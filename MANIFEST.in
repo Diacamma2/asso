@@ -1,0 +1,2 @@
+recursive-include diacamma/asso *
+recursive-exclude diacamma/asso/__pycache__ *

@@ -1,0 +1,14 @@
+<project name="Diacamma2.asso" default="all" basedir=".">
+	<property name="core.path" value="${basedir}/../lct-core"/>
+	<property name="project.packagepath" value="diacamma/asso" />
+	<property name="project.packagename" value="diacamma.asso" />
+	<property name="project.name" value="diacamma" />
+	<property name="project.packname" value="diacamma_asso.egg-info" />
+	<property name="project.pythonpath" value="${core.path}:${env.PYTHONPATH}" />
+	<property name="project.modules" value="lucterios.dummy" />
+	<property name="project.appli" value="diacamma.asso" />
+	<property name="project.test.source" value="diacamma"/>
+	<property name="project.test.omit" value="${core.path}/lucterios/install/*"/>
+	<property name="project.test.include" value="${core.path}/lucterios/CORE/*.py,${core.path}/lucterios/framework/*.py"/>
+    <import file="${core.path}/utils/lib_build.xml"/>
+</project>
