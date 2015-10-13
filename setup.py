@@ -30,7 +30,7 @@ setup(
     name="diacamma-asso",
     version=__version__,
     author="Lucterios",
-    author_email="support@sd-libre.fr",
+    author_email="info@lucterios.org",
     url="http://www.sd-libre.fr",
     description="association application.",
     long_description="""
