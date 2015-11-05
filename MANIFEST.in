@@ -1,2 +1,4 @@
 recursive-include diacamma/asso *
 recursive-exclude diacamma/asso/__pycache__ *
+recursive-include diacamma/member *
+recursive-exclude diacamma/member/__pycache__ *

@@ -53,9 +53,11 @@ setup(
         'Topic :: Database :: Front-Ends',
     ],
     # Packages
-    packages=["diacamma", "diacamma.asso"],
+    packages=["diacamma", "diacamma.asso", "diacamma.member"],
     package_data={
         "diacamma.asso": ['build', 'logo.gif', 'locale/*/*/*', 'help/*'],
+        "diacamma.member.migrations": ['*'],
+        "diacamma.member": ['build', 'images/*', 'locale/*/*/*', 'help/*'],
     },
     install_requires=["lucterios ==2.0.*", "lucterios-contacts ==2.0.*",
                       "diacamma-financial >=2.0b0,<=2.0b999999999999999"],
