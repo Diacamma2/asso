@@ -23,3 +23,27 @@ along with Lucterios.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 from __future__ import unicode_literals
+
+from lucterios.framework.xfergraphic import XferContainerAcknowledge
+
+from diacamma.accounting.test_tools import default_compta
+from diacamma.invoice.test_tools import default_articles
+from diacamma.payoff.test_tools import default_bankaccount
+from diacamma.member.editors import SeasonEditor
+from diacamma.member.models import Season
+
+
+def default_financial():
+    default_compta()
+    default_articles()
+    default_bankaccount()
+
+
+def default_season():
+    xfer = XferContainerAcknowledge()
+    for idx in range(20):
+        xfer.params['begin_date'] = '%d-09-01' % (2000 + idx)
+        xfer.item = Season()
+        editor = SeasonEditor(xfer.item)
+        editor.saving(xfer)
+    Season.objects.get(id=10).set_has_actif()

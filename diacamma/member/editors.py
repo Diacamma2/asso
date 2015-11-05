@@ -30,6 +30,7 @@ from django.db.models.aggregates import Max
 from django.utils.translation import ugettext_lazy as _
 
 from lucterios.framework.editors import LucteriosEditor
+from lucterios.framework.tools import ActionsManage, SELECT_SINGLE, SELECT_NONE
 from lucterios.framework.xfercomponents import XferCompLabelForm, XferCompDate,\
     XferCompGrid
 from lucterios.framework.error import LucteriosException, IMPORTANT
@@ -66,6 +67,8 @@ class SeasonEditor(LucteriosEditor):
         for period_idx in range(4):
             Period.objects.create(season=xfer.item, begin_date=same_day_months_after(date, period_idx * 3),
                                   end_date=same_day_months_after(date, (period_idx + 1) * 3) - timedelta(days=1))
+        if len(Season.objects.all()) == 1:
+            xfer.item.set_has_actif()
 
     def edit(self, xfer):
         lbl = XferCompLabelForm('lbl_begin_date')
@@ -79,6 +82,30 @@ class SeasonEditor(LucteriosEditor):
         if ('end_date__max' in val.keys()) and (val['end_date__max'] is not None):
             date.set_value(val['end_date__max'] + timedelta(days=1))
         xfer.add_component(date)
+
+    def show(self, xfer):
+        row = xfer.get_max_row() + 1
+        lbl = XferCompLabelForm('lbl_document')
+        lbl.set_value_as_name(_('documents'))
+        lbl.set_location(1, row)
+        xfer.add_component(lbl)
+        grid = XferCompGrid("doc_need_id")
+        grid.add_header('name', _('name'))
+        doc_need_list = self.item.get_doc_need()
+        keys = list(doc_need_list.keys())
+        keys.sort()
+        for idx in keys:
+            grid.set_value(idx, 'name', doc_need_list[idx])
+        grid.set_location(2, row, 3)
+        grid.set_size(200, 500)
+        modal_name = xfer.item.__class__.__name__
+        grid.add_action(xfer.request, ActionsManage.get_act_changed(modal_name, 'documentaddmodify',
+                                                                    _("Modify"), "images/edit.png"), {'unique': SELECT_SINGLE})
+        grid.add_action(xfer.request, ActionsManage.get_act_changed(modal_name, 'documentdel',
+                                                                    _("Delete"), "images/delete.png"), {'unique': SELECT_SINGLE})
+        grid.add_action(xfer.request, ActionsManage.get_act_changed(modal_name, 'documentaddmodify',
+                                                                    _("Add"), "images/add.png"), {'unique': SELECT_NONE})
+        xfer.add_component(grid)
 
 
 class PeriodEditor(LucteriosEditor):

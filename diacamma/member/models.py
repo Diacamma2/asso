@@ -102,7 +102,7 @@ class Season(LucteriosModel):
 
     def save_doc_need(self, doc_need_list):
         new_doc_needs = []
-        for doc_idx in range(max(doc_need_list.keys()) + 1):
+        for doc_idx in range(1, max(doc_need_list.keys()) + 1):
             if doc_idx in doc_need_list.keys():
                 new_doc_needs.append(doc_need_list[doc_idx])
             else:
@@ -115,7 +115,10 @@ class Season(LucteriosModel):
         if doc_idx in doc_need_list.keys():
             doc_need_list[doc_idx] = name
         else:
-            doc_idx = max(doc_need_list.keys()) + 1
+            if len(doc_need_list) == 0:
+                doc_idx = 1
+            else:
+                doc_idx = max(doc_need_list.keys()) + 1
             doc_need_list[doc_idx] = name
         self.save_doc_need(doc_need_list)
 

@@ -26,10 +26,8 @@ class MemberConf(XferListEditor):
     caption = _("Seasons and subscriptions")
 
     def fillresponse_header(self):
-        self.action_grid.insert(
-            0, ('document', _("Documents"), "", SELECT_SINGLE))
-        self.action_grid.insert(
-            0, ('active', _("Active"), "images/ok.png", SELECT_SINGLE))
+        self.action_grid.append(
+            ('active', _("Active"), "images/ok.png", SELECT_SINGLE))
         self.new_tab(_('Season'))
         show_filter = self.getparam('show_filter', 0)
         lbl = XferCompLabelForm('lbl_showing')
@@ -92,42 +90,13 @@ class SeasonShow(XferShowEditor):
     field_id = 'season'
     caption = _("Show season")
 
-
-@ActionsManage.affect('Season', 'document')
-@MenuManage.describ('member.change_season')
-class SeasonDocumment(XferContainerCustom):
-    icon = "season.png"
-    model = Season
-    field_id = 'season'
-    caption = _("Edition of documents")
-
     def fillresponse(self):
-        img = XferCompImage('img')
-        img.set_value(self.icon_path())
-        img.set_location(0, 0, 1, 6)
-        self.add_component(img)
-        self.fill_from_model(1, 0, True, ['designation'])
-        grid = XferCompGrid("doc_need_id")
-        grid.add_header('name', _('name'))
-        doc_need_list = self.item.get_doc_need()
-        keys = list(doc_need_list.keys())
-        keys.sort()
-        for idx in keys:
-            grid.set_value(idx, 'name', doc_need_list[idx])
-        grid.set_location(1, 1, 2)
-        grid.set_size(200, 500)
-        grid.add_action(self.request, SeasonDocummentAddModify.get_action(
-            _("Modify"), "images/edit.png"), {'unique': SELECT_SINGLE})
-        grid.add_action(self.request, SeasonDocummentDel.get_action(
-            _("Delete"), "images/delete.png"), {'unique': SELECT_SINGLE})
-        grid.add_action(self.request, SeasonDocummentAddModify.get_action(
-            _("Add"), "images/add.png"), {'unique': SELECT_NONE})
-        self.add_component(grid)
-        self.add_action(
-            SeasonDocummentClone.get_action(_('Clone last'), 'images/ok.png'), {'close': CLOSE_NO})
-        self.add_action(WrapAction(_('Close'), 'images/close.png'), {})
+        XferShowEditor.fillresponse(self)
+        self.add_action(SeasonDocummentClone.get_action(
+            _('Import doc.'), 'images/ok.png'), {'close': CLOSE_NO}, 0)
 
 
+@ActionsManage.affect('Season', 'documentaddmodify')
 @MenuManage.describ('member.change_season')
 class SeasonDocummentAddModify(XferContainerCustom):
     icon = "season.png"
@@ -167,6 +136,7 @@ class SeasonDocummentSave(XferContainerAcknowledge):
         self.item.set_doc_need(doc_need_id, name)
 
 
+@ActionsManage.affect('Season', 'documentdel')
 @MenuManage.describ('member.change_season')
 class SeasonDocummentDel(XferContainerAcknowledge):
     icon = "season.png"
@@ -180,6 +150,7 @@ class SeasonDocummentDel(XferContainerAcknowledge):
             self.item.del_doc_need(doc_need_id)
 
 
+@ActionsManage.affect('Season', 'documentclone')
 @MenuManage.describ('member.change_season')
 class SeasonDocummentClone(XferContainerAcknowledge):
     icon = "season.png"
