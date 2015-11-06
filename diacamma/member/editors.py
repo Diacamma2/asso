@@ -30,7 +30,8 @@ from django.db.models.aggregates import Max
 from django.utils.translation import ugettext_lazy as _
 
 from lucterios.framework.editors import LucteriosEditor
-from lucterios.framework.xfercomponents import XferCompLabelForm, XferCompDate, XferCompGrid
+from lucterios.framework.xfercomponents import XferCompLabelForm, XferCompDate, XferCompGrid,\
+    XferCompFloat
 from lucterios.framework.error import LucteriosException, IMPORTANT
 
 from diacamma.member.models import Period, Season
@@ -86,3 +87,30 @@ class PeriodEditor(LucteriosEditor):
 
     def edit(self, xfer):
         xfer.change_to_readonly('num')
+
+
+class AgeEditor(LucteriosEditor):
+
+    def before_save(self, xfer):
+        self.item.set_dates(
+            xfer.getparam('date_min', 0), xfer.getparam('date_max', 0))
+
+    def edit(self, xfer):
+        lbl = XferCompLabelForm('lbl_date_min')
+        lbl.set_value_as_name(_("date min."))
+        lbl.set_location(1, 5)
+        xfer.add_component(lbl)
+        date = XferCompFloat('date_min', 1900, 2100, 0)
+        date.set_location(2, 5)
+        date.set_needed(True)
+        date.set_value(self.item.date_min)
+        xfer.add_component(date)
+        lbl = XferCompLabelForm('lbl_date_max')
+        lbl.set_value_as_name(_("date max."))
+        lbl.set_location(1, 6)
+        xfer.add_component(lbl)
+        date = XferCompFloat('date_max', 1900, 2100, 0)
+        date.set_location(2, 6)
+        date.set_needed(True)
+        date.set_value(self.item.date_max)
+        xfer.add_component(date)

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-11-06 13:35+0000\n"
+"POT-Creation-Date: 2015-11-06 15:42+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -22,198 +22,310 @@ msgstr ""
 msgid "Diacamma member"
 msgstr "Diacamma adhérent"
 
-#: editors.py:44 models.py:165
+#: editors.py:45 models.py:178 models.py:297
 msgid "date invalid!"
 msgstr "date invalide!"
 
-#: editors.py:48
+#: editors.py:49
 msgid "Season exists yet!"
 msgstr "La saison existe déjà!"
 
-#: editors.py:73 models.py:57 models.py:133
+#: editors.py:74 models.py:59 models.py:147
 msgid "begin date"
 msgstr "date de début"
 
-#: editors.py:95 models.py:108 models.py:179
-msgid "name"
-msgstr "nom"
+#: editors.py:100 models.py:285 models.py:293
+msgid "date min."
+msgstr "date min."
 
-#: editors.py:96 models.py:192 models.py:200
-msgid "price"
-msgstr "prix"
+#: editors.py:109 models.py:285 models.py:293
+msgid "date max."
+msgstr "date max."
 
-#: models.py:41
+#: models.py:42
 msgid "designation"
 msgstr "désignation"
 
-#: models.py:42
+#: models.py:44
 msgid "is current"
 msgstr "courrant"
 
-#: models.py:57 models.py:134
+#: models.py:59 models.py:148
 msgid "end date"
 msgstr "date de fin"
 
-#: models.py:100 models.py:107 models.py:130
+#: models.py:75
+msgid "No default season define!"
+msgstr "Pas de saison par défaut de définie!"
+
+#: models.py:114 models.py:121 models.py:144
 msgid "season"
 msgstr "saison"
 
-#: models.py:101
+#: models.py:115
 msgid "seasons"
 msgstr "saisons"
 
-#: models.py:123
+#: models.py:122 models.py:192 models.py:228 models.py:252 models.py:277
+msgid "name"
+msgstr "nom"
+
+#: models.py:137
 msgid "document needs"
 msgstr "document demandé"
 
-#: models.py:124
+#: models.py:138
 msgid "documents needs"
 msgstr "documents demandés"
 
-#: models.py:132
+#: models.py:146
 msgid "numeros"
 msgstr "numéros"
 
-#: models.py:153
+#: models.py:167
 msgid "Each season have to have 2 periods minimum!"
 msgstr "Chaque saison doit avoir 2 périodes minimum!"
 
-#: models.py:172
+#: models.py:185
 msgid "period"
 msgstr "période"
 
-#: models.py:173
+#: models.py:186
 msgid "periods"
 msgstr "périodes"
 
-#: models.py:180
+#: models.py:193 models.py:229 models.py:253
 msgid "description"
 msgstr "description"
 
-#: models.py:181
+#: models.py:194
 msgid "duration"
 msgstr "durée"
 
-#: models.py:181
+#: models.py:194
 msgid "annually"
 msgstr "annuelle"
 
-#: models.py:182
+#: models.py:195
 msgid "periodic"
 msgstr "périodique"
 
-#: models.py:182
+#: models.py:195
 msgid "monthly"
 msgstr "mensuelle"
 
-#: models.py:182
+#: models.py:195
 msgid "calendar"
 msgstr "calendaire"
 
-#: models.py:183
+#: models.py:196 models.py:254
 msgid "unactive"
-msgstr "non-actif"
+msgstr "désactivé"
 
-#: models.py:185
+#: models.py:198
 msgid "articles"
 msgstr "articles"
 
-#: models.py:210
+#: models.py:205 models.py:213
+msgid "price"
+msgstr "prix"
+
+#: models.py:223
 msgid "subscription"
 msgstr "cotisation"
 
-#: models.py:211
+#: models.py:224
 msgid "subscriptions"
 msgstr "cotisations"
 
-#: views_season.py:19
+#: models.py:247
+msgid "activity"
+msgstr "activité"
+
+#: models.py:248
+msgid "activities"
+msgstr "activités"
+
+#: models.py:272
+msgid "team"
+msgstr "équipe"
+
+#: models.py:273
+msgid "teams"
+msgstr "équipes"
+
+#: models.py:279
+msgid "minimum"
+msgstr "minimum"
+
+#: models.py:281
+msgid "maximum"
+msgstr "maximum"
+
+#: models.py:311
+msgid "age"
+msgstr "age"
+
+#: models.py:312
+msgid "ages"
+msgstr "ages"
+
+#: views_conf.py:17
+msgid "Management of member categories"
+msgstr "Gestion des catégories d'adhésion"
+
+#: views_conf.py:20
+msgid "Categories"
+msgstr "Catégories"
+
+#: views_conf.py:23
+msgid "Parameters"
+msgstr "Paramètres"
+
+#: views_conf.py:29
+msgid "Modify"
+msgstr "Modifier"
+
+#: views_conf.py:33
+msgid "Age"
+msgstr "Age"
+
+#: views_conf.py:35
+msgid "Team"
+msgstr "Equipe"
+
+#: views_conf.py:37
+msgid "Activity"
+msgstr "Activité"
+
+#: views_conf.py:47
+msgid "Add age"
+msgstr "Ajouter un age"
+
+#: views_conf.py:48
+msgid "Modify age"
+msgstr "Modification d'un age"
+
+#: views_conf.py:57
+msgid "Delete age"
+msgstr "Suppression d'un age"
+
+#: views_conf.py:66
+msgid "Add team"
+msgstr "Ajout d'une équipe"
+
+#: views_conf.py:67
+msgid "Modify team"
+msgstr "Modification d'une équipe"
+
+#: views_conf.py:76
+msgid "Delete team"
+msgstr "Suppression d'une équipe"
+
+#: views_conf.py:85
+msgid "Add activity"
+msgstr "Ajouter une activité"
+
+#: views_conf.py:86
+msgid "Modify activity"
+msgstr "Modification d'une activité"
+
+#: views_conf.py:95
+msgid "Delete activity"
+msgstr "Suppression d'une activité"
+
+#: views_season.py:18
+msgid "Member"
+msgstr "Adhésion"
+
+#: views_season.py:21
 msgid "Management of seasons and subscriptions"
 msgstr "Gestion des saisons et des cotisations"
 
-#: views_season.py:24
+#: views_season.py:26
 msgid "Seasons and subscriptions"
 msgstr "Les saisons et les cotisations"
 
-#: views_season.py:28
+#: views_season.py:30
 msgid "Active"
 msgstr "Activer"
 
-#: views_season.py:29
+#: views_season.py:31
 msgid "Season"
 msgstr "Saison"
 
-#: views_season.py:32 views_season.py:89
+#: views_season.py:34 views_season.py:90
 msgid "Show season"
 msgstr "Voir une saison"
 
-#: views_season.py:36
+#: views_season.py:38
 msgid "Near active"
 msgstr "Proche de l'active"
 
-#: views_season.py:36
+#: views_season.py:38
 msgid "All"
 msgstr "Tous"
 
-#: views_season.py:56
+#: views_season.py:57
 msgid "Subscriptions"
 msgstr "Les cotisations"
 
-#: views_season.py:67
+#: views_season.py:68
 msgid "Activate"
 msgstr "Activation"
 
-#: views_season.py:79
+#: views_season.py:80
 msgid "Add season"
 msgstr "Ajout d'une saison"
 
-#: views_season.py:80
+#: views_season.py:81
 msgid "Modify season"
 msgstr "Modification d'une saison"
 
-#: views_season.py:94
+#: views_season.py:95
 msgid "Import doc."
 msgstr "Importer doc."
 
-#: views_season.py:103
+#: views_season.py:104
 msgid "Add document"
 msgstr "Ajout d'un document"
 
-#: views_season.py:104
+#: views_season.py:105
 msgid "Modify document"
 msgstr "Modification d'un document"
 
-#: views_season.py:113
+#: views_season.py:114
 msgid "Delete document"
 msgstr "Suppression d'un document"
 
-#: views_season.py:121
+#: views_season.py:122
 msgid "Clone document"
 msgstr "Clone d'un document"
 
-#: views_season.py:133
+#: views_season.py:134
 msgid "Add period"
 msgstr "Ajout d'une période"
 
-#: views_season.py:134
+#: views_season.py:135
 msgid "Modify period"
 msgstr "Modification d'une période"
 
-#: views_season.py:143
+#: views_season.py:144
 msgid "Delete period"
 msgstr "Suppression d'une période"
 
-#: views_season.py:152
+#: views_season.py:153
 msgid "Add subscription"
 msgstr "Ajout d'une cotisation"
 
-#: views_season.py:153
+#: views_season.py:154
 msgid "Modify subscription"
 msgstr "Modification d'une cotisation"
 
-#: views_season.py:162
+#: views_season.py:163
 msgid "Show subscription"
 msgstr "Visualisation d'une cotisation"
 
-#: views_season.py:171
+#: views_season.py:172
 msgid "Delete subscription"
 msgstr "Suppression d'une cotisation"

@@ -35,11 +35,13 @@ from lucterios.framework.error import LucteriosException, IMPORTANT
 
 from diacamma.invoice.models import Article
 from diacamma.accounting.tools import format_devise
+from django.core.exceptions import ObjectDoesNotExist
 
 
 class Season(LucteriosModel):
     designation = models.CharField(_('designation'), max_length=100)
-    iscurrent = models.BooleanField(verbose_name=_('is current'), default=True)
+    iscurrent = models.BooleanField(
+        verbose_name=_('is current'), default=False)
 
     def __str__(self):
         return self.designation
@@ -63,6 +65,18 @@ class Season(LucteriosModel):
             season_item.save()
         self.iscurrent = True
         self.save()
+
+    @classmethod
+    def current_season(self):
+        try:
+            return Season.objects.get(iscurrent=True)
+        except ObjectDoesNotExist:
+            raise LucteriosException(
+                IMPORTANT, _('No default season define!'))
+
+    @property
+    def reference_year(self):
+        return int(self.designation[:4])
 
     @property
     def begin_date(self):
@@ -161,8 +175,7 @@ class Period(LucteriosModel):
     def save(self, force_insert=False, force_update=False, using=None,
              update_fields=None, refresh_num=True):
         if self.begin_date > self.end_date:
-            raise LucteriosException(
-                IMPORTANT, _("date invalid!") + " %s->%s" % (self.begin_date, self.end_date))
+            raise LucteriosException(IMPORTANT, _("date invalid!"))
         LucteriosModel.save(self, force_insert=force_insert,
                             force_update=force_update, using=using, update_fields=update_fields)
         if refresh_num:
@@ -180,7 +193,7 @@ class Subscription(LucteriosModel):
     description = models.TextField(_('description'), null=True, default="")
     duration = models.IntegerField(verbose_name=_('duration'), choices=((0, _('annually')), (1, _(
         'periodic')), (2, _('monthly')), (3, _('calendar'))), null=False, default=0, db_index=True)
-    unactive = models.BooleanField(verbose_name=_('unactive'), default=True)
+    unactive = models.BooleanField(verbose_name=_('unactive'), default=False)
     articles = models.ManyToManyField(
         Article, verbose_name=_('articles'), blank=True)
 
@@ -189,11 +202,11 @@ class Subscription(LucteriosModel):
 
     @classmethod
     def get_default_fields(cls):
-        return ["name", "description", 'duration', (_('price'), 'price')]
+        return ["name", "description", 'duration', "unactive", (_('price'), 'price')]
 
     @classmethod
     def get_edit_fields(cls):
-        return ["name", "description", 'duration', ('articles', None)]
+        return ["name", "description", 'duration', "unactive", ('articles', None)]
 
     @classmethod
     def get_show_fields(cls):
@@ -209,3 +222,92 @@ class Subscription(LucteriosModel):
     class Meta(object):
         verbose_name = _('subscription')
         verbose_name_plural = _('subscriptions')
+
+
+class Activity(LucteriosModel):
+    name = models.CharField(_('name'), max_length=50)
+    description = models.TextField(_('description'), null=True, default="")
+
+    def __str__(self):
+        return self.name
+
+    @classmethod
+    def get_default_fields(cls):
+        return ["name", "description"]
+
+    @classmethod
+    def get_edit_fields(cls):
+        return ["name", "description"]
+
+    @classmethod
+    def get_show_fields(cls):
+        return ["name", "description"]
+
+    class Meta(object):
+        verbose_name = _('activity')
+        verbose_name_plural = _('activities')
+
+
+class Team(LucteriosModel):
+    name = models.CharField(_('name'), max_length=50)
+    description = models.TextField(_('description'), null=True, default="")
+    unactive = models.BooleanField(verbose_name=_('unactive'), default=False)
+
+    def __str__(self):
+        return self.name
+
+    @classmethod
+    def get_default_fields(cls):
+        return ["name", "description", "unactive"]
+
+    @classmethod
+    def get_edit_fields(cls):
+        return ["name", "description", "unactive"]
+
+    @classmethod
+    def get_show_fields(cls):
+        return ["name", "description", "unactive"]
+
+    class Meta(object):
+        verbose_name = _('team')
+        verbose_name_plural = _('teams')
+
+
+class Age(LucteriosModel):
+    name = models.CharField(_('name'), max_length=50)
+    minimum = models.IntegerField(
+        verbose_name=_('minimum'), null=False, default=0)
+    maximum = models.IntegerField(
+        verbose_name=_('maximum'), null=False, default=0)
+
+    @classmethod
+    def get_default_fields(cls):
+        return ["name", (_("date min."), "date_min"), (_("date max."), "date_max")]
+
+    @classmethod
+    def get_edit_fields(cls):
+        return ["name"]
+
+    @classmethod
+    def get_show_fields(cls):
+        return ["name", ((_("date min."), "date_min"),), ((_("date max."), "date_max"),)]
+
+    def set_dates(self, datemin, datemax):
+        if datemin > datemax:
+            raise LucteriosException(IMPORTANT, _("date invalid!"))
+        ref_year = Season.current_season().reference_year
+        self.maximum = ref_year - datemin
+        self.minimum = ref_year - datemax
+
+    @property
+    def date_min(self):
+        return Season.current_season().reference_year - self.maximum
+
+    @property
+    def date_max(self):
+        return Season.current_season().reference_year - self.minimum
+
+    class Meta(object):
+        verbose_name = _('age')
+        verbose_name_plural = _('ages')
+        ordering = ['-minimum']

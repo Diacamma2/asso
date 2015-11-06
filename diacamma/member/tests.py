@@ -30,11 +30,13 @@ from lucterios.framework.test import LucteriosTest
 from lucterios.framework.xfergraphic import XferContainerAcknowledge
 from lucterios.framework.filetools import get_user_dir
 
-from diacamma.member.views_season import SeasonAddModify, SeasonShow, MemberConf,\
+from diacamma.member.views_season import SeasonAddModify, SeasonShow, SeasonSubscription,\
     SeasonActive, DocummentAddModify, DocummentDel, SeasonDocummentClone,\
     PeriodDel, PeriodAddModify, SubscriptionAddModify, SubscriptionShow,\
     SubscriptionDel
 from diacamma.member.test_tools import default_season, default_financial
+from diacamma.member.views_conf import CategoryConf, ActivityAddModify,\
+    ActivityDel, TeamAddModify, TeamDel, AgeAddModify, AgeDel
 
 
 class SeasonTest(LucteriosTest):
@@ -45,7 +47,7 @@ class SeasonTest(LucteriosTest):
         rmtree(get_user_dir(), True)
 
     def test_add(self):
-        self.factory.xfer = MemberConf()
+        self.factory.xfer = SeasonSubscription()
         self.call('/diacamma.member/memberConf', {}, False)
         self.assert_observer(
             'core.custom', 'diacamma.member', 'memberConf')
@@ -86,7 +88,7 @@ class SeasonTest(LucteriosTest):
         self.assert_count_equal(
             'COMPONENTS/GRID[@name="document"]/RECORD', 0)
 
-        self.factory.xfer = MemberConf()
+        self.factory.xfer = SeasonSubscription()
         self.call('/diacamma.member/memberConf', {}, False)
         self.assert_observer(
             'core.custom', 'diacamma.member', 'memberConf')
@@ -111,7 +113,7 @@ class SeasonTest(LucteriosTest):
         self.assert_observer(
             'core.acknowledge', 'diacamma.member', 'seasonAddModify')
 
-        self.factory.xfer = MemberConf()
+        self.factory.xfer = SeasonSubscription()
         self.call('/diacamma.member/memberConf', {}, False)
         self.assert_observer(
             'core.custom', 'diacamma.member', 'memberConf')
@@ -135,7 +137,7 @@ class SeasonTest(LucteriosTest):
     def test_list(self):
         default_season()
 
-        self.factory.xfer = MemberConf()
+        self.factory.xfer = SeasonSubscription()
         self.call('/diacamma.member/memberConf', {}, False)
         self.assert_observer(
             'core.custom', 'diacamma.member', 'memberConf')
@@ -151,14 +153,14 @@ class SeasonTest(LucteriosTest):
         self.assert_count_equal(
             'COMPONENTS/GRID[@name="season"]/RECORD', 5)
 
-        self.factory.xfer = MemberConf()
+        self.factory.xfer = SeasonSubscription()
         self.call('/diacamma.member/memberConf', {'show_filter': 1}, False)
         self.assert_observer(
             'core.custom', 'diacamma.member', 'memberConf')
         self.assert_count_equal(
             'COMPONENTS/GRID[@name="season"]/RECORD', 20)
 
-        self.factory.xfer = MemberConf()
+        self.factory.xfer = SeasonSubscription()
         self.call('/diacamma.member/memberConf', {'show_filter': 0}, False)
         self.assert_observer(
             'core.custom', 'diacamma.member', 'memberConf')
@@ -190,7 +192,7 @@ class SeasonTest(LucteriosTest):
         self.assert_observer(
             'core.acknowledge', 'diacamma.member', 'seasonActive')
 
-        self.factory.xfer = MemberConf()
+        self.factory.xfer = SeasonSubscription()
         self.call('/diacamma.member/memberConf', {'show_filter': 0}, False)
         self.assert_observer(
             'core.custom', 'diacamma.member', 'memberConf')
@@ -436,30 +438,25 @@ class SeasonTest(LucteriosTest):
         self.assert_xml_equal(
             'COMPONENTS/GRID[@name="period"]/RECORD[@id="40"]/VALUE[@name="begin_date"]', '1 juin 2010')
 
-
-class SubscriptionTest(LucteriosTest):
-
-    def setUp(self):
-        self.xfer_class = XferContainerAcknowledge
-        LucteriosTest.setUp(self)
-        rmtree(get_user_dir(), True)
+    def test_subscription(self):
         default_financial()
         default_season()
 
-    def test_addlist(self):
-        self.factory.xfer = MemberConf()
+        self.factory.xfer = SeasonSubscription()
         self.call('/diacamma.member/memberConf', {}, False)
         self.assert_observer(
             'core.custom', 'diacamma.member', 'memberConf')
         self.assert_count_equal('COMPONENTS/*', 10)
         self.assert_count_equal(
-            'COMPONENTS/GRID[@name="subscription"]/HEADER', 4)
+            'COMPONENTS/GRID[@name="subscription"]/HEADER', 5)
         self.assert_xml_equal(
             'COMPONENTS/GRID[@name="subscription"]/HEADER[@name="name"]', "nom")
         self.assert_xml_equal(
             'COMPONENTS/GRID[@name="subscription"]/HEADER[@name="description"]', "description")
         self.assert_xml_equal(
             'COMPONENTS/GRID[@name="subscription"]/HEADER[@name="duration"]', "durée")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="subscription"]/HEADER[@name="unactive"]', "désactivé")
         self.assert_xml_equal(
             'COMPONENTS/GRID[@name="subscription"]/HEADER[@name="price"]', "prix")
         self.assert_count_equal(
@@ -469,7 +466,7 @@ class SubscriptionTest(LucteriosTest):
         self.call('/diacamma.member/subscriptionAddModify', {}, False)
         self.assert_observer(
             'core.custom', 'diacamma.member', 'subscriptionAddModify')
-        self.assert_count_equal('COMPONENTS/*', 16)
+        self.assert_count_equal('COMPONENTS/*', 18)
 
         self.factory.xfer = SubscriptionAddModify()
         self.call('/diacamma.member/subscriptionAddModify',
@@ -477,7 +474,7 @@ class SubscriptionTest(LucteriosTest):
         self.assert_observer(
             'core.acknowledge', 'diacamma.member', 'subscriptionAddModify')
 
-        self.factory.xfer = MemberConf()
+        self.factory.xfer = SeasonSubscription()
         self.call('/diacamma.member/memberConf', {}, False)
         self.assert_observer(
             'core.custom', 'diacamma.member', 'memberConf')
@@ -489,6 +486,8 @@ class SubscriptionTest(LucteriosTest):
             'COMPONENTS/GRID[@name="subscription"]/RECORD[1]/VALUE[@name="description"]', "blablabla")
         self.assert_xml_equal(
             'COMPONENTS/GRID[@name="subscription"]/RECORD[1]/VALUE[@name="duration"]', "périodique")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="subscription"]/RECORD[1]/VALUE[@name="unactive"]', "0")
         self.assert_xml_equal(
             'COMPONENTS/GRID[@name="subscription"]/RECORD[1]/VALUE[@name="price"]', "76.44€")
 
@@ -513,9 +512,222 @@ class SubscriptionTest(LucteriosTest):
         self.assert_observer(
             'core.acknowledge', 'diacamma.member', 'subscriptionDel')
 
-        self.factory.xfer = MemberConf()
+        self.factory.xfer = SeasonSubscription()
         self.call('/diacamma.member/memberConf', {}, False)
         self.assert_observer(
             'core.custom', 'diacamma.member', 'memberConf')
         self.assert_count_equal(
             'COMPONENTS/GRID[@name="subscription"]/RECORD', 0)
+
+
+class CategoriesTest(LucteriosTest):
+
+    def setUp(self):
+        self.xfer_class = XferContainerAcknowledge
+        LucteriosTest.setUp(self)
+        rmtree(get_user_dir(), True)
+
+    def test_activity(self):
+        self.factory.xfer = CategoryConf()
+        self.call('/diacamma.member/categoryConf', {}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.member', 'categoryConf')
+        self.assert_count_equal('COMPONENTS/*', 13)
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="activity"]/HEADER', 2)
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="activity"]/HEADER[@name="name"]', "nom")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="activity"]/HEADER[@name="description"]', "description")
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="activity"]/RECORD', 0)
+
+        self.factory.xfer = ActivityAddModify()
+        self.call('/diacamma.member/activityAddModify', {}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.member', 'activityAddModify')
+        self.assert_count_equal('COMPONENTS/*', 5)
+
+        self.factory.xfer = ActivityAddModify()
+        self.call('/diacamma.member/activityAddModify',
+                  {"SAVE": "YES", "name": "xyz", "description": "abc"}, False)
+        self.assert_observer(
+            'core.acknowledge', 'diacamma.member', 'activityAddModify')
+
+        self.factory.xfer = CategoryConf()
+        self.call('/diacamma.member/categoryConf', {}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.member', 'categoryConf')
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="activity"]/RECORD', 1)
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="activity"]/RECORD[1]/VALUE[@name="name"]', "xyz")
+
+        self.factory.xfer = ActivityDel()
+        self.call('/diacamma.member/activityAddModify',
+                  {"CONFIRME": "YES", "activity": 1}, False)
+        self.assert_observer(
+            'core.acknowledge', 'diacamma.member', 'activityAddModify')
+
+        self.factory.xfer = CategoryConf()
+        self.call('/diacamma.member/categoryConf', {}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.member', 'categoryConf')
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="activity"]/RECORD', 0)
+
+    def test_team(self):
+        self.factory.xfer = CategoryConf()
+        self.call('/diacamma.member/categoryConf', {}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.member', 'categoryConf')
+        self.assert_count_equal('COMPONENTS/*', 13)
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="team"]/HEADER', 3)
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="team"]/HEADER[@name="name"]', "nom")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="team"]/HEADER[@name="description"]', "description")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="team"]/HEADER[@name="unactive"]', "désactivé")
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="team"]/RECORD', 0)
+
+        self.factory.xfer = TeamAddModify()
+        self.call('/diacamma.member/teamAddModify', {}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.member', 'teamAddModify')
+        self.assert_count_equal('COMPONENTS/*', 7)
+
+        self.factory.xfer = TeamAddModify()
+        self.call('/diacamma.member/teamAddModify',
+                  {"SAVE": "YES", "name": "xyz", "description": "abc"}, False)
+        self.assert_observer(
+            'core.acknowledge', 'diacamma.member', 'teamAddModify')
+
+        self.factory.xfer = CategoryConf()
+        self.call('/diacamma.member/categoryConf', {}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.member', 'categoryConf')
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="team"]/RECORD', 1)
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="team"]/RECORD[1]/VALUE[@name="name"]', "xyz")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="team"]/RECORD[1]/VALUE[@name="unactive"]', "0")
+
+        self.factory.xfer = TeamDel()
+        self.call('/diacamma.member/teamDel',
+                  {"CONFIRME": "YES", "team": 1}, False)
+        self.assert_observer(
+            'core.acknowledge', 'diacamma.member', 'teamDel')
+
+        self.factory.xfer = CategoryConf()
+        self.call('/diacamma.member/categoryConf', {}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.member', 'categoryConf')
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="team"]/RECORD', 0)
+
+    def test_age(self):
+        self.factory.xfer = CategoryConf()
+        self.call('/diacamma.member/categoryConf', {}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.member', 'categoryConf')
+        self.assert_count_equal('COMPONENTS/*', 13)
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="age"]/HEADER', 3)
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="age"]/HEADER[@name="name"]', "nom")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="age"]/HEADER[@name="date_min"]', "date min.")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="age"]/HEADER[@name="date_max"]', "date max.")
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="age"]/RECORD', 0)
+
+        self.factory.xfer = AgeAddModify()
+        self.call('/diacamma.member/ageAddModify', {}, False)
+        self.assert_observer(
+            'core.exception', 'diacamma.member', 'ageAddModify')
+
+        default_season()
+
+        self.factory.xfer = AgeAddModify()
+        self.call('/diacamma.member/ageAddModify', {}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.member', 'ageAddModify')
+        self.assert_count_equal('COMPONENTS/*', 7)
+
+        self.factory.xfer = AgeAddModify()
+        self.call('/diacamma.member/ageAddModify',
+                  {"SAVE": "YES", "name": "xyz", "date_min": "1981", "date_max": "1980"}, False)
+        self.assert_observer(
+            'core.exception', 'diacamma.member', 'ageAddModify')
+
+        self.factory.xfer = AgeAddModify()
+        self.call('/diacamma.member/ageAddModify',
+                  {"SAVE": "YES", "name": "xyz", "date_min": "1980", "date_max": "1981"}, False)
+        self.assert_observer(
+            'core.acknowledge', 'diacamma.member', 'ageAddModify')
+        self.factory.xfer = AgeAddModify()
+        self.call('/diacamma.member/ageAddModify',
+                  {"SAVE": "YES", "name": "uvw", "date_min": "1979", "date_max": "1980"}, False)
+        self.assert_observer(
+            'core.acknowledge', 'diacamma.member', 'ageAddModify')
+
+        self.factory.xfer = CategoryConf()
+        self.call('/diacamma.member/categoryConf', {}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.member', 'categoryConf')
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="age"]/RECORD', 2)
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="age"]/RECORD[1]/VALUE[@name="name"]', "uvw")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="age"]/RECORD[1]/VALUE[@name="date_min"]', "1979")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="age"]/RECORD[1]/VALUE[@name="date_max"]', "1980")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="age"]/RECORD[2]/VALUE[@name="name"]', "xyz")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="age"]/RECORD[2]/VALUE[@name="date_min"]', "1980")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="age"]/RECORD[2]/VALUE[@name="date_max"]', "1981")
+
+        self.factory.xfer = SeasonActive()
+        self.call('/diacamma.member/seasonActive', {'season': 12}, False)
+        self.assert_observer(
+            'core.acknowledge', 'diacamma.member', 'seasonActive')
+
+        self.factory.xfer = CategoryConf()
+        self.call('/diacamma.member/categoryConf', {}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.member', 'categoryConf')
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="age"]/RECORD', 2)
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="age"]/RECORD[1]/VALUE[@name="name"]', "uvw")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="age"]/RECORD[1]/VALUE[@name="date_min"]', "1981")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="age"]/RECORD[1]/VALUE[@name="date_max"]', "1982")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="age"]/RECORD[2]/VALUE[@name="name"]', "xyz")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="age"]/RECORD[2]/VALUE[@name="date_min"]', "1982")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="age"]/RECORD[2]/VALUE[@name="date_max"]', "1983")
+
+        self.factory.xfer = AgeDel()
+        self.call('/diacamma.member/ageDel',
+                  {"CONFIRME": "YES", "age": 1}, False)
+        self.assert_observer(
+            'core.acknowledge', 'diacamma.member', 'ageDel')
+
+        self.factory.xfer = CategoryConf()
+        self.call('/diacamma.member/categoryConf', {}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.member', 'categoryConf')
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="age"]/RECORD', 1)

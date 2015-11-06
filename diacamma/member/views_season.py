@@ -15,9 +15,11 @@ from lucterios.framework.xfercomponents import XferCompLabelForm, XferCompSelect
 
 from diacamma.member.models import Season, Period, Subscription, Document
 
+MenuManage.add_sub("member.conf", "core.extensions", "", _("Member"), "", 5)
 
-@MenuManage.describ('member.change_season', FORMTYPE_NOMODAL, 'contact.conf', _('Management of seasons and subscriptions'))
-class MemberConf(XferListEditor):
+
+@MenuManage.describ('member.change_season', FORMTYPE_NOMODAL, 'member.conf', _('Management of seasons and subscriptions'))
+class SeasonSubscription(XferListEditor):
     icon = "season.png"
     model = Season
     field_id = 'season'
@@ -42,10 +44,9 @@ class MemberConf(XferListEditor):
         self.filter = Q()
         if show_filter == 0:
             try:
-                active_season = Season.objects.get(iscurrent=True)
-                year_init = int(active_season.designation[:4])
-                designation_begin = "%d/%d" % (year_init - 2, year_init - 1)
-                designation_end = "%d/%d" % (year_init + 2, year_init + 3)
+                year_ref = Season.current_season().reference_year
+                designation_begin = "%d/%d" % (year_ref - 2, year_ref - 1)
+                designation_end = "%d/%d" % (year_ref + 2, year_ref + 3)
                 self.filter = Q(designation__gte=designation_begin) & Q(
                     designation__lte=designation_end)
             except:
