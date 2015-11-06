@@ -9,13 +9,11 @@ from lucterios.framework.xferadvance import XferAddEditor
 from lucterios.framework.xferadvance import XferShowEditor
 from lucterios.framework.xferadvance import XferDelete
 from lucterios.framework.tools import FORMTYPE_NOMODAL, ActionsManage, MenuManage,\
-    SELECT_SINGLE, FORMTYPE_REFRESH, CLOSE_NO, WrapAction, SELECT_NONE
-from lucterios.framework.xfergraphic import XferContainerAcknowledge,\
-    XferContainerCustom
-from lucterios.framework.xfercomponents import XferCompLabelForm, XferCompSelect,\
-    XferCompImage, XferCompGrid, XferCompEdit
+    SELECT_SINGLE, FORMTYPE_REFRESH, CLOSE_NO
+from lucterios.framework.xfergraphic import XferContainerAcknowledge
+from lucterios.framework.xfercomponents import XferCompLabelForm, XferCompSelect
 
-from diacamma.member.models import Season, Period, Subscription
+from diacamma.member.models import Season, Period, Subscription, Document
 
 
 @MenuManage.describ('member.change_season', FORMTYPE_NOMODAL, 'contact.conf', _('Management of seasons and subscriptions'))
@@ -96,61 +94,25 @@ class SeasonShow(XferShowEditor):
             _('Import doc.'), 'images/ok.png'), {'close': CLOSE_NO}, 0)
 
 
-@ActionsManage.affect('Season', 'documentaddmodify')
+@ActionsManage.affect('Document', 'add', 'edit')
 @MenuManage.describ('member.change_season')
-class SeasonDocummentAddModify(XferContainerCustom):
+class DocummentAddModify(XferAddEditor):
     icon = "season.png"
-    model = Season
-    field_id = 'season'
-    caption = _("Edit document")
-    readonly = True
-
-    def fillresponse(self, doc_need_id=0):
-        img = XferCompImage('img')
-        img.set_value(self.icon_path())
-        img.set_location(0, 0, 1, 6)
-        self.add_component(img)
-        lbl = XferCompLabelForm('lbl_name')
-        lbl.set_value_as_name(_('name'))
-        lbl.set_location(1, 0)
-        self.add_component(lbl)
-        edt = XferCompEdit("name")
-        if doc_need_id > 0:
-            edt.set_value(self.item.get_doc_need(doc_need_id))
-        edt.set_location(1, 1)
-        self.add_component(edt)
-        self.add_action(
-            SeasonDocummentSave.get_action(_('Ok'), 'images/ok.png'), {})
-        self.add_action(WrapAction(_('Close'), 'images/close.png'), {})
+    model = Document
+    field_id = 'document'
+    caption_add = _("Add document")
+    caption_modify = _("Modify document")
 
 
+@ActionsManage.affect('Document', 'delete')
 @MenuManage.describ('member.change_season')
-class SeasonDocummentSave(XferContainerAcknowledge):
+class DocummentDel(XferDelete):
     icon = "season.png"
-    model = Season
-    field_id = 'season'
-    caption = _("Edit document")
-    readonly = True
-
-    def fillresponse(self, doc_need_id=0, name=""):
-        self.item.set_doc_need(doc_need_id, name)
-
-
-@ActionsManage.affect('Season', 'documentdel')
-@MenuManage.describ('member.change_season')
-class SeasonDocummentDel(XferContainerAcknowledge):
-    icon = "season.png"
-    model = Season
-    field_id = 'season'
+    model = Document
+    field_id = 'document'
     caption = _("Delete document")
-    readonly = True
-
-    def fillresponse(self, doc_need_id=0):
-        if self.confirme(_("Do you want to delete this document?")):
-            self.item.del_doc_need(doc_need_id)
 
 
-@ActionsManage.affect('Season', 'documentclone')
 @MenuManage.describ('member.change_season')
 class SeasonDocummentClone(XferContainerAcknowledge):
     icon = "season.png"
@@ -158,7 +120,7 @@ class SeasonDocummentClone(XferContainerAcknowledge):
     field_id = 'season'
     caption = _("Clone document")
 
-    def fillresponse(self, doc_need_id=0):
+    def fillresponse(self):
         self.item.clone_doc_need()
 
 

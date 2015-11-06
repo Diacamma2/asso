@@ -40,7 +40,6 @@ from diacamma.accounting.tools import format_devise
 class Season(LucteriosModel):
     designation = models.CharField(_('designation'), max_length=100)
     iscurrent = models.BooleanField(verbose_name=_('is current'), default=True)
-    doc_need = models.TextField(_('doc need'), null=True, default="")
 
     def __str__(self):
         return self.designation
@@ -55,7 +54,7 @@ class Season(LucteriosModel):
 
     @classmethod
     def get_show_fields(cls):
-        return ["designation", ((_('begin date'), "begin_date"), (_('end date'), 'end_date')), 'period_set']
+        return ["designation", ((_('begin date'), "begin_date"), (_('end date'), 'end_date')), 'period_set', 'document_set']
 
     def set_has_actif(self):
         all_season = Season.objects.all()
@@ -88,57 +87,42 @@ class Season(LucteriosModel):
             nb += 1
             period.save(refresh_num=False)
 
-    def get_doc_need(self, doc_idx=None):
-        doc_need_list = {}
-        idx = 1
-        for item in self.doc_need.split('|'):
-            if item.strip() != '':
-                doc_need_list[idx] = item
-            idx += 1
-        if doc_idx is None:
-            return doc_need_list
-        else:
-            return doc_need_list[doc_idx]
-
-    def save_doc_need(self, doc_need_list):
-        new_doc_needs = []
-        for doc_idx in range(1, max(doc_need_list.keys()) + 1):
-            if doc_idx in doc_need_list.keys():
-                new_doc_needs.append(doc_need_list[doc_idx])
-            else:
-                new_doc_needs.append('')
-        self.doc_need = '|'.join(new_doc_needs)
-        self.save()
-
-    def set_doc_need(self, doc_idx, name):
-        doc_need_list = self.get_doc_need()
-        if doc_idx in doc_need_list.keys():
-            doc_need_list[doc_idx] = name
-        else:
-            if len(doc_need_list) == 0:
-                doc_idx = 1
-            else:
-                doc_idx = max(doc_need_list.keys()) + 1
-            doc_need_list[doc_idx] = name
-        self.save_doc_need(doc_need_list)
-
-    def del_doc_need(self, doc_idx):
-        doc_need_list = self.get_doc_need()
-        if doc_idx in doc_need_list.keys():
-            del doc_need_list[doc_idx]
-            self.save_doc_need(doc_need_list)
-
     def clone_doc_need(self):
         old_season = Season.objects.filter(
             designation__lt=self.designation).order_by("-designation")
         if len(old_season) > 0:
-            self.doc_need = old_season[0].doc_need
-            self.save()
+            for doc_need in old_season[0].document_set.all():
+                doc_need.id = None
+                doc_need.season = self
+                doc_need.save()
 
     class Meta(object):
         verbose_name = _('season')
         verbose_name_plural = _('seasons')
         ordering = ['-designation']
+
+
+class Document(LucteriosModel):
+    season = models.ForeignKey(
+        Season, verbose_name=_('season'), null=False, default=None, db_index=True, on_delete=models.CASCADE)
+    name = models.CharField(_('name'), max_length=100)
+
+    @classmethod
+    def get_default_fields(cls):
+        return ["name"]
+
+    @classmethod
+    def get_edit_fields(cls):
+        return ["name"]
+
+    @classmethod
+    def get_show_fields(cls):
+        return ["season", "name"]
+
+    class Meta(object):
+        verbose_name = _('document needs')
+        verbose_name_plural = _('documents needs')
+        default_permissions = []
 
 
 class Period(LucteriosModel):

@@ -31,8 +31,8 @@ from lucterios.framework.xfergraphic import XferContainerAcknowledge
 from lucterios.framework.filetools import get_user_dir
 
 from diacamma.member.views_season import SeasonAddModify, SeasonShow, MemberConf,\
-    SeasonActive, SeasonDocummentAddModify, SeasonDocummentSave,\
-    SeasonDocummentDel, SeasonDocummentClone
+    SeasonActive, DocummentAddModify, DocummentDel, SeasonDocummentClone,\
+    PeriodDel, PeriodAddModify
 from diacamma.member.test_tools import default_season
 
 
@@ -78,18 +78,12 @@ class SeasonTest(LucteriosTest):
             'COMPONENTS/LABELFORM[@name="end_date"]', "31 août 2015")
         self.assert_count_equal(
             'COMPONENTS/GRID[@name="period"]/HEADER', 3)
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="period"]/HEADER[@name="num"]', "N°")
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="period"]/HEADER[@name="begin_date"]', "date de début")
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="period"]/HEADER[@name="end_date"]', "date de fin")
         self.assert_count_equal(
             'COMPONENTS/GRID[@name="period"]/RECORD', 4)
         self.assert_count_equal(
-            'COMPONENTS/GRID[@name="doc_need_id"]/HEADER', 1)
+            'COMPONENTS/GRID[@name="document"]/HEADER', 1)
         self.assert_count_equal(
-            'COMPONENTS/GRID[@name="doc_need_id"]/RECORD', 0)
+            'COMPONENTS/GRID[@name="document"]/RECORD', 0)
 
         self.factory.xfer = MemberConf()
         self.call('/diacamma.member/memberConf', {}, False)
@@ -225,97 +219,96 @@ class SeasonTest(LucteriosTest):
         self.assert_count_equal(
             'COMPONENTS/GRID[@name="period"]/RECORD', 4)
         self.assert_count_equal(
-            'COMPONENTS/GRID[@name="doc_need_id"]/HEADER', 1)
+            'COMPONENTS/GRID[@name="document"]/HEADER', 1)
         self.assert_count_equal(
-            'COMPONENTS/GRID[@name="doc_need_id"]/RECORD', 0)
+            'COMPONENTS/GRID[@name="document"]/RECORD', 0)
 
-        self.factory.xfer = SeasonDocummentAddModify()
+        self.factory.xfer = DocummentAddModify()
         self.call(
-            '/diacamma.member/seasonDocummentAddModify', {'season': 10}, False)
+            '/diacamma.member/docummentAddModify', {'season': 10}, False)
         self.assert_observer(
-            'core.custom', 'diacamma.member', 'seasonDocummentAddModify')
+            'core.custom', 'diacamma.member', 'docummentAddModify')
         self.assert_count_equal('COMPONENTS/*', 3)
 
-        self.factory.xfer = SeasonDocummentSave()
-        self.call('/diacamma.member/seasonDocummentSave',
-                  {'season': 10, 'name': 'abc123'}, False)
+        self.factory.xfer = DocummentAddModify()
+        self.call('/diacamma.member/docummentAddModify',
+                  {'SAVE': 'YES', 'season': 10, 'name': 'abc123'}, False)
         self.assert_observer(
-            'core.acknowledge', 'diacamma.member', 'seasonDocummentSave')
-        self.factory.xfer = SeasonDocummentSave()
-        self.call('/diacamma.member/seasonDocummentSave',
-                  {'season': 10, 'name': 'xyz987'}, False)
+            'core.acknowledge', 'diacamma.member', 'docummentAddModify')
+        self.factory.xfer = DocummentAddModify()
+        self.call('/diacamma.member/docummentAddModify',
+                  {'SAVE': 'YES', 'season': 10, 'name': 'xyz987'}, False)
         self.assert_observer(
-            'core.acknowledge', 'diacamma.member', 'seasonDocummentSave')
-
-        self.factory.xfer = SeasonDocummentSave()
-        self.call('/diacamma.member/seasonDocummentSave',
-                  {'season': 10, 'name': 'opq357'}, False)
+            'core.acknowledge', 'diacamma.member', 'docummentAddModify')
+        self.factory.xfer = DocummentAddModify()
+        self.call('/diacamma.member/docummentAddModify',
+                  {'SAVE': 'YES', 'season': 10, 'name': 'opq357'}, False)
         self.assert_observer(
-            'core.acknowledge', 'diacamma.member', 'seasonDocummentSave')
+            'core.acknowledge', 'diacamma.member', 'docummentAddModify')
 
         self.factory.xfer = SeasonShow()
         self.call('/diacamma.member/seasonShow', {'season': 10}, False)
         self.assert_observer(
             'core.custom', 'diacamma.member', 'seasonShow')
         self.assert_count_equal(
-            'COMPONENTS/GRID[@name="doc_need_id"]/RECORD', 3)
+            'COMPONENTS/GRID[@name="document"]/RECORD', 3)
         self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="doc_need_id"]/RECORD[1]/VALUE[@name="name"]', "abc123")
+            'COMPONENTS/GRID[@name="document"]/RECORD[1]/VALUE[@name="name"]', "abc123")
         self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="doc_need_id"]/RECORD[2]/VALUE[@name="name"]', "xyz987")
+            'COMPONENTS/GRID[@name="document"]/RECORD[2]/VALUE[@name="name"]', "xyz987")
         self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="doc_need_id"]/RECORD[3]/VALUE[@name="name"]', "opq357")
+            'COMPONENTS/GRID[@name="document"]/RECORD[3]/VALUE[@name="name"]', "opq357")
 
-        self.factory.xfer = SeasonDocummentAddModify()
+        self.factory.xfer = DocummentAddModify()
         self.call(
-            '/diacamma.member/seasonDocummentAddModify', {'season': 10, 'doc_need_id': 2}, False)
+            '/diacamma.member/docummentAddModify', {'season': 10, 'document': 2}, False)
         self.assert_observer(
-            'core.custom', 'diacamma.member', 'seasonDocummentAddModify')
+            'core.custom', 'diacamma.member', 'docummentAddModify')
         self.assert_count_equal('COMPONENTS/*', 3)
         self.assert_xml_equal('COMPONENTS/EDIT[@name="name"]', "xyz987")
 
-        self.factory.xfer = SeasonDocummentSave()
-        self.call('/diacamma.member/seasonDocummentSave',
-                  {'season': 10, 'doc_need_id': 2, 'name': '987xyz'}, False)
+        self.factory.xfer = DocummentAddModify()
+        self.call(
+            '/diacamma.member/docummentAddModify', {'SAVE': 'YES', 'season': 10, 'document': 2, 'name': '987xyz'}, False)
         self.assert_observer(
-            'core.acknowledge', 'diacamma.member', 'seasonDocummentSave')
+            'core.acknowledge', 'diacamma.member', 'docummentAddModify')
 
         self.factory.xfer = SeasonShow()
         self.call('/diacamma.member/seasonShow', {'season': 10}, False)
         self.assert_observer(
             'core.custom', 'diacamma.member', 'seasonShow')
         self.assert_count_equal(
-            'COMPONENTS/GRID[@name="doc_need_id"]/RECORD', 3)
+            'COMPONENTS/GRID[@name="document"]/RECORD', 3)
         self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="doc_need_id"]/RECORD[1]/VALUE[@name="name"]', "abc123")
+            'COMPONENTS/GRID[@name="document"]/RECORD[1]/VALUE[@name="name"]', "abc123")
         self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="doc_need_id"]/RECORD[2]/VALUE[@name="name"]', "987xyz")
+            'COMPONENTS/GRID[@name="document"]/RECORD[2]/VALUE[@name="name"]', "987xyz")
         self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="doc_need_id"]/RECORD[3]/VALUE[@name="name"]', "opq357")
+            'COMPONENTS/GRID[@name="document"]/RECORD[3]/VALUE[@name="name"]', "opq357")
 
-        self.factory.xfer = SeasonDocummentDel()
-        self.call('/diacamma.member/seasonDocummentDel',
-                  {'CONFIRME': 'YES', 'season': 10, 'doc_need_id': 2}, False)
+        self.factory.xfer = DocummentDel()
+        self.call('/diacamma.member/docummentDel',
+                  {'CONFIRME': 'YES', 'season': 10, 'document': 2}, False)
         self.assert_observer(
-            'core.acknowledge', 'diacamma.member', 'seasonDocummentDel')
+            'core.acknowledge', 'diacamma.member', 'docummentDel')
 
         self.factory.xfer = SeasonShow()
         self.call('/diacamma.member/seasonShow', {'season': 10}, False)
         self.assert_observer(
             'core.custom', 'diacamma.member', 'seasonShow')
         self.assert_count_equal(
-            'COMPONENTS/GRID[@name="doc_need_id"]/RECORD', 2)
+            'COMPONENTS/GRID[@name="document"]/RECORD', 2)
         self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="doc_need_id"]/RECORD[1]/VALUE[@name="name"]', "abc123")
+            'COMPONENTS/GRID[@name="document"]/RECORD[1]/VALUE[@name="name"]', "abc123")
         self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="doc_need_id"]/RECORD[2]/VALUE[@name="name"]', "opq357")
+            'COMPONENTS/GRID[@name="document"]/RECORD[2]/VALUE[@name="name"]', "opq357")
 
         self.factory.xfer = SeasonShow()
         self.call('/diacamma.member/seasonShow', {'season': 11}, False)
         self.assert_observer(
             'core.custom', 'diacamma.member', 'seasonShow')
         self.assert_count_equal(
-            'COMPONENTS/GRID[@name="doc_need_id"]/RECORD', 0)
+            'COMPONENTS/GRID[@name="document"]/RECORD', 0)
 
         self.factory.xfer = SeasonDocummentClone()
         self.call('/diacamma.member/seasonDocummentClone',
@@ -328,8 +321,116 @@ class SeasonTest(LucteriosTest):
         self.assert_observer(
             'core.custom', 'diacamma.member', 'seasonShow')
         self.assert_count_equal(
-            'COMPONENTS/GRID[@name="doc_need_id"]/RECORD', 2)
+            'COMPONENTS/GRID[@name="document"]/RECORD', 2)
         self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="doc_need_id"]/RECORD[1]/VALUE[@name="name"]', "abc123")
+            'COMPONENTS/GRID[@name="document"]/RECORD[1]/VALUE[@name="name"]', "abc123")
         self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="doc_need_id"]/RECORD[2]/VALUE[@name="name"]', "opq357")
+            'COMPONENTS/GRID[@name="document"]/RECORD[2]/VALUE[@name="name"]', "opq357")
+
+    def test_period(self):
+        default_season()
+
+        self.factory.xfer = SeasonShow()
+        self.call('/diacamma.member/seasonShow', {'season': 10}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.member', 'seasonShow')
+        self.assert_count_equal('COMPONENTS/*', 11)
+        self.assert_xml_equal(
+            'COMPONENTS/LABELFORM[@name="designation"]', "2009/2010")
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="period"]/HEADER', 3)
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="period"]/HEADER[@name="num"]', "N°")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="period"]/HEADER[@name="begin_date"]', "date de début")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="period"]/HEADER[@name="end_date"]', "date de fin")
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="period"]/RECORD', 4)
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="document"]/RECORD', 0)
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="period"]/RECORD[@id="37"]/VALUE[@name="num"]', '1')
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="period"]/RECORD[@id="38"]/VALUE[@name="num"]', '2')
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="period"]/RECORD[@id="39"]/VALUE[@name="num"]', '3')
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="period"]/RECORD[@id="40"]/VALUE[@name="num"]', '4')
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="period"]/RECORD[@id="37"]/VALUE[@name="begin_date"]', '1 septembre 2009')
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="period"]/RECORD[@id="38"]/VALUE[@name="begin_date"]', '1 décembre 2009')
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="period"]/RECORD[@id="39"]/VALUE[@name="begin_date"]', '1 mars 2010')
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="period"]/RECORD[@id="40"]/VALUE[@name="begin_date"]', '1 juin 2010')
+
+        self.factory.xfer = PeriodDel()
+        self.call('/diacamma.member/periodDel',
+                  {'CONFIRME': 'YES', 'period': 38}, False)
+        self.assert_observer(
+            'core.acknowledge', 'diacamma.member', 'periodDel')
+        self.factory.xfer = PeriodDel()
+        self.call('/diacamma.member/periodDel',
+                  {'CONFIRME': 'YES', 'period': 39}, False)
+        self.assert_observer(
+            'core.acknowledge', 'diacamma.member', 'periodDel')
+        self.factory.xfer = PeriodDel()
+        self.call('/diacamma.member/periodDel',
+                  {'CONFIRME': 'YES', 'period': 40}, False)
+        self.assert_observer(
+            'core.exception', 'diacamma.member', 'periodDel')
+
+        self.factory.xfer = SeasonShow()
+        self.call('/diacamma.member/seasonShow', {'season': 10}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.member', 'seasonShow')
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="period"]/RECORD', 2)
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="period"]/RECORD[@id="37"]/VALUE[@name="num"]', '1')
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="period"]/RECORD[@id="40"]/VALUE[@name="num"]', '2')
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="period"]/RECORD[@id="37"]/VALUE[@name="begin_date"]', '1 septembre 2009')
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="period"]/RECORD[@id="40"]/VALUE[@name="begin_date"]', '1 juin 2010')
+
+        self.factory.xfer = PeriodAddModify()
+        self.call(
+            '/diacamma.member/periodAddModify', {'season': 10}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.member', 'periodAddModify')
+        self.assert_count_equal('COMPONENTS/*', 7)
+
+        self.factory.xfer = PeriodAddModify()
+        self.call(
+            '/diacamma.member/periodAddModify', {'SAVE': 'YES', 'season': 10, 'begin_date': '2010-05-30', 'end_date': '2009-12-01'}, False)
+        self.assert_observer(
+            'core.exception', 'diacamma.member', 'periodAddModify')
+
+        self.factory.xfer = PeriodAddModify()
+        self.call(
+            '/diacamma.member/periodAddModify', {'SAVE': 'YES', 'season': 10, 'begin_date': '2009-12-01', 'end_date': '2010-05-30'}, False)
+        self.assert_observer(
+            'core.acknowledge', 'diacamma.member', 'periodAddModify')
+
+        self.factory.xfer = SeasonShow()
+        self.call('/diacamma.member/seasonShow', {'season': 10}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.member', 'seasonShow')
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="period"]/RECORD', 3)
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="period"]/RECORD[@id="37"]/VALUE[@name="num"]', '1')
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="period"]/RECORD[2]/VALUE[@name="num"]', '2')
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="period"]/RECORD[@id="40"]/VALUE[@name="num"]', '3')
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="period"]/RECORD[@id="37"]/VALUE[@name="begin_date"]', '1 septembre 2009')
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="period"]/RECORD[2]/VALUE[@name="begin_date"]', '1 décembre 2009')
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="period"]/RECORD[@id="40"]/VALUE[@name="begin_date"]', '1 juin 2010')

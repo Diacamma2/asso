@@ -37,6 +37,7 @@ class MemberMigrate(MigrateAbstract):
         MigrateAbstract.__init__(self, old_db)
         self.season_list = {}
         self.period_list = {}
+        self.doc_list = {}
 
     def _season(self):
         season_mdl = apps.get_model("member", "Season")
@@ -45,13 +46,23 @@ class MemberMigrate(MigrateAbstract):
         period_mdl = apps.get_model("member", "Period")
         period_mdl.objects.all().delete()
         self.period_list = {}
+        doc_mdl = apps.get_model("member", "Document")
+        doc_mdl.objects.all().delete()
+        self.doc_list = {}
         cur_s = self.old_db.open()
         cur_s.execute(
             "SELECT id, designation,docNeed,courant FROM fr_sdlibre_membres_saisons")
         for seasonid, designation, doc_need, courant in cur_s.fetchall():
             self.print_log("=> SEASON %s", (designation,))
             self.season_list[seasonid] = season_mdl.objects.create(
-                designation=designation, iscurrent=courant == 'o', doc_need=doc_need)
+                designation=designation, iscurrent=courant == 'o')
+            if doc_need is not None:
+                doc_idx = 0
+                for doc_item in doc_need.split('|'):
+                    if doc_item != '':
+                        self.doc_list["%d_%d" % (seasonid, doc_idx)] = doc_mdl.objects.create(
+                            season=self.season_list[seasonid], name=doc_item)
+                    doc_idx += 1
         cur_p = self.old_db.open()
         cur_p.execute(
             "SELECT id, saison,num,begin,end  FROM fr_sdlibre_membres_periodSaisons")
