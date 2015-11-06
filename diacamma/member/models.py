@@ -193,11 +193,11 @@ class Subscription(LucteriosModel):
 
     @classmethod
     def get_edit_fields(cls):
-        return ["name", "description", 'duration', 'articles']
+        return ["name", "description", 'duration', ('articles', None)]
 
     @classmethod
     def get_show_fields(cls):
-        return ["name", "description", 'duration', 'unactive', ((_('price'), 'price'),)]
+        return ["name", "description", 'duration', 'unactive', ((_('price'), 'price'),), 'articles']
 
     @property
     def price(self):

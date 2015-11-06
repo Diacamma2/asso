@@ -86,17 +86,3 @@ class PeriodEditor(LucteriosEditor):
 
     def edit(self, xfer):
         xfer.change_to_readonly('num')
-
-
-class SubscriptionEditor(LucteriosEditor):
-
-    def show(self, xfer):
-        grid = XferCompGrid("articles")
-        grid.add_header('name', _('name'))
-        grid.add_header('price', _('price'))
-        for art in self.item.articles.all():
-            grid.set_value(art.id, 'name', art.reference)
-            grid.set_value(art.id, 'price', art.price_txt)
-        grid.set_location(1, xfer.get_max_row() + 1, 2)
-        grid.set_size(200, 500)
-        xfer.add_component(grid)

@@ -32,8 +32,9 @@ from lucterios.framework.filetools import get_user_dir
 
 from diacamma.member.views_season import SeasonAddModify, SeasonShow, MemberConf,\
     SeasonActive, DocummentAddModify, DocummentDel, SeasonDocummentClone,\
-    PeriodDel, PeriodAddModify
-from diacamma.member.test_tools import default_season
+    PeriodDel, PeriodAddModify, SubscriptionAddModify, SubscriptionShow,\
+    SubscriptionDel
+from diacamma.member.test_tools import default_season, default_financial
 
 
 class SeasonTest(LucteriosTest):
@@ -434,3 +435,87 @@ class SeasonTest(LucteriosTest):
             'COMPONENTS/GRID[@name="period"]/RECORD[2]/VALUE[@name="begin_date"]', '1 décembre 2009')
         self.assert_xml_equal(
             'COMPONENTS/GRID[@name="period"]/RECORD[@id="40"]/VALUE[@name="begin_date"]', '1 juin 2010')
+
+
+class SubscriptionTest(LucteriosTest):
+
+    def setUp(self):
+        self.xfer_class = XferContainerAcknowledge
+        LucteriosTest.setUp(self)
+        rmtree(get_user_dir(), True)
+        default_financial()
+        default_season()
+
+    def test_addlist(self):
+        self.factory.xfer = MemberConf()
+        self.call('/diacamma.member/memberConf', {}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.member', 'memberConf')
+        self.assert_count_equal('COMPONENTS/*', 10)
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="subscription"]/HEADER', 4)
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="subscription"]/HEADER[@name="name"]', "nom")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="subscription"]/HEADER[@name="description"]', "description")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="subscription"]/HEADER[@name="duration"]', "durée")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="subscription"]/HEADER[@name="price"]', "prix")
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="subscription"]/RECORD', 0)
+
+        self.factory.xfer = SubscriptionAddModify()
+        self.call('/diacamma.member/subscriptionAddModify', {}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.member', 'subscriptionAddModify')
+        self.assert_count_equal('COMPONENTS/*', 16)
+
+        self.factory.xfer = SubscriptionAddModify()
+        self.call('/diacamma.member/subscriptionAddModify',
+                  {'SAVE': 'YES', 'name': 'abc123', 'description': 'blablabla', 'duration': 1, 'articles': '1;5'}, False)
+        self.assert_observer(
+            'core.acknowledge', 'diacamma.member', 'subscriptionAddModify')
+
+        self.factory.xfer = MemberConf()
+        self.call('/diacamma.member/memberConf', {}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.member', 'memberConf')
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="subscription"]/RECORD', 1)
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="subscription"]/RECORD[1]/VALUE[@name="name"]', "abc123")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="subscription"]/RECORD[1]/VALUE[@name="description"]', "blablabla")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="subscription"]/RECORD[1]/VALUE[@name="duration"]', "périodique")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="subscription"]/RECORD[1]/VALUE[@name="price"]', "76.44€")
+
+        self.factory.xfer = SubscriptionShow()
+        self.call(
+            '/diacamma.member/subscriptionShow', {'subscription': 1}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.member', 'subscriptionShow')
+        self.assert_count_equal('COMPONENTS/*', 13)
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="articles"]/HEADER', 6)
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="articles"]/RECORD', 2)
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="articles"]/RECORD[1]/VALUE[@name="reference"]', "ABC1")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="articles"]/RECORD[2]/VALUE[@name="reference"]', "ABC5")
+
+        self.factory.xfer = SubscriptionDel()
+        self.call(
+            '/diacamma.member/subscriptionDel', {'subscription': 1, 'CONFIRME': 'YES'}, False)
+        self.assert_observer(
+            'core.acknowledge', 'diacamma.member', 'subscriptionDel')
+
+        self.factory.xfer = MemberConf()
+        self.call('/diacamma.member/memberConf', {}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.member', 'memberConf')
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="subscription"]/RECORD', 0)
