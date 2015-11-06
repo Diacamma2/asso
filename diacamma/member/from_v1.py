@@ -29,6 +29,8 @@ from django.apps import apps
 from django.utils import six
 
 from lucterios.install.lucterios_migration import MigrateAbstract
+from diacamma.accounting.from_v1 import convert_code
+from lucterios.CORE.models import Parameter
 
 
 class MemberMigrate(MigrateAbstract):
@@ -38,6 +40,9 @@ class MemberMigrate(MigrateAbstract):
         self.season_list = {}
         self.period_list = {}
         self.doc_list = {}
+        self.age_list = {}
+        self.team_list = {}
+        self.activity_list = {}
 
     def _season(self):
         season_mdl = apps.get_model("member", "Season")
@@ -97,14 +102,82 @@ class MemberMigrate(MigrateAbstract):
                 subid].articles = article_mdl.objects.filter(id__in=ids)
             self.subscription_list[subid].save()
 
+    def _categories(self):
+        age_mdl = apps.get_model("member", "Age")
+        age_mdl.objects.all().delete()
+        self.age_list = {}
+        team_mdl = apps.get_model("member", "Team")
+        team_mdl.objects.all().delete()
+        self.team_list = {}
+        activity_mdl = apps.get_model("member", "Activity")
+        activity_mdl.objects.all().delete()
+        self.activity_list = {}
+
+        cur_a = self.old_db.open()
+        cur_a.execute(
+            "SELECT id,nom,ageMin,ageMax  FROM fr_sdlibre_membres_ages")
+        for ageid, nom, age_min, age_max in cur_a.fetchall():
+            self.print_log(
+                "=> Age:%s", (nom,))
+            self.age_list[ageid] = age_mdl.objects.create(
+                name=nom, minimum=age_min, maximum=age_max)
+        cur_t = self.old_db.open()
+        cur_t.execute(
+            "SELECT id,nom, description, noactive FROM fr_sdlibre_membres_equipes")
+        for teamid, nom, description, noactive in cur_t.fetchall():
+            self.print_log(
+                "=> Team:%s", (nom,))
+            self.team_list[teamid] = team_mdl.objects.create(
+                name=nom, description=description, unactive=noactive == 'o')
+        cur_y = self.old_db.open()
+        cur_y.execute(
+            "SELECT id,nom, description FROM fr_sdlibre_membres_activite")
+        for activityid, nom, description in cur_y.fetchall():
+            self.print_log(
+                "=> Activity:%s", (nom,))
+            self.activity_list[activityid] = activity_mdl.objects.create(
+                name=nom, description=description)
+
     def _params(self):
-        pass
+        cur_p = self.old_db.open()
+        cur_p.execute(
+            "SELECT paramName,value FROM CORE_extension_params WHERE extensionId LIKE 'fr_sdlibre_membres' and paramName in ('EquipeEnable', 'EquipeText', 'ActiviteEnable', 'ActiviteText', 'AgeEnable', 'LicenceEnabled', 'FiltreGenre', 'Numero', 'Naissance', 'compteTiersDefault', 'connexion')")
+        for param_name, param_value in cur_p.fetchall():
+            pname = ''
+            if param_name == "EquipeEnable":
+                pname = "member-team-enable"
+            if param_name == "EquipeText":
+                pname = "member-team-text"
+            if param_name == "ActiviteEnable":
+                pname = "member-activite-enable"
+            if param_name == "ActiviteText":
+                pname = "member-activite-text"
+            if param_name == "AgeEnable":
+                pname = "member-age-enable"
+            if param_name == "LicenceEnabled":
+                pname = "member-licence-enabled"
+            if param_name == "FiltreGenre":
+                pname = "member-filter-genre"
+            if param_name == "Numero":
+                pname = "member-numero"
+            if param_name == "Naissance":
+                pname = "member-birth"
+            if param_name == "compteTiersDefault":
+                pname = "member-account-third"
+                param_value = convert_code(param_value)
+            if param_name == "connexion":
+                pname = "member-connection"
+            if pname != '':
+                self.print_log(
+                    "=> parameter of invoice %s - %s", (pname, param_value))
+                Parameter.change_value(pname, param_value)
 
     def run(self):
         try:
             self._params()
             self._season()
             self._subscription()
+            self._categories()
         except:
             import traceback
             traceback.print_exc()

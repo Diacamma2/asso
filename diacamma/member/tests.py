@@ -37,6 +37,8 @@ from diacamma.member.views_season import SeasonAddModify, SeasonShow, SeasonSubs
 from diacamma.member.test_tools import default_season, default_financial
 from diacamma.member.views_conf import CategoryConf, ActivityAddModify,\
     ActivityDel, TeamAddModify, TeamDel, AgeAddModify, AgeDel
+from lucterios.CORE.models import Parameter
+from lucterios.CORE.parameters import Params
 
 
 class SeasonTest(LucteriosTest):
@@ -532,7 +534,7 @@ class CategoriesTest(LucteriosTest):
         self.call('/diacamma.member/categoryConf', {}, False)
         self.assert_observer(
             'core.custom', 'diacamma.member', 'categoryConf')
-        self.assert_count_equal('COMPONENTS/*', 13)
+        self.assert_count_equal('COMPONENTS/*', 35)
         self.assert_count_equal(
             'COMPONENTS/GRID[@name="activity"]/HEADER', 2)
         self.assert_xml_equal(
@@ -576,12 +578,27 @@ class CategoriesTest(LucteriosTest):
         self.assert_count_equal(
             'COMPONENTS/GRID[@name="activity"]/RECORD', 0)
 
+        Parameter.change_value("member-activite-enable", '0')
+        Params.clear()
+
+        self.factory.xfer = CategoryConf()
+        self.call('/diacamma.member/categoryConf', {}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.member', 'categoryConf')
+        self.assert_count_equal('COMPONENTS/*', 32)
+        self.assert_xml_equal(
+            'COMPONENTS/LABELFORM[@name="member-activite-enable"]', 'Non')
+        self.assert_count_equal('COMPONENTS/TAB', 3)
+        self.assert_xml_equal('COMPONENTS/TAB[1]', 'Paramètres')
+        self.assert_xml_equal('COMPONENTS/TAB[2]', 'Age')
+        self.assert_xml_equal('COMPONENTS/TAB[3]', 'Equipe')
+
     def test_team(self):
         self.factory.xfer = CategoryConf()
         self.call('/diacamma.member/categoryConf', {}, False)
         self.assert_observer(
             'core.custom', 'diacamma.member', 'categoryConf')
-        self.assert_count_equal('COMPONENTS/*', 13)
+        self.assert_count_equal('COMPONENTS/*', 35)
         self.assert_count_equal(
             'COMPONENTS/GRID[@name="team"]/HEADER', 3)
         self.assert_xml_equal(
@@ -629,12 +646,27 @@ class CategoriesTest(LucteriosTest):
         self.assert_count_equal(
             'COMPONENTS/GRID[@name="team"]/RECORD', 0)
 
+        Parameter.change_value("member-team-enable", '0')
+        Params.clear()
+
+        self.factory.xfer = CategoryConf()
+        self.call('/diacamma.member/categoryConf', {}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.member', 'categoryConf')
+        self.assert_count_equal('COMPONENTS/*', 32)
+        self.assert_xml_equal(
+            'COMPONENTS/LABELFORM[@name="member-team-enable"]', 'Non')
+        self.assert_count_equal('COMPONENTS/TAB', 3)
+        self.assert_xml_equal('COMPONENTS/TAB[1]', 'Paramètres')
+        self.assert_xml_equal('COMPONENTS/TAB[2]', 'Age')
+        self.assert_xml_equal('COMPONENTS/TAB[3]', 'Activité')
+
     def test_age(self):
         self.factory.xfer = CategoryConf()
         self.call('/diacamma.member/categoryConf', {}, False)
         self.assert_observer(
             'core.custom', 'diacamma.member', 'categoryConf')
-        self.assert_count_equal('COMPONENTS/*', 13)
+        self.assert_count_equal('COMPONENTS/*', 35)
         self.assert_count_equal(
             'COMPONENTS/GRID[@name="age"]/HEADER', 3)
         self.assert_xml_equal(
@@ -718,6 +750,8 @@ class CategoriesTest(LucteriosTest):
             'COMPONENTS/GRID[@name="age"]/RECORD[2]/VALUE[@name="date_min"]', "1982")
         self.assert_xml_equal(
             'COMPONENTS/GRID[@name="age"]/RECORD[2]/VALUE[@name="date_max"]', "1983")
+        self.assert_xml_equal(
+            'COMPONENTS/LABELFORM[@name="member-age-enable"]', 'Oui')
 
         self.factory.xfer = AgeDel()
         self.call('/diacamma.member/ageDel',
@@ -731,3 +765,53 @@ class CategoriesTest(LucteriosTest):
             'core.custom', 'diacamma.member', 'categoryConf')
         self.assert_count_equal(
             'COMPONENTS/GRID[@name="age"]/RECORD', 1)
+
+        Parameter.change_value("member-age-enable", '0')
+        Params.clear()
+
+        self.factory.xfer = CategoryConf()
+        self.call('/diacamma.member/categoryConf', {}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.member', 'categoryConf')
+        self.assert_count_equal('COMPONENTS/*', 32)
+        self.assert_xml_equal(
+            'COMPONENTS/LABELFORM[@name="member-age-enable"]', 'Non')
+        self.assert_count_equal('COMPONENTS/TAB', 3)
+        self.assert_xml_equal('COMPONENTS/TAB[1]', 'Paramètres')
+        self.assert_xml_equal('COMPONENTS/TAB[2]', 'Equipe')
+        self.assert_xml_equal('COMPONENTS/TAB[3]', 'Activité')
+
+    def test_params(self):
+        self.factory.xfer = CategoryConf()
+        self.call('/diacamma.member/categoryConf', {}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.member', 'categoryConf')
+        self.assert_count_equal('COMPONENTS/*', 35)
+        self.assert_count_equal('COMPONENTS/TAB', 4)
+        self.assert_xml_equal('COMPONENTS/TAB[1]', 'Paramètres')
+        self.assert_xml_equal('COMPONENTS/TAB[2]', 'Age')
+        self.assert_xml_equal('COMPONENTS/TAB[3]', 'Equipe')
+        self.assert_xml_equal('COMPONENTS/TAB[4]', 'Activité')
+        self.assert_xml_equal(
+            'COMPONENTS/LABELFORM[@name="member-team-text"]', 'Equipe')
+        self.assert_xml_equal(
+            'COMPONENTS/LABELFORM[@name="member-activite-text"]', 'Activité')
+
+        Parameter.change_value("member-team-text", 'Cours')
+        Parameter.change_value("member-activite-text", 'Sport')
+        Params.clear()
+
+        self.factory.xfer = CategoryConf()
+        self.call('/diacamma.member/categoryConf', {}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.member', 'categoryConf')
+        self.assert_count_equal('COMPONENTS/*', 35)
+        self.assert_count_equal('COMPONENTS/TAB', 4)
+        self.assert_xml_equal('COMPONENTS/TAB[1]', 'Paramètres')
+        self.assert_xml_equal('COMPONENTS/TAB[2]', 'Age')
+        self.assert_xml_equal('COMPONENTS/TAB[3]', 'Cours')
+        self.assert_xml_equal('COMPONENTS/TAB[4]', 'Sport')
+        self.assert_xml_equal(
+            'COMPONENTS/LABELFORM[@name="member-team-text"]', 'Cours')
+        self.assert_xml_equal(
+            'COMPONENTS/LABELFORM[@name="member-activite-text"]', 'Sport')

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-11-06 15:42+0000\n"
+"POT-Creation-Date: 2015-11-06 17:03+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -41,6 +41,58 @@ msgstr "date min."
 #: editors.py:109 models.py:285 models.py:293
 msgid "date max."
 msgstr "date max."
+
+#: migrations/0001_initial.py:15
+msgid "member-age-enable"
+msgstr "Activer les cat. d'âges"
+
+#: migrations/0001_initial.py:22
+msgid "member-team-enable"
+msgstr "Activer les cat. d'âges"
+
+#: migrations/0001_initial.py:29
+msgid "member-team-text"
+msgstr "Intitulé activité"
+
+#: migrations/0001_initial.py:31
+msgid "Team"
+msgstr "Equipe"
+
+#: migrations/0001_initial.py:36
+msgid "member-activite-enable"
+msgstr "Activer les activités"
+
+#: migrations/0001_initial.py:43
+msgid "member-activite-text"
+msgstr "Intitulé activité"
+
+#: migrations/0001_initial.py:45
+msgid "Activity"
+msgstr "Activité"
+
+#: migrations/0001_initial.py:50
+msgid "member-account-third"
+msgstr "Compte tiers par défault"
+
+#: migrations/0001_initial.py:57
+msgid "member-connection"
+msgstr "Activer la création de connexion"
+
+#: migrations/0001_initial.py:64
+msgid "member-birth"
+msgstr "Utiliser date et lieu de naissance"
+
+#: migrations/0001_initial.py:71
+msgid "member-filter-genre"
+msgstr "Fitrage par genre"
+
+#: migrations/0001_initial.py:78
+msgid "member-numero"
+msgstr "Afficher le numéro d'adhérent"
+
+#: migrations/0001_initial.py:85
+msgid "member-licence-enabled"
+msgstr "Gérer un numéro de licence"
 
 #: models.py:42
 msgid "designation"
@@ -182,55 +234,47 @@ msgstr "Catégories"
 msgid "Parameters"
 msgstr "Paramètres"
 
-#: views_conf.py:29
+#: views_conf.py:30
 msgid "Modify"
 msgstr "Modifier"
 
-#: views_conf.py:33
+#: views_conf.py:35
 msgid "Age"
 msgstr "Age"
 
-#: views_conf.py:35
-msgid "Team"
-msgstr "Equipe"
-
-#: views_conf.py:37
-msgid "Activity"
-msgstr "Activité"
-
-#: views_conf.py:47
+#: views_conf.py:51
 msgid "Add age"
 msgstr "Ajouter un age"
 
-#: views_conf.py:48
+#: views_conf.py:52
 msgid "Modify age"
 msgstr "Modification d'un age"
 
-#: views_conf.py:57
+#: views_conf.py:61
 msgid "Delete age"
 msgstr "Suppression d'un age"
 
-#: views_conf.py:66
+#: views_conf.py:70
 msgid "Add team"
 msgstr "Ajout d'une équipe"
 
-#: views_conf.py:67
+#: views_conf.py:71
 msgid "Modify team"
 msgstr "Modification d'une équipe"
 
-#: views_conf.py:76
+#: views_conf.py:80
 msgid "Delete team"
 msgstr "Suppression d'une équipe"
 
-#: views_conf.py:85
+#: views_conf.py:89
 msgid "Add activity"
 msgstr "Ajouter une activité"
 
-#: views_conf.py:86
+#: views_conf.py:90
 msgid "Modify activity"
 msgstr "Modification d'une activité"
 
-#: views_conf.py:95
+#: views_conf.py:99
 msgid "Delete activity"
 msgstr "Suppression d'une activité"
 
