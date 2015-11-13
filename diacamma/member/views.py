@@ -23,6 +23,7 @@ along with Lucterios.  If not, see <http://www.gnu.org/licenses/>.
 '''
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+from datetime import datetime
 
 from django.utils.translation import ugettext_lazy as _
 from django.db.models import Q
@@ -39,13 +40,11 @@ from lucterios.framework.tools import FORMTYPE_NOMODAL, ActionsManage, MenuManag
     FORMTYPE_REFRESH, CLOSE_NO
 from lucterios.framework.xfercomponents import XferCompLabelForm,\
     XferCompCheckList, XferCompButton, XferCompSelect, XferCompDate
-
-from diacamma.member.models import Adherent, Subscription, Season, Age, Team,\
-    Activity, License, DocAdherent
-from datetime import datetime
-from builtins import ValueError
 from lucterios.framework.xfergraphic import XferContainerAcknowledge
+
 from lucterios.CORE.parameters import Params
+
+from diacamma.member.models import Adherent, Subscription, Season, Age, Team, Activity, License, DocAdherent
 
 MenuManage.add_sub(
     "association", None, "diacamma.member/images/association.png", _("Association"), _("Association tools"), 30)
@@ -68,35 +67,38 @@ def _add_adherent_filter(xfer):
         current_season = Season.current_season()
         dateref = current_season.date_ref
 
-    lbl = XferCompLabelForm('lblage')
-    lbl.set_value_as_name(_("Age"))
-    lbl.set_location(0, row)
-    xfer.add_component(lbl)
-    sel = XferCompCheckList('age')
-    sel.set_select_query(Age.objects.all())
-    sel.set_value(age)
-    sel.set_location(1, row, 1, 2)
-    xfer.add_component(sel)
+    if Params.getvalue("member-age-enable"):
+        lbl = XferCompLabelForm('lblage')
+        lbl.set_value_as_name(_("Age"))
+        lbl.set_location(0, row)
+        xfer.add_component(lbl)
+        sel = XferCompCheckList('age')
+        sel.set_select_query(Age.objects.all())
+        sel.set_value(age)
+        sel.set_location(1, row, 1, 2)
+        xfer.add_component(sel)
 
-    lbl = XferCompLabelForm('lblteam')
-    lbl.set_value_as_name(Params.getvalue("member-team-text"))
-    lbl.set_location(2, row)
-    xfer.add_component(lbl)
-    sel = XferCompCheckList('team')
-    sel.set_select_query(Team.objects.all())
-    sel.set_value(team)
-    sel.set_location(3, row, 1, 2)
-    xfer.add_component(sel)
+    if Params.getvalue("member-team-enable"):
+        lbl = XferCompLabelForm('lblteam')
+        lbl.set_value_as_name(Params.getvalue("member-team-text"))
+        lbl.set_location(2, row)
+        xfer.add_component(lbl)
+        sel = XferCompCheckList('team')
+        sel.set_select_query(Team.objects.all())
+        sel.set_value(team)
+        sel.set_location(3, row, 1, 2)
+        xfer.add_component(sel)
 
-    lbl = XferCompLabelForm('lblactivity')
-    lbl.set_value_as_name(Params.getvalue("member-activite-text"))
-    lbl.set_location(4, row)
-    xfer.add_component(lbl)
-    sel = XferCompCheckList('activity')
-    sel.set_select_query(Activity.objects.all())
-    sel.set_value(activity)
-    sel.set_location(5, row, 1, 2)
-    xfer.add_component(sel)
+    if Params.getvalue("member-activite-enable"):
+        lbl = XferCompLabelForm('lblactivity')
+        lbl.set_value_as_name(Params.getvalue("member-activite-text"))
+        lbl.set_location(4, row)
+        xfer.add_component(lbl)
+        sel = XferCompCheckList('activity')
+        sel.set_select_query(Activity.objects.all())
+        sel.set_value(activity)
+        sel.set_location(5, row, 1, 2)
+        xfer.add_component(sel)
 
     lbl = XferCompLabelForm('lbldateref')
     lbl.set_value_as_name(_("reference date"))
@@ -109,18 +111,18 @@ def _add_adherent_filter(xfer):
     dtref.set_location(7, row, 2)
     xfer.add_component(dtref)
 
-    lbl = XferCompLabelForm('lblgenre')
-    lbl.set_value_as_name(_("genre"))
-    lbl.set_location(6, row + 1)
-    xfer.add_component(lbl)
-
-    sel = XferCompSelect('genre')
-    list_genre = list(xfer.item.get_field_by_name('genre').choices)
-    list_genre.insert(0, (0, '---'))
-    sel.set_select(list_genre)
-    sel.set_location(7, row + 1)
-    sel.set_value(genre)
-    xfer.add_component(sel)
+    if Params.getvalue("member-filter-genre"):
+        lbl = XferCompLabelForm('lblgenre')
+        lbl.set_value_as_name(_("genre"))
+        lbl.set_location(6, row + 1)
+        xfer.add_component(lbl)
+        sel = XferCompSelect('genre')
+        list_genre = list(xfer.item.get_field_by_name('genre').choices)
+        list_genre.insert(0, (0, '---'))
+        sel.set_select(list_genre)
+        sel.set_location(7, row + 1)
+        sel.set_value(genre)
+        xfer.add_component(sel)
 
     btn = XferCompButton('btndateref')
     btn.set_location(8, row + 1)

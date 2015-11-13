@@ -382,23 +382,28 @@ class Adherent(Individual):
     @classmethod
     def get_default_fields(cls):
         fields = Individual.get_default_fields()
-        fields.insert(0, "num")
-        fields.append((_('license'), 'license'))
+        if Params.getvalue("member-numero"):
+            fields.insert(0, "num")
+        if Params.getvalue("member-licence-enabled"):
+            fields.append((_('license'), 'license'))
         return fields
 
     @classmethod
     def get_edit_fields(cls):
         fields = Individual.get_edit_fields()
-        fields.insert(-1, ("birthday", "birthplace"))
+        if Params.getvalue("member-birth"):
+            fields.insert(-1, ("birthday", "birthplace"))
         return fields
 
     @classmethod
     def get_show_fields(cls):
         fields = Individual.get_show_fields()
         keys = list(fields.keys())
-        fields[keys[0]][0] = ("num", fields[keys[0]][0])
-        fields[keys[0]].insert(-1, ("birthday", "birthplace"))
-        fields[keys[0]].insert(-1, ((_("age category"), "age_category"), ))
+        if Params.getvalue("member-numero"):
+            fields[keys[0]][0] = ("num", fields[keys[0]][0])
+        if Params.getvalue("member-birth"):
+            fields[keys[0]].insert(-1, ("birthday", "birthplace"))
+            fields[keys[0]].insert(-1, ((_("age category"), "age_category"), ))
         fields[_('002@Subscription')] = ['subscription_set']
         fields[''] = [((_("reference date"), "dateref"), )]
         return fields
@@ -473,7 +478,10 @@ class Subscription(LucteriosModel):
 
     @classmethod
     def get_default_fields(cls):
-        return ["season", "subscriptiontype", "begin_date", "end_date", "license_set"]
+        fields = ["season", "subscriptiontype", "begin_date", "end_date"]
+        if Params.getvalue("member-licence-enabled"):
+            fields.append("license_set")
+        return fields
 
     @classmethod
     def get_edit_fields(cls):
@@ -481,7 +489,10 @@ class Subscription(LucteriosModel):
 
     @classmethod
     def get_show_fields(cls):
-        return ["season", "subscriptiontype", "begin_date", "end_date", "license_set"]
+        fields = ["season", "subscriptiontype", "begin_date", "end_date"]
+        if Params.getvalue("member-licence-enabled") or Params.getvalue("member-team-enable") or Params.getvalue("member-activite-enable"):
+            fields.append("license_set")
+        return fields
 
     @property
     def season_query(self):
@@ -547,15 +558,39 @@ class License(LucteriosModel):
 
     @classmethod
     def get_default_fields(cls):
-        return [(Params.getvalue("member-team-text"), "team"), (Params.getvalue("member-activite-text"), "activity"), "value"]
+        fields = []
+        if Params.getvalue("member-team-enable"):
+            fields.append((Params.getvalue("member-team-text"), "team"))
+        if Params.getvalue("member-activite-enable"):
+            fields.append(
+                (Params.getvalue("member-activite-text"), "activity"))
+        if Params.getvalue("member-licence-enabled"):
+            fields.append("value")
+        return fields
 
     @classmethod
     def get_edit_fields(cls):
-        return [((Params.getvalue("member-team-text"), "team"),), ((Params.getvalue("member-activite-text"), "activity"),), "value"]
+        fields = []
+        if Params.getvalue("member-team-enable"):
+            fields.append(((Params.getvalue("member-team-text"), "team"),))
+        if Params.getvalue("member-activite-enable"):
+            fields.append(
+                ((Params.getvalue("member-activite-text"), "activity"),))
+        if Params.getvalue("member-licence-enabled"):
+            fields.append("value")
+        return fields
 
     @classmethod
     def get_show_fields(cls):
-        return [((Params.getvalue("member-team-text"), "team"),), ((Params.getvalue("member-activite-text"), "activity"),), "value"]
+        fields = []
+        if Params.getvalue("member-team-enable"):
+            fields.append(((Params.getvalue("member-team-text"), "team"),))
+        if Params.getvalue("member-activite-enable"):
+            fields.append(
+                ((Params.getvalue("member-activite-text"), "activity"),))
+        if Params.getvalue("member-licence-enabled"):
+            fields.append("value")
+        return fields
 
     class Meta(object):
         verbose_name = _('license')

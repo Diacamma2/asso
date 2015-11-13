@@ -255,15 +255,19 @@ class SubscriptionEditor(LucteriosEditor):
             xfer.fill_from_model(1, row + 1, False)
             xfer.item = self.item
             team = xfer.get_components('team')
-            team.set_needed(True)
+            if team is not None:
+                team.set_needed(True)
             activity = xfer.get_components('activity')
-            activity.set_needed(True)
+            if activity is not None:
+                activity.set_needed(True)
 
 
 class LicenseEditor(LucteriosEditor):
 
     def edit(self, xfer):
         team = xfer.get_components('team')
-        team.set_needed(True)
+        if team is not None:
+            team.set_needed(True)
         activity = xfer.get_components('activity')
-        activity.set_needed(True)
+        if activity is not None:
+            activity.set_needed(True)

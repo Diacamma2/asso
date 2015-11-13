@@ -518,6 +518,7 @@ class AdherentTest(LucteriosTest):
             '/diacamma.member/adherentList', {'dateref': '2009-10-01'}, False)
         self.assert_observer(
             'core.custom', 'diacamma.member', 'adherentList')
+        self.assert_count_equal('COMPONENTS/*', 2 + 11 + 3)
         self.assert_count_equal(
             'COMPONENTS/GRID[@name="adherent"]/RECORD', 5)
 
@@ -706,3 +707,48 @@ class AdherentTest(LucteriosTest):
             'COMPONENTS/CHECK[@name="doc_1"]', "0")
         self.assert_xml_equal(
             'COMPONENTS/CHECK[@name="doc_2"]', "1")
+
+    def test_subscription_withoutparams(self):
+        self.add_subscriptions()
+        set_parameters([])
+
+        self.factory.xfer = AdherentList()
+        self.call('/diacamma.member/adherentList', {}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.member', 'adherentList')
+        self.assert_count_equal('COMPONENTS/*', 2 + 3 + 3)
+
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="adherent"]/HEADER', 5)
+
+        self.factory.xfer = AdherentShow()
+        self.call('/diacamma.member/adherentShow',
+                  {'adherent': 2, 'dateref': '2009-10-01'}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.member', 'adherentShow')
+        self.assert_count_equal(
+            'COMPONENTS/*', 1 + 1 + 2 * (8 + 4 + 2) + 1 + 2 + (2 * 2 + 3))
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="subscription"]/HEADER', 4)
+
+        self.factory.xfer = AdherentAddModify()
+        self.call('/diacamma.member/adherentAddModify',
+                  {'adherent': 2, 'dateref': '2009-10-01'}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.member', 'adherentAddModify')
+        self.assert_count_equal('COMPONENTS/*', 1 + 2 * (8 + 3 + 0) + 2)
+
+        self.factory.xfer = SubscriptionAddModify()
+        self.call('/diacamma.member/subscriptionAddModify',
+                  {'adherent': 2, 'dateref': '2014-10-01'}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.member', 'subscriptionAddModify')
+        self.assert_count_equal(
+            'COMPONENTS/*', 7)
+
+        self.factory.xfer = SubscriptionShow()
+        self.call('/diacamma.member/subscriptionShow',
+                  {'adherent': 2, 'dateref': '2014-10-01', 'subscription': 1}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.member', 'subscriptionShow')
+        self.assert_count_equal('COMPONENTS/*', 9)
