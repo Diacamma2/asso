@@ -36,7 +36,8 @@ from diacamma.member.test_tools import default_season, default_financial, defaul
     default_adherents, default_subscription, set_parameters
 from diacamma.member.views import AdherentList, AdherentAddModify, AdherentShow,\
     SubscriptionAddModify, SubscriptionShow, LicenseAddModify, LicenseDel,\
-    AdherentDoc
+    AdherentDoc, AdherentLicense, AdherentLicenseSave
+from diacamma.invoice.views import BillList
 
 
 class AdherentTest(LucteriosTest):
@@ -82,6 +83,8 @@ class AdherentTest(LucteriosTest):
             'COMPONENTS/SELECT[@name="genre"]/CASE', 3)
         self.assert_count_equal(
             'COMPONENTS/GRID[@name="adherent"]/HEADER', 7)
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="adherent"]/ACTIONS/ACTION', 4)
         self.assert_xml_equal(
             'COMPONENTS/GRID[@name="adherent"]/HEADER[@name="num"]', "N°")
         self.assert_xml_equal(
@@ -223,13 +226,13 @@ class AdherentTest(LucteriosTest):
         self.assert_count_equal(
             'COMPONENTS/SELECT[@name="subscriptiontype"]/CASE', 4)
         self.assert_xml_equal(
-            'COMPONENTS/SELECT[@name="subscriptiontype"]/CASE[1]', "Annually [12.34€]")
+            'COMPONENTS/SELECT[@name="subscriptiontype"]/CASE[1]', "Annually [76.44€]")
         self.assert_xml_equal(
-            'COMPONENTS/SELECT[@name="subscriptiontype"]/CASE[2]', "Periodic [12.34€]")
+            'COMPONENTS/SELECT[@name="subscriptiontype"]/CASE[2]', "Periodic [76.44€]")
         self.assert_xml_equal(
-            'COMPONENTS/SELECT[@name="subscriptiontype"]/CASE[3]', "Monthly [12.34€]")
+            'COMPONENTS/SELECT[@name="subscriptiontype"]/CASE[3]', "Monthly [76.44€]")
         self.assert_xml_equal(
-            'COMPONENTS/SELECT[@name="subscriptiontype"]/CASE[4]', "Calendar [12.34€]")
+            'COMPONENTS/SELECT[@name="subscriptiontype"]/CASE[4]', "Calendar [76.44€]")
         self.assert_xml_equal(
             'COMPONENTS/LABELFORM[@name="lbl_team"]', '{[b]}group{[/b]}')
         self.assert_xml_equal(
@@ -409,6 +412,12 @@ class AdherentTest(LucteriosTest):
         default_adherents()
         default_subscription()
 
+        self.factory.xfer = BillList()
+        self.call('/diacamma.invoice/billList', {}, False)
+        self.assert_observer('core.custom', 'diacamma.invoice', 'billList')
+        self.assert_count_equal('COMPONENTS/GRID[@name="bill"]/RECORD', 0)
+        self.assert_count_equal('COMPONENTS/GRID[@name="bill"]/HEADER', 7)
+
         self.factory.xfer = SubscriptionAddModify()
         self.call('/diacamma.member/subscriptionAddModify',
                   {'SAVE': 'YES', 'adherent': 2, 'dateref': '2014-10-01', 'subscriptiontype': 1, 'season': 10, 'team': 2, 'activity': 1, 'value': 'abc123'}, False)
@@ -459,9 +468,40 @@ class AdherentTest(LucteriosTest):
         self.assert_observer(
             'core.acknowledge', 'diacamma.member', 'licenseAddModify')
 
+        self.factory.xfer = AdherentList()
+        self.call(
+            '/diacamma.member/adherentList', {'dateref': '2009-10-01'}, False)
+        self.assert_count_equal('COMPONENTS/GRID[@name="adherent"]/RECORD', 1)
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="adherent"]/RECORD[1]/VALUE[@name="license"]', "team2 [activity1] abc123{[br/]}team1 [activity2] 987xyz")
+
+        self.factory.xfer = AdherentLicense()
+        self.call('/diacamma.member/adherentLicense',
+                  {'adherent': 2, 'dateref': '2009-10-01'}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.member', 'adherentLicense')
+        self.assert_count_equal('COMPONENTS/*', 21)
+        self.assert_xml_equal(
+            'COMPONENTS/EDIT[@name="value_1"]', 'abc123')
+        self.assert_xml_equal(
+            'COMPONENTS/EDIT[@name="value_2"]', '987xyz')
+
+        self.factory.xfer = AdherentLicenseSave()
+        self.call('/diacamma.member/adherentLicenseSave',
+                  {'adherent': 2, 'dateref': '2009-10-01', 'value_1': 'abcd1234', 'value_2': '9876wxyz'}, False)
+        self.assert_observer(
+            'core.acknowledge', 'diacamma.member', 'adherentLicenseSave')
+
+        self.factory.xfer = AdherentList()
+        self.call(
+            '/diacamma.member/adherentList', {'dateref': '2009-10-01'}, False)
+        self.assert_count_equal('COMPONENTS/GRID[@name="adherent"]/RECORD', 1)
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="adherent"]/RECORD[1]/VALUE[@name="license"]', "team2 [activity1] abcd1234{[br/]}team1 [activity2] 9876wxyz")
+
         self.factory.xfer = SubscriptionShow()
         self.call('/diacamma.member/subscriptionShow',
-                  {'adherent': 2, 'dateref': '2014-10-01', 'subscription': 1}, False)
+                  {'adherent': 2, 'dateref': '2009-10-01', 'subscription': 1}, False)
         self.assert_observer(
             'core.custom', 'diacamma.member', 'subscriptionShow')
         self.assert_count_equal(
@@ -475,11 +515,19 @@ class AdherentTest(LucteriosTest):
 
         self.factory.xfer = SubscriptionShow()
         self.call('/diacamma.member/subscriptionShow',
-                  {'adherent': 2, 'dateref': '2014-10-01', 'subscription': 1}, False)
+                  {'adherent': 2, 'dateref': '2009-10-01', 'subscription': 1}, False)
         self.assert_observer(
             'core.custom', 'diacamma.member', 'subscriptionShow')
         self.assert_count_equal(
             'COMPONENTS/GRID[@name="license"]/RECORD', 1)
+
+        self.factory.xfer = BillList()
+        self.call('/diacamma.invoice/billList', {}, False)
+        self.assert_observer('core.custom', 'diacamma.invoice', 'billList')
+        self.assert_count_equal('COMPONENTS/GRID[@name="bill"]/RECORD', 1)
+        self.assert_count_equal('COMPONENTS/GRID[@name="bill"]/HEADER', 7)
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="bill"]/RECORD[1]/VALUE[@name="total"]', "76.44€")
 
     def add_subscriptions(self):
         default_adherents()
@@ -720,6 +768,8 @@ class AdherentTest(LucteriosTest):
 
         self.assert_count_equal(
             'COMPONENTS/GRID[@name="adherent"]/HEADER', 5)
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="adherent"]/ACTIONS/ACTION', 3)
 
         self.factory.xfer = AdherentShow()
         self.call('/diacamma.member/adherentShow',

@@ -33,12 +33,13 @@ from django.utils import formats, six
 from lucterios.framework.models import LucteriosModel
 from lucterios.framework.error import LucteriosException, IMPORTANT
 
-from diacamma.invoice.models import Article, Bill
+from diacamma.invoice.models import Article, Bill, Detail
 from diacamma.accounting.tools import format_devise
 from django.core.exceptions import ObjectDoesNotExist
 from lucterios.contacts.models import Individual
 from datetime import date, datetime
 from lucterios.CORE.parameters import Params
+from diacamma.accounting.models import Third, AccountThird, CostAccounting
 
 
 def convert_date(current_date):
@@ -498,11 +499,36 @@ class Subscription(LucteriosModel):
     def season_query(self):
         return Season.objects.all().exclude(id__in=[sub.season_id for sub in self.adherent.subscription_set.all()])
 
+    def create_bill(self):
+        if len(self.subscriptiontype.articles.all()) == 0:
+            return
+        try:
+            adh_third = Third.objects.get(contact_id=self.adherent_id)
+        except ObjectDoesNotExist:
+            adh_third = Third.objects.create(
+                contact_id=self.adherent_id, status=0)
+            AccountThird.objects.create(
+                third=adh_third, code=Params.getvalue("member-account-third"))
+        self.bill = Bill.objects.create(
+            bill_type=1, date=date.today(), third=adh_third)
+        cost_acc = CostAccounting.objects.filter(is_default=True)
+        if len(cost_acc) > 0:
+            self.bill.cost_accounting = cost_acc[0]
+        cmt = ["{[b]}%s{[/b]}" % _("subscription"), "{[i]}%s{[/i]}: %s" %
+               (_('subscription type'), six.text_type(self.subscriptiontype))]
+        self.bill.comment = "{[br/]}".join(cmt)
+        self.bill.save()
+        for art in self.subscriptiontype.articles.all():
+            Detail.objects.create(bill=self.bill, article=art, designation=art.designation,
+                                  price=art.price, unit=art.unit, quantity=1)
+
     def save(self, force_insert=False, force_update=False, using=None,
              update_fields=None):
         is_new = self.id is None
         if is_new and (self.season not in list(self.season_query)):
             raise LucteriosException(IMPORTANT, _("Season always used!"))
+        if is_new:
+            self.create_bill()
         LucteriosModel.save(self, force_insert=force_insert,
                             force_update=force_update, using=using, update_fields=update_fields)
         if is_new:

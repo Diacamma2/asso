@@ -34,7 +34,8 @@ from lucterios.framework.editors import LucteriosEditor
 from lucterios.framework.xfercomponents import XferCompLabelForm, XferCompDate, XferCompFloat,\
     XferCompSelect, XferCompCheck, XferCompButton
 from lucterios.framework.error import LucteriosException, IMPORTANT
-from lucterios.framework.tools import CLOSE_NO, FORMTYPE_REFRESH, ActionsManage
+from lucterios.framework.tools import CLOSE_NO, FORMTYPE_REFRESH, ActionsManage,\
+    SELECT_SINGLE
 
 from lucterios.contacts.editors import IndividualEditor
 
@@ -126,6 +127,10 @@ class AdherentEditor(IndividualEditor):
         IndividualEditor.show(self, xfer)
         img = xfer.get_components('img')
         img.set_value("diacamma.member/images/adherent.png")
+
+        xfer.get_components('subscription').add_action(xfer.request, ActionsManage.get_act_changed(
+            'Subscription', 'bill', _('Bill'), 'images/ok.png'), {'close': CLOSE_NO, 'unique': SELECT_SINGLE})
+
         if xfer.item.current_subscription() is not None:
             xfer.tab = 1
             row_init = xfer.get_max_row() + 1

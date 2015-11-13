@@ -106,19 +106,19 @@ def default_adherents():
 def default_subscription():
     sub1 = SubscriptionType.objects.create(
         name="Annually", description="AAA", duration=0)
-    sub1.articles = Article.objects.filter(id=1)
+    sub1.articles = Article.objects.filter(id__in=(1, 5))
     sub1.save()
     sub2 = SubscriptionType.objects.create(
         name="Periodic", description="BBB", duration=1)
-    sub2.articles = Article.objects.filter(id=1)
+    sub2.articles = Article.objects.filter(id__in=(1, 5))
     sub2.save()
     sub3 = SubscriptionType.objects.create(
         name="Monthly", description="CCC", duration=2)
-    sub3.articles = Article.objects.filter(id=1)
+    sub3.articles = Article.objects.filter(id__in=(1, 5))
     sub3.save()
     sub4 = SubscriptionType.objects.create(
         name="Calendar", description="DDD", duration=3)
-    sub4.articles = Article.objects.filter(id=1)
+    sub4.articles = Article.objects.filter(id__in=(1, 5))
     sub4.save()
 
 
