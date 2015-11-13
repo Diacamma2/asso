@@ -23,9 +23,10 @@ along with Lucterios.  If not, see <http://www.gnu.org/licenses/>.
 '''
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-from datetime import datetime, date
+from datetime import datetime
 
 from django.utils.translation import ugettext_lazy as _
+from django.utils import six
 from django.db.models import Q
 
 from lucterios.framework.xferadvance import XferListEditor
@@ -37,19 +38,19 @@ from lucterios.CORE.xferprint import XferPrintAction
 from lucterios.CORE.xferprint import XferPrintLabel
 from lucterios.CORE.xferprint import XferPrintListing
 from lucterios.framework.tools import FORMTYPE_NOMODAL, ActionsManage, MenuManage,\
-    FORMTYPE_REFRESH, CLOSE_NO, SELECT_SINGLE, WrapAction
+    FORMTYPE_REFRESH, CLOSE_NO, SELECT_SINGLE, WrapAction, FORMTYPE_MODAL
 from lucterios.framework.xfercomponents import XferCompLabelForm,\
     XferCompCheckList, XferCompButton, XferCompSelect, XferCompDate,\
-    XferCompImage, XferCompEdit
+    XferCompImage, XferCompEdit, XferCompGrid
 from lucterios.framework.xfergraphic import XferContainerAcknowledge,\
     XferContainerCustom
+from lucterios.framework.error import LucteriosException, IMPORTANT
+from lucterios.framework import signal_and_lock
 
 from lucterios.CORE.parameters import Params
 
-from diacamma.member.models import Adherent, Subscription, Season, Age, Team, Activity, License, DocAdherent
-from lucterios.framework.error import LucteriosException, IMPORTANT
-from django.utils import six
-from lucterios.framework import signal_and_lock
+from diacamma.member.models import Adherent, Subscription, Season, Age, Team, Activity, License, DocAdherent,\
+    SubscriptionType
 
 MenuManage.add_sub(
     "association", None, "diacamma.member/images/association.png", _("Association"), _("Association tools"), 30)
@@ -393,6 +394,106 @@ class LicenseDel(XferDelete):
     model = License
     field_id = 'license'
     caption = _("Delete license")
+
+
+@MenuManage.describ('member.change_adherent', FORMTYPE_MODAL, 'member.actions', _('Statistic of adherents and subscriptions'))
+class AdherentStatistic(XferContainerCustom):
+    icon = "statistic.png"
+    model = Adherent
+    field_id = 'adherent'
+    caption = _("Statistic")
+
+    def fillresponse(self, season):
+        if season is None:
+            working_season = Season.current_season()
+        else:
+            working_season = Season.objects.get(id=season)
+        img = XferCompImage('img')
+        img.set_value(self.icon_path())
+        img.set_location(0, 0)
+        self.add_component(img)
+        lab = XferCompLabelForm('lbl_season')
+        lab.set_value_as_name(_('season'))
+        lab.set_location(1, 0)
+        self.add_component(lab)
+        sel = XferCompSelect('season')
+        sel.set_needed(True)
+        sel.set_select_query(Season.objects.all())
+        sel.set_value(working_season.id)
+        sel.set_location(2, 0)
+        sel.set_action(
+            self.request, self.get_action('', ''), {'modal': FORMTYPE_REFRESH, 'close': CLOSE_NO})
+        self.add_component(sel)
+        stat_result = working_season.get_statistic()
+        if len(stat_result) == 0:
+            lab = XferCompLabelForm('lbl_season')
+            lab.set_color('red')
+            lab.set_value_as_infocenter(_('no subscription!'))
+            lab.set_location(1, 1, 2)
+            self.add_component(lab)
+        else:
+            tab_iden = 0
+            for stat_title, stat_city, stat_type in stat_result:
+                tab_iden += 1
+                if (len(stat_city) > 0) and (len(stat_type) > 0):
+                    self.new_tab(stat_title)
+                    lab = XferCompLabelForm("lbltown_%d" % tab_iden)
+                    lab.set_underlined()
+                    lab.set_value(_("Result by city"))
+                    lab.set_location(0, 1)
+                    self.add_component(lab)
+                    grid = XferCompGrid("town_%d" % tab_iden)
+                    grid.add_header("city", _("city"))
+                    grid.add_header("MajW", _("women major"))
+                    grid.add_header("MajM", _("men major"))
+                    grid.add_header("MinW", _("women minor"))
+                    grid.add_header("MinM", _("men minor"))
+                    grid.add_header("ratio", _("total (%)"))
+                    cmp = 0
+                    for stat_val in stat_city:
+                        for stat_key in stat_val.keys():
+                            grid.set_value(cmp, stat_key, stat_val[stat_key])
+                        cmp += 1
+                    grid.set_location(0, 2)
+                    self.add_component(grid)
+
+                    lab = XferCompLabelForm("lbltype_%d" % tab_iden)
+                    lab.set_underlined()
+                    lab.set_value(_("Result by type"))
+                    lab.set_location(0, 3)
+                    self.add_component(lab)
+                    grid = XferCompGrid("type_%d" % tab_iden)
+                    grid.add_header("type", _("type"))
+                    grid.add_header("MajW", _("women major"))
+                    grid.add_header("MajM", _("men major"))
+                    grid.add_header("MinW", _("women minor"))
+                    grid.add_header("MinM", _("men minor"))
+                    grid.add_header("ratio", _("total (%)"))
+                    cmp = 0
+                    for stat_val in stat_type:
+                        for stat_key in stat_val.keys():
+                            if (stat_key == 'type') and not isinstance(stat_val['type'], six.text_type):
+                                grid.set_value(cmp, stat_key, six.text_type(
+                                    SubscriptionType.objects.get(id=stat_val['type'])))
+                            else:
+                                grid.set_value(
+                                    cmp, stat_key, stat_val[stat_key])
+                        cmp += 1
+                    grid.set_location(0, 4)
+                    self.add_component(grid)
+        self.add_action(AdherentStatisticPrint.get_action(
+            _("Print"), "images/print.png"), {'close': CLOSE_NO, 'params': {'classname': self.__class__.__name__}})
+        self.add_action(WrapAction(_('Close'), 'images/close.png'), {})
+
+
+@MenuManage.describ('member.change_adherent')
+class AdherentStatisticPrint(XferPrintAction):
+    icon = "statistic.png"
+    model = Adherent
+    field_id = 'adherent'
+    caption = _("Statistic")
+    action_class = AdherentStatistic
+    with_text_export = True
 
 
 @signal_and_lock.Signal.decorate('summary')

@@ -36,7 +36,7 @@ from diacamma.member.test_tools import default_season, default_financial, defaul
     default_adherents, default_subscription, set_parameters
 from diacamma.member.views import AdherentList, AdherentAddModify, AdherentShow,\
     SubscriptionAddModify, SubscriptionShow, LicenseAddModify, LicenseDel,\
-    AdherentDoc, AdherentLicense, AdherentLicenseSave
+    AdherentDoc, AdherentLicense, AdherentLicenseSave, AdherentStatistic
 from diacamma.invoice.views import BillList
 
 
@@ -802,3 +802,34 @@ class AdherentTest(LucteriosTest):
         self.assert_observer(
             'core.custom', 'diacamma.member', 'subscriptionShow')
         self.assert_count_equal('COMPONENTS/*', 9)
+
+    def test_statistic(self):
+        self.add_subscriptions()
+
+        self.factory.xfer = AdherentStatistic()
+        self.call('/diacamma.member/adherentStatistic',
+                  {'season': 1}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.member', 'adherentStatistic')
+        self.assert_count_equal('COMPONENTS/*', 4)
+
+        self.factory.xfer = AdherentStatistic()
+        self.call('/diacamma.member/adherentStatistic',
+                  {'dateref': '2009-10-01'}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.member', 'adherentStatistic')
+
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="town_1"]/RECORD', 2)
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="town_1"]/RECORD[2]/VALUE[@name="ratio"]', '{[b]}2{[/b]}')
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="town_2"]/RECORD', 2)
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="town_2"]/RECORD[2]/VALUE[@name="ratio"]', '{[b]}1{[/b]}')
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="town_3"]/RECORD', 2)
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="town_3"]/RECORD[2]/VALUE[@name="ratio"]', '{[b]}1{[/b]}')
+
+        self.assert_count_equal('COMPONENTS/*', 3 * 5 + 3)

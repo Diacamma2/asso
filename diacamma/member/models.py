@@ -26,7 +26,8 @@ along with Lucterios.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import unicode_literals
 
 from django.db import models
-from django.db.models.aggregates import Min, Max
+from django.db.models.aggregates import Min, Max, Count
+from django.db.models import Q
 from django.utils.translation import ugettext_lazy as _
 from django.utils import formats, six
 
@@ -84,6 +85,54 @@ class Season(LucteriosModel):
         except ObjectDoesNotExist:
             raise LucteriosException(
                 IMPORTANT, _('No default season define!'))
+
+    def stats_by_criteria(self, duration_id, field, name):
+        val_by_city = {}
+        query = Q(subscription__begin_date__lte=self.date_ref) & Q(
+            subscription__end_date__gte=self.date_ref)
+        query &= Q(subscription__subscriptiontype__duration=duration_id)
+        birthday = date(
+            self.date_ref.year - 18, self.date_ref.month, self.date_ref.day)
+        total = 0
+        for age in range(2):
+            if age == 0:
+                new_query = query & Q(birthday__gte=birthday)
+                offset = + 1
+            else:
+                new_query = query & Q(birthday__lt=birthday)
+                offset = - 1
+            values = Adherent.objects.filter(new_query).values(
+                field, 'genre').annotate(genre_sum=Count('genre'))
+            for value in values:
+                if value[field] not in val_by_city.keys():
+                    val_by_city[value[field]] = [0, 0, 0, 0]
+                val_by_city[value[field]][
+                    value['genre'] + offset] += value['genre_sum']
+                total += value['genre_sum']
+        total_by_city = [0, 0, 0, 0]
+        values_by_city = []
+        for city in val_by_city.keys():
+            city_sum = val_by_city[city][
+                0] + val_by_city[city][1] + val_by_city[city][2] + val_by_city[city][3]
+            values_by_city.append({name: city, "MajM": val_by_city[city][0], "MajW": val_by_city[
+                                  city][1], "MinM": val_by_city[city][2], "MinW": val_by_city[city][3], "sum": city_sum, "ratio": "%d (%.1f%%)" % (city_sum, 100 * city_sum / total)})
+            for idx in range(4):
+                total_by_city[idx] += val_by_city[city][idx]
+        values_by_city.sort(key=lambda val: -1 * val['sum'])
+        if len(values_by_city) > 0:
+            values_by_city.append({name: "{[b]}%s{[/b]}" % _('total'), "MajM": "{[b]}%d{[/b]}" % total_by_city[0], "MajW": "{[b]}%d{[/b]}" % total_by_city[
+                                  1], "MinM": "{[b]}%d{[/b]}" % total_by_city[2], "MinW": "{[b]}%d{[/b]}" % total_by_city[3], "ratio": "{[b]}%d{[/b]}" % total})
+        return values_by_city
+
+    def get_statistic(self):
+        stat_res = []
+        for duration_id, duration_title in SubscriptionType().get_field_by_name('duration').choices:
+            res1 = self.stats_by_criteria(duration_id, 'city', 'city')
+            res2 = self.stats_by_criteria(
+                duration_id, 'subscription__subscriptiontype', 'type')
+            if (len(res1) > 0) or (len(res2) > 0):
+                stat_res.append((duration_title, res1, res2))
+        return stat_res
 
     @property
     def reference_year(self):
