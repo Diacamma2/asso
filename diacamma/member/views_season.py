@@ -1,4 +1,27 @@
 # -*- coding: utf-8 -*-
+'''
+diacamma.member package
+
+@author: Laurent GAY
+@organization: sd-libre.fr
+@contact: info@sd-libre.fr
+@copyright: 2015 sd-libre.fr
+@license: This file is part of Lucterios.
+
+Lucterios is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Lucterios is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Lucterios.  If not, see <http://www.gnu.org/licenses/>.
+'''
+
 from __future__ import unicode_literals
 
 from django.utils.translation import ugettext_lazy as _
@@ -13,7 +36,7 @@ from lucterios.framework.tools import FORMTYPE_NOMODAL, ActionsManage, MenuManag
 from lucterios.framework.xfergraphic import XferContainerAcknowledge
 from lucterios.framework.xfercomponents import XferCompLabelForm, XferCompSelect
 
-from diacamma.member.models import Season, Period, Subscription, Document
+from diacamma.member.models import Season, Period, SubscriptionType, Document
 
 MenuManage.add_sub("member.conf", "core.extensions", "", _("Member"), "", 5)
 
@@ -56,7 +79,7 @@ class SeasonSubscription(XferListEditor):
         XferListEditor.fillresponse(self)
         self.new_tab(_('Subscriptions'))
         self.fill_grid(
-            self.get_max_row(), Subscription, "subscription", Subscription.objects.all())
+            self.get_max_row(), SubscriptionType, "subscriptiontype", SubscriptionType.objects.all())
 
 
 @ActionsManage.affect('Season', 'active')
@@ -144,29 +167,29 @@ class PeriodDel(XferDelete):
     caption = _("Delete period")
 
 
-@ActionsManage.affect('Subscription', 'edit', 'modify', 'add')
+@ActionsManage.affect('SubscriptionType', 'edit', 'modify', 'add')
 @MenuManage.describ('member.add_subscription')
-class SubscriptionAddModify(XferAddEditor):
+class SubscriptionTypeAddModify(XferAddEditor):
     icon = "season.png"
-    model = Subscription
-    field_id = 'subscription'
+    model = SubscriptionType
+    field_id = 'subscriptiontype'
     caption_add = _("Add subscription")
     caption_modify = _("Modify subscription")
 
 
-@ActionsManage.affect('Subscription', 'show')
+@ActionsManage.affect('SubscriptionType', 'show')
 @MenuManage.describ('member.change_subscription')
-class SubscriptionShow(XferShowEditor):
+class SubscriptionTypeShow(XferShowEditor):
     icon = "season.png"
-    model = Subscription
-    field_id = 'subscription'
+    model = SubscriptionType
+    field_id = 'subscriptiontype'
     caption = _("Show subscription")
 
 
-@ActionsManage.affect('Subscription', 'delete')
+@ActionsManage.affect('SubscriptionType', 'delete')
 @MenuManage.describ('member.delete_subscription')
-class SubscriptionDel(XferDelete):
+class SubscriptionTypeDel(XferDelete):
     icon = "season.png"
-    model = Subscription
-    field_id = 'subscription'
+    model = SubscriptionType
+    field_id = 'subscriptiontype'
     caption = _("Delete subscription")

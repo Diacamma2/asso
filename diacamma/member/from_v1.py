@@ -43,6 +43,9 @@ class MemberMigrate(MigrateAbstract):
         self.age_list = {}
         self.team_list = {}
         self.activity_list = {}
+        self.subscriptiontype_list = {}
+        self.adherent_list = {}
+        self.subscription_list = {}
 
     def _season(self):
         season_mdl = apps.get_model("member", "Season")
@@ -79,9 +82,9 @@ class MemberMigrate(MigrateAbstract):
 
     def _subscription(self):
         article_mdl = apps.get_model("invoice", "Article")
-        subscription_mdl = apps.get_model("member", "Subscription")
-        subscription_mdl.objects.all().delete()
-        self.subscription_list = {}
+        subscriptiontype_mdl = apps.get_model("member", "SubscriptionType")
+        subscriptiontype_mdl.objects.all().delete()
+        self.subscriptiontype_list = {}
 
         cur_s = self.old_db.open()
         cur_s.execute(
@@ -89,7 +92,7 @@ class MemberMigrate(MigrateAbstract):
         for subid, nom, description, duration, noactive in cur_s.fetchall():
             self.print_log(
                 "=> SUBSCRIPTION:%s", (nom,))
-            self.subscription_list[subid] = subscription_mdl.objects.create(
+            self.subscriptiontype_list[subid] = subscriptiontype_mdl.objects.create(
                 name=nom, description=description, duration=duration, unactive=noactive == 'o')
             ids = []
             artcur = self.old_db.open()
@@ -98,9 +101,9 @@ class MemberMigrate(MigrateAbstract):
             for article, in artcur.fetchall():
                 if article in self.old_db.objectlinks['article'].keys():
                     ids.append(self.old_db.objectlinks['article'][article].pk)
-            self.subscription_list[
+            self.subscriptiontype_list[
                 subid].articles = article_mdl.objects.filter(id__in=ids)
-            self.subscription_list[subid].save()
+            self.subscriptiontype_list[subid].save()
 
     def _categories(self):
         age_mdl = apps.get_model("member", "Age")
@@ -117,8 +120,7 @@ class MemberMigrate(MigrateAbstract):
         cur_a.execute(
             "SELECT id,nom,ageMin,ageMax  FROM fr_sdlibre_membres_ages")
         for ageid, nom, age_min, age_max in cur_a.fetchall():
-            self.print_log(
-                "=> Age:%s", (nom,))
+            self.print_log("=> Age:%s", (nom,))
             self.age_list[ageid] = age_mdl.objects.create(
                 name=nom, minimum=age_min, maximum=age_max)
         cur_t = self.old_db.open()
@@ -137,6 +139,65 @@ class MemberMigrate(MigrateAbstract):
                 "=> Activity:%s", (nom,))
             self.activity_list[activityid] = activity_mdl.objects.create(
                 name=nom, description=description)
+
+    def _adherents(self):
+        adherent_mdl = apps.get_model("member", "Adherent")
+        adherent_mdl.objects.all().delete()
+        self.adherent_list = {}
+        subscription_mdl = apps.get_model("member", "Subscription")
+        subscription_mdl.objects.all().delete()
+        self.subscription_list = {}
+        licence_mdl = apps.get_model("member", "License")
+        licence_mdl.objects.all().delete()
+
+        cur_a = self.old_db.open()
+        cur_a.execute(
+            "SELECT id, superId, DateNaissance, LieuNaissance  FROM fr_sdlibre_membres_adherents")
+        for adherentid, superid, date_naissance, lieu_naissance in cur_a.fetchall():
+            if superid in self.old_db.objectlinks['individual'].keys():
+                individual = self.old_db.objectlinks['individual'][superid]
+                self.print_log("=> Adherent:%s", (six.text_type(individual),))
+                self.adherent_list[adherentid] = adherent_mdl(
+                    individual_ptr_id=individual.pk)
+                self.adherent_list[adherentid].num = adherentid
+                self.adherent_list[adherentid].birthday = date_naissance
+                self.adherent_list[adherentid].birthplace = lieu_naissance
+                self.adherent_list[adherentid].save(new_num=False)
+                self.adherent_list[adherentid].__dict__.update(
+                    individual.__dict__)
+                self.adherent_list[adherentid].save()
+
+        cur_s = self.old_db.open()
+        cur_s.execute(
+            "SELECT id,adherentid,saisonid,type,end,begin,licence,equipe,activite,document,facture FROM fr_sdlibre_membres_licences")
+        for subid, adherentid, saisonid, subtype, end, begin, licence, equipe, activite, document, facture in cur_s.fetchall():
+            if (adherentid in self.adherent_list.keys()) and (saisonid in self.season_list.keys()) and (subtype in self.subscriptiontype_list.keys()):
+                self.print_log("=> Subscription:%s %s", (adherentid, saisonid))
+                old_sub = subscription_mdl.objects.get_or_create(adherent=self.adherent_list[adherentid], season=self.season_list[
+                    saisonid], subscriptiontype=self.subscriptiontype_list[subtype], begin_date=begin, end_date=end)
+                if isinstance(old_sub, tuple):
+                    old_sub = old_sub[0]
+                self.subscription_list[subid] = old_sub
+                if facture in self.old_db.objectlinks['bill'].keys():
+                    old_sub.bill = self.old_db.objectlinks['bill'][facture]
+                    old_sub.save()
+                if (equipe in self.team_list.keys()) and (activite in self.activity_list.keys()):
+                    new_lic = licence_mdl.objects.create(subscription=old_sub, team=self.team_list[
+                        equipe], activity=self.activity_list[activite])
+                    if licence is not None:
+                        new_lic.value = licence
+                        new_lic.save()
+                if document is not None:
+                    doc_idx = 0
+                    for doc_item in document:
+                        doc_idx = "%d_%d" % (
+                            self.season_list[saisonid], doc_idx)
+                        if doc_idx in self.doc_list.keys():
+                            doc_adh = old_sub.docadherent_set.filter(
+                                document=self.doc_list[doc_idx])
+                            if len(doc_adh) > 0:
+                                doc_adh[0].value = doc_item == 'o'
+                        doc_idx += 1
 
     def _params(self):
         cur_p = self.old_db.open()
@@ -178,6 +239,7 @@ class MemberMigrate(MigrateAbstract):
             self._season()
             self._subscription()
             self._categories()
+            self._adherents()
         except:
             import traceback
             traceback.print_exc()

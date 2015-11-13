@@ -23,18 +23,30 @@ along with Lucterios.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 from __future__ import unicode_literals
-from datetime import datetime, timedelta
+from datetime import timedelta
 from calendar import monthrange
 
 from django.db.models.aggregates import Max
 from django.utils.translation import ugettext_lazy as _
+from django.utils import formats, six
 
 from lucterios.framework.editors import LucteriosEditor
-from lucterios.framework.xfercomponents import XferCompLabelForm, XferCompDate, XferCompGrid,\
-    XferCompFloat
+from lucterios.framework.xfercomponents import XferCompLabelForm, XferCompDate, XferCompFloat,\
+    XferCompSelect, XferCompCheck, XferCompButton
 from lucterios.framework.error import LucteriosException, IMPORTANT
+from lucterios.framework.tools import CLOSE_NO, FORMTYPE_REFRESH, ActionsManage
 
-from diacamma.member.models import Period, Season
+from lucterios.contacts.editors import IndividualEditor
+
+from diacamma.member.models import Period, Season, SubscriptionType, convert_date,\
+    License
+
+
+def same_day_months_after(start_date, months=1):
+    target_year = start_date.year + int((start_date.month - 1 + months) / 12)
+    target_month = (start_date.month - 1 + months) % 12 + 1
+    num_days_target_month = monthrange(target_year, target_month)[1]
+    return start_date.replace(year=target_year, month=target_month, day=min(start_date.day, num_days_target_month))
 
 
 class SeasonEditor(LucteriosEditor):
@@ -43,7 +55,7 @@ class SeasonEditor(LucteriosEditor):
         date = xfer.getparam('begin_date')
         if date is None:
             raise LucteriosException(IMPORTANT, _("date invalid!"))
-        date = datetime.strptime(date, "%Y-%m-%d")
+        date = convert_date(date)
         new_season = "%d/%d" % (date.year, date.year + 1)
         if len(Season.objects.filter(designation=new_season)) > 0:
             raise LucteriosException(IMPORTANT, _("Season exists yet!"))
@@ -51,18 +63,10 @@ class SeasonEditor(LucteriosEditor):
         self.item.iscurrent = False
 
     def saving(self, xfer):
-        def same_day_months_after(start_date, months=1):
-            target_year = start_date.year + \
-                int((start_date.month - 1 + months) / 12)
-            target_month = (start_date.month - 1 + months) % 12 + 1
-            num_days_target_month = monthrange(
-                target_year, target_month)[1]
-            return start_date.replace(year=target_year, month=target_month,
-                                      day=min(start_date.day, num_days_target_month))
         if not xfer.has_changed:
             self.before_save(xfer)
             self.item.save()
-        date = datetime.strptime(xfer.getparam('begin_date'), "%Y-%m-%d")
+        date = convert_date(xfer.getparam('begin_date'))
         for period_idx in range(4):
             Period.objects.create(season=xfer.item, begin_date=same_day_months_after(date, period_idx * 3),
                                   end_date=same_day_months_after(date, (period_idx + 1) * 3) - timedelta(days=1))
@@ -114,3 +118,152 @@ class AgeEditor(LucteriosEditor):
         date.set_needed(True)
         date.set_value(self.item.date_max)
         xfer.add_component(date)
+
+
+class AdherentEditor(IndividualEditor):
+
+    def show(self, xfer):
+        IndividualEditor.show(self, xfer)
+        img = xfer.get_components('img')
+        img.set_value("diacamma.member/images/adherent.png")
+        if xfer.item.current_subscription() is not None:
+            xfer.tab = 1
+            row_init = xfer.get_max_row() + 1
+            row = row_init + 1
+            for doc in xfer.item.current_subscription().docadherent_set.all():
+                lbl = XferCompLabelForm("lbl_doc_%d" % doc.id)
+                lbl.set_value(six.text_type(doc.document))
+                lbl.set_location(2, row)
+                xfer.add_component(lbl)
+                ckc = XferCompCheck("doc_%d" % doc.id)
+                ckc.set_value(doc.value)
+                ckc.set_location(3, row)
+                xfer.add_component(ckc)
+                row += 1
+            if row != row_init + 1:
+                lbl = XferCompLabelForm("lbl_doc_sep")
+                lbl.set_value("{[hr/]}")
+                lbl.set_location(1, row_init, 4)
+                xfer.add_component(lbl)
+                lbl = XferCompLabelForm("lbl_doc")
+                lbl.set_value_as_name(_('documents needs'))
+                lbl.set_location(1, row_init + 1)
+                xfer.add_component(lbl)
+                btn = XferCompButton("btn_doc")
+                btn.set_location(4, row_init + 1, 1, row - row_init)
+                btn.set_action(xfer.request, ActionsManage.get_act_changed(
+                    "Adherent", "doc", _('Modify'), ''), {'close': CLOSE_NO})
+                xfer.add_component(btn)
+
+
+class SubscriptionEditor(LucteriosEditor):
+
+    def before_save(self, xfer):
+        xfer.is_new = (self.item.id is None)
+        if self.item.subscriptiontype.duration == 0:  # periodic
+            season = self.item.season
+            self.item.begin_date = season.begin_date
+            self.item.end_date = season.end_date
+        elif self.item.subscriptiontype.duration == 1:  # periodic
+            periodid = xfer.getparam('period', 0)
+            period = Period.objects.get(id=periodid)
+            self.item.begin_date = period.begin_date
+            self.item.end_date = period.end_date
+        elif self.item.subscriptiontype.duration == 2:  # monthly
+            month_num = xfer.getparam('month', '')
+            self.item.begin_date = convert_date(month_num + '-01')
+            self.item.end_date = same_day_months_after(
+                self.item.begin_date, 1) - timedelta(days=1)
+        elif self.item.subscriptiontype.duration == 3:  # calendar
+            self.item.begin_date = convert_date(
+                xfer.getparam('begin_date', ''))
+            self.item.end_date = same_day_months_after(
+                self.item.begin_date, 12) - timedelta(days=1)
+
+    def saving(self, xfer):
+        if xfer.is_new:
+            new_lic = License.objects.create(
+                subscription=self.item, value=xfer.getparam('value'))
+            new_lic.team_id = xfer.getparam('team')
+            new_lic.activity_id = xfer.getparam('activity')
+            new_lic.save()
+
+    def edit(self, xfer):
+        if self.item.id is not None:
+            xfer.change_to_readonly('season')
+        else:
+            cmp_season = xfer.get_components('season')
+            if self.item.season_id is None:
+                self.item.season = Season.current_season()
+                cmp_season.set_value(self.item.season.id)
+            cmp_season.set_action(xfer.request, xfer.get_action(),
+                                  {'close': CLOSE_NO, 'modal': FORMTYPE_REFRESH})
+        cmp_subscriptiontype = xfer.get_components('subscriptiontype')
+        if self.item.subscriptiontype_id is None:
+            if len(cmp_subscriptiontype.select_list) == 0:
+                raise LucteriosException(
+                    IMPORTANT, _("No subscription type defined!"))
+            cmp_subscriptiontype.get_reponse_xml()
+            self.item.subscriptiontype = SubscriptionType.objects.get(
+                id=cmp_subscriptiontype.value)
+        cmp_subscriptiontype.set_action(xfer.request, xfer.get_action(),
+                                        {'close': CLOSE_NO, 'modal': FORMTYPE_REFRESH})
+        row = xfer.get_max_row() + 1
+        season = self.item.season
+        if self.item.subscriptiontype.duration == 0:  # annually
+            lbl = XferCompLabelForm("lbl_seasondates")
+            lbl.set_location(1, row)
+            lbl.set_value_as_name(_('annually'))
+            xfer.add_component(lbl)
+            lbl = XferCompLabelForm("seasondates")
+            lbl.set_location(2, row)
+            lbl.set_value("%s => %s" % (formats.date_format(
+                season.begin_date, "SHORT_DATE_FORMAT"), formats.date_format(season.end_date, "SHORT_DATE_FORMAT")))
+            xfer.add_component(lbl)
+        elif self.item.subscriptiontype.duration == 1:  # periodic
+            lbl = XferCompLabelForm("lbl_period")
+            lbl.set_location(1, row)
+            lbl.set_value_as_name(_('period'))
+            xfer.add_component(lbl)
+            sel = XferCompSelect('period')
+            sel.set_needed(True)
+            sel.set_select_query(season.period_set.all())
+            sel.set_location(2, row)
+            xfer.add_component(sel)
+        elif self.item.subscriptiontype.duration == 2:  # monthly
+            lbl = XferCompLabelForm("lbl_month")
+            lbl.set_location(1, row)
+            lbl.set_value_as_name(_('month'))
+            xfer.add_component(lbl)
+            sel = XferCompSelect('month')
+            sel.set_needed(True)
+            sel.set_select(season.get_months())
+            sel.set_location(2, row)
+            xfer.add_component(sel)
+        elif self.item.subscriptiontype.duration == 3:  # calendar
+            lbl = XferCompLabelForm("lbl_begin_date")
+            lbl.set_location(1, row)
+            lbl.set_value_as_name(_('begin date'))
+            xfer.add_component(lbl)
+            begindate = XferCompDate('begin_date')
+            begindate.set_needed(True)
+            begindate.set_value(season.date_ref)
+            begindate.set_location(2, row)
+            xfer.add_component(begindate)
+        if self.item.id is None:
+            xfer.item = License()
+            xfer.fill_from_model(1, row + 1, False)
+            xfer.item = self.item
+            team = xfer.get_components('team')
+            team.set_needed(True)
+            activity = xfer.get_components('activity')
+            activity.set_needed(True)
+
+
+class LicenseEditor(LucteriosEditor):
+
+    def edit(self, xfer):
+        team = xfer.get_components('team')
+        team.set_needed(True)
+        activity = xfer.get_components('activity')
+        activity.set_needed(True)

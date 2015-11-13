@@ -32,8 +32,8 @@ from lucterios.framework.filetools import get_user_dir
 
 from diacamma.member.views_season import SeasonAddModify, SeasonShow, SeasonSubscription,\
     SeasonActive, DocummentAddModify, DocummentDel, SeasonDocummentClone,\
-    PeriodDel, PeriodAddModify, SubscriptionAddModify, SubscriptionShow,\
-    SubscriptionDel
+    PeriodDel, PeriodAddModify, SubscriptionTypeAddModify, SubscriptionTypeShow,\
+    SubscriptionTypeDel
 from diacamma.member.test_tools import default_season, default_financial
 from diacamma.member.views_conf import CategoryConf, ActivityAddModify,\
     ActivityDel, TeamAddModify, TeamDel, AgeAddModify, AgeDel
@@ -450,27 +450,27 @@ class SeasonTest(LucteriosTest):
             'core.custom', 'diacamma.member', 'memberConf')
         self.assert_count_equal('COMPONENTS/*', 10)
         self.assert_count_equal(
-            'COMPONENTS/GRID[@name="subscription"]/HEADER', 5)
+            'COMPONENTS/GRID[@name="subscriptiontype"]/HEADER', 5)
         self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="subscription"]/HEADER[@name="name"]', "nom")
+            'COMPONENTS/GRID[@name="subscriptiontype"]/HEADER[@name="name"]', "nom")
         self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="subscription"]/HEADER[@name="description"]', "description")
+            'COMPONENTS/GRID[@name="subscriptiontype"]/HEADER[@name="description"]', "description")
         self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="subscription"]/HEADER[@name="duration"]', "durée")
+            'COMPONENTS/GRID[@name="subscriptiontype"]/HEADER[@name="duration"]', "durée")
         self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="subscription"]/HEADER[@name="unactive"]', "désactivé")
+            'COMPONENTS/GRID[@name="subscriptiontype"]/HEADER[@name="unactive"]', "désactivé")
         self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="subscription"]/HEADER[@name="price"]', "prix")
+            'COMPONENTS/GRID[@name="subscriptiontype"]/HEADER[@name="price"]', "prix")
         self.assert_count_equal(
-            'COMPONENTS/GRID[@name="subscription"]/RECORD', 0)
+            'COMPONENTS/GRID[@name="subscriptiontype"]/RECORD', 0)
 
-        self.factory.xfer = SubscriptionAddModify()
+        self.factory.xfer = SubscriptionTypeAddModify()
         self.call('/diacamma.member/subscriptionAddModify', {}, False)
         self.assert_observer(
             'core.custom', 'diacamma.member', 'subscriptionAddModify')
         self.assert_count_equal('COMPONENTS/*', 18)
 
-        self.factory.xfer = SubscriptionAddModify()
+        self.factory.xfer = SubscriptionTypeAddModify()
         self.call('/diacamma.member/subscriptionAddModify',
                   {'SAVE': 'YES', 'name': 'abc123', 'description': 'blablabla', 'duration': 1, 'articles': '1;5'}, False)
         self.assert_observer(
@@ -481,21 +481,21 @@ class SeasonTest(LucteriosTest):
         self.assert_observer(
             'core.custom', 'diacamma.member', 'memberConf')
         self.assert_count_equal(
-            'COMPONENTS/GRID[@name="subscription"]/RECORD', 1)
+            'COMPONENTS/GRID[@name="subscriptiontype"]/RECORD', 1)
         self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="subscription"]/RECORD[1]/VALUE[@name="name"]', "abc123")
+            'COMPONENTS/GRID[@name="subscriptiontype"]/RECORD[1]/VALUE[@name="name"]', "abc123")
         self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="subscription"]/RECORD[1]/VALUE[@name="description"]', "blablabla")
+            'COMPONENTS/GRID[@name="subscriptiontype"]/RECORD[1]/VALUE[@name="description"]', "blablabla")
         self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="subscription"]/RECORD[1]/VALUE[@name="duration"]', "périodique")
+            'COMPONENTS/GRID[@name="subscriptiontype"]/RECORD[1]/VALUE[@name="duration"]', "périodique")
         self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="subscription"]/RECORD[1]/VALUE[@name="unactive"]', "0")
+            'COMPONENTS/GRID[@name="subscriptiontype"]/RECORD[1]/VALUE[@name="unactive"]', "0")
         self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="subscription"]/RECORD[1]/VALUE[@name="price"]', "76.44€")
+            'COMPONENTS/GRID[@name="subscriptiontype"]/RECORD[1]/VALUE[@name="price"]', "76.44€")
 
-        self.factory.xfer = SubscriptionShow()
+        self.factory.xfer = SubscriptionTypeShow()
         self.call(
-            '/diacamma.member/subscriptionShow', {'subscription': 1}, False)
+            '/diacamma.member/subscriptionShow', {"subscriptiontype": 1}, False)
         self.assert_observer(
             'core.custom', 'diacamma.member', 'subscriptionShow')
         self.assert_count_equal('COMPONENTS/*', 13)
@@ -508,9 +508,9 @@ class SeasonTest(LucteriosTest):
         self.assert_xml_equal(
             'COMPONENTS/GRID[@name="articles"]/RECORD[2]/VALUE[@name="reference"]', "ABC5")
 
-        self.factory.xfer = SubscriptionDel()
+        self.factory.xfer = SubscriptionTypeDel()
         self.call(
-            '/diacamma.member/subscriptionDel', {'subscription': 1, 'CONFIRME': 'YES'}, False)
+            '/diacamma.member/subscriptionDel', {"subscriptiontype": 1, 'CONFIRME': 'YES'}, False)
         self.assert_observer(
             'core.acknowledge', 'diacamma.member', 'subscriptionDel')
 
@@ -519,7 +519,7 @@ class SeasonTest(LucteriosTest):
         self.assert_observer(
             'core.custom', 'diacamma.member', 'memberConf')
         self.assert_count_equal(
-            'COMPONENTS/GRID[@name="subscription"]/RECORD', 0)
+            'COMPONENTS/GRID[@name="subscriptiontype"]/RECORD', 0)
 
 
 class CategoriesTest(LucteriosTest):

@@ -28,14 +28,24 @@ from __future__ import unicode_literals
 from django.db import models
 from django.db.models.aggregates import Min, Max
 from django.utils.translation import ugettext_lazy as _
-from django.utils import formats
+from django.utils import formats, six
 
 from lucterios.framework.models import LucteriosModel
 from lucterios.framework.error import LucteriosException, IMPORTANT
 
-from diacamma.invoice.models import Article
+from diacamma.invoice.models import Article, Bill
 from diacamma.accounting.tools import format_devise
 from django.core.exceptions import ObjectDoesNotExist
+from lucterios.contacts.models import Individual
+from datetime import date, datetime
+from lucterios.CORE.parameters import Params
+
+
+def convert_date(current_date):
+    try:
+        return datetime.strptime(current_date, "%Y-%m-%d").date()
+    except TypeError:
+        return None
 
 
 class Season(LucteriosModel):
@@ -79,12 +89,34 @@ class Season(LucteriosModel):
         return int(self.designation[:4])
 
     @property
+    def date_ref(self):
+        value = date.today()
+        if (self.begin_date > value) or (self.end_date < value):
+            value = date(self.begin_date.year, value.month, value.day)
+            if self.begin_date > value:
+                value = date(self.end_date.year, value.month, value.day)
+        return value
+
+    @property
     def begin_date(self):
         val = self.period_set.all().aggregate(Min('begin_date'))
         if 'begin_date__min' in val.keys():
             return val['begin_date__min']
         else:
             return "---"
+
+    def get_months(self):
+        months = []
+        begin = self.begin_date
+        for month_num in range(12):
+            year = begin.year
+            month = begin.month + month_num
+            if month > 12:
+                month -= 12
+                year += 1
+            months.append(
+                ('%4d-%02d' % (year, month), date(year, month, 1).strftime("%B %Y")))
+        return months
 
     @property
     def end_date(self):
@@ -121,6 +153,9 @@ class Document(LucteriosModel):
         Season, verbose_name=_('season'), null=False, default=None, db_index=True, on_delete=models.CASCADE)
     name = models.CharField(_('name'), max_length=100)
 
+    def __str__(self):
+        return self.name
+
     @classmethod
     def get_default_fields(cls):
         return ["name"]
@@ -132,6 +167,16 @@ class Document(LucteriosModel):
     @classmethod
     def get_show_fields(cls):
         return ["season", "name"]
+
+    def save(self, force_insert=False, force_update=False, using=None,
+             update_fields=None):
+        is_new = self.id is None
+        LucteriosModel.save(self, force_insert=force_insert,
+                            force_update=force_update, using=using, update_fields=update_fields)
+        if is_new:
+            for sub in self.season.subscription_set.all():
+                DocAdherent.objects.create(
+                    subscription=sub, document=self, value=False)
 
     class Meta(object):
         verbose_name = _('document needs')
@@ -188,7 +233,7 @@ class Period(LucteriosModel):
         default_permissions = []
 
 
-class Subscription(LucteriosModel):
+class SubscriptionType(LucteriosModel):
     name = models.CharField(_('name'), max_length=50)
     description = models.TextField(_('description'), null=True, default="")
     duration = models.IntegerField(verbose_name=_('duration'), choices=((0, _('annually')), (1, _(
@@ -199,6 +244,9 @@ class Subscription(LucteriosModel):
 
     def __str__(self):
         return self.name
+
+    def get_text_value(self):
+        return "%s [%s]" % (self.name, self.price)
 
     @classmethod
     def get_default_fields(cls):
@@ -220,8 +268,8 @@ class Subscription(LucteriosModel):
         return format_devise(total_price, 5)
 
     class Meta(object):
-        verbose_name = _('subscription')
-        verbose_name_plural = _('subscriptions')
+        verbose_name = _('subscription type')
+        verbose_name_plural = _('subscription types')
 
 
 class Activity(LucteriosModel):
@@ -280,6 +328,9 @@ class Age(LucteriosModel):
     maximum = models.IntegerField(
         verbose_name=_('maximum'), null=False, default=0)
 
+    def __str__(self):
+        return self.name
+
     @classmethod
     def get_default_fields(cls):
         return ["name", (_("date min."), "date_min"), (_("date max."), "date_max")]
@@ -311,3 +362,202 @@ class Age(LucteriosModel):
         verbose_name = _('age')
         verbose_name_plural = _('ages')
         ordering = ['-minimum']
+
+
+class Adherent(Individual):
+    num = models.IntegerField(
+        verbose_name=_('numeros'), null=False, default=0,)
+    birthday = models.DateField(
+        verbose_name=_('birthday'), default=date.today, blank=False)
+    birthplace = models.CharField(_('birthplace'), max_length=50, blank=True)
+
+    def __init__(self, *args, **kwargs):
+        Individual.__init__(self, *args, **kwargs)
+        self.date_ref = None
+
+    def set_context(self, xfer):
+        if xfer is not None:
+            self.date_ref = convert_date(xfer.getparam("dateref"))
+
+    @classmethod
+    def get_default_fields(cls):
+        fields = Individual.get_default_fields()
+        fields.insert(0, "num")
+        fields.append((_('license'), 'license'))
+        return fields
+
+    @classmethod
+    def get_edit_fields(cls):
+        fields = Individual.get_edit_fields()
+        fields.insert(-1, ("birthday", "birthplace"))
+        return fields
+
+    @classmethod
+    def get_show_fields(cls):
+        fields = Individual.get_show_fields()
+        keys = list(fields.keys())
+        fields[keys[0]][0] = ("num", fields[keys[0]][0])
+        fields[keys[0]].insert(-1, ("birthday", "birthplace"))
+        fields[keys[0]].insert(-1, ((_("age category"), "age_category"), ))
+        fields[_('002@Subscription')] = ['subscription_set']
+        fields[''] = [((_("reference date"), "dateref"), )]
+        return fields
+
+    @property
+    def age_category(self):
+        age_val = int((self.dateref - self.birthday).days / 365)
+        ages = Age.objects.filter(
+            minimum__lte=age_val, maximum__gte=age_val)
+        if len(list(ages)) > 0:
+            return ages[0]
+        else:
+            return "---"
+
+    @property
+    def license(self):
+        sub = self.current_subscription()
+        if sub is not None:
+            resvalue = []
+            for sub_lic in sub.license_set.all():
+                resvalue.append(six.text_type(sub_lic))
+            return "{[br/]}".join(resvalue)
+        return None
+
+    @property
+    def dateref(self):
+        if self.date_ref is None:
+            self.date_ref = Season.current_season().date_ref
+        return self.date_ref
+
+    def current_subscription(self):
+        sub = self.subscription_set.filter(
+            begin_date__lte=self.dateref, end_date__gte=self.dateref)
+        if len(sub) > 0:
+            return sub[0]
+        else:
+            return None
+
+    def save(self, force_insert=False, force_update=False, using=None,
+             update_fields=None, new_num=True):
+        if (self.id is None) and new_num:
+            val = Adherent.objects.all().aggregate(Max('num'))
+            if val['num__max'] is None:
+                self.num = 1
+            else:
+                self.num = val['num__max'] + 1
+        Individual.save(self, force_insert=force_insert,
+                        force_update=force_update, using=using, update_fields=update_fields)
+
+    class Meta(object):
+        verbose_name = _('adherent')
+        verbose_name_plural = _('adherents')
+
+
+class Subscription(LucteriosModel):
+    adherent = models.ForeignKey(
+        Adherent, verbose_name=_('adherent'), null=False, default=None, db_index=True, on_delete=models.CASCADE)
+    season = models.ForeignKey(
+        Season, verbose_name=_('season'), null=False, default=None, db_index=True, on_delete=models.PROTECT)
+    subscriptiontype = models.ForeignKey(
+        SubscriptionType, verbose_name=_('subscription type'), null=False, default=None, db_index=True, on_delete=models.PROTECT)
+    bill = models.ForeignKey(
+        Bill, verbose_name=_('bill'), null=True, default=None, db_index=True, on_delete=models.PROTECT)
+    begin_date = models.DateField(verbose_name=_('begin date'), null=False)
+    end_date = models.DateField(verbose_name=_('end date'), null=False)
+
+    def __str__(self):
+        if not isinstance(self.begin_date, six.text_type) and not isinstance(self.end_date, six.text_type):
+            return "%s:%s->%s" % (self.subscriptiontype, formats.date_format(self.begin_date, "SHORT_DATE_FORMAT"), formats.date_format(self.end_date, "SHORT_DATE_FORMAT"))
+        else:
+            return self.subscriptiontype
+
+    @classmethod
+    def get_default_fields(cls):
+        return ["season", "subscriptiontype", "begin_date", "end_date", "license_set"]
+
+    @classmethod
+    def get_edit_fields(cls):
+        return ["season", "subscriptiontype"]
+
+    @classmethod
+    def get_show_fields(cls):
+        return ["season", "subscriptiontype", "begin_date", "end_date", "license_set"]
+
+    @property
+    def season_query(self):
+        return Season.objects.all().exclude(id__in=[sub.season_id for sub in self.adherent.subscription_set.all()])
+
+    def save(self, force_insert=False, force_update=False, using=None,
+             update_fields=None):
+        is_new = self.id is None
+        if is_new and (self.season not in list(self.season_query)):
+            raise LucteriosException(IMPORTANT, _("Season always used!"))
+        LucteriosModel.save(self, force_insert=force_insert,
+                            force_update=force_update, using=using, update_fields=update_fields)
+        if is_new:
+            for doc in self.season.document_set.all():
+                DocAdherent.objects.create(
+                    subscription=self, document=doc, value=False)
+
+    class Meta(object):
+        verbose_name = _('subscription')
+        verbose_name_plural = _('subscription')
+
+
+class DocAdherent(LucteriosModel):
+    subscription = models.ForeignKey(
+        Subscription, verbose_name=_('subscription'), null=False, default=None, db_index=True, on_delete=models.CASCADE)
+    document = models.ForeignKey(
+        Document, verbose_name=_('document'), null=False, default=None, db_index=True, on_delete=models.PROTECT)
+    value = models.BooleanField(
+        verbose_name=_('value'), default=False)
+
+    def __str__(self):
+        return "%s %s" % (self.document, self.value)
+
+    @classmethod
+    def get_default_fields(cls):
+        return ["document", "value"]
+
+    @classmethod
+    def get_edit_fields(cls):
+        return ["document", "value"]
+
+    @classmethod
+    def get_show_fields(cls):
+        return ["document", "value"]
+
+    class Meta(object):
+        verbose_name = _('document')
+        verbose_name_plural = _('documents')
+        default_permissions = []
+
+
+class License(LucteriosModel):
+    subscription = models.ForeignKey(
+        Subscription, verbose_name=_('subscription'), null=False, default=None, db_index=True, on_delete=models.CASCADE)
+    value = models.CharField(_('value'), max_length=50, null=True)
+    team = models.ForeignKey(
+        Team, verbose_name=_('team'), null=True, default=None, db_index=True, on_delete=models.PROTECT)
+    activity = models.ForeignKey(
+        Activity, verbose_name=_('activity'), null=True, default=None, db_index=True, on_delete=models.PROTECT)
+
+    def __str__(self):
+        return "%s [%s] %s" % (self.team, self.activity, self.value)
+
+    @classmethod
+    def get_default_fields(cls):
+        return [(Params.getvalue("member-team-text"), "team"), (Params.getvalue("member-activite-text"), "activity"), "value"]
+
+    @classmethod
+    def get_edit_fields(cls):
+        return [((Params.getvalue("member-team-text"), "team"),), ((Params.getvalue("member-activite-text"), "activity"),), "value"]
+
+    @classmethod
+    def get_show_fields(cls):
+        return [((Params.getvalue("member-team-text"), "team"),), ((Params.getvalue("member-activite-text"), "activity"),), "value"]
+
+    class Meta(object):
+        verbose_name = _('license')
+        verbose_name_plural = _('licenses')
+        default_permissions = []
