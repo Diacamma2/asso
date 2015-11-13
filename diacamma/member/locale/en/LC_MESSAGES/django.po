@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-11-13 14:58+0000\n"
+"POT-Creation-Date: 2015-11-13 15:16+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -41,7 +41,7 @@ msgstr "date min."
 msgid "date max."
 msgstr "date max."
 
-#: editors.py:132 views.py:352
+#: editors.py:132 views.py:353
 msgid "Bill"
 msgstr "Bill"
 
@@ -257,7 +257,7 @@ msgstr "age category"
 msgid "002@Subscription"
 msgstr "Subscription"
 
-#: models.py:409 views.py:108
+#: models.py:409 views.py:109
 msgid "reference date"
 msgstr "reference date"
 
@@ -285,7 +285,7 @@ msgstr "Season always used!"
 msgid "document"
 msgstr "document"
 
-#: models.py:550 models.py:576 views.py:250
+#: models.py:550 models.py:576 views.py:251
 msgid "value"
 msgstr "value"
 
@@ -297,129 +297,134 @@ msgstr "documents"
 msgid "licenses"
 msgstr "licenses"
 
-#: views.py:54
+#: views.py:55
 msgid "Association"
 msgstr "Association"
 
-#: views.py:54
+#: views.py:55
 msgid "Association tools"
 msgstr "Association tools"
 
-#: views.py:57
+#: views.py:58 views.py:403
 msgid "Adherents"
 msgstr "Adherents"
 
-#: views.py:57
+#: views.py:58
 msgid "Management of adherents and subscriptions."
 msgstr "Management of adherents and subscriptions."
 
-#: views.py:76 views_conf.py:57
+#: views.py:77 views_conf.py:57
 msgid "Age"
 msgstr "Age"
 
-#: views.py:120
+#: views.py:121
 msgid "genre"
 msgstr "genre"
 
-#: views.py:133
+#: views.py:134
 msgid "refresh"
 msgstr "refresh"
 
-#: views.py:155
+#: views.py:156
 msgid "List of adherents with subscribtion"
 msgstr "List of adherents with subscribtion"
 
-#: views.py:160
+#: views.py:161
 msgid "Subscribe adherents"
 msgstr "Subscribe adherents"
 
-#: views.py:178
+#: views.py:179
 msgid "To find an adherent following a set of criteria."
 msgstr "To find an adherent following a set of criteria."
 
-#: views.py:183
+#: views.py:184
 msgid "Search adherent"
 msgstr "Search adherent"
 
-#: views.py:192
+#: views.py:193
 msgid "Add adherent"
 msgstr "Add adherent"
 
-#: views.py:193
+#: views.py:194
 msgid "Modify adherent"
 msgstr "Modify adherent"
 
-#: views.py:202
+#: views.py:203
 msgid "Show adherent"
 msgstr "Show adherent"
 
-#: views.py:210 views.py:268
+#: views.py:211 views.py:269
 msgid "License"
 msgstr "License"
 
-#: views.py:219
+#: views.py:220
 msgid "no subscription!"
 msgstr "no subscription!"
 
-#: views.py:259
+#: views.py:260
 msgid "Ok"
 msgstr "Ok"
 
-#: views.py:260
+#: views.py:261
 msgid "Cancel"
 msgstr "Cancel"
 
-#: views.py:284
+#: views.py:285
 msgid "Delete adherent"
 msgstr "Delete adherent"
 
-#: views.py:293 views_season.py:128
+#: views.py:294 views_season.py:128
 msgid "Modify document"
 msgstr "Modify document"
 
-#: views.py:309
+#: views.py:310
 msgid "Print adherent"
 msgstr "Print adherent"
 
-#: views.py:318
+#: views.py:319
 msgid "Label adherent"
 msgstr "Label adherent"
 
-#: views.py:327
+#: views.py:328
 msgid "Listing adherent"
 msgstr "Listing adherent"
 
-#: views.py:336 views_season.py:176
+#: views.py:337 views_season.py:176
 msgid "Add subscription"
 msgstr "Add subscription"
 
-#: views.py:337 views_season.py:177
+#: views.py:338 views_season.py:177
 msgid "Modify subscription"
 msgstr "Modify subscription"
 
-#: views.py:347 views_season.py:186
+#: views.py:348 views_season.py:186
 msgid "Show subscription"
 msgstr "Show subscription"
 
-#: views.py:361 views_season.py:195
+#: views.py:362 views_season.py:195
 msgid "Delete subscription"
 msgstr "Delete subscription"
 
-#: views.py:370
+#: views.py:371
 msgid "Show bill of subscription"
 msgstr "Show bill of subscription"
 
-#: views.py:384
+#: views.py:385
 msgid "Add license"
 msgstr "Add license"
 
-#: views.py:385
+#: views.py:386
 msgid "Modify license"
 msgstr "Modify license"
 
-#: views.py:394
+#: views.py:395
 msgid "Delete license"
 msgstr "Delete license"
+
+#: views.py:416
+#, python-format
+msgid "Active adherents: %d"
+msgstr "Active adherents: %d"
 
 #: views_conf.py:39
 msgid "Management of member categories"

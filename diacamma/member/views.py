@@ -23,7 +23,7 @@ along with Lucterios.  If not, see <http://www.gnu.org/licenses/>.
 '''
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-from datetime import datetime
+from datetime import datetime, date
 
 from django.utils.translation import ugettext_lazy as _
 from django.db.models import Q
@@ -49,6 +49,7 @@ from lucterios.CORE.parameters import Params
 from diacamma.member.models import Adherent, Subscription, Season, Age, Team, Activity, License, DocAdherent
 from lucterios.framework.error import LucteriosException, IMPORTANT
 from django.utils import six
+from lucterios.framework import signal_and_lock
 
 MenuManage.add_sub(
     "association", None, "diacamma.member/images/association.png", _("Association"), _("Association tools"), 30)
@@ -392,3 +393,36 @@ class LicenseDel(XferDelete):
     model = License
     field_id = 'license'
     caption = _("Delete license")
+
+
+@signal_and_lock.Signal.decorate('summary')
+def summary_member(xfer):
+    if WrapAction.is_permission(xfer.request, 'member.change_adherent'):
+        row = xfer.get_max_row() + 1
+        lab = XferCompLabelForm('membertitle')
+        lab.set_value_as_infocenter(_("Adherents"))
+        lab.set_location(0, row, 4)
+        xfer.add_component(lab)
+        try:
+            current_season = Season.current_season()
+            dateref = current_season.date_ref
+            lab = XferCompLabelForm('memberseason')
+            lab.set_value_as_headername(six.text_type(current_season))
+            lab.set_location(0, row + 1, 4)
+            xfer.add_component(lab)
+            nb_adh = len(Adherent.objects.filter(Q(subscription__begin_date__lte=dateref) & Q(
+                subscription__end_date__gte=dateref)))
+            lab = XferCompLabelForm('membernb')
+            lab.set_value_as_header(_("Active adherents: %d") % nb_adh)
+            lab.set_location(0, row + 2, 4)
+            xfer.add_component(lab)
+            lab = XferCompLabelForm('member')
+            lab.set_value_as_infocenter("{[hr/]}")
+            lab.set_location(0, row + 3, 4)
+            xfer.add_component(lab)
+        except LucteriosException as lerr:
+            lbl = XferCompLabelForm("member_error")
+            lbl.set_value_center(six.text_type(lerr))
+            lbl.set_location(0, row + 1, 4)
+            xfer.add_component(lbl)
+    return True
