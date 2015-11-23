@@ -24,30 +24,43 @@ along with Lucterios.  If not, see <http://www.gnu.org/licenses/>.
 
 
 from __future__ import unicode_literals
+from datetime import date, datetime, timedelta
+from calendar import monthrange
 
 from django.db import models
 from django.db.models.aggregates import Min, Max, Count
 from django.db.models import Q
 from django.utils.translation import ugettext_lazy as _
 from django.utils import formats, six
+from django.core.exceptions import ObjectDoesNotExist
 
 from lucterios.framework.models import LucteriosModel
 from lucterios.framework.error import LucteriosException, IMPORTANT
 
+from lucterios.CORE.parameters import Params
+from lucterios.contacts.models import Individual
+
 from diacamma.invoice.models import Article, Bill, Detail
 from diacamma.accounting.tools import format_devise
-from django.core.exceptions import ObjectDoesNotExist
-from lucterios.contacts.models import Individual
-from datetime import date, datetime
-from lucterios.CORE.parameters import Params
 from diacamma.accounting.models import Third, AccountThird, CostAccounting
 
 
-def convert_date(current_date):
+def convert_date(current_date, defaultdate=None):
     try:
         return datetime.strptime(current_date, "%Y-%m-%d").date()
-    except TypeError:
-        return None
+    except (TypeError, ValueError):
+        return defaultdate
+
+
+def same_day_months_after(start_date, months=1):
+    month_val = start_date.month - 1 + months
+    if month_val < 0:
+        target_year = start_date.year + int(month_val / 12) - 1
+    else:
+        target_year = start_date.year + int(month_val / 12)
+    target_month = month_val % 12 + 1
+    num_days_target_month = monthrange(target_year, target_month)[1]
+    return start_date.replace(year=target_year, month=target_month, day=min(start_date.day, num_days_target_month))
 
 
 class Season(LucteriosModel):
@@ -79,12 +92,29 @@ class Season(LucteriosModel):
         self.save()
 
     @classmethod
-    def current_season(self):
+    def current_season(cls):
         try:
             return Season.objects.get(iscurrent=True)
         except ObjectDoesNotExist:
             raise LucteriosException(
                 IMPORTANT, _('No default season define!'))
+
+    @classmethod
+    def get_from_date(cls, dateref):
+        seasons = Season.objects.filter(
+            period__begin_date__lte=dateref, period__end_date__gte=dateref)
+        if len(seasons) > 0:
+            return seasons[0]
+        else:
+            raise LucteriosException(IMPORTANT, _('No season find!'))
+
+    def get_period_from_date(self, dateref):
+        periods = self.period_set.filter(
+            begin_date__lte=dateref, end_date__gte=dateref)
+        if len(periods) > 0:
+            return periods[0]
+        else:
+            raise LucteriosException(IMPORTANT, _('No period find!'))
 
     def stats_by_criteria(self, duration_id, field, name):
         val_by_city = {}
@@ -430,10 +460,15 @@ class Adherent(Individual):
             self.date_ref = convert_date(xfer.getparam("dateref"))
 
     @classmethod
-    def get_default_fields(cls):
+    def get_renew_fields(cls):
         fields = Individual.get_default_fields()
         if Params.getvalue("member-numero"):
             fields.insert(0, "num")
+        return fields
+
+    @classmethod
+    def get_default_fields(cls):
+        fields = cls.get_renew_fields()
         if Params.getvalue("member-licence-enabled"):
             fields.append((_('license'), 'license'))
         return fields
@@ -483,6 +518,42 @@ class Adherent(Individual):
         if self.date_ref is None:
             self.date_ref = Season.current_season().date_ref
         return self.date_ref
+
+    def renew(self, dateref):
+        last_subscription = self.last_subscription
+        if last_subscription is not None:
+            current_season = Season.get_from_date(dateref)
+            new_subscription = Subscription(
+                adherent=self, subscriptiontype=last_subscription.subscriptiontype, season=current_season)
+            if new_subscription.subscriptiontype.duration == 0:  # periodic
+                new_subscription.begin_date = current_season.begin_date
+                new_subscription.end_date = current_season.end_date
+            elif new_subscription.subscriptiontype.duration == 1:  # periodic
+                period = current_season.get_period_from_date(dateref)
+                new_subscription.begin_date = period.begin_date
+                new_subscription.end_date = period.end_date
+            elif new_subscription.subscriptiontype.duration == 2:  # monthly
+                new_subscription.begin_date = convert_date(
+                    '%4d-%02d-01' % (dateref.year, dateref.month))
+                new_subscription.end_date = same_day_months_after(
+                    new_subscription.begin_date, 1) - timedelta(days=1)
+            elif new_subscription.subscriptiontype.duration == 3:  # calendar
+                new_subscription.begin_date = dateref
+                new_subscription.end_date = same_day_months_after(
+                    new_subscription.begin_date, 12) - timedelta(days=1)
+            new_subscription.save()
+            for license_item in last_subscription.license_set.all():
+                license_item.id = None
+                license_item.subscription = new_subscription
+                license_item.save()
+
+    @property
+    def last_subscription(self):
+        subscriptions = self.subscription_set.all().order_by('-end_date')
+        if len(subscriptions) > 0:
+            return subscriptions[0]
+        else:
+            return None
 
     def current_subscription(self):
         sub = self.subscription_set.filter(
@@ -544,10 +615,6 @@ class Subscription(LucteriosModel):
             fields.append("license_set")
         return fields
 
-    @property
-    def season_query(self):
-        return Season.objects.all().exclude(id__in=[sub.season_id for sub in self.adherent.subscription_set.all()])
-
     def create_bill(self):
         if len(self.subscriptiontype.articles.all()) == 0:
             return
@@ -574,8 +641,8 @@ class Subscription(LucteriosModel):
     def save(self, force_insert=False, force_update=False, using=None,
              update_fields=None):
         is_new = self.id is None
-        if is_new and (self.season not in list(self.season_query)):
-            raise LucteriosException(IMPORTANT, _("Season always used!"))
+        if is_new and (len(self.adherent.subscription_set.filter((Q(begin_date__lte=self.end_date) & Q(end_date__gte=self.end_date)) | (Q(begin_date__lte=self.begin_date) & Q(end_date__gte=self.begin_date)))) > 0):
+            raise LucteriosException(IMPORTANT, _("dates always used!"))
         if is_new:
             self.create_bill()
         LucteriosModel.save(self, force_insert=force_insert,

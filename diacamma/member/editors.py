@@ -24,7 +24,6 @@ along with Lucterios.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import unicode_literals
 from datetime import timedelta
-from calendar import monthrange
 
 from django.db.models.aggregates import Max
 from django.utils.translation import ugettext_lazy as _
@@ -39,15 +38,7 @@ from lucterios.framework.tools import CLOSE_NO, FORMTYPE_REFRESH, ActionsManage,
 
 from lucterios.contacts.editors import IndividualEditor
 
-from diacamma.member.models import Period, Season, SubscriptionType, convert_date,\
-    License
-
-
-def same_day_months_after(start_date, months=1):
-    target_year = start_date.year + int((start_date.month - 1 + months) / 12)
-    target_month = (start_date.month - 1 + months) % 12 + 1
-    num_days_target_month = monthrange(target_year, target_month)[1]
-    return start_date.replace(year=target_year, month=target_month, day=min(start_date.day, num_days_target_month))
+from diacamma.member.models import Period, Season, SubscriptionType, License, convert_date, same_day_months_after
 
 
 class SeasonEditor(LucteriosEditor):
@@ -194,6 +185,8 @@ class SubscriptionEditor(LucteriosEditor):
             new_lic.save()
 
     def edit(self, xfer):
+        last_subscription = self.item.adherent.last_subscription
+        cmp_subscriptiontype = xfer.get_components('subscriptiontype')
         if self.item.id is not None:
             xfer.change_to_readonly('season')
         else:
@@ -203,7 +196,9 @@ class SubscriptionEditor(LucteriosEditor):
                 cmp_season.set_value(self.item.season.id)
             cmp_season.set_action(xfer.request, xfer.get_action(),
                                   {'close': CLOSE_NO, 'modal': FORMTYPE_REFRESH})
-        cmp_subscriptiontype = xfer.get_components('subscriptiontype')
+            if last_subscription is not None:
+                cmp_subscriptiontype.set_value(
+                    last_subscription.subscriptiontype.id)
         if self.item.subscriptiontype_id is None:
             if len(cmp_subscriptiontype.select_list) == 0:
                 raise LucteriosException(
@@ -257,6 +252,10 @@ class SubscriptionEditor(LucteriosEditor):
             xfer.add_component(begindate)
         if self.item.id is None:
             xfer.item = License()
+            if last_subscription is not None:
+                licenses = last_subscription.license_set.all()
+                if len(licenses) > 0:
+                    xfer.item = licenses[0]
             xfer.fill_from_model(1, row + 1, False)
             xfer.item = self.item
             team = xfer.get_components('team')

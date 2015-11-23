@@ -38,10 +38,11 @@ from lucterios.CORE.xferprint import XferPrintAction
 from lucterios.CORE.xferprint import XferPrintLabel
 from lucterios.CORE.xferprint import XferPrintListing
 from lucterios.framework.tools import FORMTYPE_NOMODAL, ActionsManage, MenuManage,\
-    FORMTYPE_REFRESH, CLOSE_NO, SELECT_SINGLE, WrapAction, FORMTYPE_MODAL
+    FORMTYPE_REFRESH, CLOSE_NO, SELECT_SINGLE, WrapAction, FORMTYPE_MODAL,\
+    SELECT_MULTI
 from lucterios.framework.xfercomponents import XferCompLabelForm,\
     XferCompCheckList, XferCompButton, XferCompSelect, XferCompDate,\
-    XferCompImage, XferCompEdit, XferCompGrid
+    XferCompImage, XferCompEdit, XferCompGrid, DEFAULT_ACTION_LIST
 from lucterios.framework.xfergraphic import XferContainerAcknowledge,\
     XferContainerCustom
 from lucterios.framework.error import LucteriosException, IMPORTANT
@@ -50,7 +51,7 @@ from lucterios.framework import signal_and_lock
 from lucterios.CORE.parameters import Params
 
 from diacamma.member.models import Adherent, Subscription, Season, Age, Team, Activity, License, DocAdherent,\
-    SubscriptionType
+    SubscriptionType, convert_date, same_day_months_after
 
 MenuManage.add_sub(
     "association", None, "diacamma.member/images/association.png", _("Association"), _("Association tools"), 30)
@@ -59,110 +60,130 @@ MenuManage.add_sub("member.actions", "association", "diacamma.member/images/memb
                    _("Adherents"), _("Management of adherents and subscriptions."), 50)
 
 
-def _add_adherent_filter(xfer):
-    row = xfer.get_max_row() + 1
-    team = xfer.getparam("team", ())
-    activity = xfer.getparam("activity", ())
-    genre = xfer.getparam("genre", 0)
-    age = xfer.getparam("age", ())
-    dateref = xfer.getparam("dateref", "")
-
-    try:
-        dateref = datetime.strptime(dateref, "%Y-%m-%d").date()
-    except (TypeError, ValueError):
-        current_season = Season.current_season()
-        dateref = current_season.date_ref
-
-    if Params.getvalue("member-age-enable"):
-        lbl = XferCompLabelForm('lblage')
-        lbl.set_value_as_name(_("Age"))
-        lbl.set_location(0, row)
-        xfer.add_component(lbl)
-        sel = XferCompCheckList('age')
-        sel.set_select_query(Age.objects.all())
-        sel.set_value(age)
-        sel.set_location(1, row, 1, 2)
-        xfer.add_component(sel)
-
-    if Params.getvalue("member-team-enable"):
-        lbl = XferCompLabelForm('lblteam')
-        lbl.set_value_as_name(Params.getvalue("member-team-text"))
-        lbl.set_location(2, row)
-        xfer.add_component(lbl)
-        sel = XferCompCheckList('team')
-        sel.set_select_query(Team.objects.all())
-        sel.set_value(team)
-        sel.set_location(3, row, 1, 2)
-        xfer.add_component(sel)
-
-    if Params.getvalue("member-activite-enable"):
-        lbl = XferCompLabelForm('lblactivity')
-        lbl.set_value_as_name(Params.getvalue("member-activite-text"))
-        lbl.set_location(4, row)
-        xfer.add_component(lbl)
-        sel = XferCompCheckList('activity')
-        sel.set_select_query(Activity.objects.all())
-        sel.set_value(activity)
-        sel.set_location(5, row, 1, 2)
-        xfer.add_component(sel)
-
-    lbl = XferCompLabelForm('lbldateref')
-    lbl.set_value_as_name(_("reference date"))
-    lbl.set_location(6, row)
-    xfer.add_component(lbl)
-
-    dtref = XferCompDate('dateref')
-    dtref.set_value(dateref)
-    dtref.set_needed(True)
-    dtref.set_location(7, row, 2)
-    xfer.add_component(dtref)
-
-    if Params.getvalue("member-filter-genre"):
-        lbl = XferCompLabelForm('lblgenre')
-        lbl.set_value_as_name(_("genre"))
-        lbl.set_location(6, row + 1)
-        xfer.add_component(lbl)
-        sel = XferCompSelect('genre')
-        list_genre = list(xfer.item.get_field_by_name('genre').choices)
-        list_genre.insert(0, (0, '---'))
-        sel.set_select(list_genre)
-        sel.set_location(7, row + 1)
-        sel.set_value(genre)
-        xfer.add_component(sel)
-
-    btn = XferCompButton('btndateref')
-    btn.set_location(8, row + 1)
-    btn.set_action(xfer.request, xfer.get_action(_('refresh'), ''),
-                   {'modal': FORMTYPE_REFRESH, 'close': CLOSE_NO})
-    xfer.add_component(btn)
-
-    current_filter = Q(subscription__begin_date__lte=dateref) & Q(
-        subscription__end_date__gte=dateref)
-    if len(team) > 0:
-        current_filter &= Q(subscription__license__team__in=team)
-    if len(activity) > 0:
-        current_filter &= Q(subscription__license__activity__in=activity)
-    if len(age) > 0:
-        age_filter = Q()
-        for age_item in Age.objects.filter(id__in=age):
-            age_filter |= Q(birthday__gte="%d-01-01" % (dateref.year - age_item.maximum)) & Q(
-                birthday__lte="%d-12-31" % (dateref.year - age_item.minimum))
-        current_filter &= age_filter
-    if genre != 0:
-        current_filter &= Q(genre=genre)
-    return current_filter
-
-
-@ActionsManage.affect('Adherent', 'list')
-@MenuManage.describ('member.change_adherent', FORMTYPE_NOMODAL, 'member.actions', _('List of adherents with subscribtion'))
-class AdherentList(XferListEditor):
+class AdherentAbstractList(XferListEditor):
     icon = "adherent.png"
     model = Adherent
     field_id = 'adherent'
-    caption = _("Subscribe adherents")
+    is_renew = False
 
     def fillresponse_header(self):
-        self.filter = _add_adherent_filter(self)
+        row = self.get_max_row() + 1
+        team = self.getparam("team", ())
+        activity = self.getparam("activity", ())
+        genre = self.getparam("genre", 0)
+        age = self.getparam("age", ())
+        dateref = convert_date(
+            self.getparam("dateref", ""), Season.current_season().date_ref)
+
+        if Params.getvalue("member-age-enable"):
+            lbl = XferCompLabelForm('lblage')
+            lbl.set_value_as_name(_("Age"))
+            lbl.set_location(0, row)
+            self.add_component(lbl)
+            sel = XferCompCheckList('age')
+            sel.set_select_query(Age.objects.all())
+            sel.set_value(age)
+            sel.set_location(1, row, 1, 2)
+            self.add_component(sel)
+
+        if Params.getvalue("member-team-enable"):
+            lbl = XferCompLabelForm('lblteam')
+            lbl.set_value_as_name(Params.getvalue("member-team-text"))
+            lbl.set_location(2, row)
+            self.add_component(lbl)
+            sel = XferCompCheckList('team')
+            sel.set_select_query(Team.objects.all())
+            sel.set_value(team)
+            sel.set_location(3, row, 1, 2)
+            self.add_component(sel)
+
+        if Params.getvalue("member-activite-enable"):
+            lbl = XferCompLabelForm('lblactivity')
+            lbl.set_value_as_name(Params.getvalue("member-activite-text"))
+            lbl.set_location(4, row)
+            self.add_component(lbl)
+            sel = XferCompCheckList('activity')
+            sel.set_select_query(Activity.objects.all())
+            sel.set_value(activity)
+            sel.set_location(5, row, 1, 2)
+            self.add_component(sel)
+
+        lbl = XferCompLabelForm('lbldateref')
+        lbl.set_value_as_name(_("reference date"))
+        lbl.set_location(6, row)
+        self.add_component(lbl)
+
+        dtref = XferCompDate('dateref')
+        dtref.set_value(dateref)
+        dtref.set_needed(True)
+        dtref.set_location(7, row, 2)
+        self.add_component(dtref)
+
+        if Params.getvalue("member-filter-genre"):
+            lbl = XferCompLabelForm('lblgenre')
+            lbl.set_value_as_name(_("genre"))
+            lbl.set_location(6, row + 1)
+            self.add_component(lbl)
+            sel = XferCompSelect('genre')
+            list_genre = list(self.item.get_field_by_name('genre').choices)
+            list_genre.insert(0, (0, '---'))
+            sel.set_select(list_genre)
+            sel.set_location(7, row + 1)
+            sel.set_value(genre)
+            self.add_component(sel)
+
+        btn = XferCompButton('btndateref')
+        btn.set_location(8, row + 1)
+        btn.set_action(self.request, self.get_action(_('refresh'), ''),
+                       {'modal': FORMTYPE_REFRESH, 'close': CLOSE_NO})
+        self.add_component(btn)
+
+    def get_items_from_filter(self):
+        team = self.getparam("team", ())
+        activity = self.getparam("activity", ())
+        genre = self.getparam("genre", 0)
+        age = self.getparam("age", ())
+        dateref = convert_date(
+            self.getparam("dateref", ""), Season.current_season().date_ref)
+        if self.is_renew:
+            date_one_year = same_day_months_after(dateref, -12)
+            date_six_month = same_day_months_after(dateref, -6)
+            date_three_month = same_day_months_after(dateref, -3)
+            current_filter = Q(subscription__subscriptiontype__duration=0) & Q(
+                subscription__end_date__gte=date_one_year)
+            current_filter |= Q(subscription__subscriptiontype__duration=1) & Q(
+                subscription__end_date__gte=date_six_month)
+            current_filter |= Q(subscription__subscriptiontype__duration=2) & Q(
+                subscription__end_date__gte=date_three_month)
+            current_filter |= Q(subscription__subscriptiontype__duration=3) & Q(
+                subscription__end_date__gte=date_one_year)
+            exclude_filter = Q(subscription__begin_date__lte=dateref) & Q(
+                subscription__end_date__gte=dateref)
+        else:
+            current_filter = Q(subscription__begin_date__lte=dateref) & Q(
+                subscription__end_date__gte=dateref)
+            exclude_filter = Q()
+        if len(team) > 0:
+            current_filter &= Q(subscription__license__team__in=team)
+        if len(activity) > 0:
+            current_filter &= Q(subscription__license__activity__in=activity)
+        if len(age) > 0:
+            age_filter = Q()
+            for age_item in Age.objects.filter(id__in=age):
+                age_filter |= Q(birthday__gte="%d-01-01" % (dateref.year - age_item.maximum)) & Q(
+                    birthday__lte="%d-12-31" % (dateref.year - age_item.minimum))
+            current_filter &= age_filter
+        if genre != 0:
+            current_filter &= Q(genre=genre)
+        items = self.model.objects.filter(
+            current_filter).exclude(exclude_filter)
+        return items
+
+
+@MenuManage.describ('member.change_adherent', FORMTYPE_NOMODAL, 'member.actions', _('List of adherents with subscribtion'))
+class AdherentActiveList(AdherentAbstractList):
+    caption = _("Subscribe adherents")
+    is_renew = False
 
     def fillresponse(self):
         XferListEditor.fillresponse(self)
@@ -176,13 +197,33 @@ class AdherentList(XferListEditor):
                 "License", ""), {"unique": SELECT_SINGLE, "close": CLOSE_NO})
 
 
-@ActionsManage.affect('Adherent', 'search')
 @MenuManage.describ('member.change_adherent', FORMTYPE_NOMODAL, 'member.actions', _('To find an adherent following a set of criteria.'))
 class AdherentSearch(XferSearchEditor):
     icon = "adherent.png"
     model = Adherent
     field_id = 'adherent'
     caption = _("Search adherent")
+
+
+@MenuManage.describ('member.change_adherent', FORMTYPE_NOMODAL, 'member.actions', _('List of adherents with old subscribtion not renew yet'))
+class AdherentRenewList(AdherentAbstractList):
+    caption = _("Adherents to renew")
+    is_renew = True
+
+    def fillresponse_header(self):
+        AdherentAbstractList.fillresponse_header(self)
+        self.action_grid = [DEFAULT_ACTION_LIST[0]]
+        self.action_grid.append(
+            ('renew', _("re-new"), "images/add.png", SELECT_MULTI))
+        self.fieldnames = Adherent.get_renew_fields()
+
+    def fillresponse(self):
+        XferListEditor.fillresponse(self)
+        self.item.editor.add_email_selector(
+            self, 0, self.get_max_row() + 1, 10)
+        self.get_components('title').colspan = 10
+        self.get_components(self.field_id).colspan = 10
+        self.get_components('nb_adherent').colspan = 10
 
 
 @ActionsManage.affect('Adherent', 'modify', 'add')
@@ -275,6 +316,24 @@ class AdherentLicenseSave(XferContainerAcknowledge):
                 doc = License.objects.get(id=int(param_id[6:]))
                 doc.value = self.getparam(param_id, '')
                 doc.save()
+
+
+@ActionsManage.affect('Adherent', 'renew')
+@MenuManage.describ('member.add_subscription')
+class AdherentRenew(XferContainerAcknowledge):
+    icon = "adherent.png"
+    model = Adherent
+    field_id = 'adherent'
+    caption = _("License")
+
+    def fillresponse(self):
+        text = _(
+            "{[b]}Do you want that those %d old selected adherent(s) has been renew?{[/b]}{[br/]}Same subscription(s) will be applicated.{[br/]}No validated bill will be created for each subscritpion.") % len(self.items)
+        if self.confirme(text):
+            dateref = convert_date(
+                self.getparam("dateref", ""), Season.current_season().date_ref)
+            for item in self.items:
+                item.renew(dateref)
 
 
 @ActionsManage.affect('Adherent', 'delete')
