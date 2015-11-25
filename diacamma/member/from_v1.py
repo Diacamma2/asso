@@ -27,10 +27,13 @@ import sys
 
 from django.apps import apps
 from django.utils import six
+from django.db.models import Q
 
 from lucterios.install.lucterios_migration import MigrateAbstract
-from diacamma.accounting.from_v1 import convert_code
+from lucterios.framework.error import LucteriosException
 from lucterios.CORE.models import Parameter
+
+from diacamma.accounting.from_v1 import convert_code
 
 
 class MemberMigrate(MigrateAbstract):
@@ -173,8 +176,12 @@ class MemberMigrate(MigrateAbstract):
         for subid, adherentid, saisonid, subtype, end, begin, licence, equipe, activite, document, facture in cur_s.fetchall():
             if (adherentid in self.adherent_list.keys()) and (saisonid in self.season_list.keys()) and (subtype in self.subscriptiontype_list.keys()):
                 self.print_log("=> Subscription:%s %s", (adherentid, saisonid))
-                old_sub = subscription_mdl.objects.get_or_create(adherent=self.adherent_list[adherentid], season=self.season_list[
-                    saisonid], subscriptiontype=self.subscriptiontype_list[subtype], begin_date=begin, end_date=end)
+                try:
+                    old_sub = subscription_mdl.objects.get_or_create(adherent=self.adherent_list[adherentid], season=self.season_list[
+                        saisonid], subscriptiontype=self.subscriptiontype_list[subtype], begin_date=begin, end_date=end)
+                except LucteriosException:
+                    old_sub = self.adherent_list[adherentid].subscription_set.filter((Q(begin_date__lte=end) & Q(
+                        end_date__gte=end)) | (Q(begin_date__lte=begin) & Q(end_date__gte=begin)))[0]
                 if isinstance(old_sub, tuple):
                     old_sub = old_sub[0]
                 self.subscription_list[subid] = old_sub
