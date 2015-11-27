@@ -751,7 +751,7 @@ class AdherentTest(LucteriosTest):
         self.call('/diacamma.member/adherentAddModify',
                   {'adherent': 2, 'dateref': '2009-10-01'}, False)
         self.assert_count_equal(
-            'COMPONENTS/*', 1 + 1 + 2 * (8 + 4 + 6) + 1 + 2 + (2 * 2 + 3))
+            'COMPONENTS/*', 1 + 1 + 2 * (8 + 4 + 6) + 1 + 2 + (2 * 2 + 3) + 2)
         self.assert_xml_equal(
             'COMPONENTS/LABELFORM[@name="lbl_doc_1"]', "Doc 1")
         self.assert_xml_equal(
@@ -810,7 +810,7 @@ class AdherentTest(LucteriosTest):
         self.assert_observer(
             'core.custom', 'diacamma.member', 'adherentShow')
         self.assert_count_equal(
-            'COMPONENTS/*', 1 + 1 + 2 * (8 + 4 + 2) + 1 + 2 + (2 * 2 + 3))
+            'COMPONENTS/*', 1 + 1 + 2 * (8 + 4 + 2) + 1 + 2 + (2 * 2 + 3) + 2)
         self.assert_count_equal(
             'COMPONENTS/GRID[@name="subscription"]/HEADER', 4)
 
