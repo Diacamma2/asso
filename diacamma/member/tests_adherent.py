@@ -852,6 +852,7 @@ class AdherentTest(LucteriosTest):
         self.assert_observer(
             'core.custom', 'diacamma.member', 'adherentStatistic')
 
+        self.assert_count_equal('COMPONENTS/*', 2 * 5 + 3)
         self.assert_count_equal(
             'COMPONENTS/GRID[@name="town_1"]/RECORD', 2)
         self.assert_xml_equal(
@@ -860,12 +861,6 @@ class AdherentTest(LucteriosTest):
             'COMPONENTS/GRID[@name="town_2"]/RECORD', 2)
         self.assert_xml_equal(
             'COMPONENTS/GRID[@name="town_2"]/RECORD[2]/VALUE[@name="ratio"]', '{[b]}1{[/b]}')
-        self.assert_count_equal(
-            'COMPONENTS/GRID[@name="town_3"]/RECORD', 2)
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="town_3"]/RECORD[2]/VALUE[@name="ratio"]', '{[b]}1{[/b]}')
-
-        self.assert_count_equal('COMPONENTS/*', 3 * 5 + 3)
 
     def test_renew(self):
         self.add_subscriptions()
