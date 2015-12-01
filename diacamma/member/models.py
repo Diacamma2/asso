@@ -127,10 +127,10 @@ class Season(LucteriosModel):
         for age in range(2):
             if age == 0:
                 new_query = query & Q(birthday__gte=birthday)
-                offset = + 1
+                offset = +1
             else:
                 new_query = query & Q(birthday__lt=birthday)
-                offset = - 1
+                offset = -1
             values = Adherent.objects.filter(new_query).values(
                 field, 'genre').annotate(genre_sum=Count('genre'))
             for value in values:
@@ -148,7 +148,7 @@ class Season(LucteriosModel):
                                   city][1], "MinM": val_by_city[city][2], "MinW": val_by_city[city][3], "sum": city_sum, "ratio": "%d (%.1f%%)" % (city_sum, 100 * city_sum / total)})
             for idx in range(4):
                 total_by_city[idx] += val_by_city[city][idx]
-        values_by_city.sort(key=lambda val: -1 * val['sum'])
+        values_by_city.sort(key=lambda val:-1 * val['sum'])
         if len(values_by_city) > 0:
             values_by_city.append({name: "{[b]}%s{[/b]}" % _('total'), "MajM": "{[b]}%d{[/b]}" % total_by_city[0], "MajW": "{[b]}%d{[/b]}" % total_by_city[
                                   1], "MinM": "{[b]}%d{[/b]}" % total_by_city[2], "MinW": "{[b]}%d{[/b]}" % total_by_city[3], "ratio": "{[b]}%d{[/b]}" % total})
@@ -488,9 +488,9 @@ class Adherent(Individual):
             fields[keys[0]][0] = ("num", fields[keys[0]][0])
         if Params.getvalue("member-birth"):
             fields[keys[0]].insert(-1, ("birthday", "birthplace"))
-            fields[keys[0]].insert(-1, ((_("age category"), "age_category"), ))
+            fields[keys[0]].insert(-1, ((_("age category"), "age_category"),))
         fields[_('002@Subscription')] = ['subscription_set']
-        fields[''] = [((_("reference date"), "dateref"), )]
+        fields[''] = [((_("reference date"), "dateref"),)]
         return fields
 
     @property
@@ -630,7 +630,7 @@ class Subscription(LucteriosModel):
         cost_acc = CostAccounting.objects.filter(is_default=True)
         if len(cost_acc) > 0:
             self.bill.cost_accounting = cost_acc[0]
-        cmt = ["{[b]}%s{[/b]}" % _("subscription"), "{[i]}%s{[/i]}: %s" %
+        cmt = ["{[b]}%s{[/b]}" % _("subscription"), "{[i]}%s{[/i]}: %s" % 
                (_('subscription type'), six.text_type(self.subscriptiontype))]
         self.bill.comment = "{[br/]}".join(cmt)
         self.bill.save()
@@ -643,7 +643,7 @@ class Subscription(LucteriosModel):
         is_new = self.id is None
         if is_new and (len(self.adherent.subscription_set.filter((Q(begin_date__lte=self.end_date) & Q(end_date__gte=self.end_date)) | (Q(begin_date__lte=self.begin_date) & Q(end_date__gte=self.begin_date)))) > 0):
             raise LucteriosException(IMPORTANT, _("dates always used!"))
-        if is_new:
+        if not force_insert and is_new:
             self.create_bill()
         LucteriosModel.save(self, force_insert=force_insert,
                             force_update=force_update, using=using, update_fields=update_fields)
