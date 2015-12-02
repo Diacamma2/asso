@@ -43,6 +43,7 @@ from lucterios.contacts.models import Individual
 from diacamma.invoice.models import Article, Bill, Detail
 from diacamma.accounting.tools import format_devise
 from diacamma.accounting.models import Third, AccountThird, CostAccounting
+import logging
 
 
 def convert_date(current_date, defaultdate=None):
@@ -148,7 +149,7 @@ class Season(LucteriosModel):
                                   city][1], "MinM": val_by_city[city][2], "MinW": val_by_city[city][3], "sum": city_sum, "ratio": "%d (%.1f%%)" % (city_sum, 100 * city_sum / total)})
             for idx in range(4):
                 total_by_city[idx] += val_by_city[city][idx]
-        values_by_city.sort(key=lambda val:-1 * val['sum'])
+        values_by_city.sort(key=lambda val: -1 * val['sum'])
         if len(values_by_city) > 0:
             values_by_city.append({name: "{[b]}%s{[/b]}" % _('total'), "MajM": "{[b]}%d{[/b]}" % total_by_city[0], "MajW": "{[b]}%d{[/b]}" % total_by_city[
                                   1], "MinM": "{[b]}%d{[/b]}" % total_by_city[2], "MinW": "{[b]}%d{[/b]}" % total_by_city[3], "ratio": "{[b]}%d{[/b]}" % total})
@@ -448,7 +449,7 @@ class Adherent(Individual):
     num = models.IntegerField(
         verbose_name=_('numeros'), null=False, default=0,)
     birthday = models.DateField(
-        verbose_name=_('birthday'), default=date.today, blank=False)
+        verbose_name=_('birthday'), default=date.today, null=True)
     birthplace = models.CharField(_('birthplace'), max_length=50, blank=True)
 
     def __init__(self, *args, **kwargs):
@@ -492,6 +493,105 @@ class Adherent(Individual):
         fields[_('002@Subscription')] = ['subscription_set']
         fields[''] = [((_("reference date"), "dateref"),)]
         return fields
+
+    @classmethod
+    def get_search_fields(cls):
+        if Params.getvalue("member-numero"):
+            ident_field = ['num']
+        else:
+            ident_field = []
+        ident_field.extend(super(Adherent, cls).get_search_fields())
+        if Params.getvalue("member-birth"):
+            ident_field.extend(['birthday', 'birthplace'])
+        ident_field.extend(['subscription_set.season', 'subscription_set.subscriptiontype',
+                            'subscription_set.begin_date', 'subscription_set.end_date'])
+        if Params.getvalue("member-team-enable"):
+            # Params.getvalue("member-team-text")
+            ident_field.append('subscription_set.license_set.team')
+        if Params.getvalue("member-activite-enable"):
+            # Params.getvalue("member-activite-text")
+            ident_field.append('subscription_set.license_set.activity')
+        if Params.getvalue("member-licence-enabled"):
+            ident_field.append('subscription_set.license_set.value')
+        return ident_field
+
+    @classmethod
+    def get_import_fields(cls):
+        fields = super(Individual, cls).get_import_fields()
+        fields.append(('subscriptiontype', _('subscription type')))
+        if Params.getvalue("member-team-enable"):
+            fields.append(('team', Params.getvalue("member-team-text")))
+        if Params.getvalue("member-activite-enable"):
+            fields.append(
+                ('activity', Params.getvalue("member-activite-text")))
+        if Params.getvalue("member-licence-enabled"):
+            fields.append(('value', _('license #')))
+        return fields
+
+    @classmethod
+    def import_data(cls, rowdata):
+        try:
+            new_item = super(Individual, cls).import_data(rowdata)
+            if new_item is not None:
+                working_subscription = None
+                if 'subscriptiontype' in rowdata.keys():
+                    current_season = Season.current_season()
+                    type_name = rowdata['subscriptiontype']
+                    type_idx = 0
+                    if '#' in type_name:
+                        type_name, type_idx = type_name.split('#')
+                    type_obj = SubscriptionType.objects.filter(name=type_name)
+                    if len(type_obj) > 0:
+                        type_obj = type_obj[0]
+                        if type_obj.duration == 1:
+                            type_idx = int(type_idx)
+                            period_list = type_obj.period_set.all()
+                            begin_date = period_list[type_idx].begin_date
+                            end_date = period_list[type_idx].end_date
+                        elif type_obj.duration == 2:
+                            type_idx = int(type_idx)
+                            mounths = current_season.get_months()
+                            begin_date = convert_date(
+                                mounths[type_idx][0] + '-01')
+                            end_date = same_day_months_after(begin_date, 1)
+                        elif type_obj.duration == 3:
+                            begin_date = date.today()
+                            end_date = same_day_months_after(begin_date, 12)
+                        else:
+                            begin_date = current_season.begin_date
+                            end_date = current_season.end_date
+                        working_subscription = Subscription.objects.get_or_create(
+                            adherent=new_item, season=current_season, subscriptiontype=type_obj, begin_date=begin_date, end_date=end_date)
+                        if isinstance(working_subscription, tuple):
+                            working_subscription = working_subscription[0]
+                if working_subscription is None:
+                    working_subscription = new_item.last_subscription
+                if working_subscription is not None:
+                    try:
+                        team = Team.objects.get(name=rowdata['team'])
+                    except:
+                        team = None
+                    try:
+                        activity = Activity.objects.get(
+                            name=rowdata['activity'])
+                    except:
+                        activity = None
+                    try:
+                        value = rowdata['value']
+                    except:
+                        value = ''
+                    if ('subscriptiontype' in rowdata.keys()) or (team is not None) or (activity is not None) or (value != ''):
+                        License.objects.create(
+                            subscription=working_subscription, team=team, activity=activity, value=value)
+            return new_item
+        except:
+            logging.getLogger('diacamma.member').exception("import_data")
+            return None
+
+    @classmethod
+    def get_print_fields(cls):
+        return ["image", 'num', "firstname", "lastname", 'address', 'postal_code', 'city', 'country', 'tel1', 'tel2',
+                'email', 'birthday', 'birthplace', 'comment', 'user', 'subscription_set', 'responsability_set', 'OUR_DETAIL']
 
     @property
     def age_category(self):
@@ -624,13 +724,13 @@ class Subscription(LucteriosModel):
             adh_third = Third.objects.create(
                 contact_id=self.adherent_id, status=0)
             AccountThird.objects.create(
-                third=adh_third, code=Params.getvalue("member-account-third"))
+                third=adh_third, code=Params.getvalue("invoice-account-third"))
         self.bill = Bill.objects.create(
-            bill_type=1, date=date.today(), third=adh_third)
+            bill_type=1, date=self.season.date_ref, third=adh_third)
         cost_acc = CostAccounting.objects.filter(is_default=True)
         if len(cost_acc) > 0:
             self.bill.cost_accounting = cost_acc[0]
-        cmt = ["{[b]}%s{[/b]}" % _("subscription"), "{[i]}%s{[/i]}: %s" % 
+        cmt = ["{[b]}%s{[/b]}" % _("subscription"), "{[i]}%s{[/i]}: %s" %
                (_('subscription type'), six.text_type(self.subscriptiontype))]
         self.bill.comment = "{[br/]}".join(cmt)
         self.bill.save()
@@ -689,14 +789,21 @@ class DocAdherent(LucteriosModel):
 class License(LucteriosModel):
     subscription = models.ForeignKey(
         Subscription, verbose_name=_('subscription'), null=False, default=None, db_index=True, on_delete=models.CASCADE)
-    value = models.CharField(_('value'), max_length=50, null=True)
+    value = models.CharField(_('license #'), max_length=50, null=True)
     team = models.ForeignKey(
         Team, verbose_name=_('team'), null=True, default=None, db_index=True, on_delete=models.PROTECT)
     activity = models.ForeignKey(
         Activity, verbose_name=_('activity'), null=True, default=None, db_index=True, on_delete=models.PROTECT)
 
     def __str__(self):
-        return "%s [%s] %s" % (self.team, self.activity, self.value)
+        val = []
+        if Params.getvalue("member-team-enable") and (self.team is not None):
+            val.append(six.text_type(self.team))
+        if Params.getvalue("member-activite-enable") and (self.activity is not None):
+            val.append("[%s]" % six.text_type(self.activity))
+        if Params.getvalue("member-licence-enabled"):
+            val.append(self.value)
+        return " ".join(val)
 
     @classmethod
     def get_default_fields(cls):

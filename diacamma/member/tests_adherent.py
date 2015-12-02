@@ -438,7 +438,7 @@ class AdherentTest(LucteriosTest):
         self.assert_xml_equal(
             'COMPONENTS/GRID[@name="license"]/HEADER[@name="activity"]', "passion")
         self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="license"]/HEADER[@name="value"]', "valeur")
+            'COMPONENTS/GRID[@name="license"]/HEADER[@name="value"]', "N° licence")
         self.assert_count_equal(
             'COMPONENTS/GRID[@name="license"]/RECORD', 1)
         self.assert_xml_equal(

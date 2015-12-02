@@ -231,7 +231,7 @@ class MemberMigrate(MigrateAbstract):
             if param_name == "Naissance":
                 pname = "member-birth"
             if param_name == "compteTiersDefault":
-                pname = "member-account-third"
+                pname = "invoice-account-third"
                 param_value = convert_code(param_value)
             if param_name == "connexion":
                 pname = "member-connection"

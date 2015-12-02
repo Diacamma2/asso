@@ -28,7 +28,8 @@ from datetime import date
 from django.db import migrations, models
 from django.utils.translation import ugettext_lazy as _
 
-from lucterios.CORE.models import Parameter
+from lucterios.CORE.models import Parameter, PrintModel
+from diacamma.member.models import Adherent
 
 
 def initial_values(*args):
@@ -70,13 +71,6 @@ def initial_values(*args):
     param.save()
 
     param = Parameter.objects.create(
-        name="member-account-third", typeparam=0)
-    param.title = _("member-account-third")
-    param.args = "{'Multi':False}"
-    param.value = '411'
-    param.save()
-
-    param = Parameter.objects.create(
         name="member-connection", typeparam=3)
     param.title = _("member-connection")
     param.args = "{}"
@@ -111,6 +105,69 @@ def initial_values(*args):
     param.value = 'True'
     param.save()
 
+    prtmdl = PrintModel.objects.create(
+        name=_("adherents listing"), kind=0, modelname=Adherent.get_long_name())
+    prtmdl.change_listing(297, 210, [(22, _('numeros'), '#num'),
+                                     (25, _('lastname'), '#lastname'),
+                                     (40, _('firstname'), '#firstname'),
+                                     (50, _('address'), '#address'),
+                                     (15, _('postal code'), '#postal_code'),
+                                     (30, _('city'), '#city'),
+                                     (20, _('phone'), '#tel1 #tel2'),
+                                     (35, _('email'), '#email'),
+                                     (30, _('comment'), '#comment')])
+    prtmdl.save()
+
+    prtmdl = PrintModel.objects.create(
+        name=_("List émargement"), kind=0, modelname=Adherent.get_long_name())
+    prtmdl.change_listing(297, 210, [(30, "%(last)s{[br/]}%(first)s" % {'last': _('lastname'), 'first': _('firstname')}, '#lastname{[br/]}#firstname'),
+                                     (25, '', ''),
+                                     (25, '', ''),
+                                     (25, '', ''),
+                                     (25, '', ''),
+                                     (25, '', ''),
+                                     (25, '', '')])
+    prtmdl.save()
+
+    prtmdl = PrintModel.objects.create(
+        name=_("Complet listing"), kind=0, modelname=Adherent.get_long_name())
+    prtmdl.change_listing(297, 210, [(1, _('numeros'), '#num'),
+                                     (1, _('lastname'), '#lastname'),
+                                     (1, _('firstname'), '#firstname'),
+                                     (1, _('address'), '#address'),
+                                     (1, _('postal code'), '#postal_code'),
+                                     (1, _('city'), '#city'),
+                                     (1, _('tel1'), '#tel1'),
+                                     (1, _('tel2'), '#tel2'),
+                                     (1, _('email'), '#email'),
+                                     (1, _('comment'), '#comment'),
+                                     (1, _("birthday"), "#birthday"),
+                                     (1, _("birthplace"), "#birthplace"),
+                                     (1, _('season'),
+                                      '#subscription_set.season'),
+                                     (1, _('subscription type'),
+                                      '#subscription_set.subscriptiontype'),
+                                     (1, _('begin date'),
+                                      '#subscription_set.begin_date'),
+                                     (1, _('end date'),
+                                      '#subscription_set.end_date'),
+                                     (1, _('team'),
+                                      '#subscription_set.license_set.team'),
+                                     (1, _('activity'),
+                                      '#subscription_set.license_set.activity'),
+                                     (1, _('license #'), '#subscription_set.license_set.value')])
+    prtmdl.save()
+
+    prtmdl = PrintModel.objects.create(
+        name=_("label"), kind=1, modelname=Adherent.get_long_name())
+    prtmdl.value = "#firstname #lastname{[newline]}#address{[newline]}#postal_code #city"
+    prtmdl.save()
+
+    prtmdl = PrintModel.objects.create(
+        name=_("card"), kind=1, modelname=Adherent.get_long_name())
+    prtmdl.value = "#num #firstname #lastname{[newline]}#birthday #birthplace{[newline]}#subscription_set.license_set.team #subscription_set.license_set.activity #subscription_set.license_set.value"
+    prtmdl.save()
+
 
 class Migration(migrations.Migration):
 
@@ -142,7 +199,7 @@ class Migration(migrations.Migration):
                 ('num', models.IntegerField(
                     default=0, verbose_name='numeros')),
                 ('birthday', models.DateField(
-                    default=date.today, verbose_name='birthday')),
+                    default=date.today, null=True, verbose_name='birthday')),
                 ('birthplace', models.CharField(
                     blank=True, max_length=50, verbose_name='birthplace')),
             ],

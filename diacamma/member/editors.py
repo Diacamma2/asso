@@ -85,6 +85,17 @@ class PeriodEditor(LucteriosEditor):
         xfer.change_to_readonly('num')
 
 
+class SubscriptionTypeEditor(LucteriosEditor):
+
+    def edit(self, xfer):
+        row_init = xfer.get_max_row() + 3
+        btn = XferCompButton("btn_article")
+        btn.set_location(3, row_init, 2)
+        btn.set_action(xfer.request, ActionsManage.get_act_changed(
+            'Article', 'list', _('Articles'), 'diacamma.invoice/images/article.png'), {'close': CLOSE_NO})
+        xfer.add_component(btn)
+
+
 class AgeEditor(LucteriosEditor):
 
     def before_save(self, xfer):
