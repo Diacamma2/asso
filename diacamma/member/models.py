@@ -758,7 +758,9 @@ class Subscription(LucteriosModel):
     def save(self, force_insert=False, force_update=False, using=None,
              update_fields=None):
         is_new = self.id is None
-        if is_new and (len(self.adherent.subscription_set.filter((Q(begin_date__lte=self.end_date) & Q(end_date__gte=self.end_date)) | (Q(begin_date__lte=self.begin_date) & Q(end_date__gte=self.begin_date)))) > 0):
+        query_dates = (Q(begin_date__lte=self.end_date) & Q(end_date__gte=self.end_date)) | (
+            Q(begin_date__lte=self.begin_date) & Q(end_date__gte=self.begin_date))
+        if is_new and (len(self.adherent.subscription_set.filter((Q(subscriptiontype__duration=0) & Q(season=self.season)) | (Q(subscriptiontype__duration__gt=0) & query_dates))) > 0):
             raise LucteriosException(IMPORTANT, _("dates always used!"))
         if not force_insert and is_new:
             self.create_bill()
@@ -818,7 +820,7 @@ class License(LucteriosModel):
             val.append(six.text_type(self.team))
         if Params.getvalue("member-activite-enable") and (self.activity is not None):
             val.append("[%s]" % six.text_type(self.activity))
-        if Params.getvalue("member-licence-enabled"):
+        if Params.getvalue("member-licence-enabled") and (self.value is not None):
             val.append(self.value)
         return " ".join(val)
 

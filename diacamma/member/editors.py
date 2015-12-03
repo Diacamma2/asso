@@ -207,7 +207,7 @@ class SubscriptionEditor(LucteriosEditor):
                 cmp_season.set_value(self.item.season.id)
             cmp_season.set_action(xfer.request, xfer.get_action(),
                                   {'close': CLOSE_NO, 'modal': FORMTYPE_REFRESH})
-            if last_subscription is not None:
+            if (last_subscription is not None) and (xfer.getparam('subscriptiontype') is None):
                 cmp_subscriptiontype.set_value(
                     last_subscription.subscriptiontype.id)
         if self.item.subscriptiontype_id is None:
