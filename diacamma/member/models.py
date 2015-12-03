@@ -528,61 +528,59 @@ class Adherent(Individual):
             fields.append(('value', _('license #')))
         return fields
 
-    @classmethod
-    def import_data(cls, rowdata):
+    def _import_subscription(self, type_name, dateformat):
+        working_subscription = None
+        current_season = Season.current_season()
+        type_option = 0
+        if '#' in type_name:
+            type_name, type_option = type_name.split('#')
         try:
-            new_item = super(Individual, cls).import_data(rowdata)
+            type_obj = SubscriptionType.objects.filter(name=type_name)
+            if len(type_obj) > 0:
+                type_obj = type_obj[0]
+                if type_obj.duration == 1:
+                    type_option = int(type_option) - 1
+                    period_list = current_season.period_set.all()
+                    begin_date = period_list[type_option].begin_date
+                    end_date = period_list[type_option].end_date
+                elif type_obj.duration == 2:
+                    type_option = int(type_option) - 1
+                    mounths = current_season.get_months()
+                    begin_date = convert_date(mounths[type_option][0] + '-01')
+                    end_date = same_day_months_after(
+                        begin_date, 1) - timedelta(days=1)
+                elif type_obj.duration == 3:
+                    try:
+                        begin_date = datetime.strptime(
+                            type_option, dateformat).date()
+                    except (TypeError, ValueError):
+                        begin_date = date.today()
+                    end_date = same_day_months_after(
+                        begin_date, 12) - timedelta(days=1)
+                else:
+                    begin_date = current_season.begin_date
+                    end_date = current_season.end_date
+                working_subscription = Subscription.objects.get_or_create(
+                    adherent=self, season=current_season, subscriptiontype=type_obj, begin_date=begin_date, end_date=end_date)
+                if isinstance(working_subscription, tuple):
+                    working_subscription = working_subscription[0]
+        except:
+            logging.getLogger('diacamma.member').exception("import_data")
+        return working_subscription
+
+    @classmethod
+    def import_data(cls, rowdata, dateformat):
+        try:
+            new_item = super(Individual, cls).import_data(rowdata, dateformat)
             if new_item is not None:
                 working_subscription = None
                 if 'subscriptiontype' in rowdata.keys():
-                    current_season = Season.current_season()
-                    type_name = rowdata['subscriptiontype']
-                    type_idx = 0
-                    if '#' in type_name:
-                        type_name, type_idx = type_name.split('#')
-                    type_obj = SubscriptionType.objects.filter(name=type_name)
-                    if len(type_obj) > 0:
-                        type_obj = type_obj[0]
-                        if type_obj.duration == 1:
-                            type_idx = int(type_idx)
-                            period_list = type_obj.period_set.all()
-                            begin_date = period_list[type_idx].begin_date
-                            end_date = period_list[type_idx].end_date
-                        elif type_obj.duration == 2:
-                            type_idx = int(type_idx)
-                            mounths = current_season.get_months()
-                            begin_date = convert_date(
-                                mounths[type_idx][0] + '-01')
-                            end_date = same_day_months_after(begin_date, 1)
-                        elif type_obj.duration == 3:
-                            begin_date = date.today()
-                            end_date = same_day_months_after(begin_date, 12)
-                        else:
-                            begin_date = current_season.begin_date
-                            end_date = current_season.end_date
-                        working_subscription = Subscription.objects.get_or_create(
-                            adherent=new_item, season=current_season, subscriptiontype=type_obj, begin_date=begin_date, end_date=end_date)
-                        if isinstance(working_subscription, tuple):
-                            working_subscription = working_subscription[0]
+                    working_subscription = new_item._import_subscription(
+                        rowdata['subscriptiontype'], dateformat)
                 if working_subscription is None:
                     working_subscription = new_item.last_subscription
                 if working_subscription is not None:
-                    try:
-                        team = Team.objects.get(name=rowdata['team'])
-                    except:
-                        team = None
-                    try:
-                        activity = Activity.objects.get(
-                            name=rowdata['activity'])
-                    except:
-                        activity = None
-                    try:
-                        value = rowdata['value']
-                    except:
-                        value = ''
-                    if ('subscriptiontype' in rowdata.keys()) or (team is not None) or (activity is not None) or (value != ''):
-                        License.objects.create(
-                            subscription=working_subscription, team=team, activity=activity, value=value)
+                    working_subscription.import_licence(rowdata)
             return new_item
         except:
             logging.getLogger('diacamma.member').exception("import_data")
@@ -737,6 +735,25 @@ class Subscription(LucteriosModel):
         for art in self.subscriptiontype.articles.all():
             Detail.objects.create(bill=self.bill, article=art, designation=art.designation,
                                   price=art.price, unit=art.unit, quantity=1)
+
+    def import_licence(self, rowdata):
+        try:
+            team = Team.objects.get(name=rowdata['team'])
+        except:
+            team = None
+        try:
+            activity = Activity.objects.get(
+                name=rowdata['activity'])
+        except:
+            activity = None
+        try:
+            value = rowdata['value']
+        except:
+            value = ''
+        if ('subscriptiontype' in rowdata.keys()) or (team is not None) or (activity is not None) or (value != ''):
+            return License.objects.create(subscription=self, team=team, activity=activity, value=value)
+        else:
+            return None
 
     def save(self, force_insert=False, force_update=False, using=None,
              update_fields=None):
