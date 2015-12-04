@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-12-02 16:05+0000\n"
+"POT-Creation-Date: 2015-12-04 11:04+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -33,3 +33,31 @@ msgstr "(c) GPL Licence"
 #: help/presentation.html:2
 msgid "presentation.html"
 msgstr "Présentation de Diacamma Asso"
+
+#: migrations/0001_initial.py:34
+msgid "president"
+msgstr "président"
+
+#: migrations/0001_initial.py:35
+msgid "vice-president"
+msgstr "vice-président"
+
+#: migrations/0001_initial.py:36
+msgid "treasurer"
+msgstr "trésorier"
+
+#: migrations/0001_initial.py:37
+msgid "secretary"
+msgstr "secrétaire"
+
+#: migrations/0001_initial.py:38
+msgid "special adviser"
+msgstr "chargé de mission"
+
+#: migrations/0001_initial.py:39
+msgid "enterprise"
+msgstr "entreprise"
+
+#: migrations/0001_initial.py:40
+msgid "association"
+msgstr "association"

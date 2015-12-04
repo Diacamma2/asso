@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-12-02 16:05+0000\n"
+"POT-Creation-Date: 2015-12-04 11:04+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -21,7 +21,7 @@ msgstr ""
 msgid "Diacamma member"
 msgstr "Diacamma member"
 
-#: editors.py:49 models.py:303 models.py:428
+#: editors.py:49 models.py:304 models.py:429
 msgid "date invalid!"
 msgstr "date invalid!"
 
@@ -29,8 +29,8 @@ msgstr "date invalid!"
 msgid "Season exists yet!"
 msgstr "Season exists yet!"
 
-#: editors.py:70 editors.py:257 migrations/0001_initial.py:150 models.py:84
-#: models.py:272 models.py:612
+#: editors.py:70 editors.py:257 migrations/0001_initial.py:150 models.py:85
+#: models.py:273 models.py:689
 msgid "begin date"
 msgstr "begin date"
 
@@ -38,11 +38,11 @@ msgstr "begin date"
 msgid "Articles"
 msgstr "Articles"
 
-#: editors.py:107 models.py:416 models.py:424
+#: editors.py:107 models.py:417 models.py:425
 msgid "date min."
 msgstr "date min."
 
-#: editors.py:116 models.py:416 models.py:424
+#: editors.py:116 models.py:417 models.py:425
 msgid "date max."
 msgstr "date max."
 
@@ -50,7 +50,7 @@ msgstr "date max."
 msgid "Bill"
 msgstr "Bill"
 
-#: editors.py:156 models.py:263
+#: editors.py:156 models.py:264
 msgid "documents needs"
 msgstr "documents needs"
 
@@ -62,11 +62,11 @@ msgstr "Modify"
 msgid "No subscription type defined!"
 msgstr "No subscription type defined!"
 
-#: editors.py:227 models.py:319
+#: editors.py:227 models.py:320
 msgid "annually"
 msgstr "annually"
 
-#: editors.py:237 models.py:310
+#: editors.py:237 models.py:311
 msgid "period"
 msgstr "period"
 
@@ -126,8 +126,8 @@ msgstr "Manage licence number"
 msgid "adherents listing"
 msgstr "adherents listing"
 
-#: migrations/0001_initial.py:110 migrations/0001_initial.py:134 models.py:271
-#: models.py:449
+#: migrations/0001_initial.py:110 migrations/0001_initial.py:134 models.py:272
+#: models.py:450
 msgid "numeros"
 msgstr "numeros"
 
@@ -181,36 +181,37 @@ msgstr "tel1"
 msgid "tel2"
 msgstr "tel2"
 
-#: migrations/0001_initial.py:144 models.py:451
+#: migrations/0001_initial.py:144 models.py:452
 msgid "birthday"
 msgstr "birthday"
 
-#: migrations/0001_initial.py:145 models.py:452
+#: migrations/0001_initial.py:145 models.py:453
 msgid "birthplace"
 msgstr "birthplace"
 
-#: migrations/0001_initial.py:146 models.py:226 models.py:233 models.py:269
-#: models.py:607 views.py:475
+#: migrations/0001_initial.py:146 models.py:227 models.py:234 models.py:270
+#: models.py:684 views.py:475
 msgid "season"
 msgstr "season"
 
-#: migrations/0001_initial.py:148 models.py:351 models.py:609 models.py:655
+#: migrations/0001_initial.py:148 models.py:352 models.py:521 models.py:686
+#: models.py:732
 msgid "subscription type"
 msgstr "subscription type"
 
-#: migrations/0001_initial.py:152 models.py:84 models.py:273 models.py:613
+#: migrations/0001_initial.py:152 models.py:85 models.py:274 models.py:690
 msgid "end date"
 msgstr "end date"
 
-#: migrations/0001_initial.py:154 models.py:400 models.py:715
+#: migrations/0001_initial.py:154 models.py:401 models.py:813
 msgid "team"
 msgstr "team"
 
-#: migrations/0001_initial.py:156 models.py:375 models.py:717
+#: migrations/0001_initial.py:156 models.py:376 models.py:815
 msgid "activity"
 msgstr "activity"
 
-#: migrations/0001_initial.py:158 models.py:713
+#: migrations/0001_initial.py:158 models.py:528 models.py:811
 msgid "license #"
 msgstr "license #"
 
@@ -222,159 +223,159 @@ msgstr "label"
 msgid "card"
 msgstr "card"
 
-#: models.py:67
+#: models.py:68
 msgid "designation"
 msgstr "designation"
 
-#: models.py:69
+#: models.py:70
 msgid "is current"
 msgstr "is current"
 
-#: models.py:100
+#: models.py:101
 msgid "No default season define!"
 msgstr "No default season define!"
 
-#: models.py:109
+#: models.py:110
 msgid "No season find!"
 msgstr "No season find!"
 
-#: models.py:117
+#: models.py:118
 msgid "No period find!"
 msgstr "No period find!"
 
-#: models.py:153
+#: models.py:154
 msgid "total"
 msgstr "total"
 
-#: models.py:227
+#: models.py:228
 msgid "seasons"
 msgstr "seasons"
 
-#: models.py:234 models.py:317 models.py:356 models.py:380 models.py:405
+#: models.py:235 models.py:318 models.py:357 models.py:381 models.py:406
 msgid "name"
 msgstr "name"
 
-#: models.py:262
+#: models.py:263
 msgid "document needs"
 msgstr "document needs"
 
-#: models.py:292
+#: models.py:293
 msgid "Each season have to have 2 periods minimum!"
 msgstr "Each season have to have 2 periods minimum!"
 
-#: models.py:311
+#: models.py:312
 msgid "periods"
 msgstr "periods"
 
-#: models.py:318 models.py:357 models.py:381
+#: models.py:319 models.py:358 models.py:382
 msgid "description"
 msgstr "description"
 
-#: models.py:319
+#: models.py:320
 msgid "duration"
 msgstr "duration"
 
-#: models.py:320
+#: models.py:321
 msgid "periodic"
 msgstr "periodic"
 
-#: models.py:320
+#: models.py:321
 msgid "monthly"
 msgstr "monthly"
 
-#: models.py:320
+#: models.py:321
 msgid "calendar"
 msgstr "calendar"
 
-#: models.py:321 models.py:382
+#: models.py:322 models.py:383
 msgid "unactive"
 msgstr "unactive"
 
-#: models.py:323
+#: models.py:324
 msgid "articles"
 msgstr "articles"
 
-#: models.py:333 models.py:341
+#: models.py:334 models.py:342
 msgid "price"
 msgstr "price"
 
-#: models.py:352
+#: models.py:353
 msgid "subscription types"
 msgstr "subscription types"
 
-#: models.py:376
+#: models.py:377
 msgid "activities"
 msgstr "activities"
 
-#: models.py:401
+#: models.py:402
 msgid "teams"
 msgstr "teams"
 
-#: models.py:407
+#: models.py:408
 msgid "minimum"
 msgstr "minimum"
 
-#: models.py:409
+#: models.py:410
 msgid "maximum"
 msgstr "maximum"
 
-#: models.py:442
+#: models.py:443
 msgid "age"
 msgstr "age"
 
-#: models.py:443
+#: models.py:444
 msgid "ages"
 msgstr "ages"
 
-#: models.py:473 models.py:759
+#: models.py:474 models.py:864
 msgid "license"
 msgstr "license"
 
-#: models.py:491
+#: models.py:492
 msgid "age category"
 msgstr "age category"
 
-#: models.py:492
+#: models.py:493
 msgid "002@Subscription"
 msgstr "Subscription"
 
-#: models.py:493 views.py:112
+#: models.py:494 views.py:112
 msgid "reference date"
 msgstr "reference date"
 
-#: models.py:599 models.py:605
+#: models.py:676 models.py:682
 msgid "adherent"
 msgstr "adherent"
 
-#: models.py:600
+#: models.py:677
 msgid "adherents"
 msgstr "adherents"
 
-#: models.py:611
+#: models.py:688
 msgid "bill"
 msgstr "bill"
 
-#: models.py:654 models.py:677 models.py:678 models.py:683 models.py:712
+#: models.py:731 models.py:775 models.py:776 models.py:781 models.py:810
 msgid "subscription"
 msgstr "subscription"
 
-#: models.py:666
+#: models.py:764
 msgid "dates always used!"
 msgstr "dates always used!"
 
-#: models.py:685 models.py:705
+#: models.py:783 models.py:803
 msgid "document"
 msgstr "document"
 
-#: models.py:687 views.py:293
+#: models.py:785 views.py:293
 msgid "value"
 msgstr "value"
 
-#: models.py:706
+#: models.py:804
 msgid "documents"
 msgstr "documents"
 
-#: models.py:760
+#: models.py:865
 msgid "licenses"
 msgstr "licenses"
 
