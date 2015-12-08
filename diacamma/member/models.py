@@ -602,7 +602,7 @@ class Adherent(Individual):
 
     @property
     def age_category(self):
-        age_val = int((self.dateref - self.birthday).days / 365)
+        age_val = int(self.dateref.year - self.birthday.year)
         ages = Age.objects.filter(
             minimum__lte=age_val, maximum__gte=age_val)
         if len(list(ages)) > 0:
