@@ -560,8 +560,17 @@ class Adherent(Individual):
                 else:
                     begin_date = current_season.begin_date
                     end_date = current_season.end_date
-                working_subscription = Subscription.objects.get_or_create(
-                    adherent=self, season=current_season, subscriptiontype=type_obj, begin_date=begin_date, end_date=end_date)
+                try:
+                    working_subscription = Subscription.objects.get(
+                        adherent=self, season=current_season, subscriptiontype=type_obj, begin_date=begin_date, end_date=end_date)
+                except ObjectDoesNotExist:
+                    working_subscription = Subscription()
+                    working_subscription.adherent = self
+                    working_subscription.season = current_season
+                    working_subscription.subscriptiontype = type_obj
+                    working_subscription.begin_date = begin_date
+                    working_subscription.end_date = end_date
+                    working_subscription.save()
                 if isinstance(working_subscription, tuple):
                     working_subscription = working_subscription[0]
         except:

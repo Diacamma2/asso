@@ -1,0 +1,38 @@
+code;name
+102;Fonds associatif sans droit de reprise
+103;Fonds associatifs droit de reprise
+106;Réserves
+110;Report à nouveau (créditeur)
+119;Report à nouveau (débiteur)
+120;Résultat de l'exercice (excédent)
+129;Résultat de l'exercice (perte)
+131;Subventions d'équipement
+139;Subventions d'investissement inscrites au compte de résultat
+151;Provisions
+164;Emprunts auprès des établissements de crédit
+512;Banques
+531;Caisse
+581;Virements de fonds
+401;Fournisseurs collectif
+408;Fournisseurs - Factures non parvenues
+411;Usagers collectifs	
+418;Usagers - Produits non encore facturés	
+601;Achats de matières premières
+602;Achats de fournitures
+604;Achats de prestations de services
+607;Achats de marchandises
+613;Locations et charges locatives
+615;Entretien et réparations
+616;Primes d'assurances
+623;Frais de publicité
+624;Frais de transports
+625;Frais de déplacements
+626;Frais postaux et télécommunications
+627;Frais des services bancaires
+628;Services extérieurs divers
+6541;Créances de l'exercice
+701;Ventes de produits finis	
+706;Ventes de prestations de services	
+707;Ventes de marchandises	
+709;Rabais, remises et ristournes accordés par l'association
+708;Produits des activités annexes	

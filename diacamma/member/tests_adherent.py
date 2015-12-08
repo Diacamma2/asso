@@ -1041,13 +1041,17 @@ class AdherentTest(LucteriosTest):
             'core.custom', 'diacamma.member', 'adherentList')
         self.assert_count_equal(
             'COMPONENTS/GRID[@name="adherent"]/RECORD', 3)
+        self.factory.xfer = BillList()
+        self.call('/diacamma.invoice/billList', {}, False)
+        self.assert_observer('core.custom', 'diacamma.invoice', 'billList')
+        self.assert_count_equal('COMPONENTS/GRID[@name="bill"]/RECORD', 5)
 
         self.factory.xfer = ContactImport()
         self.call('/lucterios.contacts/contactImport', {'step': 1, 'modelname': 'member.Adherent', 'quotechar': "'",
                                                         'delimiter': ',', 'encoding': 'utf-8', 'dateformat': '%d/%m/%Y', 'csvcontent': StringIO(csv_content)}, False)
         self.assert_observer(
             'core.custom', 'lucterios.contacts', 'contactImport')
-        self.assert_count_equal('COMPONENTS/*', 6 + 2 * 17)
+        self.assert_count_equal('COMPONENTS/*', 7 + 2 * 17)
         self.assert_count_equal('COMPONENTS/SELECT[@name="fld_city"]/CASE', 15)
         self.assert_count_equal(
             'COMPONENTS/SELECT[@name="fld_country"]/CASE', 16)
@@ -1057,15 +1061,16 @@ class AdherentTest(LucteriosTest):
             'COMPONENTS/GRID[@name="CSV"]/RECORD', 5)
         self.assert_count_equal(
             'COMPONENTS/GRID[@name="CSV"]/ACTIONS', 0)
-        self.assert_count_equal('ACTIONS/ACTION', 2)
+        self.assert_count_equal('ACTIONS/ACTION', 3)
         self.assert_action_equal('ACTIONS/ACTION[1]', (six.text_type(
+            'Retour'), 'images/left.png', 'lucterios.contacts', 'contactImport', 0, 2, 1, {'step': '0'}))
+        self.assert_action_equal('ACTIONS/ACTION[2]', (six.text_type(
             'Ok'), 'images/ok.png', 'lucterios.contacts', 'contactImport', 0, 2, 1, {'step': '2'}))
-        self.assert_count_equal('CONTEXT/PARAM', 7)
-        self.assert_xml_equal('CONTEXT/PARAM[@name="csvcontent"]', csv_content)
+        self.assert_count_equal('CONTEXT/PARAM', 8)
 
         self.factory.xfer = ContactImport()
         self.call('/lucterios.contacts/contactImport', {'step': 2, 'modelname': 'member.Adherent', 'quotechar': "'", 'delimiter': ',',
-                                                        'encoding': 'utf-8', 'dateformat': '%d/%m/%Y', 'csvcontent': csv_content,
+                                                        'encoding': 'utf-8', 'dateformat': '%d/%m/%Y', 'csvcontent0': csv_content,
                                                         "fld_lastname": "nom", "fld_firstname": "prenom", "fld_address": "adresse",
                                                         "fld_postal_code": "codePostal", "fld_city": "ville", "fld_email": "mail",
                                                         "fld_birthday": "DateNaissance", "fld_birthplace": "LieuNaissance", 'fld_subscriptiontype': 'Type',
@@ -1079,13 +1084,13 @@ class AdherentTest(LucteriosTest):
             'COMPONENTS/GRID[@name="CSV"]/RECORD', 5)
         self.assert_count_equal(
             'COMPONENTS/GRID[@name="CSV"]/ACTIONS', 0)
-        self.assert_count_equal('ACTIONS/ACTION', 2)
-        self.assert_action_equal('ACTIONS/ACTION[1]', (six.text_type(
+        self.assert_count_equal('ACTIONS/ACTION', 3)
+        self.assert_action_equal('ACTIONS/ACTION[2]', (six.text_type(
             'Ok'), 'images/ok.png', 'lucterios.contacts', 'contactImport', 0, 2, 1, {'step': '3'}))
 
         self.factory.xfer = ContactImport()
         self.call('/lucterios.contacts/contactImport', {'step': 3, 'modelname': 'member.Adherent', 'quotechar': "'", 'delimiter': ',',
-                                                        'encoding': 'utf-8', 'dateformat': '%d/%m/%Y', 'csvcontent': csv_content,
+                                                        'encoding': 'utf-8', 'dateformat': '%d/%m/%Y', 'csvcontent0': csv_content,
                                                         "fld_lastname": "nom", "fld_firstname": "prenom", "fld_address": "adresse",
                                                         "fld_postal_code": "codePostal", "fld_city": "ville", "fld_email": "mail",
                                                         "fld_birthday": "DateNaissance", "fld_birthplace": "LieuNaissance", 'fld_subscriptiontype': 'Type',
@@ -1155,7 +1160,8 @@ class AdherentTest(LucteriosTest):
             'COMPONENTS/GRID[@name="subscription"]/RECORD[1]/VALUE[@name="license_set"]', "team3 [activity1] 1000031-00099")
 
         self.factory.xfer = AdherentShow()
-        self.call('/diacamma.member/adherentAddModify', {'adherent': 10}, False)
+        self.call(
+            '/diacamma.member/adherentAddModify', {'adherent': 10}, False)
         self.assert_observer(
             'core.custom', 'diacamma.member', 'adherentAddModify')
         self.assert_xml_equal(
@@ -1174,7 +1180,8 @@ class AdherentTest(LucteriosTest):
             'COMPONENTS/GRID[@name="subscription"]/RECORD[1]/VALUE[@name="license_set"]', "team1 [activity2] 1000032-00099")
 
         self.factory.xfer = AdherentShow()
-        self.call('/diacamma.member/adherentAddModify', {'adherent': 11}, False)
+        self.call(
+            '/diacamma.member/adherentAddModify', {'adherent': 11}, False)
         self.assert_observer(
             'core.custom', 'diacamma.member', 'adherentAddModify')
         self.assert_xml_equal(
@@ -1199,3 +1206,8 @@ class AdherentTest(LucteriosTest):
             'core.custom', 'diacamma.member', 'adherentList')
         self.assert_count_equal(
             'COMPONENTS/GRID[@name="adherent"]/RECORD', 8)
+
+        self.factory.xfer = BillList()
+        self.call('/diacamma.invoice/billList', {}, False)
+        self.assert_observer('core.custom', 'diacamma.invoice', 'billList')
+        self.assert_count_equal('COMPONENTS/GRID[@name="bill"]/RECORD', 10)
