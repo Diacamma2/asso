@@ -125,6 +125,12 @@ class AgeEditor(LucteriosEditor):
 
 class AdherentEditor(IndividualEditor):
 
+    def edit(self, xfer):
+        IndividualEditor.edit(self, xfer)
+        birthday = xfer.get_components('birthday')
+        if birthday is not None:
+            birthday.needed = True
+
     def show(self, xfer):
         IndividualEditor.show(self, xfer)
         img = xfer.get_components('img')

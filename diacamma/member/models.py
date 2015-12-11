@@ -742,8 +742,10 @@ class Subscription(LucteriosModel):
         self.bill.comment = "{[br/]}".join(cmt)
         self.bill.save()
         for art in self.subscriptiontype.articles.all():
-            Detail.objects.create(bill=self.bill, article=art, designation=art.designation,
-                                  price=art.price, unit=art.unit, quantity=1)
+            newdetail = Detail(
+                bill=self.bill, article=art, designation=art.designation, price=art.price, unit=art.unit, quantity=1)
+            newdetail.editor.before_save(None)
+            newdetail.save()
 
     def import_licence(self, rowdata):
         try:
