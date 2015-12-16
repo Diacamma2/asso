@@ -350,18 +350,18 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(
                     auto_created=True, verbose_name='ID', primary_key=True, serialize=False)),
                 ('value', models.CharField(
-                    max_length=50, null=True, verbose_name='value')),
+                    null=True, verbose_name='license #', max_length=50)),
                 ('activity', models.ForeignKey(default=None, null=True,
                                                on_delete=models.deletion.PROTECT, verbose_name='activity', to='member.Activity')),
-                ('subscription', models.ForeignKey(default=None, on_delete=models.deletion.PROTECT,
-                                                   verbose_name='subscription', to='member.Subscription')),
+                ('subscription', models.ForeignKey(
+                    verbose_name='subscription', default=None, to='member.Subscription')),
                 ('team', models.ForeignKey(default=None, null=True,
                                            on_delete=models.deletion.PROTECT, verbose_name='team', to='member.Team')),
             ],
             options={
+                'verbose_name': 'license',
                 'default_permissions': [],
-                'verbose_name_plural': 'licences',
-                'verbose_name': 'licence',
+                'verbose_name_plural': 'licenses'
             },
         ),
         migrations.AddField(
