@@ -55,7 +55,7 @@ setup(
     # Packages
     packages=["diacamma", "diacamma.asso", "diacamma.member"],
     package_data={
-        "diacamma.asso": ['build', 'logo.gif', '*.csv', 'locale/*/*/*', 'help/*'],
+        "diacamma.asso": ['build', 'Diacamma.png', 'Diacamma.ico', '*.csv', 'locale/*/*/*', 'help/*'],
         "diacamma.member.migrations": ['*'],
         "diacamma.member": ['build', 'images/*', 'locale/*/*/*', 'help/*'],
     },
