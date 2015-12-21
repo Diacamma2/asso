@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-12-04 11:04+0000\n"
+"POT-Creation-Date: 2015-12-16 14:09+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -30,8 +30,8 @@ msgstr "date invalide!"
 msgid "Season exists yet!"
 msgstr "La saison existe déjà!"
 
-#: editors.py:70 editors.py:257 migrations/0001_initial.py:150 models.py:85
-#: models.py:273 models.py:689
+#: editors.py:70 editors.py:263 migrations/0001_initial.py:150 models.py:85
+#: models.py:273 models.py:698
 msgid "begin date"
 msgstr "date de début"
 
@@ -47,31 +47,31 @@ msgstr "date min."
 msgid "date max."
 msgstr "date max."
 
-#: editors.py:134 views.py:413
+#: editors.py:140 views.py:413
 msgid "Bill"
 msgstr "Facture"
 
-#: editors.py:156 models.py:264
+#: editors.py:162 models.py:264
 msgid "documents needs"
 msgstr "documents demandés"
 
-#: editors.py:162 views_conf.py:52
+#: editors.py:168 views_conf.py:52
 msgid "Modify"
 msgstr "Modifier"
 
-#: editors.py:216
+#: editors.py:222
 msgid "No subscription type defined!"
 msgstr "Aucun type de cotisation de défini!"
 
-#: editors.py:227 models.py:320
+#: editors.py:233 models.py:320
 msgid "annually"
 msgstr "annuelle"
 
-#: editors.py:237 models.py:311
+#: editors.py:243 models.py:311
 msgid "period"
 msgstr "période"
 
-#: editors.py:247
+#: editors.py:253
 msgid "month"
 msgstr "mois"
 
@@ -191,28 +191,28 @@ msgid "birthplace"
 msgstr "lieu de naissance"
 
 #: migrations/0001_initial.py:146 models.py:227 models.py:234 models.py:270
-#: models.py:684 views.py:475
+#: models.py:693 views.py:475
 msgid "season"
 msgstr "saison"
 
-#: migrations/0001_initial.py:148 models.py:352 models.py:521 models.py:686
-#: models.py:732
+#: migrations/0001_initial.py:148 models.py:352 models.py:521 models.py:695
+#: models.py:741
 msgid "subscription type"
 msgstr "type de cotisation"
 
-#: migrations/0001_initial.py:152 models.py:85 models.py:274 models.py:690
+#: migrations/0001_initial.py:152 models.py:85 models.py:274 models.py:699
 msgid "end date"
 msgstr "date de fin"
 
-#: migrations/0001_initial.py:154 models.py:401 models.py:813
+#: migrations/0001_initial.py:154 models.py:401 models.py:824
 msgid "team"
 msgstr "équipe"
 
-#: migrations/0001_initial.py:156 models.py:376 models.py:815
+#: migrations/0001_initial.py:156 models.py:376 models.py:826
 msgid "activity"
 msgstr "activité"
 
-#: migrations/0001_initial.py:158 models.py:528 models.py:811
+#: migrations/0001_initial.py:158 models.py:528 models.py:822
 msgid "license #"
 msgstr "N° licence"
 
@@ -328,7 +328,7 @@ msgstr "age"
 msgid "ages"
 msgstr "ages"
 
-#: models.py:474 models.py:864
+#: models.py:474 models.py:875
 msgid "license"
 msgstr "licence"
 
@@ -344,39 +344,39 @@ msgstr "Cotisation"
 msgid "reference date"
 msgstr "date de référence"
 
-#: models.py:676 models.py:682
+#: models.py:685 models.py:691
 msgid "adherent"
 msgstr "adhérent"
 
-#: models.py:677
+#: models.py:686
 msgid "adherents"
 msgstr "adhérents"
 
-#: models.py:688
+#: models.py:697
 msgid "bill"
 msgstr "facture"
 
-#: models.py:731 models.py:775 models.py:776 models.py:781 models.py:810
+#: models.py:740 models.py:786 models.py:787 models.py:792 models.py:821
 msgid "subscription"
 msgstr "cotisation"
 
-#: models.py:764
+#: models.py:775
 msgid "dates always used!"
 msgstr "dates déjà utilisées!"
 
-#: models.py:783 models.py:803
+#: models.py:794 models.py:814
 msgid "document"
 msgstr "document"
 
-#: models.py:785 views.py:293
+#: models.py:796 views.py:293
 msgid "value"
 msgstr "valeur"
 
-#: models.py:804
+#: models.py:815
 msgid "documents"
 msgstr "documents"
 
-#: models.py:865
+#: models.py:876
 msgid "licenses"
 msgstr "licences"
 
