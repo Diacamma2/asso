@@ -1,7 +1,7 @@
 Prise en main
 =============
 
-Le logiciel Diacamma Asso comprends un grand nombre de paramétrages et peu paraître difficile à configurer au besoin de votre structure.
+Le logiciel *Diacamma Asso* comprends un grand nombre de paramétrages et peu paraître difficile à configurer au besoin de votre structure.
 
 Nous vous proposons cette explication pour vous aider à franchir cette première étape dans l'utilisation de cet outil.
 
@@ -120,4 +120,4 @@ Définissez vos différents dossier vous permettant d'importer vos documents à 
 
 
 Une fois avoir parcouru ces points, votre logiciel *Diacamma Asso* est pleinement opérationnel.
-N'hésistez pas à consulter le forum: de nombreuses astuces peux vous aider pour utiliser au mieux votre logiciel.
+N'hésitez pas à consulter le forum: de nombreuses astuces peux vous aider pour utiliser au mieux votre logiciel.
