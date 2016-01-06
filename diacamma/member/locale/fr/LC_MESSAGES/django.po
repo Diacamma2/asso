@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-12-16 14:09+0000\n"
+"POT-Creation-Date: 2016-01-06 17:51+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -130,7 +130,7 @@ msgstr "Liste d'adhérents"
 #: migrations/0001_initial.py:110 migrations/0001_initial.py:134 models.py:272
 #: models.py:450
 msgid "numeros"
-msgstr "numéros"
+msgstr "N°"
 
 #: migrations/0001_initial.py:111 migrations/0001_initial.py:123
 #: migrations/0001_initial.py:135
