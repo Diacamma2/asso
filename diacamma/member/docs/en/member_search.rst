@@ -3,15 +3,13 @@ Search a member
 
 Members of the search tool is in the menu *Association/Members/Search adherent*.
 
-.. Image :: seach.jpg
+.. Image :: search.jpg
 
 You can then do a search according to various criteria concerning the identity or membership.
 You can also search for one of the following membership criteria 'documents requested' or a custom field.
 
 **Note:** if you do a search with the criteria linked to a contribution (team, documents, license number, ...) be sure to specify the search season.
 The result is a list of members corresponding to the criteria provided.
-
-.. Image :: result.jpg
 
 You can merge multiple sheets of the same person in one.
 For this you must specify the main person, the tool will remove other records after moving all their references on the main record.

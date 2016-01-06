@@ -10,7 +10,7 @@ Le menu *administration/Modules (conf.)/Les saisons et les cotisations* vous per
 
 	**Les Saisons**
 
-.. image:: season_list.jpg
+	.. image:: season_list.jpg
 
 Ici, vous pourrez ajouter de nouvelles saisons au fur et à mesure de l'utilisation du logiciel. Vous pourrez également déterminer laquelle est la saison courante (dite active).
 De plus, chaque saison est découpée en quatre périodes et douze mois.
@@ -21,11 +21,11 @@ Deux périodes peuvent se chevaucher ou être disjointes (dans ce cas, un messag
 Le premier des douze mois commence le mois de la plus petite date de début de période. Même si votre saison couvre plus qu'une année calendaire, il n'y aura pas de treizième mois dans votre saison.
 
 Vous pouvez associer à chaque saison une liste de documents que chaque adhérent devra vous fournir pour finaliser son inscription.
-.. image:: documents.jpg
+	.. image:: documents.jpg
 
 	**Les types de cotisations**
 
-.. image:: cotisations.jpg
+	.. image:: cotisations.jpg
 
 Ici vous pourrez saisir les différents types de cotisations proposés par votre association. Par exemple, pour une association pratiquant plusieurs activités sportives distinctes, vous pouvez avoir un type de cotisation pour chaque activité, un autre pour plusieurs de ces activités, et encore des types différents selon une pratique en compétition ou hors compétition des activités.
 
@@ -50,19 +50,19 @@ Le menu *administration/Modules (conf.)/Catégories* vous permet de modifier ce 
 Vous pouvez ne pas vouloir utiliser certaines catégories. Pour cela, désactivez là depuis l'écran de paramétrages.
 De la même façon, vous pouvez préciser si vous souhaitez pouvoir créer automatiquement une connexion par adhérent actif, afficher un numéro d'adhérent ou gérer des numéros de licence.
 Vous pouvez également personnaliser la désignation 'équipe' et 'activité'.
-.. image:: categories.jpg
+	.. image:: categories.jpg
 
 	**Les âges**
 
 Vous pourrez ici renseigner les catégories d'âges existantes dans votre association en renseignant un nom de catégorie, une année (de naissance) de début et de fin de la catégorie.
 
 Vous n'aurez pas besoin de changer les valeurs des années de naissance ultérieurement : le décalage est effectué automatiquement d'années en années !
-.. image:: age.jpg
+	.. image:: age.jpg
 
 	**Les équipes/cours**
 
 Vous gérez différentes équipes ou différents cours et vous souhaitez pouvoir vos adhérents selon ce critère? Renseignez les ici, vous pourrez alors affecter des adhérents à ces équipes ou cours et ainsi les retrouver plus facilement.
-.. image:: team.jpg
+	.. image:: team.jpg
 
 	**Les activités**
 
@@ -71,4 +71,4 @@ Vous gérez différentes activités (par exemple plusieurs arts martiaux) dans v
 Exemple : une association regroupant judo et karaté, et donc affiliée à deux fédérations sportives différentes.
 Vous pourriez alors saisir 2 licences par adhérent (sous réserve que vos adhérents pratiquent les deux sports et soient licenciés des deux fédérations).
 
-.. image:: activity.jpg
+	.. image:: activity.jpg
