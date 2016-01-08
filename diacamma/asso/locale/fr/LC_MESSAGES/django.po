@@ -26,7 +26,7 @@ msgstr "Diacamma Asso"
 msgid "Association application"
 msgstr "Application d'association"
 
-#: appli_settings.py:45
+#: appli_settings.py:46
 msgid "(c) GPL Licence"
 msgstr "(c) GPL Licence"
 
