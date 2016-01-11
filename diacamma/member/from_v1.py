@@ -64,7 +64,7 @@ class MemberMigrate(MigrateAbstract):
         cur_s.execute(
             "SELECT id, designation,docNeed,courant FROM fr_sdlibre_membres_saisons")
         for seasonid, designation, doc_need, courant in cur_s.fetchall():
-            self.print_log("=> SEASON %s", (designation,))
+            self.print_debug("=> SEASON %s", (designation,))
             self.season_list[seasonid] = season_mdl.objects.create(
                 designation=designation, iscurrent=courant == 'o')
             if doc_need is not None:
@@ -79,7 +79,7 @@ class MemberMigrate(MigrateAbstract):
             "SELECT id, saison,num,begin,end  FROM fr_sdlibre_membres_periodSaisons")
         for periodid, saison, num, begin, end in cur_p.fetchall():
             if saison in self.season_list.keys():
-                self.print_log("=> PERIOD %s %d", (saison, num))
+                self.print_debug("=> PERIOD %s %d", (saison, num))
                 self.period_list[periodid] = period_mdl.objects.create(
                     season=self.season_list[saison], num=num, begin_date=begin, end_date=end)
 
@@ -93,7 +93,7 @@ class MemberMigrate(MigrateAbstract):
         cur_s.execute(
             "SELECT id,nom,description,duration,noactive FROM fr_sdlibre_membres_typeCotisations")
         for subid, nom, description, duration, noactive in cur_s.fetchall():
-            self.print_log(
+            self.print_debug(
                 "=> SUBSCRIPTION:%s", (nom,))
             self.subscriptiontype_list[subid] = subscriptiontype_mdl.objects.create(
                 name=nom, description=description, duration=duration, unactive=noactive == 'o')
@@ -123,14 +123,14 @@ class MemberMigrate(MigrateAbstract):
         cur_a.execute(
             "SELECT id,nom,ageMin,ageMax  FROM fr_sdlibre_membres_ages")
         for ageid, nom, age_min, age_max in cur_a.fetchall():
-            self.print_log("=> Age:%s", (nom,))
+            self.print_debug("=> Age:%s", (nom,))
             self.age_list[ageid] = age_mdl.objects.create(
                 name=nom, minimum=age_min, maximum=age_max)
         cur_t = self.old_db.open()
         cur_t.execute(
             "SELECT id,nom, description, noactive FROM fr_sdlibre_membres_equipes")
         for teamid, nom, description, noactive in cur_t.fetchall():
-            self.print_log(
+            self.print_debug(
                 "=> Team:%s", (nom,))
             self.team_list[teamid] = team_mdl.objects.create(
                 name=nom, description=description, unactive=noactive == 'o')
@@ -138,7 +138,7 @@ class MemberMigrate(MigrateAbstract):
         cur_y.execute(
             "SELECT id,nom, description FROM fr_sdlibre_membres_activite")
         for activityid, nom, description in cur_y.fetchall():
-            self.print_log(
+            self.print_debug(
                 "=> Activity:%s", (nom,))
             self.activity_list[activityid] = activity_mdl.objects.create(
                 name=nom, description=description)
@@ -159,7 +159,8 @@ class MemberMigrate(MigrateAbstract):
         for adherentid, superid, date_naissance, lieu_naissance in cur_a.fetchall():
             if superid in self.old_db.objectlinks['individual'].keys():
                 individual = self.old_db.objectlinks['individual'][superid]
-                self.print_log("=> Adherent:%s", (six.text_type(individual),))
+                self.print_debug(
+                    "=> Adherent:%s", (six.text_type(individual),))
                 self.adherent_list[adherentid] = adherent_mdl(
                     individual_ptr_id=individual.pk)
                 self.adherent_list[adherentid].num = adherentid
@@ -175,7 +176,8 @@ class MemberMigrate(MigrateAbstract):
             "SELECT id,adherentid,saisonid,type,end,begin,licence,equipe,activite,document,facture FROM fr_sdlibre_membres_licences")
         for subid, adherentid, saisonid, subtype, end, begin, licence, equipe, activite, document, facture in cur_s.fetchall():
             if (adherentid in self.adherent_list.keys()) and (saisonid in self.season_list.keys()) and (subtype in self.subscriptiontype_list.keys()):
-                self.print_log("=> Subscription:%s %s", (adherentid, saisonid))
+                self.print_debug(
+                    "=> Subscription:%s %s", (adherentid, saisonid))
                 try:
                     old_sub = subscription_mdl.objects.get_or_create(adherent=self.adherent_list[adherentid], season=self.season_list[
                         saisonid], subscriptiontype=self.subscriptiontype_list[subtype], begin_date=begin, end_date=end)
@@ -236,7 +238,7 @@ class MemberMigrate(MigrateAbstract):
             if param_name == "connexion":
                 pname = "member-connection"
             if pname != '':
-                self.print_log(
+                self.print_debug(
                     "=> parameter of invoice %s - %s", (pname, param_value))
                 Parameter.change_value(pname, param_value)
 
@@ -251,3 +253,6 @@ class MemberMigrate(MigrateAbstract):
             import traceback
             traceback.print_exc()
             six.print_("*** Unexpected error: %s ****" % sys.exc_info()[0])
+        self.print_info("Nb seasons:%d", len(self.season_list))
+        self.print_info("Nb adherents:%d", len(self.adherent_list))
+        self.print_info("Nb subscriptions:%d", len(self.subscription_list))
