@@ -192,9 +192,10 @@ class MemberMigrate(MigrateAbstract):
                 if isinstance(old_sub, tuple):
                     old_sub = old_sub[0]
                 self.subscription_list[subid] = old_sub
-                if facture in self.old_db.objectlinks['bill'].keys():
-                    old_sub.bill = self.old_db.objectlinks['bill'][facture]
-                    old_sub.save()
+                if (facture is not None) and ('bill' in self.old_db.objectlinks.keys()):
+                    if facture in self.old_db.objectlinks['bill'].keys():
+                        old_sub.bill = self.old_db.objectlinks['bill'][facture]
+                        old_sub.save()
                 if (equipe in self.team_list.keys()) and (activite in self.activity_list.keys()):
                     new_lic = licence_mdl.objects.create(subscription=old_sub, team=self.team_list[
                         equipe], activity=self.activity_list[activite])
@@ -204,11 +205,11 @@ class MemberMigrate(MigrateAbstract):
                 if document is not None:
                     doc_idx = 0
                     for doc_item in document:
-                        doc_idx = "%d_%d" % (
+                        doc_item = "%d_%d" % (
                             self.season_list[saisonid].id, doc_idx)
-                        if doc_idx in self.doc_list.keys():
+                        if doc_item in self.doc_list.keys():
                             doc_adh = old_sub.docadherent_set.filter(
-                                document=self.doc_list[doc_idx])
+                                document=self.doc_list[doc_item])
                             if len(doc_adh) > 0:
                                 doc_adh[0].value = doc_item == 'o'
                         doc_idx += 1
