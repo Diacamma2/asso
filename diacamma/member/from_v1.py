@@ -183,6 +183,9 @@ class MemberMigrate(MigrateAbstract):
             if (adherentid in self.adherent_list.keys()) and (saisonid in self.season_list.keys()) and (subtype in self.subscriptiontype_list.keys()):
                 self.print_debug(
                     "=> Subscription:%s %s", (adherentid, saisonid))
+                begin = convert_date(
+                    begin, self.season_list[saisonid].begin_date)
+                end = convert_date(end, self.season_list[saisonid].end_date)
                 try:
                     old_sub = subscription_mdl.objects.get_or_create(adherent=self.adherent_list[adherentid], season=self.season_list[
                         saisonid], subscriptiontype=self.subscriptiontype_list[subtype], begin_date=begin, end_date=end)
