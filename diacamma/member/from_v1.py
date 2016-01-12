@@ -187,8 +187,13 @@ class MemberMigrate(MigrateAbstract):
                     old_sub = subscription_mdl.objects.get_or_create(adherent=self.adherent_list[adherentid], season=self.season_list[
                         saisonid], subscriptiontype=self.subscriptiontype_list[subtype], begin_date=begin, end_date=end)
                 except LucteriosException:
-                    old_sub = self.adherent_list[adherentid].subscription_set.filter((Q(begin_date__lte=end) & Q(
-                        end_date__gte=end)) | (Q(begin_date__lte=begin) & Q(end_date__gte=begin)))[0]
+                    if self.subscriptiontype_list[subtype].duration == 0:
+                        query_search = Q(season=self.season_list[saisonid])
+                    else:
+                        query_search = (Q(begin_date__lte=end) & Q(end_date__gte=end)) | (
+                            Q(begin_date__lte=begin) & Q(end_date__gte=begin))
+                    old_sub = self.adherent_list[
+                        adherentid].subscription_set.filter(query_search)[0]
                 if isinstance(old_sub, tuple):
                     old_sub = old_sub[0]
                 self.subscription_list[subid] = old_sub
