@@ -34,6 +34,7 @@ from lucterios.framework.error import LucteriosException
 from lucterios.CORE.models import Parameter
 
 from diacamma.accounting.from_v1 import convert_code
+from diacamma.member.models import convert_date
 
 
 class MemberMigrate(MigrateAbstract):
@@ -164,8 +165,12 @@ class MemberMigrate(MigrateAbstract):
                 self.adherent_list[adherentid] = adherent_mdl(
                     individual_ptr_id=individual.pk)
                 self.adherent_list[adherentid].num = adherentid
-                self.adherent_list[adherentid].birthday = date_naissance
-                self.adherent_list[adherentid].birthplace = lieu_naissance
+                self.adherent_list[
+                    adherentid].birthday = convert_date(date_naissance)
+                if lieu_naissance is None:
+                    self.adherent_list[adherentid].birthplace = ''
+                else:
+                    self.adherent_list[adherentid].birthplace = lieu_naissance
                 self.adherent_list[adherentid].save(new_num=False)
                 self.adherent_list[adherentid].__dict__.update(
                     individual.__dict__)
@@ -200,7 +205,7 @@ class MemberMigrate(MigrateAbstract):
                     doc_idx = 0
                     for doc_item in document:
                         doc_idx = "%d_%d" % (
-                            self.season_list[saisonid], doc_idx)
+                            self.season_list[saisonid].id, doc_idx)
                         if doc_idx in self.doc_list.keys():
                             doc_adh = old_sub.docadherent_set.filter(
                                 document=self.doc_list[doc_idx])
