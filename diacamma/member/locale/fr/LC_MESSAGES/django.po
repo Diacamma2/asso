@@ -8,19 +8,20 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-01-07 10:10+0000\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"POT-Creation-Date: 2016-01-08 15:54+0000\n"
+"PO-Revision-Date: 2016-01-14 22:13+0000\n"
+"Last-Translator: b'Paul ARULATEDA <paul531@orange.fr>'\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: \n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Translated-Using: django-rosetta 0.7.8\n"
 
 #: __init__.py:42
 msgid "Diacamma member"
-msgstr "Diacamma adhérent"
+msgstr "Adhérent Diacamma "
 
 #: editors.py:49 models.py:304 models.py:429
 msgid "date invalid!"
@@ -61,7 +62,7 @@ msgstr "Modifier"
 
 #: editors.py:222
 msgid "No subscription type defined!"
-msgstr "Aucun type de cotisation de défini!"
+msgstr "Aucun type de cotisation défini!"
 
 #: editors.py:233 models.py:320
 msgid "annually"
@@ -89,7 +90,7 @@ msgstr "Intitulé équipe"
 
 #: migrations/0001_initial.py:56
 msgid "Team"
-msgstr "Equipe"
+msgstr "Équipe"
 
 #: migrations/0001_initial.py:61
 msgid "member-activite-enable"
@@ -230,15 +231,15 @@ msgstr "désignation"
 
 #: models.py:70
 msgid "is current"
-msgstr "courrant"
+msgstr "courant"
 
 #: models.py:101
 msgid "No default season define!"
-msgstr "Pas de saison par défaut de définie!"
+msgstr "Pas de saison par défaut définie!"
 
 #: models.py:110
 msgid "No season find!"
-msgstr "Pas de saison de définie!"
+msgstr "Pas de saison définie!"
 
 #: models.py:118
 msgid "No period find!"
@@ -258,7 +259,7 @@ msgstr "nom"
 
 #: models.py:263
 msgid "document needs"
-msgstr "document demandé"
+msgstr "document nécessaire"
 
 #: models.py:293
 msgid "Each season have to have 2 periods minimum!"
@@ -406,11 +407,11 @@ msgstr "genre"
 
 #: views.py:137
 msgid "refresh"
-msgstr "refresh"
+msgstr "renouvellement"
 
 #: views.py:183
 msgid "List of adherents with subscribtion"
-msgstr "Liste d'adhérent à jours de leur cotisation"
+msgstr "Liste des adhérents à jour de leur cotisation"
 
 #: views.py:185
 msgid "Subscribe adherents"
@@ -467,13 +468,13 @@ msgstr "Annuler"
 #: views.py:331
 #, python-format
 msgid ""
-"{[b]}Do you want that those %d old selected adherent(s) has been renew?{[/b]}"
-"{[br/]}Same subscription(s) will be applicated.{[br/]}No validated bill will "
-"be created for each subscritpion."
+"{[b]}Do you want that those %d old selected adherent(s) has been "
+"renew?{[/b]}{[br/]}Same subscription(s) will be applicated.{[br/]}No "
+"validated bill will be created for each subscritpion."
 msgstr ""
 "{[b]}Voulez-vous que ces %d ancien(s) adhérent(s) selectionné(s) soit "
-"renouvelé?{[/b]}{[br/]}La même cotisation sera appliquée.{[br/]}Une facture "
-"non-validée sera créée pour chaque cotisation."
+"renouvelé(s)?{[/b]}{[br/]}La même cotisation sera appliquée.{[br/]}Une "
+"facture non-validée sera créée pour chaque cotisation."
 
 #: views.py:345
 msgid "Delete adherent"
@@ -489,11 +490,11 @@ msgstr "Imprimer un adhérent"
 
 #: views.py:379
 msgid "Label adherent"
-msgstr "Etiquette d'adhérent"
+msgstr "Étiquette d'adhérent"
 
 #: views.py:388
 msgid "Listing adherent"
-msgstr "Listing d'adhérents"
+msgstr "Listing adhérents"
 
 #: views.py:397 views_season.py:176
 msgid "Add subscription"
@@ -650,7 +651,7 @@ msgstr "Saison"
 
 #: views_season.py:57 views_season.py:113
 msgid "Show season"
-msgstr "Voir une saison"
+msgstr "Afficher une saison"
 
 #: views_season.py:61
 msgid "Near active"
