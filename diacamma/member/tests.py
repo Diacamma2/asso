@@ -151,7 +151,7 @@ class SeasonTest(LucteriosTest):
         self.assert_xml_equal(
             'COMPONENTS/GRID[@name="season"]/HEADER[@name="period_set"]', "période")
         self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="season"]/HEADER[@name="iscurrent"]', "courrant")
+            'COMPONENTS/GRID[@name="season"]/HEADER[@name="iscurrent"]', "courant")
         self.assert_count_equal(
             'COMPONENTS/GRID[@name="season"]/RECORD', 5)
 
@@ -591,7 +591,7 @@ class CategoriesTest(LucteriosTest):
         self.assert_count_equal('COMPONENTS/TAB', 3)
         self.assert_xml_equal('COMPONENTS/TAB[1]', 'Paramètres')
         self.assert_xml_equal('COMPONENTS/TAB[2]', 'Age')
-        self.assert_xml_equal('COMPONENTS/TAB[3]', 'Equipe')
+        self.assert_xml_equal('COMPONENTS/TAB[3]', 'Équipe')
 
     def test_team(self):
         self.factory.xfer = CategoryConf()
@@ -778,7 +778,7 @@ class CategoriesTest(LucteriosTest):
             'COMPONENTS/LABELFORM[@name="member-age-enable"]', 'Non')
         self.assert_count_equal('COMPONENTS/TAB', 3)
         self.assert_xml_equal('COMPONENTS/TAB[1]', 'Paramètres')
-        self.assert_xml_equal('COMPONENTS/TAB[2]', 'Equipe')
+        self.assert_xml_equal('COMPONENTS/TAB[2]', 'Équipe')
         self.assert_xml_equal('COMPONENTS/TAB[3]', 'Activité')
 
     def test_params(self):
@@ -790,10 +790,10 @@ class CategoriesTest(LucteriosTest):
         self.assert_count_equal('COMPONENTS/TAB', 4)
         self.assert_xml_equal('COMPONENTS/TAB[1]', 'Paramètres')
         self.assert_xml_equal('COMPONENTS/TAB[2]', 'Age')
-        self.assert_xml_equal('COMPONENTS/TAB[3]', 'Equipe')
+        self.assert_xml_equal('COMPONENTS/TAB[3]', 'Équipe')
         self.assert_xml_equal('COMPONENTS/TAB[4]', 'Activité')
         self.assert_xml_equal(
-            'COMPONENTS/LABELFORM[@name="member-team-text"]', 'Equipe')
+            'COMPONENTS/LABELFORM[@name="member-team-text"]', 'Équipe')
         self.assert_xml_equal(
             'COMPONENTS/LABELFORM[@name="member-activite-text"]', 'Activité')
 

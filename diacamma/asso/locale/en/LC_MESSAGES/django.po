@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-01-08 15:54+0000\n"
+"POT-Creation-Date: 2016-01-18 10:35+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -28,10 +28,6 @@ msgstr "Association application"
 #: appli_settings.py:46
 msgid "(c) GPL Licence"
 msgstr "(c) GPL Licence"
-
-#: help/presentation.html:2
-msgid "presentation.html"
-msgstr "Diacamma Asso Presentation"
 
 #: migrations/0001_initial.py:34
 msgid "president"
@@ -60,3 +56,6 @@ msgstr "enterprise"
 #: migrations/0001_initial.py:40
 msgid "association"
 msgstr "association"
+
+#~ msgid "presentation.html"
+#~ msgstr "Diacamma Asso Presentation"
