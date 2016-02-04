@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 '''
-diacamma.syndic package
+diacamma.event package
 
 @author: Laurent GAY
 @organization: sd-libre.fr
 @contact: info@sd-libre.fr
-@copyright: 2015 sd-libre.fr
+@copyright: 2016 sd-libre.fr
 @license: This file is part of Lucterios.
 
 Lucterios is free software: you can redistribute it and/or modify
@@ -39,8 +39,8 @@ __version__ = "2.0.1." + get_build()
 
 def __title__():
     from django.utils.translation import ugettext_lazy as _
-    return _("Diacamma asso")
+    return _("Diacamma event")
 
 
 def link():
-    return ["lucterios.contacts", "lucterios.mailing", "lucterios.documents", "diacamma.accounting", "diacamma.invoice", "diacamma.payoff", "diacamma.member", "diacamma.event"]
+    return ["lucterios.contacts", "diacamma.member"]

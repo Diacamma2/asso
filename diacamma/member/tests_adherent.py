@@ -25,12 +25,14 @@ along with Lucterios.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import unicode_literals
 from shutil import rmtree
 from datetime import date
+from _io import StringIO
 
 from django.utils import formats, six
 
 from lucterios.framework.test import LucteriosTest
 from lucterios.framework.xfergraphic import XferContainerAcknowledge
 from lucterios.framework.filetools import get_user_dir
+from lucterios.contacts.views import ContactImport
 
 from diacamma.member.test_tools import default_season, default_financial, default_params,\
     default_adherents, default_subscription, set_parameters
@@ -39,8 +41,6 @@ from diacamma.member.views import AdherentActiveList, AdherentAddModify, Adheren
     AdherentDoc, AdherentLicense, AdherentLicenseSave, AdherentStatistic,\
     AdherentRenewList, AdherentRenew
 from diacamma.invoice.views import BillList
-from _io import StringIO
-from lucterios.contacts.views import ContactImport
 
 
 class AdherentTest(LucteriosTest):
@@ -127,7 +127,7 @@ class AdherentTest(LucteriosTest):
         self.assert_observer(
             'core.custom', 'diacamma.member', 'adherentAddModify')
         self.assert_count_equal(
-            'COMPONENTS/*', 1 + 1 + 2 * (8 + 4 + 6) + 1 + 2)
+            'COMPONENTS/*', 1 + 1 + 2 * (8 + 4 + 6) + 1 + 2 + 2)
         self.assert_xml_equal(
             'COMPONENTS/LABELFORM[@name="dateref"]', formats.date_format(self.dateref_expected, "DATE_FORMAT"))
         self.assert_xml_equal(
@@ -753,7 +753,7 @@ class AdherentTest(LucteriosTest):
         self.call('/diacamma.member/adherentAddModify',
                   {'adherent': 2, 'dateref': '2009-10-01'}, False)
         self.assert_count_equal(
-            'COMPONENTS/*', 1 + 1 + 2 * (8 + 4 + 6) + 1 + 2 + (2 * 2 + 3) + 2)
+            'COMPONENTS/*', 1 + 1 + 2 * (8 + 4 + 6) + 1 + 2 + (2 * 2 + 3) + 2 + 2)
         self.assert_xml_equal(
             'COMPONENTS/LABELFORM[@name="lbl_doc_1"]', "Doc 1")
         self.assert_xml_equal(
@@ -812,7 +812,7 @@ class AdherentTest(LucteriosTest):
         self.assert_observer(
             'core.custom', 'diacamma.member', 'adherentShow')
         self.assert_count_equal(
-            'COMPONENTS/*', 1 + 1 + 2 * (8 + 4 + 2) + 1 + 2 + (2 * 2 + 3) + 2)
+            'COMPONENTS/*', 1 + 1 + 2 * (8 + 4 + 2) + 1 + 2 + (2 * 2 + 3) + 2 + 2)
         self.assert_count_equal(
             'COMPONENTS/GRID[@name="subscription"]/HEADER', 4)
 

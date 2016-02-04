@@ -56,12 +56,8 @@ setup(
         'Topic :: Office/Business :: Financial',
     ],
     # Packages
-    packages=["diacamma", "diacamma.asso", "diacamma.member"],
-    package_data={
-        "diacamma.asso": ['build', 'Diacamma.png', 'Diacamma.ico', '*.csv', 'locale/*/*/*', 'help/*'],
-        "diacamma.member.migrations": ['*'],
-        "diacamma.member": ['build', 'images/*', 'locale/*/*/*', 'help/*'],
-    },
+    packages=["diacamma", "diacamma.asso",
+              "diacamma.member", "diacamma.event"],
     install_requires=["lucterios ==2.0.*", "lucterios-contacts ==2.0.*",
                       "diacamma-financial ==2.0.*"],
 )

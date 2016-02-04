@@ -1,0 +1,123 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2016-02-04 15:48+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: __init__.py:42
+msgid "Diacamma event"
+msgstr "Évenement Diacamma"
+
+#: models.py:37 models.py:65
+msgid "name"
+msgstr "nom"
+
+#: models.py:38 models.py:66
+msgid "level"
+msgstr "niveau"
+
+#: models.py:41
+msgid "activity"
+msgstr "activité"
+
+#: models.py:59
+msgid "degree type"
+msgstr "type de diplôme"
+
+#: models.py:60
+msgid "degree types"
+msgstr "type de diplômes"
+
+#: models.py:85
+msgid "sub degree type"
+msgstr "type de sous-diplôme"
+
+#: models.py:86
+msgid "sub degree types"
+msgstr "type de sous-diplômes"
+
+#: models.py:105
+msgid "adherent"
+msgstr "adhérent"
+
+#: models.py:107 models.py:129
+msgid "degree"
+msgstr "diplôme"
+
+#: models.py:109
+msgid "sub degree"
+msgstr "sous-diplôme"
+
+#: models.py:110
+msgid "date"
+msgstr "date"
+
+#: models.py:130
+msgid "degrees"
+msgstr "diplômes"
+
+#: views_conf.py:14
+msgid "Management of degrees"
+msgstr "Gestion de diplômes"
+
+#: views_conf.py:17
+msgid "Configuration of degrees"
+msgstr "Configuration des diplômes"
+
+#: views_conf.py:20 views_degree.py:22
+msgid "Degree"
+msgstr "Diplôme"
+
+#: views_conf.py:22
+msgid "Sub-degree"
+msgstr "Sous-diplôme"
+
+#: views_conf.py:33
+msgid "Add degree type"
+msgstr "Ajouter un type de diplôme"
+
+#: views_conf.py:34
+msgid "Modify degree type"
+msgstr "Modifier un type de diplôme"
+
+#: views_conf.py:43
+msgid "Delete degree type"
+msgstr "Supprimer un type de diplôme"
+
+#: views_conf.py:52
+msgid "Add sub degree type"
+msgstr "Ajouter un type de sous-diplôme"
+
+#: views_conf.py:53
+msgid "Modify sub degree type"
+msgstr "Modifier un type de sous-diplôme"
+
+#: views_conf.py:62
+msgid "Delete sub degree type"
+msgstr "Supprimer un type de sous-diplôme"
+
+#: views_degree.py:37
+msgid "Add degree"
+msgstr "Ajouter un diplôme"
+
+#: views_degree.py:38
+msgid "Modify degree"
+msgstr "Modifier un diplôme"
+
+#: views_degree.py:47
+msgid "Delete degree"
+msgstr "Supprimer un diplôme"

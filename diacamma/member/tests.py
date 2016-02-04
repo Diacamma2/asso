@@ -542,7 +542,7 @@ class CategoriesTest(LucteriosTest):
         self.assert_xml_equal(
             'COMPONENTS/GRID[@name="activity"]/HEADER[@name="description"]', "description")
         self.assert_count_equal(
-            'COMPONENTS/GRID[@name="activity"]/RECORD', 0)
+            'COMPONENTS/GRID[@name="activity"]/RECORD', 1)
 
         self.factory.xfer = ActivityAddModify()
         self.call('/diacamma.member/activityAddModify', {}, False)
@@ -561,13 +561,13 @@ class CategoriesTest(LucteriosTest):
         self.assert_observer(
             'core.custom', 'diacamma.member', 'categoryConf')
         self.assert_count_equal(
-            'COMPONENTS/GRID[@name="activity"]/RECORD', 1)
+            'COMPONENTS/GRID[@name="activity"]/RECORD', 2)
         self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="activity"]/RECORD[1]/VALUE[@name="name"]', "xyz")
+            'COMPONENTS/GRID[@name="activity"]/RECORD[2]/VALUE[@name="name"]', "xyz")
 
         self.factory.xfer = ActivityDel()
         self.call('/diacamma.member/activityAddModify',
-                  {"CONFIRME": "YES", "activity": 1}, False)
+                  {"CONFIRME": "YES", "activity": 2}, False)
         self.assert_observer(
             'core.acknowledge', 'diacamma.member', 'activityAddModify')
 
@@ -576,7 +576,13 @@ class CategoriesTest(LucteriosTest):
         self.assert_observer(
             'core.custom', 'diacamma.member', 'categoryConf')
         self.assert_count_equal(
-            'COMPONENTS/GRID[@name="activity"]/RECORD', 0)
+            'COMPONENTS/GRID[@name="activity"]/RECORD', 1)
+
+        self.factory.xfer = ActivityDel()
+        self.call('/diacamma.member/activityDel',
+                  {"CONFIRME": "YES", "activity": 1}, False)
+        self.assert_observer(
+            'core.exception', 'diacamma.member', 'activityDel')
 
         Parameter.change_value("member-activite-enable", '0')
         Params.clear()

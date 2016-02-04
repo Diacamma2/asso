@@ -38,7 +38,8 @@ from lucterios.framework.tools import CLOSE_NO, FORMTYPE_REFRESH, ActionsManage,
 
 from lucterios.contacts.editors import IndividualEditor
 
-from diacamma.member.models import Period, Season, SubscriptionType, License, convert_date, same_day_months_after
+from diacamma.member.models import Period, Season, SubscriptionType, License, convert_date, same_day_months_after,\
+    Activity
 
 
 class SeasonEditor(LucteriosEditor):
@@ -195,11 +196,13 @@ class SubscriptionEditor(LucteriosEditor):
 
     def saving(self, xfer):
         if xfer.is_new:
-            new_lic = License.objects.create(
-                subscription=self.item, value=xfer.getparam('value'))
-            new_lic.team_id = xfer.getparam('team')
-            new_lic.activity_id = xfer.getparam('activity')
-            new_lic.save()
+            activity_id = xfer.getparam('activity')
+            team_id = xfer.getparam('team')
+            value = xfer.getparam('value')
+            if activity_id is None:
+                activity_id = Activity.objects.all()[0].id
+            License.objects.create(
+                subscription=self.item, value=value, activity_id=activity_id, team_id=team_id)
 
     def edit(self, xfer):
         last_subscription = self.item.adherent.last_subscription
@@ -292,3 +295,6 @@ class LicenseEditor(LucteriosEditor):
         activity = xfer.get_components('activity')
         if activity is not None:
             activity.set_needed(True)
+        else:
+            default_act = Activity.objects.all()[0]
+            xfer.params['activity'] = default_act.id

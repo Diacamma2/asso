@@ -372,6 +372,11 @@ class Activity(LucteriosModel):
     def get_show_fields(cls):
         return ["name", "description"]
 
+    def can_delete(self):
+        if (len(Activity.objects.all()) == 1):
+            return _("1 activity is needs!")
+        return ""
+
     class Meta(object):
         verbose_name = _('activity')
         verbose_name_plural = _('activities')
@@ -823,7 +828,7 @@ class License(LucteriosModel):
     team = models.ForeignKey(
         Team, verbose_name=_('team'), null=True, default=None, db_index=True, on_delete=models.PROTECT)
     activity = models.ForeignKey(
-        Activity, verbose_name=_('activity'), null=True, default=None, db_index=True, on_delete=models.PROTECT)
+        Activity, verbose_name=_('activity'), null=False, default=None, db_index=True, on_delete=models.PROTECT)
 
     def __str__(self):
         val = []

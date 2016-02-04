@@ -60,7 +60,10 @@ def default_params():
     Parameter.change_value(
         'member-activite-text', 'passion')
     Params.clear()
-    Activity.objects.create(name="activity1", description="activity N°1")
+    default = Activity.objects.get(id=1)
+    default.name = "activity1"
+    default.description = "activity N°1"
+    default.save()
     Activity.objects.create(name="activity2", description="activity N°2")
     Team.objects.create(name="team1", description="team N°1")
     Team.objects.create(name="team2", description="team N°2")

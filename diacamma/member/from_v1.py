@@ -270,3 +270,5 @@ class MemberMigrate(MigrateAbstract):
         self.print_info("Nb seasons:%d", len(self.season_list))
         self.print_info("Nb adherents:%d", len(self.adherent_list))
         self.print_info("Nb subscriptions:%d", len(self.subscription_list))
+        self.old_db.objectlinks['activity'] = self.activity_list
+        self.old_db.objectlinks['adherent'] = self.adherent_list

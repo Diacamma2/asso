@@ -1,0 +1,122 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2016-02-04 15:48+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: __init__.py:42
+msgid "Diacamma event"
+msgstr "Diacamma event"
+
+#: models.py:37 models.py:65
+msgid "name"
+msgstr "name"
+
+#: models.py:38 models.py:66
+msgid "level"
+msgstr "level"
+
+#: models.py:41
+msgid "activity"
+msgstr "activity"
+
+#: models.py:59
+msgid "degree type"
+msgstr "degree type"
+
+#: models.py:60
+msgid "degree types"
+msgstr "degree types"
+
+#: models.py:85
+msgid "sub degree type"
+msgstr "sub degree type"
+
+#: models.py:86
+msgid "sub degree types"
+msgstr "sub degree types"
+
+#: models.py:105
+msgid "adherent"
+msgstr "adherent"
+
+#: models.py:107 models.py:129
+msgid "degree"
+msgstr "degree"
+
+#: models.py:109
+msgid "sub degree"
+msgstr "sub degree"
+
+#: models.py:110
+msgid "date"
+msgstr "date"
+
+#: models.py:130
+msgid "degrees"
+msgstr "degrees"
+
+#: views_conf.py:14
+msgid "Management of degrees"
+msgstr "Management of degrees"
+
+#: views_conf.py:17
+msgid "Configuration of degrees"
+msgstr "Configuration of degrees"
+
+#: views_conf.py:20 views_degree.py:22
+msgid "Degree"
+msgstr "Degree"
+
+#: views_conf.py:22
+msgid "Sub-degree"
+msgstr "Sub-degree"
+
+#: views_conf.py:33
+msgid "Add degree type"
+msgstr "Add degree type"
+
+#: views_conf.py:34
+msgid "Modify degree type"
+msgstr "Modify degree type"
+
+#: views_conf.py:43
+msgid "Delete degree type"
+msgstr "Delete degree type"
+
+#: views_conf.py:52
+msgid "Add sub degree type"
+msgstr "Add sub degree type"
+
+#: views_conf.py:53
+msgid "Modify sub degree type"
+msgstr "Modify sub degree type"
+
+#: views_conf.py:62
+msgid "Delete sub degree type"
+msgstr "Delete sub degree type"
+
+#: views_degree.py:37
+msgid "Add degree"
+msgstr "Add degree"
+
+#: views_degree.py:38
+msgid "Modify degree"
+msgstr "Modify degree"
+
+#: views_degree.py:47
+msgid "Delete degree"
+msgstr "Delete degree"

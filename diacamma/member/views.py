@@ -23,7 +23,6 @@ along with Lucterios.  If not, see <http://www.gnu.org/licenses/>.
 '''
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-from datetime import datetime
 
 from django.utils.translation import ugettext_lazy as _
 from django.utils import six
