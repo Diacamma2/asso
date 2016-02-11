@@ -29,23 +29,14 @@ from lucterios.framework.test import LucteriosTest
 from lucterios.framework.xfergraphic import XferContainerAcknowledge
 from lucterios.framework.filetools import get_user_dir
 
-from diacamma.member.test_tools import default_adherents, default_season
+from diacamma.member.test_tools import default_adherents, default_season,\
+    default_params
 from diacamma.member.views import AdherentShow
-from diacamma.member.models import Activity
 
 from diacamma.event.views_conf import EventConf, DegreeTypeAddModify,\
     DegreeTypeDel, SubDegreeTypeAddModify, SubDegreeTypeDel
 from diacamma.event.views_degree import DegreeAddModify, DegreeDel
-from diacamma.event.models import DegreeType, SubDegreeType
-
-
-def default_params():
-    activity = Activity.objects.all()[0]
-    for level in range(1, 10):
-        DegreeType.objects.create(
-            name="level #%d" % level, level=level, activity=activity)
-    for level in range(1, 6):
-        SubDegreeType.objects.create(name="sublevel #%d" % level, level=level)
+from diacamma.event.test_tools import default_event_params
 
 
 class ConfigurationTest(LucteriosTest):
@@ -163,8 +154,9 @@ class DegreeTest(LucteriosTest):
         LucteriosTest.setUp(self)
         rmtree(get_user_dir(), True)
         default_season()
-        default_adherents()
         default_params()
+        default_adherents()
+        default_event_params()
 
     def test_degree(self):
         self.factory.xfer = AdherentShow()
@@ -203,7 +195,7 @@ class DegreeTest(LucteriosTest):
         self.assert_count_equal(
             'COMPONENTS/GRID[@name="degrees"]/RECORD', 1)
         self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="degrees"]/RECORD[1]/VALUE[@name="degree"]', "[défaut] level #3")
+            'COMPONENTS/GRID[@name="degrees"]/RECORD[1]/VALUE[@name="degree"]', "[activity1] level #1.3")
         self.assert_xml_equal(
             'COMPONENTS/GRID[@name="degrees"]/RECORD[1]/VALUE[@name="subdegree"]', "sublevel #2")
         self.assert_xml_equal(

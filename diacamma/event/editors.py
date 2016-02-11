@@ -23,10 +23,40 @@ along with Lucterios.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 from __future__ import unicode_literals
+
+from django.utils.translation import ugettext_lazy as _
+
 from lucterios.framework.editors import LucteriosEditor
+from lucterios.framework.tools import SELECT_SINGLE
+
+from diacamma.event.models import Participant, Organizer
+from lucterios.framework.xfercomponents import DEFAULT_ACTION_LIST
 
 
 class DegreeEditor(LucteriosEditor):
 
     def edit(self, xfer):
         xfer.change_to_readonly('adherent')
+
+
+class EventEditor(LucteriosEditor):
+
+    def edit(self, xfer):
+        xfer.change_to_readonly('status')
+
+    def show(self, xfer):
+        organizer = xfer.get_components('organizer')
+        participant = xfer.get_components('participant')
+        organizer.actions = []
+        if self.item.status == 0:
+            organizer.add_actions(
+                xfer, action_list=[('responsible', _("Responsible"), "images/ok.png", SELECT_SINGLE)], model=Organizer)
+            organizer.add_actions(xfer, model=Organizer)
+            participant.delete_header('degree_result_simple')
+            participant.delete_header('subdegree_result')
+            participant.delete_header('comment')
+        else:
+            participant.delete_header('current_degree')
+            participant.actions = []
+            participant.add_actions(
+                xfer, action_list=DEFAULT_ACTION_LIST[:1], model=Participant)

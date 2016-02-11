@@ -227,6 +227,7 @@ class Season(LucteriosModel):
         verbose_name = _('season')
         verbose_name_plural = _('seasons')
         ordering = ['-designation']
+        default_permissions = ['add', 'change']
 
 
 class Document(LucteriosModel):
@@ -351,6 +352,7 @@ class SubscriptionType(LucteriosModel):
     class Meta(object):
         verbose_name = _('subscription type')
         verbose_name_plural = _('subscription types')
+        default_permissions = []
 
 
 class Activity(LucteriosModel):
@@ -380,6 +382,7 @@ class Activity(LucteriosModel):
     class Meta(object):
         verbose_name = _('activity')
         verbose_name_plural = _('activities')
+        default_permissions = []
 
 
 class Team(LucteriosModel):
@@ -405,6 +408,7 @@ class Team(LucteriosModel):
     class Meta(object):
         verbose_name = _('team')
         verbose_name_plural = _('teams')
+        default_permissions = []
 
 
 class Age(LucteriosModel):
@@ -448,6 +452,7 @@ class Age(LucteriosModel):
         verbose_name = _('age')
         verbose_name_plural = _('ages')
         ordering = ['-minimum']
+        default_permissions = []
 
 
 class Adherent(Individual):

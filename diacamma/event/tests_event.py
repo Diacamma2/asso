@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 '''
-diacamma.syndic package
+diacamma.event package
 
 @author: Laurent GAY
 @organization: sd-libre.fr
 @contact: info@sd-libre.fr
-@copyright: 2015 sd-libre.fr
+@copyright: 2016 sd-libre.fr
 @license: This file is part of Lucterios.
 
 Lucterios is free software: you can redistribute it and/or modify
@@ -22,25 +22,26 @@ You should have received a copy of the GNU General Public License
 along with Lucterios.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-
 from __future__ import unicode_literals
-from os.path import dirname, join, isfile
+from shutil import rmtree
+
+from lucterios.framework.test import LucteriosTest
+from lucterios.framework.xfergraphic import XferContainerAcknowledge
+from lucterios.framework.filetools import get_user_dir
+
+from diacamma.member.test_tools import default_season, default_params,\
+    default_adherents
+from diacamma.event.test_tools import default_event_params, add_default_degree
 
 
-def get_build():
-    file_name = join(dirname(__file__), 'build')
-    if isfile(file_name):
-        with open(file_name) as flb:
-            return flb.read()
-    return "0"
+class EventTest(LucteriosTest):
 
-__version__ = "2.0.2." + get_build()
-
-
-def __title__():
-    from django.utils.translation import ugettext_lazy as _
-    return _("Diacamma asso")
-
-
-def link():
-    return ["lucterios.contacts", "lucterios.mailing", "lucterios.documents", "diacamma.accounting", "diacamma.invoice", "diacamma.payoff", "diacamma.member", "diacamma.event"]
+    def setUp(self):
+        self.xfer_class = XferContainerAcknowledge
+        LucteriosTest.setUp(self)
+        rmtree(get_user_dir(), True)
+        default_season()
+        default_params()
+        default_adherents()
+        default_event_params()
+        add_default_degree()

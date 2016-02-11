@@ -36,7 +36,7 @@ from lucterios.framework.xfercomponents import XferCompButton
 from lucterios.CORE.views import ParamEdit
 
 
-@MenuManage.describ('invoice.change_vat', FORMTYPE_NOMODAL, 'member.conf', _('Management of member categories'))
+@MenuManage.describ('CORE.change_parameter', FORMTYPE_NOMODAL, 'member.conf', _('Management of member categories'))
 class CategoryConf(XferListEditor):
     icon = "config.png"
     caption = _("Categories")
@@ -65,7 +65,7 @@ class CategoryConf(XferListEditor):
 
 
 @ActionsManage.affect('Age', 'edit', 'add')
-@MenuManage.describ('member.add_age')
+@MenuManage.describ('CORE.add_parameter')
 class AgeAddModify(XferAddEditor):
     icon = "config.png"
     model = Age
@@ -75,7 +75,7 @@ class AgeAddModify(XferAddEditor):
 
 
 @ActionsManage.affect('Age', 'delete')
-@MenuManage.describ('member.delete_age')
+@MenuManage.describ('CORE.add_parameter')
 class AgeDel(XferDelete):
     icon = "config.png"
     model = Age
@@ -84,7 +84,7 @@ class AgeDel(XferDelete):
 
 
 @ActionsManage.affect('Team', 'edit', 'add')
-@MenuManage.describ('member.add_team')
+@MenuManage.describ('CORE.add_parameter')
 class TeamAddModify(XferAddEditor):
     icon = "config.png"
     model = Team
@@ -94,7 +94,7 @@ class TeamAddModify(XferAddEditor):
 
 
 @ActionsManage.affect('Team', 'delete')
-@MenuManage.describ('member.delete_team')
+@MenuManage.describ('CORE.add_parameter')
 class TeamDel(XferDelete):
     icon = "config.png"
     model = Team
@@ -103,7 +103,7 @@ class TeamDel(XferDelete):
 
 
 @ActionsManage.affect('Activity', 'edit', 'add')
-@MenuManage.describ('member.add_activity')
+@MenuManage.describ('CORE.add_parameter')
 class ActivityAddModify(XferAddEditor):
     icon = "config.png"
     model = Activity
@@ -113,7 +113,7 @@ class ActivityAddModify(XferAddEditor):
 
 
 @ActionsManage.affect('Activity', 'delete')
-@MenuManage.describ('member.delete_activity')
+@MenuManage.describ('CORE.add_parameter')
 class ActivityDel(XferDelete):
     icon = "config.png"
     model = Activity

@@ -38,7 +38,7 @@ from lucterios.CORE.xferprint import XferPrintLabel
 from lucterios.CORE.xferprint import XferPrintListing
 from lucterios.framework.tools import FORMTYPE_NOMODAL, ActionsManage, MenuManage,\
     FORMTYPE_REFRESH, CLOSE_NO, SELECT_SINGLE, WrapAction, FORMTYPE_MODAL,\
-    SELECT_MULTI
+    SELECT_MULTI, CLOSE_YES
 from lucterios.framework.xfercomponents import XferCompLabelForm,\
     XferCompCheckList, XferCompButton, XferCompSelect, XferCompDate,\
     XferCompImage, XferCompEdit, XferCompGrid, DEFAULT_ACTION_LIST
@@ -177,6 +177,27 @@ class AdherentAbstractList(XferListEditor):
         items = self.model.objects.filter(
             current_filter).exclude(exclude_filter)
         return items
+
+
+class AdherentSelection(AdherentAbstractList):
+    caption = _("Select adherent")
+    mode_select = SELECT_SINGLE
+    select_class = None
+    final_class = None
+
+    def fillresponse(self):
+        self.action_list = []
+        if self.final_class is not None:
+            self.add_action(
+                self.final_class.get_action(_('ok'), "images/ok.png"), {})
+        AdherentAbstractList.fillresponse(self)
+        self.get_components('title').colspan = 10
+        self.get_components(self.field_id).colspan = 10
+        self.get_components('nb_adherent').colspan = 10
+        if self.select_class is not None:
+            grid = self.get_components(self.field_id)
+            grid.add_action(self.request, self.select_class.get_action(_("Select"), "images/ok.png"), {
+                            'close': CLOSE_YES, 'unique': self.mode_select, 'params': {'pkname': self.field_id}}, 0)
 
 
 @MenuManage.describ('member.change_adherent', FORMTYPE_NOMODAL, 'member.actions', _('List of adherents with subscribtion'))
@@ -367,6 +388,7 @@ class AdherentPrint(XferPrintAction):
     model = Adherent
     field_id = 'adherent'
     caption = _("Print adherent")
+    action_class = AdherentShow
 
 
 @ActionsManage.affect('Adherent', 'label')
