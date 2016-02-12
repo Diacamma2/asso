@@ -31,6 +31,8 @@ from lucterios.framework.tools import SELECT_SINGLE
 
 from diacamma.event.models import Participant, Organizer
 from lucterios.framework.xfercomponents import DEFAULT_ACTION_LIST
+from diacamma.member.models import Activity
+from lucterios.framework.error import LucteriosException, IMPORTANT
 
 
 class DegreeEditor(LucteriosEditor):
@@ -40,6 +42,13 @@ class DegreeEditor(LucteriosEditor):
 
 
 class EventEditor(LucteriosEditor):
+
+    def before_save(self, xfer):
+        if self.item.activity_id is None:
+            activities = Activity.objects.all()
+            if len(activities) == 0:
+                raise LucteriosException(IMPORTANT, _('No activity!'))
+            self.item.activity = activities[0]
 
     def edit(self, xfer):
         xfer.change_to_readonly('status')

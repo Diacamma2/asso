@@ -197,7 +197,7 @@ class AdherentSelection(AdherentAbstractList):
         if self.select_class is not None:
             grid = self.get_components(self.field_id)
             grid.add_action(self.request, self.select_class.get_action(_("Select"), "images/ok.png"), {
-                            'close': CLOSE_YES, 'unique': self.mode_select, 'params': {'pkname': self.field_id}}, 0)
+                            'close': CLOSE_YES, 'unique': self.mode_select}, 0)
 
 
 @MenuManage.describ('member.change_adherent', FORMTYPE_NOMODAL, 'member.actions', _('List of adherents with subscribtion'))

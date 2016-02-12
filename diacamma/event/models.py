@@ -34,6 +34,8 @@ from lucterios.framework.models import LucteriosModel
 from diacamma.member.models import Activity, Adherent
 from lucterios.contacts.models import Individual
 from django.utils import six
+from lucterios.framework.error import LucteriosException, IMPORTANT
+from lucterios.CORE.parameters import Params
 
 
 class DegreeType(LucteriosModel):
@@ -44,22 +46,34 @@ class DegreeType(LucteriosModel):
         Activity, verbose_name=_('activity'), null=False, default=None, db_index=True, on_delete=models.PROTECT)
 
     def __str__(self):
-        return "[%s] %s" % (self.activity, self.name)
+        if Params.getvalue("member-activite-enable"):
+            return "[%s] %s" % (self.activity, self.name)
+        else:
+            return self.name
 
     def get_text_value(self):
         return self.name
 
     @classmethod
     def get_default_fields(cls):
-        return ["activity", 'name', 'level']
+        if Params.getvalue("member-activite-enable"):
+            return [(Params.getvalue("member-activite-text"), "activity"), 'name', 'level']
+        else:
+            return ['name', 'level']
 
     @classmethod
     def get_edit_fields(cls):
-        return ["activity", 'name', 'level']
+        if Params.getvalue("member-activite-enable"):
+            return [((Params.getvalue("member-activite-text"), "activity"),), 'name', 'level']
+        else:
+            return ['name', 'level']
 
     @classmethod
     def get_show_fields(cls):
-        return ["activity", 'name', 'level']
+        if Params.getvalue("member-activite-enable"):
+            return [((Params.getvalue("member-activite-text"), "activity"),), 'name', 'level']
+        else:
+            return ['name', 'level']
 
     class Meta(object):
         verbose_name = _('degree type')
@@ -103,28 +117,52 @@ class Event(LucteriosModel):
         (0, _('building')), (1, _('valid'))), null=False, default=0, db_index=True)
 
     def __str__(self):
-        return "%s %s" % (self.activity, self.date)
+        if Params.getvalue("member-activite-enable"):
+            return "%s %s" % (self.activity, self.date)
+        else:
+            return six.text_type(self.date)
 
     @classmethod
     def get_default_fields(cls):
-        return ['activity', 'status', 'date', 'comment']
+        if Params.getvalue("member-activite-enable"):
+            return [(Params.getvalue("member-activite-text"), "activity"), 'status', 'date', 'comment']
+        else:
+            return ['status', 'date', 'comment']
 
     @classmethod
     def get_edit_fields(cls):
-        return ['activity', 'status', 'date', 'comment']
+        if Params.getvalue("member-activite-enable"):
+            return [((Params.getvalue("member-activite-text"), "activity"),), 'status', 'date', 'comment']
+        else:
+            return ['status', 'date', 'comment']
 
     @classmethod
     def get_show_fields(cls):
-        return [('date', 'activity'), 'organizer_set', 'participant_set', ('status', 'comment')]
+        if Params.getvalue("member-activite-enable"):
+            return [('date', (Params.getvalue("member-activite-text"), "activity")), 'organizer_set', 'participant_set', ('status', 'comment')]
+        else:
+            return ['date', 'organizer_set', 'participant_set', ('status', 'comment')]
 
     def can_delete(self):
         if self.status > 0:
             return _('examination validated!')
         return ''
 
+    def can_be_valid(self):
+        msg = ''
+        if self.status > 0:
+            msg = _('examination validated!')
+        elif len(self.organizer_set.filter(isresponsible=True)) == 0:
+            msg = _('no responsible!')
+        elif len(self.participant_set.all()) == 0:
+            msg = _('no participant!')
+        if msg != '':
+            raise LucteriosException(IMPORTANT, msg)
+
     class Meta(object):
         verbose_name = _('event')
         verbose_name_plural = _('events')
+        ordering = ['-date']
 
 
 class Organizer(LucteriosModel):

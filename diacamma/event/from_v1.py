@@ -38,6 +38,9 @@ class EventMigrate(MigrateAbstract):
         self.degreetype_list = {}
         self.subdegreetype_list = {}
         self.degree_list = {}
+        self.event_list = {}
+        self.organizer_list = {}
+        self.participant_list = {}
 
     def _config(self):
         degreetype_mdl = apps.get_model("event", "DegreeType")
@@ -68,7 +71,7 @@ class EventMigrate(MigrateAbstract):
         cur_d = self.old_db.open()
         cur_d.execute(
             "SELECT id, membre, diplome, sousDiplome, date, formation FROM fr_sdlibre_FormationSport_Diplome")
-        for degreeid, membre, diplome, sousDiplome, date, _ in cur_d.fetchall():
+        for degreeid, membre, diplome, sousDiplome, date, formation in cur_d.fetchall():
             if (diplome in self.degreetype_list.keys()) and (membre in self.old_db.objectlinks['adherent'].keys()):
                 self.print_debug(
                     "=> Degree %s %s %s", (membre, diplome, sousDiplome))
@@ -77,14 +80,59 @@ class EventMigrate(MigrateAbstract):
                 if sousDiplome in self.subdegreetype_list.keys():
                     self.degree_list[
                         degreeid].subdegree = self.subdegreetype_list[sousDiplome]
-                    self.degree_list[degreeid].save()
+                if formation in self.event_list.keys():
+                    self.degree_list[
+                        degreeid].event = self.event_list[formation]
+                self.degree_list[degreeid].save()
             else:
                 self.print_debug(
                     "=> No Degree %s %s %s", (membre, diplome, sousDiplome))
 
+    def _event(self):
+        event_mdl = apps.get_model("event", "Event")
+        self.event_list = {}
+        organizer_mdl = apps.get_model("event", "Organizer")
+        self.organizer_list = {}
+        participant_mdl = apps.get_model("event", "Participant")
+        self.participant_list = {}
+        cur_e = self.old_db.open()
+        cur_e.execute(
+            "SELECT id,date,etat,activite,remarque  FROM fr_sdlibre_FormationSport_Formation")
+        for eventid, date, etat, activite, remarque in cur_e.fetchall():
+            if (activite in self.old_db.objectlinks['activity'].keys()):
+                if remarque is None:
+                    remarque = ''
+                self.event_list[eventid] = event_mdl.objects.create(activity=self.old_db.objectlinks[
+                                                                    'activity'][activite], date=date, status=etat, comment=remarque)
+        cur_o = self.old_db.open()
+        cur_o.execute(
+            "SELECT id, formation,membre,responsable   FROM fr_sdlibre_FormationSport_Jury")
+        for orgaid, formation, membre, responsable in cur_o.fetchall():
+            if (formation in self.event_list.keys()) and (membre in self.old_db.objectlinks['adherent'].keys()):
+                adherent = self.old_db.objectlinks['adherent'][membre]
+                self.organizer_list[orgaid] = organizer_mdl.objects.create(
+                    event=self.event_list[formation], contact_id=adherent.id, isresponsible=responsable == 'o')
+
+        cur_p = self.old_db.open()
+        cur_p.execute(
+            "SELECT id, formation,membre,resultatGrade,resultatSousGrade,commentaire FROM fr_sdlibre_FormationSport_Candidat")
+        for partid, formation, membre, resultatGrade, resultatSousGrade, commentaire in cur_p.fetchall():
+            if (formation in self.event_list.keys()) and (membre in self.old_db.objectlinks['adherent'].keys()) and (resultatGrade in self.degreetype_list.keys()):
+                if commentaire is None:
+                    commentaire = ''
+                adherent = self.old_db.objectlinks['adherent'][membre]
+                if resultatSousGrade in self.subdegreetype_list.keys():
+                    sub_degree = self.subdegreetype_list[resultatSousGrade]
+                else:
+                    sub_degree = None
+                self.participant_list[
+                    partid] = participant_mdl.objects.create(event=self.event_list[formation], contact_id=adherent.id,
+                                                             degree_result=self.degreetype_list[resultatGrade], subdegree_result=sub_degree, comment=commentaire)
+
     def run(self):
         try:
             self._config()
+            self._event()
             self._degree()
         except:
             import traceback

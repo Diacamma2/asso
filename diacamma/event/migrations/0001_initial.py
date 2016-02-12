@@ -27,6 +27,39 @@ from __future__ import unicode_literals
 import django.core.validators
 from django.db import migrations, models
 import django.db.models.deletion
+from django.utils.translation import ugettext_lazy as _
+
+from lucterios.CORE.models import Parameter
+
+
+def initial_values(*args):
+    param = Parameter.objects.create(
+        name="event-subdegree-enable", typeparam=3)
+    param.title = _("event-subdegree-enable")
+    param.args = "{}"
+    param.value = 'True'
+    param.save()
+
+    param = Parameter.objects.create(
+        name="event-degree-text", typeparam=0)
+    param.title = _("event-degree-text")
+    param.args = "{'Multi':False}"
+    param.value = _('Degree')
+    param.save()
+
+    param = Parameter.objects.create(
+        name="event-subdegree-text", typeparam=0)
+    param.title = _("event-subdegree-text")
+    param.args = "{'Multi':False}"
+    param.value = _('Sub-degree')
+    param.save()
+
+    param = Parameter.objects.create(
+        name="event-comment-text", typeparam=0)
+    param.title = _("event-comment-text")
+    param.args = "{'Multi':True}"
+    param.value = ''
+    param.save()
 
 
 class Migration(migrations.Migration):
@@ -42,9 +75,11 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Degree',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.AutoField(
+                    auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('date', models.DateField(verbose_name='date')),
-                ('adherent', models.ForeignKey(default=None, on_delete=django.db.models.deletion.CASCADE, to='member.Adherent', verbose_name='adherent')),
+                ('adherent', models.ForeignKey(default=None, on_delete=django.db.models.deletion.CASCADE,
+                                               to='member.Adherent', verbose_name='adherent')),
             ],
             options={
                 'verbose_name': 'degree',
@@ -55,10 +90,14 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='DegreeType',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=100, verbose_name='name')),
-                ('level', models.IntegerField(default=1, validators=[django.core.validators.MinValueValidator(1), django.core.validators.MaxValueValidator(100)], verbose_name='level')),
-                ('activity', models.ForeignKey(default=None, on_delete=django.db.models.deletion.PROTECT, to='member.Activity', verbose_name='activity')),
+                ('id', models.AutoField(
+                    auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('name', models.CharField(
+                    max_length=100, verbose_name='name')),
+                ('level', models.IntegerField(default=1, validators=[django.core.validators.MinValueValidator(
+                    1), django.core.validators.MaxValueValidator(100)], verbose_name='level')),
+                ('activity', models.ForeignKey(default=None, on_delete=django.db.models.deletion.PROTECT,
+                                               to='member.Activity', verbose_name='activity')),
             ],
             options={
                 'verbose_name': 'degree type',
@@ -69,11 +108,15 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Event',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.AutoField(
+                    auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('date', models.DateField(verbose_name='date')),
-                ('comment', models.TextField(blank=False, verbose_name='comment')),
-                ('status', models.IntegerField(choices=[(0, 'building'), (1, 'valid')], db_index=True, default=0, verbose_name='status')),
-                ('activity', models.ForeignKey(default=None, on_delete=django.db.models.deletion.PROTECT, to='member.Activity', verbose_name='activity')),
+                ('comment', models.TextField(
+                    blank=False, verbose_name='comment')),
+                ('status', models.IntegerField(choices=[
+                 (0, 'building'), (1, 'valid')], db_index=True, default=0, verbose_name='status')),
+                ('activity', models.ForeignKey(default=None, on_delete=django.db.models.deletion.PROTECT,
+                                               to='member.Activity', verbose_name='activity')),
             ],
             options={
                 'verbose_name_plural': 'events',
@@ -83,10 +126,14 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Organizer',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('isresponsible', models.BooleanField(default=False, verbose_name='responsible')),
-                ('contact', models.ForeignKey(default=None, on_delete=django.db.models.deletion.CASCADE, to='contacts.Individual', verbose_name='contact')),
-                ('event', models.ForeignKey(default=None, on_delete=django.db.models.deletion.CASCADE, to='event.Event', verbose_name='event')),
+                ('id', models.AutoField(
+                    auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('isresponsible', models.BooleanField(
+                    default=False, verbose_name='responsible')),
+                ('contact', models.ForeignKey(default=None, on_delete=django.db.models.deletion.CASCADE,
+                                              to='contacts.Individual', verbose_name='contact')),
+                ('event', models.ForeignKey(
+                    default=None, on_delete=django.db.models.deletion.CASCADE, to='event.Event', verbose_name='event')),
             ],
             options={
                 'default_permissions': [],
@@ -97,11 +144,16 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Participant',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('comment', models.TextField(blank=True, verbose_name='comment')),
-                ('contact', models.ForeignKey(default=None, on_delete=django.db.models.deletion.CASCADE, to='contacts.Individual', verbose_name='contact')),
-                ('degree_result', models.ForeignKey(default=None, null=True, on_delete=django.db.models.deletion.CASCADE, to='event.DegreeType', verbose_name='degree result')),
-                ('event', models.ForeignKey(default=None, on_delete=django.db.models.deletion.CASCADE, to='event.Event', verbose_name='event')),
+                ('id', models.AutoField(
+                    auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('comment', models.TextField(
+                    blank=True, verbose_name='comment')),
+                ('contact', models.ForeignKey(default=None, on_delete=django.db.models.deletion.CASCADE,
+                                              to='contacts.Individual', verbose_name='contact')),
+                ('degree_result', models.ForeignKey(default=None, null=True,
+                                                    on_delete=django.db.models.deletion.CASCADE, to='event.DegreeType', verbose_name='degree result')),
+                ('event', models.ForeignKey(
+                    default=None, on_delete=django.db.models.deletion.CASCADE, to='event.Event', verbose_name='event')),
             ],
             options={
                 'default_permissions': [],
@@ -112,9 +164,12 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='SubDegreeType',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=100, verbose_name='name')),
-                ('level', models.IntegerField(default=1, validators=[django.core.validators.MinValueValidator(1), django.core.validators.MaxValueValidator(100)], verbose_name='level')),
+                ('id', models.AutoField(
+                    auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('name', models.CharField(
+                    max_length=100, verbose_name='name')),
+                ('level', models.IntegerField(default=1, validators=[django.core.validators.MinValueValidator(
+                    1), django.core.validators.MaxValueValidator(100)], verbose_name='level')),
             ],
             options={
                 'default_permissions': [],
@@ -126,21 +181,26 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='participant',
             name='subdegree_result',
-            field=models.ForeignKey(default=None, null=True, on_delete=django.db.models.deletion.CASCADE, to='event.SubDegreeType', verbose_name='sub-degree result'),
+            field=models.ForeignKey(default=None, null=True, on_delete=django.db.models.deletion.CASCADE,
+                                    to='event.SubDegreeType', verbose_name='sub-degree result'),
         ),
         migrations.AddField(
             model_name='degree',
             name='degree',
-            field=models.ForeignKey(default=None, on_delete=django.db.models.deletion.PROTECT, to='event.DegreeType', verbose_name='degree'),
+            field=models.ForeignKey(
+                default=None, on_delete=django.db.models.deletion.PROTECT, to='event.DegreeType', verbose_name='degree'),
         ),
         migrations.AddField(
             model_name='degree',
             name='event',
-            field=models.ForeignKey(default=None, null=True, on_delete=django.db.models.deletion.SET_NULL, to='event.Event', verbose_name='event'),
+            field=models.ForeignKey(
+                default=None, null=True, on_delete=django.db.models.deletion.SET_NULL, to='event.Event', verbose_name='event'),
         ),
         migrations.AddField(
             model_name='degree',
             name='subdegree',
-            field=models.ForeignKey(default=None, null=True, on_delete=django.db.models.deletion.PROTECT, to='event.SubDegreeType', verbose_name='sub degree'),
+            field=models.ForeignKey(
+                default=None, null=True, on_delete=django.db.models.deletion.PROTECT, to='event.SubDegreeType', verbose_name='sub degree'),
         ),
+        migrations.RunPython(initial_values),
     ]

@@ -46,10 +46,10 @@ def add_default_degree():
     # William Dalton level 1.7
     Degree.objects.create(
         adherent_id=3, degree_id=7, subdegree_id=None, date='2011-10-11')
-    # Jack Dalton level 2.1 sublevel 1
+    # Jack Dalton level 2.2 sublevel 1
     Degree.objects.create(
         adherent_id=4, degree_id=11, subdegree_id=1, date='2012-04-09')
-    # Joe Dalton level 2.5
+    # Joe Dalton level 2.6
     Degree.objects.create(
         adherent_id=5, degree_id=15, subdegree_id=None, date='2010-09-21')
     # Lucky Luke level 1.3 sublevel 6

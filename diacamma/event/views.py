@@ -26,10 +26,9 @@ from __future__ import unicode_literals
 
 from django.utils.translation import ugettext_lazy as _
 
-from diacamma.event.models import Event, Organizer, Participant, Degree,\
-    DegreeType, SubDegreeType
+from diacamma.event.models import Event, Organizer, Participant
 
-from lucterios.framework.xferadvance import XferListEditor, XferSave
+from lucterios.framework.xferadvance import XferListEditor
 from lucterios.framework.xferadvance import XferAddEditor
 from lucterios.framework.xferadvance import XferShowEditor
 from lucterios.framework.xferadvance import XferDelete
@@ -103,6 +102,7 @@ class EventValid(XferContainerAcknowledge):
     caption = _("Validation of an examination")
 
     def fillresponse(self):
+        self.item.can_be_valid()
         if self.getparam('SAVE') is None:
             dlg = self.create_custom()
             dlg.item = self.item
@@ -200,7 +200,7 @@ class OrganizerAddModify(ContactSelection):
     caption = _("Add organizer")
     mode_select = SELECT_MULTI
     select_class = OrganizerSave
-    model = Individual
+    inital_model = Individual
 
 
 @ActionsManage.affect('Organizer', 'delete')
@@ -231,9 +231,8 @@ class ParticipantSave(XferContainerAcknowledge):
     field_id = 'participant'
     caption_add = _("Add participant")
 
-    def fillresponse(self, event, pkname=''):
-        contact_ids = self.getparam(pkname)
-        for contact_id in contact_ids.split(';'):
+    def fillresponse(self, event, adherent=()):
+        for contact_id in adherent:
             Participant.objects.get_or_create(
                 event_id=event, contact_id=contact_id)
 

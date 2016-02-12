@@ -30,8 +30,13 @@ from lucterios.framework.xfergraphic import XferContainerAcknowledge
 from lucterios.framework.filetools import get_user_dir
 
 from diacamma.member.test_tools import default_season, default_params,\
-    default_adherents
+    default_adherents, set_parameters
 from diacamma.event.test_tools import default_event_params, add_default_degree
+from diacamma.event.views import EventList, EventAddModify, EventDel, EventShow,\
+    OrganizerAddModify, OrganizerSave, OrganizerResponsible, OrganizerDel,\
+    ParticipantAddModify, ParticipantSave, ParticipantDel, ParticipantOpen,\
+    EventValid
+from diacamma.member.views import AdherentShow
 
 
 class EventTest(LucteriosTest):
@@ -44,4 +49,507 @@ class EventTest(LucteriosTest):
         default_params()
         default_adherents()
         default_event_params()
+        set_parameters(
+            ["team", "activite", "age", "licence", "genre", 'numero', 'birth'])
         add_default_degree()
+
+    def test_add_remove(self):
+        self.factory.xfer = EventList()
+        self.call('/diacamma.event/eventList', {}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.event', 'eventList')
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="event"]/HEADER', 4)
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="event"]/HEADER[@name="activity"]', "passion")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="event"]/HEADER[@name="status"]', "status")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="event"]/HEADER[@name="date"]', "date")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="event"]/HEADER[@name="comment"]', "commentaire")
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="event"]/RECORD', 0)
+
+        self.factory.xfer = EventAddModify()
+        self.call('/diacamma.event/eventAddModify', {}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.event', 'eventAddModify')
+        self.assert_count_equal('COMPONENTS/*', 9)
+        self.assert_xml_equal(
+            'COMPONENTS/LABELFORM[@name="lbl_activity"]', "{[b]}passion{[/b]}")
+        self.assert_count_equal('COMPONENTS/SELECT[@name="activity"]/CASE', 2)
+        self.assert_xml_equal(
+            'COMPONENTS/LABELFORM[@name="status"]', "en création")
+
+        self.factory.xfer = EventAddModify()
+        self.call('/diacamma.event/eventAddModify',
+                  {"SAVE": "YES", "date": "2014-10-12", "activity": "1", "comment": "new examination"}, False)
+        self.assert_observer(
+            'core.acknowledge', 'diacamma.event', 'eventAddModify')
+
+        self.factory.xfer = EventShow()
+        self.call('/diacamma.event/eventShow', {"event": 1}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.event', 'eventShow')
+        self.assert_count_equal('COMPONENTS/*', 13)
+        self.assert_xml_equal(
+            'COMPONENTS/LABELFORM[@name="lbl_activity"]', "{[b]}passion{[/b]}")
+        self.assert_xml_equal(
+            'COMPONENTS/LABELFORM[@name="activity"]', 'activity1')
+
+        self.factory.xfer = EventList()
+        self.call('/diacamma.event/eventList', {}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.event', 'eventList')
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="event"]/RECORD', 1)
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="event"]/RECORD[1]/VALUE[@name="activity"]', "activity1")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="event"]/RECORD[1]/VALUE[@name="status"]', "en création")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="event"]/RECORD[1]/VALUE[@name="date"]', "12 octobre 2014")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="event"]/RECORD[1]/VALUE[@name="comment"]', "new examination")
+
+        self.factory.xfer = EventDel()
+        self.call('/diacamma.event/eventDel',
+                  {"CONFIRME": "YES", "event": 1}, False)
+        self.assert_observer(
+            'core.acknowledge', 'diacamma.event', 'eventDel')
+
+        self.factory.xfer = EventList()
+        self.call('/diacamma.event/eventList', {}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.event', 'eventList')
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="event"]/RECORD', 0)
+
+    def test_add_organizer(self):
+        self.factory.xfer = EventAddModify()
+        self.call('/diacamma.event/eventAddModify',
+                  {"SAVE": "YES", "date": "2014-10-12", "activity": "1", "comment": "new examination"}, False)
+
+        self.factory.xfer = EventShow()
+        self.call('/diacamma.event/eventShow', {"event": 1}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.event', 'eventShow')
+        self.assert_count_equal('COMPONENTS/*', 13)
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="organizer"]/HEADER', 2)
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="organizer"]/HEADER[@name="contact"]', "contact")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="organizer"]/HEADER[@name="isresponsible"]', "responsable")
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="organizer"]/RECORD', 0)
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="organizer"]/ACTIONS/ACTION', 3)
+
+        self.factory.xfer = OrganizerAddModify()
+        self.call('/diacamma.event/organizerAddModify', {"event": 1}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.event', 'organizerAddModify')
+
+        self.factory.xfer = OrganizerSave()
+        self.call('/diacamma.event/organizerSave',
+                  {"event": 1, 'pkname': 'contact', 'contact': '3;6'}, False)
+        self.assert_observer(
+            'core.acknowledge', 'diacamma.event', 'organizerSave')
+
+        self.factory.xfer = EventShow()
+        self.call('/diacamma.event/eventShow', {"event": 1}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.event', 'eventShow')
+        self.assert_count_equal('COMPONENTS/*', 13)
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="organizer"]/RECORD', 2)
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="organizer"]/RECORD[1]/VALUE[@name="contact"]', "Dalton William")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="organizer"]/RECORD[1]/VALUE[@name="isresponsible"]', "0")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="organizer"]/RECORD[2]/VALUE[@name="contact"]', "Luke Lucky")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="organizer"]/RECORD[2]/VALUE[@name="isresponsible"]', "0")
+
+        self.factory.xfer = OrganizerResponsible()
+        self.call('/diacamma.event/organizerResponsible',
+                  {"event": 1, 'organizer': '2'}, False)
+        self.assert_observer(
+            'core.acknowledge', 'diacamma.event', 'organizerResponsible')
+
+        self.factory.xfer = EventShow()
+        self.call('/diacamma.event/eventShow', {"event": 1}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.event', 'eventShow')
+        self.assert_count_equal('COMPONENTS/*', 13)
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="organizer"]/RECORD', 2)
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="organizer"]/RECORD[1]/VALUE[@name="contact"]', "Dalton William")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="organizer"]/RECORD[1]/VALUE[@name="isresponsible"]', "0")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="organizer"]/RECORD[2]/VALUE[@name="contact"]', "Luke Lucky")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="organizer"]/RECORD[2]/VALUE[@name="isresponsible"]', "1")
+
+        self.factory.xfer = OrganizerResponsible()
+        self.call('/diacamma.event/organizerResponsible',
+                  {"event": 1, 'organizer': '1'}, False)
+        self.assert_observer(
+            'core.acknowledge', 'diacamma.event', 'organizerResponsible')
+
+        self.factory.xfer = EventShow()
+        self.call('/diacamma.event/eventShow', {"event": 1}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.event', 'eventShow')
+        self.assert_count_equal('COMPONENTS/*', 13)
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="organizer"]/RECORD', 2)
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="organizer"]/RECORD[1]/VALUE[@name="contact"]', "Dalton William")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="organizer"]/RECORD[1]/VALUE[@name="isresponsible"]', "1")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="organizer"]/RECORD[2]/VALUE[@name="contact"]', "Luke Lucky")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="organizer"]/RECORD[2]/VALUE[@name="isresponsible"]', "0")
+
+        self.factory.xfer = OrganizerDel()
+        self.call('/diacamma.event/organizerDel',
+                  {"event": 1, 'organizer': '1', 'CONFIRME': 'YES'}, False)
+        self.assert_observer(
+            'core.acknowledge', 'diacamma.event', 'organizerDel')
+
+        self.factory.xfer = EventShow()
+        self.call('/diacamma.event/eventShow', {"event": 1}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.event', 'eventShow')
+        self.assert_count_equal('COMPONENTS/*', 13)
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="organizer"]/RECORD', 1)
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="organizer"]/RECORD[1]/VALUE[@name="contact"]', "Luke Lucky")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="organizer"]/RECORD[1]/VALUE[@name="isresponsible"]', "0")
+
+    def test_add_participant(self):
+        self.factory.xfer = EventAddModify()
+        self.call('/diacamma.event/eventAddModify',
+                  {"SAVE": "YES", "date": "2014-10-12", "activity": "1", "comment": "new examination"}, False)
+
+        self.factory.xfer = EventShow()
+        self.call('/diacamma.event/eventShow', {"event": 1}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.event', 'eventShow')
+        self.assert_count_equal('COMPONENTS/*', 13)
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="participant"]/HEADER', 2)
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="participant"]/HEADER[@name="contact"]', "contact")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="participant"]/HEADER[@name="current_degree"]', "courrant")
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="participant"]/RECORD', 0)
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="participant"]/ACTIONS/ACTION', 3)
+
+        self.factory.xfer = ParticipantAddModify()
+        self.call('/diacamma.event/participantAddModify', {"event": 1}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.event', 'participantAddModify')
+
+        self.factory.xfer = ParticipantSave()
+        self.call('/diacamma.event/participantSave',
+                  {"event": 1, 'adherent': '2;4;5'}, False)
+        self.assert_observer(
+            'core.acknowledge', 'diacamma.event', 'participantSave')
+
+        self.factory.xfer = EventShow()
+        self.call('/diacamma.event/eventShow', {"event": 1}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.event', 'eventShow')
+        self.assert_count_equal('COMPONENTS/*', 13)
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="participant"]/RECORD', 3)
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="participant"]/RECORD[1]/VALUE[@name="contact"]', "Dalton Avrel")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="participant"]/RECORD[1]/VALUE[@name="current_degree"]', "level #1.2 sublevel #3")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="participant"]/RECORD[2]/VALUE[@name="contact"]', "Dalton Jack")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="participant"]/RECORD[2]/VALUE[@name="current_degree"]', None)
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="participant"]/RECORD[3]/VALUE[@name="contact"]', "Dalton Joe")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="participant"]/RECORD[3]/VALUE[@name="current_degree"]', None)
+
+        self.factory.xfer = ParticipantDel()
+        self.call('/diacamma.event/participantDel',
+                  {"event": 1, 'participant': '2', 'CONFIRME': 'YES'}, False)
+        self.assert_observer(
+            'core.acknowledge', 'diacamma.event', 'participantDel')
+
+        self.factory.xfer = EventShow()
+        self.call('/diacamma.event/eventShow', {"event": 1}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.event', 'eventShow')
+        self.assert_count_equal('COMPONENTS/*', 13)
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="participant"]/RECORD', 2)
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="participant"]/RECORD[1]/VALUE[@name="contact"]', "Dalton Avrel")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="participant"]/RECORD[2]/VALUE[@name="contact"]', "Dalton Joe")
+
+        self.factory.xfer = ParticipantOpen()
+        self.call('/diacamma.event/participantOpen',
+                  {"event": 1, 'participant': '3'}, False)
+        self.assert_observer(
+            'core.acknowledge', 'diacamma.event', 'participantOpen')
+        self.assert_attrib_equal(
+            "ACTION", "id", "diacamma.member/adherentShow")
+        self.assert_count_equal("ACTION/PARAM", 1)
+        self.assert_xml_equal("ACTION/PARAM[@name='adherent']", "5")
+
+    def test_validation(self):
+        self.factory.xfer = EventAddModify()
+        self.call('/diacamma.event/eventAddModify',
+                  {"SAVE": "YES", "date": "2014-10-12", "activity": "1", "comment": "new examination"}, False)
+
+        self.factory.xfer = EventValid()
+        self.call('/diacamma.event/eventShow', {"event": 1}, False)
+        self.assert_observer(
+            'core.exception', 'diacamma.event', 'eventShow')
+
+        self.factory.xfer = OrganizerSave()
+        self.call('/diacamma.event/organizerSave',
+                  {"event": 1, 'pkname': 'contact', 'contact': '6'}, False)
+        self.assert_observer(
+            'core.acknowledge', 'diacamma.event', 'organizerSave')
+
+        self.factory.xfer = EventValid()
+        self.call('/diacamma.event/eventShow', {"event": 1}, False)
+        self.assert_observer(
+            'core.exception', 'diacamma.event', 'eventShow')
+
+        self.factory.xfer = OrganizerResponsible()
+        self.call('/diacamma.event/organizerResponsible',
+                  {"event": 1, 'organizer': '1'}, False)
+        self.assert_observer(
+            'core.acknowledge', 'diacamma.event', 'organizerResponsible')
+
+        self.factory.xfer = EventValid()
+        self.call('/diacamma.event/eventShow', {"event": 1}, False)
+        self.assert_observer(
+            'core.exception', 'diacamma.event', 'eventShow')
+
+        self.factory.xfer = ParticipantSave()
+        self.call('/diacamma.event/participantSave',
+                  {"event": 1, 'adherent': '2;4;5'}, False)
+        self.assert_observer(
+            'core.acknowledge', 'diacamma.event', 'participantSave')
+
+        self.factory.xfer = EventValid()
+        self.call('/diacamma.event/eventShow', {"event": 1}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.event', 'eventShow')
+        self.assert_count_equal('COMPONENTS/*', 7 + 5 * 3)
+        self.assert_xml_equal(
+            'COMPONENTS/LABELFORM[@name="name_1"]', "{[b]}Dalton Avrel{[/b]}")
+        self.assert_count_equal('COMPONENTS/SELECT[@name="degree_1"]/CASE', 9)
+        self.assert_count_equal(
+            'COMPONENTS/SELECT[@name="subdegree_1"]/CASE', 6)
+        self.assert_xml_equal(
+            'COMPONENTS/LABELFORM[@name="name_2"]', "{[b]}Dalton Jack{[/b]}")
+        self.assert_count_equal('COMPONENTS/SELECT[@name="degree_2"]/CASE', 10)
+        self.assert_count_equal(
+            'COMPONENTS/SELECT[@name="subdegree_2"]/CASE', 6)
+        self.assert_xml_equal(
+            'COMPONENTS/LABELFORM[@name="name_3"]', "{[b]}Dalton Joe{[/b]}")
+        self.assert_count_equal('COMPONENTS/SELECT[@name="degree_3"]/CASE', 10)
+        self.assert_count_equal(
+            'COMPONENTS/SELECT[@name="subdegree_3"]/CASE', 6)
+
+        self.factory.xfer = EventValid()
+        self.call('/diacamma.event/eventShow',
+                  {"event": 1, 'SAVE': 'YES', 'comment_1': 'trop nul!', 'degree_2': 5, 'comment_2': 'ça va...',
+                   'degree_3': 3, 'subdegree_3': 4, 'comment_3': 'bien :)'}, False)
+        self.assert_observer(
+            'core.acknowledge', 'diacamma.event', 'eventShow')
+
+        self.factory.xfer = EventShow()
+        self.call('/diacamma.event/eventShow', {"event": 1}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.event', 'eventShow')
+        self.assert_count_equal('COMPONENTS/*', 13)
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="organizer"]/ACTIONS/ACTION', 0)
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="participant"]/ACTIONS/ACTION', 1)
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="participant"]/HEADER', 4)
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="participant"]/HEADER[@name="contact"]', "contact")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="participant"]/HEADER[@name="degree_result_simple"]', "diplômes résultant")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="participant"]/HEADER[@name="subdegree_result"]', "sous-diplômes résultant")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="participant"]/HEADER[@name="comment"]', "commentaire")
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="participant"]/RECORD', 3)
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="participant"]/RECORD[1]/VALUE[@name="contact"]', "Dalton Avrel")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="participant"]/RECORD[1]/VALUE[@name="degree_result_simple"]', '---')
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="participant"]/RECORD[1]/VALUE[@name="subdegree_result"]', '---')
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="participant"]/RECORD[1]/VALUE[@name="comment"]', 'trop nul!')
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="participant"]/RECORD[2]/VALUE[@name="contact"]', "Dalton Jack")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="participant"]/RECORD[2]/VALUE[@name="degree_result_simple"]', "level #1.5")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="participant"]/RECORD[2]/VALUE[@name="subdegree_result"]', '---')
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="participant"]/RECORD[2]/VALUE[@name="comment"]', 'ça va...')
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="participant"]/RECORD[3]/VALUE[@name="contact"]', "Dalton Joe")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="participant"]/RECORD[3]/VALUE[@name="degree_result_simple"]', "level #1.3")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="participant"]/RECORD[3]/VALUE[@name="subdegree_result"]', "sublevel #4")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="participant"]/RECORD[3]/VALUE[@name="comment"]', 'bien :)')
+
+        self.factory.xfer = OrganizerDel()
+        self.call('/diacamma.event/organizerDel',
+                  {"event": 1, 'organizer': '1', 'CONFIRME': 'YES'}, False)
+        self.assert_observer(
+            'core.exception', 'diacamma.event', 'organizerDel')
+
+        self.factory.xfer = ParticipantDel()
+        self.call('/diacamma.event/participantDel',
+                  {"event": 1, 'participant': '2', 'CONFIRME': 'YES'}, False)
+        self.assert_observer(
+            'core.exception', 'diacamma.event', 'participantDel')
+
+        self.factory.xfer = EventList()
+        self.call('/diacamma.event/eventList', {}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.event', 'eventList')
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="event"]/RECORD', 1)
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="event"]/RECORD[1]/VALUE[@name="activity"]', "activity1")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="event"]/RECORD[1]/VALUE[@name="status"]', "validé")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="event"]/RECORD[1]/VALUE[@name="date"]', "12 octobre 2014")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="event"]/RECORD[1]/VALUE[@name="comment"]', "new examination")
+
+        self.factory.xfer = EventDel()
+        self.call('/diacamma.event/eventDel',
+                  {"CONFIRME": "YES", "event": 1}, False)
+        self.assert_observer(
+            'core.exception', 'diacamma.event', 'eventDel')
+
+        self.factory.xfer = AdherentShow()
+        self.call('/diacamma.member/adherentShow', {'adherent': 2}, False)
+        self.assert_xml_equal(
+            'COMPONENTS/LABELFORM[@name="firstname"]', "Avrel")
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="degrees"]/RECORD', 1)
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="degrees"]/RECORD[1]/VALUE[@name="degree"]', "[activity1] level #1.2")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="degrees"]/RECORD[1]/VALUE[@name="subdegree"]', "sublevel #3")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="degrees"]/RECORD[1]/VALUE[@name="date"]', "4 novembre 2011")
+
+        self.factory.xfer = AdherentShow()
+        self.call('/diacamma.member/adherentShow', {'adherent': 4}, False)
+        self.assert_xml_equal(
+            'COMPONENTS/LABELFORM[@name="firstname"]', "Jack")
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="degrees"]/RECORD', 2)
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="degrees"]/RECORD[1]/VALUE[@name="degree"]', "[activity1] level #1.5")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="degrees"]/RECORD[1]/VALUE[@name="subdegree"]', "---")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="degrees"]/RECORD[1]/VALUE[@name="date"]', "12 octobre 2014")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="degrees"]/RECORD[2]/VALUE[@name="degree"]', "[activity2] level #2.2")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="degrees"]/RECORD[2]/VALUE[@name="subdegree"]', "sublevel #1")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="degrees"]/RECORD[2]/VALUE[@name="date"]', "9 avril 2012")
+
+        self.factory.xfer = AdherentShow()
+        self.call('/diacamma.member/adherentShow', {'adherent': 5}, False)
+        self.assert_xml_equal(
+            'COMPONENTS/LABELFORM[@name="firstname"]', "Joe")
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="degrees"]/RECORD', 2)
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="degrees"]/RECORD[1]/VALUE[@name="degree"]', "[activity1] level #1.3")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="degrees"]/RECORD[1]/VALUE[@name="subdegree"]', "sublevel #4")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="degrees"]/RECORD[1]/VALUE[@name="date"]', "12 octobre 2014")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="degrees"]/RECORD[2]/VALUE[@name="degree"]', "[activity2] level #2.6")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="degrees"]/RECORD[2]/VALUE[@name="subdegree"]', "---")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="degrees"]/RECORD[2]/VALUE[@name="date"]', "21 septembre 2010")
+
+        self.factory.xfer = EventValid()
+        self.call('/diacamma.event/eventShow', {"event": 1}, False)
+        self.assert_observer(
+            'core.exception', 'diacamma.event', 'eventShow')
+
+    def test_no_activity(self):
+        set_parameters([])
+        self.factory.xfer = EventList()
+        self.call('/diacamma.event/eventList', {}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.event', 'eventList')
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="event"]/HEADER', 3)
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="event"]/HEADER[@name="status"]', "status")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="event"]/HEADER[@name="date"]', "date")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="event"]/HEADER[@name="comment"]', "commentaire")
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="event"]/RECORD', 0)
+
+        self.factory.xfer = EventAddModify()
+        self.call('/diacamma.event/eventAddModify', {}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.event', 'eventAddModify')
+        self.assert_count_equal('COMPONENTS/*', 7)
+        self.assert_xml_equal(
+            'COMPONENTS/LABELFORM[@name="status"]', "en création")
+
+        self.factory.xfer = EventAddModify()
+        self.call('/diacamma.event/eventAddModify',
+                  {"SAVE": "YES", "date": "2014-10-12", "comment": "new examination"}, False)
+        self.assert_observer(
+            'core.acknowledge', 'diacamma.event', 'eventAddModify')
+
+        self.factory.xfer = EventShow()
+        self.call('/diacamma.event/eventShow', {"event": 1}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.event', 'eventShow')
+        self.assert_count_equal('COMPONENTS/*', 11)
