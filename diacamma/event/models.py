@@ -219,28 +219,42 @@ class Degree(LucteriosModel):
         'event'), null=True, default=None, db_index=True, on_delete=models.SET_NULL)
 
     def __str__(self):
-        if self.subdegree is None:
+        if (self.subdegree is None) or (Params.getvalue("event-subdegree-enable") == 0):
             return six.text_type(self.degree)
         else:
             return "%s %s" % (self.degree, self.subdegree)
 
     def get_text(self):
-        if self.subdegree is None:
+        if (self.subdegree is None) or (Params.getvalue("event-subdegree-enable") == 0):
             return six.text_type(self.degree.name)
         else:
             return "%s %s" % (self.degree.name, self.subdegree.name)
 
     @classmethod
     def get_default_fields(cls):
-        return ["date", 'degree', 'subdegree']
+        fields = ["date", (Params.getvalue("event-degree-text"), 'degree')]
+        if Params.getvalue("event-subdegree-enable") == 1:
+            fields.append(
+                (Params.getvalue("event-subdegree-text"), 'subdegree'))
+        return fields
 
     @classmethod
     def get_edit_fields(cls):
-        return ["adherent", "date", 'degree', 'subdegree']
+        fields = [
+            "adherent", "date", ((Params.getvalue("event-degree-text"), 'degree'),)]
+        if Params.getvalue("event-subdegree-enable") == 1:
+            fields.append(
+                ((Params.getvalue("event-subdegree-text"), 'subdegree'),))
+        return fields
 
     @classmethod
     def get_show_fields(cls):
-        return ["adherent", "date", 'degree', 'subdegree']
+        fields = [
+            "adherent", "date", ((Params.getvalue("event-degree-text"), 'degree'),)]
+        if Params.getvalue("event-subdegree-enable") == 1:
+            fields.append(
+                ((Params.getvalue("event-subdegree-text"), 'subdegree'),))
+        return fields
 
     def can_delete(self):
         if not (self.event is None):
@@ -269,7 +283,13 @@ class Participant(LucteriosModel):
 
     @classmethod
     def get_default_fields(cls):
-        return ["contact", (_('current'), 'current_degree'), (_('degree result'), 'degree_result_simple'), 'subdegree_result', 'comment']
+        fields = ["contact", (_('current'), 'current_degree'), (_(
+            '%s result') % Params.getvalue("event-degree-text"), 'degree_result_simple')]
+        if Params.getvalue("event-subdegree-enable") == 1:
+            fields.append(
+                (_('%s result') % Params.getvalue("event-subdegree-text"), 'subdegree_result'))
+        fields.append('comment')
+        return fields
 
     @classmethod
     def get_edit_fields(cls):
@@ -332,6 +352,12 @@ class Participant(LucteriosModel):
         if self.event.status > 0:
             return _('examination validated!')
         return ''
+
+    def save(self, force_insert=False, force_update=False, using=None,
+             update_fields=None):
+        if (self.id is None) and ((self.comment is None) or (self.comment == '')):
+            self.comment = Params.getvalue("event-comment-text")
+        return LucteriosModel.save(self, force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
 
     class Meta(object):
         verbose_name = _('participant')

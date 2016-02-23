@@ -28,15 +28,17 @@ from shutil import rmtree
 from lucterios.framework.test import LucteriosTest
 from lucterios.framework.xfergraphic import XferContainerAcknowledge
 from lucterios.framework.filetools import get_user_dir
+from lucterios.CORE.models import Parameter
+from lucterios.CORE.parameters import Params
 
 from diacamma.member.test_tools import default_season, default_params,\
     default_adherents, set_parameters
+from diacamma.member.views import AdherentShow
 from diacamma.event.test_tools import default_event_params, add_default_degree
 from diacamma.event.views import EventList, EventAddModify, EventDel, EventShow,\
     OrganizerAddModify, OrganizerSave, OrganizerResponsible, OrganizerDel,\
     ParticipantAddModify, ParticipantSave, ParticipantDel, ParticipantOpen,\
     EventValid
-from diacamma.member.views import AdherentShow
 
 
 class EventTest(LucteriosTest):
@@ -365,15 +367,21 @@ class EventTest(LucteriosTest):
         self.assert_count_equal(
             'COMPONENTS/SELECT[@name="subdegree_1"]/CASE', 6)
         self.assert_xml_equal(
+            'COMPONENTS/MEMO[@name="comment_1"]', "Epreuve 1:{[br/]}Epreuve 2:{[br/]}")
+        self.assert_xml_equal(
             'COMPONENTS/LABELFORM[@name="name_2"]', "{[b]}Dalton Jack{[/b]}")
         self.assert_count_equal('COMPONENTS/SELECT[@name="degree_2"]/CASE', 10)
         self.assert_count_equal(
             'COMPONENTS/SELECT[@name="subdegree_2"]/CASE', 6)
         self.assert_xml_equal(
+            'COMPONENTS/MEMO[@name="comment_2"]', "Epreuve 1:{[br/]}Epreuve 2:{[br/]}")
+        self.assert_xml_equal(
             'COMPONENTS/LABELFORM[@name="name_3"]', "{[b]}Dalton Joe{[/b]}")
         self.assert_count_equal('COMPONENTS/SELECT[@name="degree_3"]/CASE', 10)
         self.assert_count_equal(
             'COMPONENTS/SELECT[@name="subdegree_3"]/CASE', 6)
+        self.assert_xml_equal(
+            'COMPONENTS/MEMO[@name="comment_3"]', "Epreuve 1:{[br/]}Epreuve 2:{[br/]}")
 
         self.factory.xfer = EventValid()
         self.call('/diacamma.event/eventShow',
@@ -396,9 +404,9 @@ class EventTest(LucteriosTest):
         self.assert_xml_equal(
             'COMPONENTS/GRID[@name="participant"]/HEADER[@name="contact"]', "contact")
         self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="participant"]/HEADER[@name="degree_result_simple"]', "diplômes résultant")
+            'COMPONENTS/GRID[@name="participant"]/HEADER[@name="degree_result_simple"]', "Grade résultant")
         self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="participant"]/HEADER[@name="subdegree_result"]', "sous-diplômes résultant")
+            'COMPONENTS/GRID[@name="participant"]/HEADER[@name="subdegree_result"]', "Barette résultant")
         self.assert_xml_equal(
             'COMPONENTS/GRID[@name="participant"]/HEADER[@name="comment"]', "commentaire")
         self.assert_count_equal(
@@ -553,3 +561,97 @@ class EventTest(LucteriosTest):
         self.assert_observer(
             'core.custom', 'diacamma.event', 'eventShow')
         self.assert_count_equal('COMPONENTS/*', 11)
+
+    def test_no_subdegree(self):
+        Parameter.change_value("event-subdegree-enable", 0)
+        Params.clear()
+
+        self.factory.xfer = EventAddModify()
+        self.call('/diacamma.event/eventAddModify',
+                  {"SAVE": "YES", "date": "2014-10-12", "activity": "1", "comment": "new examination"}, False)
+        self.assert_observer(
+            'core.acknowledge', 'diacamma.event', 'eventAddModify')
+
+        self.factory.xfer = OrganizerSave()
+        self.call('/diacamma.event/organizerSave',
+                  {"event": 1, 'pkname': 'contact', 'contact': '6'}, False)
+        self.assert_observer(
+            'core.acknowledge', 'diacamma.event', 'organizerSave')
+
+        self.factory.xfer = OrganizerResponsible()
+        self.call('/diacamma.event/organizerResponsible',
+                  {"event": 1, 'organizer': '1'}, False)
+        self.assert_observer(
+            'core.acknowledge', 'diacamma.event', 'organizerResponsible')
+
+        self.factory.xfer = ParticipantSave()
+        self.call('/diacamma.event/participantSave',
+                  {"event": 1, 'adherent': '2;4;5'}, False)
+        self.assert_observer(
+            'core.acknowledge', 'diacamma.event', 'participantSave')
+
+        self.factory.xfer = EventValid()
+        self.call('/diacamma.event/eventShow', {"event": 1}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.event', 'eventShow')
+        self.assert_count_equal('COMPONENTS/*', 7 + 4 * 3)
+        self.assert_xml_equal(
+            'COMPONENTS/LABELFORM[@name="name_1"]', "{[b]}Dalton Avrel{[/b]}")
+        self.assert_count_equal('COMPONENTS/SELECT[@name="degree_1"]/CASE', 9)
+        self.assert_xml_equal(
+            'COMPONENTS/MEMO[@name="comment_1"]', "Epreuve 1:{[br/]}Epreuve 2:{[br/]}")
+        self.assert_xml_equal(
+            'COMPONENTS/LABELFORM[@name="name_2"]', "{[b]}Dalton Jack{[/b]}")
+        self.assert_count_equal('COMPONENTS/SELECT[@name="degree_2"]/CASE', 10)
+        self.assert_xml_equal(
+            'COMPONENTS/MEMO[@name="comment_2"]', "Epreuve 1:{[br/]}Epreuve 2:{[br/]}")
+        self.assert_xml_equal(
+            'COMPONENTS/LABELFORM[@name="name_3"]', "{[b]}Dalton Joe{[/b]}")
+        self.assert_count_equal('COMPONENTS/SELECT[@name="degree_3"]/CASE', 10)
+        self.assert_xml_equal(
+            'COMPONENTS/MEMO[@name="comment_3"]', "Epreuve 1:{[br/]}Epreuve 2:{[br/]}")
+
+        self.factory.xfer = EventValid()
+        self.call('/diacamma.event/eventShow',
+                  {"event": 1, 'SAVE': 'YES', 'comment_1': 'trop nul!', 'degree_2': 5, 'comment_2': 'ça va...',
+                   'degree_3': 3, 'comment_3': 'bien :)'}, False)
+        self.assert_observer(
+            'core.acknowledge', 'diacamma.event', 'eventShow')
+
+        self.factory.xfer = EventShow()
+        self.call('/diacamma.event/eventShow', {"event": 1}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.event', 'eventShow')
+        self.assert_count_equal('COMPONENTS/*', 13)
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="organizer"]/ACTIONS/ACTION', 0)
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="participant"]/ACTIONS/ACTION', 1)
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="participant"]/HEADER', 3)
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="participant"]/HEADER[@name="contact"]', "contact")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="participant"]/HEADER[@name="degree_result_simple"]', "Grade résultant")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="participant"]/HEADER[@name="comment"]', "commentaire")
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="participant"]/RECORD', 3)
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="participant"]/RECORD[1]/VALUE[@name="contact"]', "Dalton Avrel")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="participant"]/RECORD[1]/VALUE[@name="degree_result_simple"]', '---')
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="participant"]/RECORD[1]/VALUE[@name="comment"]', 'trop nul!')
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="participant"]/RECORD[2]/VALUE[@name="contact"]', "Dalton Jack")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="participant"]/RECORD[2]/VALUE[@name="degree_result_simple"]', "level #1.5")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="participant"]/RECORD[2]/VALUE[@name="comment"]', 'ça va...')
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="participant"]/RECORD[3]/VALUE[@name="contact"]', "Dalton Joe")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="participant"]/RECORD[3]/VALUE[@name="degree_result_simple"]', "level #1.3")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="participant"]/RECORD[3]/VALUE[@name="comment"]', 'bien :)')

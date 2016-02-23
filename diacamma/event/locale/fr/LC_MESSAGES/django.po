@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-02-12 17:09+0000\n"
+"POT-Creation-Date: 2016-02-23 10:38+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -26,7 +26,7 @@ msgstr "Évenement Diacamma"
 msgid "No activity!"
 msgstr "pas d'activité!"
 
-#: editors.py:62 views.py:221
+#: editors.py:62 views.py:222
 msgid "Responsible"
 msgstr "Responsable"
 
@@ -38,7 +38,7 @@ msgstr "activé les sous-diplôme"
 msgid "event-degree-text"
 msgstr "intitulé du diplôme"
 
-#: migrations/0001_initial.py:47 views_conf.py:43 views_degree.py:45
+#: migrations/0001_initial.py:47 views_degree.py:45
 msgid "Degree"
 msgstr "Diplôme"
 
@@ -46,7 +46,7 @@ msgstr "Diplôme"
 msgid "event-subdegree-text"
 msgstr "intitulé du sous-diplôme"
 
-#: migrations/0001_initial.py:54 views_conf.py:45
+#: migrations/0001_initial.py:54
 msgid "Sub-degree"
 msgstr "Sous-diplôme"
 
@@ -82,11 +82,11 @@ msgstr "type de sous-diplôme"
 msgid "sub degree types"
 msgstr "type de sous-diplômes"
 
-#: models.py:114 models.py:216
+#: models.py:114 models.py:217
 msgid "date"
 msgstr "date"
 
-#: models.py:115 models.py:264
+#: models.py:115 models.py:279
 msgid "comment"
 msgstr "commentaire"
 
@@ -102,7 +102,7 @@ msgstr "en construction"
 msgid "valid"
 msgstr "validé"
 
-#: models.py:148 models.py:154 models.py:200 models.py:246 models.py:332
+#: models.py:148 models.py:154 models.py:201 models.py:261 models.py:353
 msgid "examination validated!"
 msgstr "examen validé!"
 
@@ -114,7 +114,7 @@ msgstr "pas de responsable!"
 msgid "no participant!"
 msgstr "pas de participant!"
 
-#: models.py:163 models.py:169 models.py:218 models.py:257
+#: models.py:163 models.py:170 models.py:219 models.py:272
 msgid "event"
 msgstr "évenement"
 
@@ -122,55 +122,60 @@ msgstr "évenement"
 msgid "events"
 msgstr "évenements"
 
-#: models.py:171 models.py:259
+#: models.py:172 models.py:274
 msgid "contact"
 msgstr "contact"
 
-#: models.py:173
+#: models.py:174
 msgid "responsible"
 msgstr "responsable"
 
-#: models.py:204
+#: models.py:205
 msgid "organizer"
 msgstr "organisateur"
 
-#: models.py:205
+#: models.py:206
 msgid "organizers"
 msgstr "organisateurs"
 
-#: models.py:211
+#: models.py:212
 msgid "adherent"
 msgstr "adhérent"
 
-#: models.py:213 models.py:250
+#: models.py:214 models.py:265
 msgid "degree"
 msgstr "diplôme"
 
-#: models.py:215
+#: models.py:216
 msgid "sub degree"
 msgstr "sous-diplôme"
 
-#: models.py:251
+#: models.py:266
 msgid "degrees"
 msgstr "diplômes"
 
-#: models.py:261 models.py:271
+#: models.py:276
 msgid "degree result"
 msgstr "diplômes résultant"
 
-#: models.py:263
+#: models.py:278
 msgid "sub-degree result"
 msgstr "sous-diplômes résultant"
 
-#: models.py:271
+#: models.py:286
 msgid "current"
 msgstr "courrant"
 
-#: models.py:336
+#: models.py:287 models.py:290
+#, python-format
+msgid "%s result"
+msgstr "%s résultant"
+
+#: models.py:363
 msgid "participant"
 msgstr "participant"
 
-#: models.py:337
+#: models.py:364
 msgid "participants"
 msgstr "participants"
 
@@ -218,67 +223,75 @@ msgstr "Valider"
 msgid "Validation of an examination"
 msgstr "Validation d'un examen"
 
-#: views.py:150
+#: views.py:151
 msgid "Ok"
 msgstr "Ok"
 
-#: views.py:151
+#: views.py:152
 msgid "Cancel"
 msgstr "Annuler"
 
-#: views.py:169
+#: views.py:170
 msgid "Delete examination"
 msgstr "Supprimer un examen"
 
-#: views.py:178
+#: views.py:179
 msgid "Print event"
 msgstr "Imprimer un évenement"
 
-#: views.py:187 views.py:200
+#: views.py:188 views.py:201
 msgid "Add organizer"
 msgstr "Ajouter un organisateur"
 
-#: views.py:212
+#: views.py:213
 msgid "Delete organizer"
 msgstr "Supprimer un organisateur"
 
-#: views.py:232 views.py:246 views.py:260
+#: views.py:233 views.py:247 views.py:261
 msgid "Add participant"
 msgstr "Ajouter un participant"
 
-#: views.py:271
+#: views.py:272
 msgid "Delete participant"
 msgstr "Supprimer un participant"
 
-#: views_conf.py:37
+#: views_conf.py:40
 msgid "Management of degrees"
 msgstr "Gestion de diplômes"
 
-#: views_conf.py:40
+#: views_conf.py:43
 msgid "Configuration of degrees"
 msgstr "Configuration des diplômes"
 
-#: views_conf.py:56
+#: views_conf.py:46
+msgid "Parameters"
+msgstr "Paramètres"
+
+#: views_conf.py:53
+msgid "Modify"
+msgstr "Modifier"
+
+#: views_conf.py:71
 msgid "Add degree type"
 msgstr "Ajouter un type de diplôme"
 
-#: views_conf.py:57
+#: views_conf.py:72
 msgid "Modify degree type"
 msgstr "Modifier un type de diplôme"
 
-#: views_conf.py:66
+#: views_conf.py:81
 msgid "Delete degree type"
 msgstr "Supprimer un type de diplôme"
 
-#: views_conf.py:75
+#: views_conf.py:90
 msgid "Add sub degree type"
 msgstr "Ajouter un type de sous-diplôme"
 
-#: views_conf.py:76
+#: views_conf.py:91
 msgid "Modify sub degree type"
 msgstr "Modifier un type de sous-diplôme"
 
-#: views_conf.py:85
+#: views_conf.py:100
 msgid "Delete sub degree type"
 msgstr "Supprimer un type de sous-diplôme"
 

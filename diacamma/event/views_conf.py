@@ -26,12 +26,15 @@ from __future__ import unicode_literals
 
 from django.utils.translation import ugettext_lazy as _
 
-from diacamma.event.models import DegreeType, SubDegreeType
-
 from lucterios.framework.xferadvance import XferListEditor
 from lucterios.framework.xferadvance import XferAddEditor
 from lucterios.framework.xferadvance import XferDelete
+from lucterios.framework.xfercomponents import XferCompButton
 from lucterios.framework.tools import FORMTYPE_NOMODAL, ActionsManage, MenuManage
+from lucterios.CORE.parameters import Params
+from lucterios.CORE.views import ParamEdit
+
+from diacamma.event.models import DegreeType, SubDegreeType
 
 
 @MenuManage.describ('event.change_degreetype', FORMTYPE_NOMODAL, 'member.conf', _('Management of degrees'))
@@ -39,12 +42,24 @@ class EventConf(XferListEditor):
     icon = "formation.png"
     caption = _("Configuration of degrees")
 
-    def fillresponse(self):
-        self.new_tab(_('Degree'))
+    def fillresponse_header(self):
+        self.new_tab(_('Parameters'))
+        param_lists = ["event-degree-text", "event-subdegree-enable",
+                       "event-subdegree-text", "event-comment-text"]
+        Params.fill(self, param_lists, 1, 1, nb_col=1)
+        btn = XferCompButton('editparam')
+        btn.set_location(1, self.get_max_row() + 1, 2, 1)
+        btn.set_action(self.request, ParamEdit.get_action(
+            _('Modify'), 'images/edit.png'), {'close': 0, 'params': {'params': param_lists, 'nb_col': 1}})
+        self.add_component(btn)
+
+    def fillresponse_body(self):
+        self.new_tab(Params.getvalue("event-degree-text"))
         self.fill_grid(0, DegreeType, "degreetype", DegreeType.objects.all())
-        self.new_tab(_('Sub-degree'))
-        self.fill_grid(
-            0, SubDegreeType, "subdegreetype", SubDegreeType.objects.all())
+        if Params.getvalue("event-subdegree-enable") == 1:
+            self.new_tab(Params.getvalue("event-subdegree-text"))
+            self.fill_grid(
+                0, SubDegreeType, "subdegreetype", SubDegreeType.objects.all())
 
 
 @ActionsManage.affect('DegreeType', 'edit', 'add')

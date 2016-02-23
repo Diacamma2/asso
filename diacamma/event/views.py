@@ -25,24 +25,26 @@ along with Lucterios.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import unicode_literals
 
 from django.utils.translation import ugettext_lazy as _
-
-from diacamma.event.models import Event, Organizer, Participant
+from django.utils import six
 
 from lucterios.framework.xferadvance import XferListEditor
 from lucterios.framework.xferadvance import XferAddEditor
 from lucterios.framework.xferadvance import XferShowEditor
 from lucterios.framework.xferadvance import XferDelete
 from lucterios.framework.xfersearch import XferSearchEditor
-from lucterios.CORE.xferprint import XferPrintAction
+from lucterios.framework.xfergraphic import XferContainerAcknowledge
 from lucterios.framework.tools import FORMTYPE_NOMODAL, ActionsManage, MenuManage,\
     SELECT_MULTI, CLOSE_NO, FORMTYPE_MODAL, WrapAction, CLOSE_YES
-from lucterios.contacts.tools import ContactSelection
-from lucterios.framework.xfergraphic import XferContainerAcknowledge
-from diacamma.member.views import AdherentSelection
-from lucterios.contacts.models import Individual
-from django.utils import six
 from lucterios.framework.xfercomponents import XferCompLabelForm, XferCompImage,\
     XferCompSelect, XferCompMemo
+from lucterios.CORE.xferprint import XferPrintAction
+from lucterios.CORE.parameters import Params
+from lucterios.contacts.tools import ContactSelection
+from lucterios.contacts.models import Individual
+
+from diacamma.member.views import AdherentSelection
+
+from diacamma.event.models import Event, Organizer, Participant
 
 MenuManage.add_sub("event.actions", "association", "diacamma.event/images/formation.png",
                    _("Events"), _("Management of events."), 80)
@@ -136,12 +138,14 @@ class EventValid(XferContainerAcknowledge):
                 sel.set_location(2, row_id)
                 dlg.add_component(sel)
 
-                sel = XferCompSelect('subdegree_%d' % participant.id)
-                sel.set_select_query(participant.allow_subdegree())
-                sel.set_location(3, row_id)
-                dlg.add_component(sel)
+                if Params.getvalue("event-subdegree-enable") == 1:
+                    sel = XferCompSelect('subdegree_%d' % participant.id)
+                    sel.set_select_query(participant.allow_subdegree())
+                    sel.set_location(3, row_id)
+                    dlg.add_component(sel)
 
                 edt = XferCompMemo('comment_%d' % participant.id)
+                edt.set_value(participant.comment)
                 edt.set_location(4, row_id)
                 dlg.add_component(edt)
 

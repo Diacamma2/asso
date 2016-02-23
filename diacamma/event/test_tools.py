@@ -24,6 +24,9 @@ along with Lucterios.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import unicode_literals
 
+from lucterios.CORE.models import Parameter
+from lucterios.CORE.parameters import Params
+
 from diacamma.member.models import Activity
 
 from diacamma.event.models import DegreeType, SubDegreeType, Degree
@@ -37,6 +40,10 @@ def default_event_params():
     for level in range(1, 6):
         SubDegreeType.objects.create(
             name="sublevel #%d" % level, level=level)
+    Parameter.change_value("event-degree-text", 'Grade')
+    Parameter.change_value("event-subdegree-text", 'Barette')
+    Parameter.change_value("event-comment-text", 'Epreuve 1:{[br/]}Epreuve 2:{[br/]}')
+    Params.clear()
 
 
 def add_default_degree():
