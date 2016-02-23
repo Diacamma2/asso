@@ -29,6 +29,7 @@ from django.apps import apps
 from django.utils import six
 
 from lucterios.install.lucterios_migration import MigrateAbstract
+from lucterios.CORE.models import Parameter
 
 
 class EventMigrate(MigrateAbstract):
@@ -41,6 +42,25 @@ class EventMigrate(MigrateAbstract):
         self.event_list = {}
         self.organizer_list = {}
         self.participant_list = {}
+
+    def _params(self):
+        cur_p = self.old_db.open()
+        cur_p.execute(
+            "SELECT paramName,value FROM CORE_extension_params WHERE extensionId LIKE 'fr_sdlibre_FormationSport'")
+        for param_name, param_value in cur_p.fetchall():
+            pname = ''
+            if param_name == "GradeText":
+                pname = "event-degree-text"
+            if param_name == "SousGradeEnable":
+                pname = "event-subdegree-enable"
+            if param_name == "SousGradeText":
+                pname = "event-subdegree-text"
+            if param_name == "defaultCommentaire":
+                pname = "event-comment-text"
+            if pname != '':
+                self.print_debug(
+                    "=> parameter of event %s - %s", (pname, param_value))
+                Parameter.change_value(pname, param_value)
 
     def _config(self):
         degreetype_mdl = apps.get_model("event", "DegreeType")
@@ -131,6 +151,7 @@ class EventMigrate(MigrateAbstract):
 
     def run(self):
         try:
+            self._params()
             self._config()
             self._event()
             self._degree()
