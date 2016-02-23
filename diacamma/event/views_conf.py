@@ -39,7 +39,7 @@ from diacamma.event.models import DegreeType, SubDegreeType
 
 @MenuManage.describ('event.change_degreetype', FORMTYPE_NOMODAL, 'member.conf', _('Management of degrees'))
 class EventConf(XferListEditor):
-    icon = "formation.png"
+    icon = "degree.png"
     caption = _("Configuration of degrees")
 
     def fillresponse_header(self):
@@ -65,7 +65,7 @@ class EventConf(XferListEditor):
 @ActionsManage.affect('DegreeType', 'edit', 'add')
 @MenuManage.describ('event.add_degreetype')
 class DegreeTypeAddModify(XferAddEditor):
-    icon = "formation.png"
+    icon = "degree.png"
     model = DegreeType
     field_id = 'degreetype'
     caption_add = _("Add degree type")
@@ -75,7 +75,7 @@ class DegreeTypeAddModify(XferAddEditor):
 @ActionsManage.affect('DegreeType', 'delete')
 @MenuManage.describ('event.delete_degreetype')
 class DegreeTypeDel(XferDelete):
-    icon = "formation.png"
+    icon = "degree.png"
     model = DegreeType
     field_id = 'degreetype'
     caption = _("Delete degree type")
@@ -84,7 +84,7 @@ class DegreeTypeDel(XferDelete):
 @ActionsManage.affect('SubDegreeType', 'edit', 'add')
 @MenuManage.describ('event.add_degreetype')
 class SubDegreeTypeAddModify(XferAddEditor):
-    icon = "formation.png"
+    icon = "degree.png"
     model = SubDegreeType
     field_id = 'subdegreetype'
     caption_add = _("Add sub degree type")
@@ -94,7 +94,7 @@ class SubDegreeTypeAddModify(XferAddEditor):
 @ActionsManage.affect('SubDegreeType', 'delete')
 @MenuManage.describ('event.delete_degreetype')
 class SubDegreeTypeDel(XferDelete):
-    icon = "formation.png"
+    icon = "degree.png"
     model = SubDegreeType
     field_id = 'subdegreetype'
     caption = _("Delete sub degree type")

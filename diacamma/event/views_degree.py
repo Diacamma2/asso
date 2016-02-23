@@ -54,7 +54,7 @@ def show_contact_degree(contact, xfer):
 @ActionsManage.affect('Degree', 'edit', 'add')
 @MenuManage.describ('event.add_degree')
 class DegreeAddModify(XferAddEditor):
-    icon = "formation.png"
+    icon = "degree.png"
     model = Degree
     field_id = 'degrees'
     caption_add = _("Add degree")
@@ -64,7 +64,7 @@ class DegreeAddModify(XferAddEditor):
 @ActionsManage.affect('Degree', 'delete')
 @MenuManage.describ('event.delete_degree')
 class DegreeDel(XferDelete):
-    icon = "formation.png"
+    icon = "degree.png"
     model = Degree
     field_id = 'degrees'
     caption = _("Delete degree")

@@ -256,6 +256,30 @@ class Degree(LucteriosModel):
                 ((Params.getvalue("event-subdegree-text"), 'subdegree'),))
         return fields
 
+    @classmethod
+    def get_statistic(cls, season):
+        def sort_fct(item):
+            if item[1][1] is None:
+                return item[1][0].level * 100000
+            else:
+                return item[1][0].level * 100000 + item[1][1].level
+        static_res = []
+        for activity in Activity.objects.all():
+            degree_activity = {}
+            for degree in Degree.objects.filter(date__gte=season.begin_date, date__lte=season.end_date, degree__activity=activity):
+                if degree.get_text() not in degree_activity.keys():
+                    degree_activity[
+                        degree.get_text()] = [degree.degree, degree.subdegree, 0]
+                degree_activity[degree.get_text()][2] += 1
+            result_activity = []
+            for item in sorted(degree_activity.items(), key=lambda item: sort_fct(item), reverse=True):
+                result_activity.append((item[0], item[1][2]))
+            if Params.getvalue("member-activite-enable"):
+                static_res.append((activity, result_activity))
+            else:
+                static_res.append((None, result_activity))
+        return static_res
+
     def can_delete(self):
         if not (self.event is None):
             return _('examination validated!')
