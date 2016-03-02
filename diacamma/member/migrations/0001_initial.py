@@ -194,7 +194,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Adherent',
             fields=[
-                ('individual_ptr', models.OneToOneField(parent_link=True, auto_created=True,
+                ('individual_ptr', models.OneToOneField(on_delete=models.CASCADE, parent_link=True, auto_created=True,
                                                         to='contacts.Individual', primary_key=True, serialize=False)),
                 ('num', models.IntegerField(
                     default=0, verbose_name='numeros')),
@@ -280,8 +280,8 @@ class Migration(migrations.Migration):
                     primary_key=True, auto_created=True, verbose_name='ID', serialize=False)),
                 ('begin_date', models.DateField(verbose_name='begin date')),
                 ('end_date', models.DateField(verbose_name='end date')),
-                ('adherent', models.ForeignKey(
-                    default=None, to='member.Adherent', verbose_name='adherent')),
+                ('adherent', models.ForeignKey(on_delete=models.CASCADE,
+                                               default=None, to='member.Adherent', verbose_name='adherent')),
                 ('season', models.ForeignKey(on_delete=models.deletion.PROTECT,
                                              default=None, to='member.Season', verbose_name='season')),
             ],
@@ -353,8 +353,8 @@ class Migration(migrations.Migration):
                     null=True, verbose_name='license #', max_length=50)),
                 ('activity', models.ForeignKey(default=None, null=True,
                                                on_delete=models.deletion.PROTECT, verbose_name='activity', to='member.Activity')),
-                ('subscription', models.ForeignKey(
-                    verbose_name='subscription', default=None, to='member.Subscription')),
+                ('subscription', models.ForeignKey(on_delete=models.CASCADE,
+                                                   verbose_name='subscription', default=None, to='member.Subscription')),
                 ('team', models.ForeignKey(default=None, null=True,
                                            on_delete=models.deletion.PROTECT, verbose_name='team', to='member.Team')),
             ],
@@ -379,14 +379,14 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='period',
             name='season',
-            field=models.ForeignKey(
-                default=None, to='member.Season', verbose_name='season'),
+            field=models.ForeignKey(on_delete=models.CASCADE,
+                                    default=None, to='member.Season', verbose_name='season'),
         ),
         migrations.AddField(
             model_name='document',
             name='season',
-            field=models.ForeignKey(
-                default=None, to='member.Season', verbose_name='season'),
+            field=models.ForeignKey(on_delete=models.CASCADE,
+                                    default=None, to='member.Season', verbose_name='season'),
         ),
         migrations.RunPython(initial_values),
     ]
