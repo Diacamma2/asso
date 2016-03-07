@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-02-23 10:38+0000\n"
+"POT-Creation-Date: 2016-03-07 16:53+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -25,7 +25,7 @@ msgstr "Diacamma event"
 msgid "No activity!"
 msgstr "No activity!"
 
-#: editors.py:62 views.py:222
+#: editors.py:62 views.py:228
 msgid "Responsible"
 msgstr "Responsible"
 
@@ -85,7 +85,7 @@ msgstr "sub degree types"
 msgid "date"
 msgstr "date"
 
-#: models.py:115 models.py:279
+#: models.py:115 models.py:303
 msgid "comment"
 msgstr "comment"
 
@@ -101,7 +101,7 @@ msgstr "building"
 msgid "valid"
 msgstr "valid"
 
-#: models.py:148 models.py:154 models.py:201 models.py:261 models.py:353
+#: models.py:148 models.py:154 models.py:201 models.py:285 models.py:377
 msgid "examination validated!"
 msgstr "examination validated!"
 
@@ -113,7 +113,7 @@ msgstr "no responsible!"
 msgid "no participant!"
 msgstr "no participant!"
 
-#: models.py:163 models.py:170 models.py:219 models.py:272
+#: models.py:163 models.py:170 models.py:219 models.py:296
 msgid "event"
 msgstr "event"
 
@@ -121,7 +121,7 @@ msgstr "event"
 msgid "events"
 msgstr "events"
 
-#: models.py:172 models.py:274
+#: models.py:172 models.py:298
 msgid "contact"
 msgstr "contact"
 
@@ -141,7 +141,7 @@ msgstr "organizers"
 msgid "adherent"
 msgstr "adherent"
 
-#: models.py:214 models.py:265
+#: models.py:214 models.py:289
 msgid "degree"
 msgstr "degree"
 
@@ -149,110 +149,144 @@ msgstr "degree"
 msgid "sub degree"
 msgstr "sub degree"
 
-#: models.py:266
+#: models.py:290
 msgid "degrees"
 msgstr "degrees"
 
-#: models.py:276
+#: models.py:300
 msgid "degree result"
 msgstr "degree result"
 
-#: models.py:278
+#: models.py:302
 msgid "sub-degree result"
 msgstr "sub-degree result"
 
-#: models.py:286
+#: models.py:310
 msgid "current"
 msgstr "current"
 
-#: models.py:287 models.py:290
+#: models.py:311 models.py:314
 #, python-format
 msgid "%s result"
 msgstr "%s result"
 
-#: models.py:363
+#: models.py:387
 msgid "participant"
 msgstr "participant"
 
-#: models.py:364
+#: models.py:388
 msgid "participants"
 msgstr "participants"
 
-#: views.py:48
+#: views.py:53
 msgid "Events"
 msgstr "Events"
 
-#: views.py:48
+#: views.py:53
 msgid "Management of events."
 msgstr "Management of events."
 
-#: views.py:52
+#: views.py:57
 msgid "Examination manage"
 msgstr "Examination manage"
 
-#: views.py:57
+#: views.py:62
 msgid "Examination"
 msgstr "Examination"
 
-#: views.py:61
+#: views.py:66
 msgid "To find an examination"
 msgstr "To find an examination"
 
-#: views.py:66
+#: views.py:71
 msgid "Search examination"
 msgstr "Search examination"
 
-#: views.py:75
+#: views.py:80
 msgid "Add examination"
 msgstr "Add examination"
 
-#: views.py:76
+#: views.py:81
 msgid "Modify examination"
 msgstr "Modify examination"
 
-#: views.py:85
+#: views.py:90
 msgid "Show examination"
 msgstr "Show examination"
 
-#: views.py:90
+#: views.py:95
 msgid "Validation"
 msgstr "Validation"
 
-#: views.py:102
+#: views.py:107
 msgid "Validation of an examination"
 msgstr "Validation of an examination"
 
-#: views.py:151
+#: views.py:157
 msgid "Ok"
 msgstr "Ok"
 
-#: views.py:152
+#: views.py:158
 msgid "Cancel"
 msgstr "Cancel"
 
-#: views.py:170
+#: views.py:176
 msgid "Delete examination"
 msgstr "Delete examination"
 
-#: views.py:179
+#: views.py:185
 msgid "Print event"
 msgstr "Print event"
 
-#: views.py:188 views.py:201
+#: views.py:194 views.py:207
 msgid "Add organizer"
 msgstr "Add organizer"
 
-#: views.py:213
+#: views.py:219
 msgid "Delete organizer"
 msgstr "Delete organizer"
 
-#: views.py:233 views.py:247 views.py:261
+#: views.py:239 views.py:253 views.py:267
 msgid "Add participant"
 msgstr "Add participant"
 
-#: views.py:272
+#: views.py:278
 msgid "Delete participant"
 msgstr "Delete participant"
+
+#: views.py:281
+#, fuzzy
+#| msgid "Configuration of degrees"
+msgid "Statistic of degrees"
+msgstr "Configuration of degrees"
+
+#: views.py:286 views.py:369
+msgid "Statistic"
+msgstr ""
+
+#: views.py:298
+msgid "season"
+msgstr ""
+
+#: views.py:313
+#, fuzzy
+#| msgid "degree"
+msgid "no degree!"
+msgstr "degree"
+
+#: views.py:342 views.py:352
+msgid "Total"
+msgstr ""
+
+#: views.py:360
+#, fuzzy
+#| msgid "Print event"
+msgid "Print"
+msgstr "Print event"
+
+#: views.py:361
+msgid "Close"
+msgstr ""
 
 #: views_conf.py:40
 msgid "Management of degrees"

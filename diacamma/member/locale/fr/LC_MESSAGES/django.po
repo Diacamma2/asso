@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-02-23 10:38+0000\n"
+"POT-Creation-Date: 2016-03-07 16:53+0000\n"
 "PO-Revision-Date: 2016-01-14 22:13+0000\n"
 "Last-Translator: b'Paul ARULATEDA <paul531@orange.fr>'\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -82,7 +82,7 @@ msgstr "Activer les cat. d'âges"
 
 #: migrations/0001_initial.py:47
 msgid "member-team-enable"
-msgstr "Activer les cat. d'âges"
+msgstr "Activer les équipes"
 
 #: migrations/0001_initial.py:54
 msgid "member-team-text"

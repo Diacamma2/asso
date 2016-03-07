@@ -766,12 +766,12 @@ class Subscription(LucteriosModel):
             activity = Activity.objects.get(
                 name=rowdata['activity'])
         except:
-            activity = None
+            activity = Activity.objects.all()[0]
         try:
             value = rowdata['value']
         except:
             value = ''
-        if ('subscriptiontype' in rowdata.keys()) or (team is not None) or (activity is not None) or (value != ''):
+        if ('subscriptiontype' in rowdata.keys()) or (team is not None) or (value != ''):
             return License.objects.create(subscription=self, team=team, activity=activity, value=value)
         else:
             return None
