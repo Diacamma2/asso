@@ -133,7 +133,7 @@ class AdherentAbstractList(XferListEditor):
 
         btn = XferCompButton('btndateref')
         btn.set_location(8, row + 1)
-        btn.set_action(self.request, self.get_action(_('refresh'), ''),
+        btn.set_action(self.request, self.get_action(_('Refresh'), ''),
                        {'modal': FORMTYPE_REFRESH, 'close': CLOSE_NO})
         self.add_component(btn)
 
@@ -214,7 +214,7 @@ class AdherentActiveList(AdherentAbstractList):
         self.get_components('nb_adherent').colspan = 10
         if Params.getvalue("member-licence-enabled"):
             self.get_components(self.field_id).add_action(self.request, AdherentLicense.get_action(
-                "License", ""), {"unique": SELECT_SINGLE, "close": CLOSE_NO})
+                _("License"), ""), {"unique": SELECT_SINGLE, "close": CLOSE_NO})
 
 
 @MenuManage.describ('member.change_adherent', FORMTYPE_NOMODAL, 'member.actions', _('To find an adherent following a set of criteria.'))

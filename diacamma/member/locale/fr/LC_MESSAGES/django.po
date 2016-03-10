@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-03-07 16:53+0000\n"
+"POT-Creation-Date: 2016-03-10 14:48+0000\n"
 "PO-Revision-Date: 2016-01-14 22:13+0000\n"
 "Last-Translator: b'Paul ARULATEDA <paul531@orange.fr>'\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -414,8 +414,8 @@ msgid "genre"
 msgstr "genre"
 
 #: views.py:136
-msgid "refresh"
-msgstr "renouvellement"
+msgid "Refresh"
+msgstr "Rafraichir"
 
 #: views.py:183
 msgid "Select adherent"
@@ -436,6 +436,10 @@ msgstr "Liste des adhérents à jour de leur cotisation"
 #: views.py:205
 msgid "Subscribe adherents"
 msgstr "Adhérents cotisants"
+
+#: views.py:217 views.py:273 views.py:331 views.py:347
+msgid "License"
+msgstr "Licence"
 
 #: views.py:220
 msgid "To find an adherent following a set of criteria."
@@ -468,10 +472,6 @@ msgstr "Modification d'un adhérent"
 #: views.py:265
 msgid "Show adherent"
 msgstr "Voir un adhérent"
-
-#: views.py:273 views.py:331 views.py:347
-msgid "License"
-msgstr "Licence"
 
 #: views.py:282 views.py:511
 msgid "no subscription!"
