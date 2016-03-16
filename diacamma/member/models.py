@@ -612,13 +612,13 @@ class Adherent(Individual):
 
     @property
     def age_category(self):
-        age_val = int(self.dateref.year - self.birthday.year)
-        ages = Age.objects.filter(
-            minimum__lte=age_val, maximum__gte=age_val)
-        if len(list(ages)) > 0:
-            return ages[0]
-        else:
-            return "---"
+        try:
+            age_val = int(self.dateref.year - self.birthday.year)
+            ages = Age.objects.filter(minimum__lte=age_val, maximum__gte=age_val)
+            val = ages[0]
+        except:
+            val = "---"
+        return val
 
     @property
     def license(self):
