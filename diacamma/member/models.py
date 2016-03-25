@@ -25,7 +25,6 @@ along with Lucterios.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import unicode_literals
 from datetime import date, datetime, timedelta
-from calendar import monthrange
 
 from django.db import models
 from django.db.models.aggregates import Min, Max, Count
@@ -36,6 +35,7 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from lucterios.framework.models import LucteriosModel
 from lucterios.framework.error import LucteriosException, IMPORTANT
+from lucterios.framework.tools import convert_date, same_day_months_after
 
 from lucterios.CORE.parameters import Params
 from lucterios.contacts.models import Individual
@@ -44,24 +44,6 @@ from diacamma.invoice.models import Article, Bill, Detail
 from diacamma.accounting.tools import format_devise
 from diacamma.accounting.models import Third, AccountThird, CostAccounting
 import logging
-
-
-def convert_date(current_date, defaultdate=None):
-    try:
-        return datetime.strptime(current_date, "%Y-%m-%d").date()
-    except (TypeError, ValueError):
-        return defaultdate
-
-
-def same_day_months_after(start_date, months=1):
-    month_val = start_date.month - 1 + months
-    if month_val < 0:
-        target_year = start_date.year + int(month_val / 12) - 1
-    else:
-        target_year = start_date.year + int(month_val / 12)
-    target_month = month_val % 12 + 1
-    num_days_target_month = monthrange(target_year, target_month)[1]
-    return start_date.replace(year=target_year, month=target_month, day=min(start_date.day, num_days_target_month))
 
 
 class Season(LucteriosModel):
@@ -614,7 +596,8 @@ class Adherent(Individual):
     def age_category(self):
         try:
             age_val = int(self.dateref.year - self.birthday.year)
-            ages = Age.objects.filter(minimum__lte=age_val, maximum__gte=age_val)
+            ages = Age.objects.filter(
+                minimum__lte=age_val, maximum__gte=age_val)
             val = ages[0]
         except:
             val = "---"

@@ -48,9 +48,11 @@ from lucterios.framework.error import LucteriosException, IMPORTANT
 from lucterios.framework import signal_and_lock
 
 from lucterios.CORE.parameters import Params
+from lucterios.framework.tools import convert_date, same_day_months_after
 
 from diacamma.member.models import Adherent, Subscription, Season, Age, Team, Activity, License, DocAdherent,\
-    SubscriptionType, convert_date, same_day_months_after
+    SubscriptionType
+
 
 MenuManage.add_sub(
     "association", None, "diacamma.member/images/association.png", _("Association"), _("Association tools"), 30)
