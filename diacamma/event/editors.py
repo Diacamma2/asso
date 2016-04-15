@@ -83,6 +83,7 @@ parent.get('lbl_date_end').setVisible(type==1);
             participant.delete_header('subdegree_result')
             if self.item.event_type == 0:
                 participant.delete_header('comment')
+                participant.delete_action("diacamma.event/participantModify")
             participant.add_actions(
                 xfer, action_list=[('addct', _("Add contact"), "images/add.png", SELECT_NONE)], model=Participant)
         else:

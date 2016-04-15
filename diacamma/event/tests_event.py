@@ -263,7 +263,7 @@ class EventTest(LucteriosTest):
         self.assert_count_equal(
             'COMPONENTS/GRID[@name="participant"]/RECORD', 0)
         self.assert_count_equal(
-            'COMPONENTS/GRID[@name="participant"]/ACTIONS/ACTION', 5)
+            'COMPONENTS/GRID[@name="participant"]/ACTIONS/ACTION', 4)
 
         self.factory.xfer = ParticipantAdd()
         self.call('/diacamma.event/participantAdd', {"event": 1}, False)

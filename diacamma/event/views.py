@@ -288,7 +288,7 @@ class ParticipantAddContact(ContactSelection):
     inital_model = Individual
 
 
-@ActionsManage.affect('Participant', 'edit', 'modify')
+@ActionsManage.affect('Participant', 'edit')
 @MenuManage.describ('event.add_event')
 class ParticipantModify(XferAddEditor):
     icon = "degree.png"
