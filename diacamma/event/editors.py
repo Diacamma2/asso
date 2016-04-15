@@ -23,22 +23,29 @@ along with Lucterios.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 from __future__ import unicode_literals
+from datetime import date
 
 from django.utils.translation import ugettext_lazy as _
 
 from lucterios.framework.editors import LucteriosEditor
-from lucterios.framework.tools import SELECT_SINGLE
+from lucterios.framework.tools import SELECT_SINGLE, SELECT_NONE
+from lucterios.framework.xfercomponents import DEFAULT_ACTION_LIST
+from lucterios.framework.error import LucteriosException, IMPORTANT
 
 from diacamma.event.models import Participant, Organizer
-from lucterios.framework.xfercomponents import DEFAULT_ACTION_LIST
 from diacamma.member.models import Activity
-from lucterios.framework.error import LucteriosException, IMPORTANT
 
 
 class DegreeEditor(LucteriosEditor):
 
     def edit(self, xfer):
         xfer.change_to_readonly('adherent')
+
+
+class ParticipantEditor(LucteriosEditor):
+
+    def edit(self, xfer):
+        xfer.change_to_readonly('contact')
 
 
 class EventEditor(LucteriosEditor):
@@ -52,10 +59,21 @@ class EventEditor(LucteriosEditor):
 
     def edit(self, xfer):
         xfer.change_to_readonly('status')
+        date_end = xfer.get_components('date_end')
+        date_end.set_needed(True)
+        if date_end.value is None:
+            date_end.value = date.today()
+        event_type = xfer.get_components('event_type')
+        event_type.java_script = """
+var type=current.getValue();
+parent.get('date_end').setVisible(type==1);
+parent.get('lbl_date_end').setVisible(type==1);
+"""
 
     def show(self, xfer):
         organizer = xfer.get_components('organizer')
         participant = xfer.get_components('participant')
+        participant.change_type_header('is_subscripter', 'bool')
         organizer.actions = []
         if self.item.status == 0:
             organizer.add_actions(
@@ -63,9 +81,26 @@ class EventEditor(LucteriosEditor):
             organizer.add_actions(xfer, model=Organizer)
             participant.delete_header('degree_result_simple')
             participant.delete_header('subdegree_result')
-            participant.delete_header('comment')
+            if self.item.event_type == 0:
+                participant.delete_header('comment')
+            participant.add_actions(
+                xfer, action_list=[('addct', _("Add contact"), "images/add.png", SELECT_NONE)], model=Participant)
         else:
             participant.delete_header('current_degree')
             participant.actions = []
             participant.add_actions(
                 xfer, action_list=DEFAULT_ACTION_LIST[:1], model=Participant)
+        img = xfer.get_components('img')
+        if self.item.event_type == 1:
+            participant.delete_header('degree_result_simple')
+            participant.delete_header('subdegree_result')
+            participant.delete_header('current_degree')
+            xfer.caption = _("Show trainning/outing")
+            img.set_value(
+                "static/diacamma.event/images/outing.png")
+        else:
+            xfer.caption = _("Show examination")
+            xfer.remove_component('date_end')
+            xfer.remove_component('lbl_date_end')
+            img.set_value(
+                "static/diacamma.event/images/degree.png")

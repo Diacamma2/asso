@@ -28,14 +28,15 @@ from django.db import models
 from django.db.models import Q
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.utils.translation import ugettext_lazy as _
-
-from lucterios.framework.models import LucteriosModel
-
-from diacamma.member.models import Activity, Adherent
-from lucterios.contacts.models import Individual
 from django.utils import six
+
+from lucterios.framework.models import LucteriosModel, get_value_converted,\
+    get_value_if_choices
 from lucterios.framework.error import LucteriosException, IMPORTANT
 from lucterios.CORE.parameters import Params
+from lucterios.contacts.models import Individual
+
+from diacamma.member.models import Activity, Adherent, Subscription, Season
 
 
 class DegreeType(LucteriosModel):
@@ -115,6 +116,9 @@ class Event(LucteriosModel):
     comment = models.TextField(_('comment'), blank=False)
     status = models.IntegerField(verbose_name=_('status'), choices=(
         (0, _('building')), (1, _('valid'))), null=False, default=0, db_index=True)
+    event_type = models.IntegerField(verbose_name=_('event type'), choices=(
+        (0, _('examination')), (1, _('trainning/outing'))), null=False, default=0, db_index=True)
+    date_end = models.DateField(verbose_name=_('end date'), null=True)
 
     def __str__(self):
         if Params.getvalue("member-activite-enable"):
@@ -125,39 +129,58 @@ class Event(LucteriosModel):
     @classmethod
     def get_default_fields(cls):
         if Params.getvalue("member-activite-enable"):
-            return [(Params.getvalue("member-activite-text"), "activity"), 'status', 'date', 'comment']
+            return [(Params.getvalue("member-activite-text"), "activity"), 'status', 'event_type', ('date', 'date_txt'), 'comment']
         else:
-            return ['status', 'date', 'comment']
+            return ['status', 'event_type', ('date', 'date_txt'), 'comment']
 
     @classmethod
     def get_edit_fields(cls):
         if Params.getvalue("member-activite-enable"):
-            return [((Params.getvalue("member-activite-text"), "activity"),), 'status', 'date', 'comment']
+            return [((Params.getvalue("member-activite-text"), "activity"),), 'status', 'event_type', 'date', 'date_end', 'comment']
         else:
-            return ['status', 'date', 'comment']
+            return ['status', 'event_type', 'date', 'date_end', 'comment']
 
     @classmethod
     def get_show_fields(cls):
         if Params.getvalue("member-activite-enable"):
-            return [('date', (Params.getvalue("member-activite-text"), "activity")), 'organizer_set', 'participant_set', ('status', 'comment')]
+            return [('date', 'date_end'), ('status', (Params.getvalue("member-activite-text"), "activity")), 'organizer_set', 'participant_set', ('comment',)]
         else:
-            return ['date', 'organizer_set', 'participant_set', ('status', 'comment')]
+            return [('date', 'date_end'), ('status',), 'organizer_set', 'participant_set', ('comment',)]
+
+    @classmethod
+    def get_search_fields(cls):
+        return ['status', 'event_type', 'date', 'date_end', 'comment']
+
+    @property
+    def date_txt(self):
+        if self.event_type == 0:
+            return get_value_converted(self.date)
+        else:
+            return "%s -> %s" % (get_value_converted(self.date), get_value_converted(self.date_end))
 
     def can_delete(self):
         if self.status > 0:
-            return _('examination validated!')
+            return _('%s validated!') % get_value_if_choices(self.event_type, self._meta.get_field('event_type'))
         return ''
 
     def can_be_valid(self):
         msg = ''
         if self.status > 0:
-            msg = _('examination validated!')
+            msg = _('%s validated!') % get_value_if_choices(
+                self.event_type, self._meta.get_field('event_type'))
         elif len(self.organizer_set.filter(isresponsible=True)) == 0:
             msg = _('no responsible!')
         elif len(self.participant_set.all()) == 0:
             msg = _('no participant!')
         if msg != '':
             raise LucteriosException(IMPORTANT, msg)
+
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        if self.event_type == 0:
+            self.date_end = None
+        elif (self.date_end is None) or (self.date_end < self.date):
+            self.date_end = self.date
+        return LucteriosModel.save(self, force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
 
     class Meta(object):
         verbose_name = _('event')
@@ -307,7 +330,7 @@ class Participant(LucteriosModel):
 
     @classmethod
     def get_default_fields(cls):
-        fields = ["contact", (_('current'), 'current_degree'), (_(
+        fields = ["contact", (_('subscript?'), 'is_subscripter'), (_('current'), 'current_degree'), (_(
             '%s result') % Params.getvalue("event-degree-text"), 'degree_result_simple')]
         if Params.getvalue("event-subdegree-enable") == 1:
             fields.append(
@@ -317,7 +340,7 @@ class Participant(LucteriosModel):
 
     @classmethod
     def get_edit_fields(cls):
-        return ["contact", 'degree_result', 'subdegree_result', 'comment']
+        return ["contact", 'comment']
 
     @classmethod
     def get_show_fields(cls):
@@ -346,6 +369,10 @@ class Participant(LucteriosModel):
         else:
             return None
 
+    @property
+    def is_subscripter(self):
+        return len(Subscription.objects.filter(adherent_id=self.contact_id, season=Season.get_from_date(self.event.date))) > 0
+
     def allow_degree(self):
         degree = self.get_current_degree()
         if degree is not None:
@@ -369,8 +396,12 @@ class Participant(LucteriosModel):
         self.comment = comment
         self.save()
         if not (self.degree_result is None):
-            Degree.objects.create(adherent_id=self.contact_id, degree=self.degree_result,
-                                  subdegree=self.subdegree_result, date=self.event.date, event=self.event)
+            try:
+                adh = Adherent.objects.get(id=self.contact_id)
+                Degree.objects.create(adherent=adh, degree=self.degree_result,
+                                      subdegree=self.subdegree_result, date=self.event.date, event=self.event)
+            except:
+                pass
 
     def can_delete(self):
         if self.event.status > 0:
@@ -379,7 +410,7 @@ class Participant(LucteriosModel):
 
     def save(self, force_insert=False, force_update=False, using=None,
              update_fields=None):
-        if (self.id is None) and ((self.comment is None) or (self.comment == '')):
+        if (self.id is None) and (self.event.event_type == 0) and ((self.comment is None) or (self.comment == '')):
             self.comment = Params.getvalue("event-comment-text")
         return LucteriosModel.save(self, force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
 

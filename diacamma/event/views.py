@@ -48,6 +48,7 @@ from diacamma.member.views import AdherentSelection
 
 from diacamma.event.models import Event, Organizer, Participant, Degree
 from diacamma.member.models import Season
+from lucterios.framework.models import get_value_if_choices
 
 MenuManage.add_sub("event.actions", "association", "diacamma.event/images/event.png",
                    _("Events"), _("Management of events."), 80)
@@ -56,43 +57,47 @@ MenuManage.add_sub("event.actions", "association", "diacamma.event/images/event.
 @ActionsManage.affect('Event', 'list')
 @MenuManage.describ('event.change_event', FORMTYPE_NOMODAL, 'event.actions', _('Examination manage'))
 class EventList(XferListEditor):
-    icon = "degree.png"
+    icon = "event.png"
     model = Event
     field_id = 'event'
-    caption = _("Examination")
+    caption = _("Event")
 
 
 @ActionsManage.affect('Event', 'search')
 @MenuManage.describ('event.change_event', FORMTYPE_NOMODAL, 'event.actions', _('To find an examination'))
 class EventSearch(XferSearchEditor):
-    icon = "degree.png"
+    icon = "event.png"
     model = Event
     field_id = 'event'
-    caption = _("Search examination")
+    caption = _("Search event")
 
 
 @ActionsManage.affect('Event', 'edit', 'modify', 'add')
 @MenuManage.describ('event.add_event')
 class EventAddModify(XferAddEditor):
-    icon = "degree.png"
+    icon = "event.png"
     model = Event
     field_id = 'event'
-    caption_add = _("Add examination")
-    caption_modify = _("Modify examination")
+    caption_add = _("Add event")
+    caption_modify = _("Modify event")
 
 
 @ActionsManage.affect('Event', 'show')
 @MenuManage.describ('event.change_event')
 class EventShow(XferShowEditor):
-    icon = "degree.png"
+    icon = "event.png"
     model = Event
     field_id = 'event'
     caption = _("Show examination")
 
     def fillresponse(self):
         if self.item.status == 0:
+            if self.item.event_type == 0:
+                params = {}
+            else:
+                params = {'SAVE': ''}
             self.action_list.insert(
-                0, ('valid', _("Validation"), "images/ok.png", CLOSE_NO))
+                0, ('valid', _("Validation"), "images/ok.png", CLOSE_NO, params))
         else:
             del self.action_list[0]
         XferShowEditor.fillresponse(self)
@@ -156,7 +161,8 @@ class EventValid(XferContainerAcknowledge):
             dlg.add_action(self.get_action(
                 _('Ok'), "images/ok.png"), {'close': CLOSE_YES, 'params': {'SAVE': 'YES'}})
             dlg.add_action(WrapAction(_('Cancel'), 'images/cancel.png'), {})
-        else:
+        elif (self.getparam('SAVE') != '') or self.confirme(_("Do you want to validate this %s?") % get_value_if_choices(
+                self.item.event_type, self.item._meta.get_field('event_type'))):
             if self.item.status == 0:
                 for participant in self.item.participant_set.all():
                     participant.give_result(self.getparam('degree_%d' % participant.id, 0),
@@ -238,10 +244,13 @@ class ParticipantSave(XferContainerAcknowledge):
     field_id = 'participant'
     caption_add = _("Add participant")
 
-    def fillresponse(self, event, adherent=()):
-        for contact_id in adherent:
-            Participant.objects.get_or_create(
-                event_id=event, contact_id=contact_id)
+    def fillresponse(self, event, adherent=[], pkname=''):
+        contact_ids = self.getparam(pkname, '').split(';')
+        contact_ids.extend(adherent)
+        for contact_id in contact_ids:
+            if contact_id != '':
+                Participant.objects.get_or_create(
+                    event_id=event, contact_id=contact_id)
 
 
 @ActionsManage.affect('Participant', 'show')
@@ -262,11 +271,32 @@ class ParticipantOpen(XferContainerAcknowledge):
 
 @ActionsManage.affect('Participant', 'add')
 @MenuManage.describ('event.add_event')
-class ParticipantAddModify(AdherentSelection):
+class ParticipantAdd(AdherentSelection):
     icon = "degree.png"
     caption = _("Add participant")
     mode_select = SELECT_MULTI
     select_class = ParticipantSave
+
+
+@ActionsManage.affect('Participant', 'addct')
+@MenuManage.describ('event.add_event')
+class ParticipantAddContact(ContactSelection):
+    icon = "degree.png"
+    caption = _("Add participant")
+    mode_select = SELECT_MULTI
+    select_class = ParticipantSave
+    inital_model = Individual
+
+
+@ActionsManage.affect('Participant', 'edit', 'modify')
+@MenuManage.describ('event.add_event')
+class ParticipantModify(XferAddEditor):
+    icon = "degree.png"
+    model = Participant
+    field_id = 'participant'
+    caption_add = _("Add participant")
+    caption_modify = _("Modify participant")
+    redirect_to_show = None
 
 
 @ActionsManage.affect('Participant', 'delete')
