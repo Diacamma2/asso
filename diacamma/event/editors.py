@@ -98,10 +98,10 @@ parent.get('lbl_date_end').setVisible(type==1);
             participant.delete_header('current_degree')
             xfer.caption = _("Show trainning/outing")
             img.set_value(
-                "static/diacamma.event/images/outing.png")
+                "/static/diacamma.event/images/outing.png")
         else:
             xfer.caption = _("Show examination")
             xfer.remove_component('date_end')
             xfer.remove_component('lbl_date_end')
             img.set_value(
-                "static/diacamma.event/images/degree.png")
+                "/static/diacamma.event/images/degree.png")

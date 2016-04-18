@@ -163,14 +163,7 @@ class EventValid(XferContainerAcknowledge):
             dlg.add_action(WrapAction(_('Cancel'), 'images/cancel.png'), {})
         elif (self.getparam('SAVE') != '') or self.confirme(_("Do you want to validate this %s?") % get_value_if_choices(
                 self.item.event_type, self.item._meta.get_field('event_type'))):
-            if self.item.status == 0:
-                for participant in self.item.participant_set.all():
-                    participant.give_result(self.getparam('degree_%d' % participant.id, 0),
-                                            self.getparam(
-                                                'subdegree_%d' % participant.id, 0),
-                                            self.getparam('comment_%d' % participant.id, ''))
-                self.item.status = 1
-                self.item.save()
+            self.item.validate(self)
 
 
 @ActionsManage.affect('Event', 'delete')

@@ -37,6 +37,11 @@ from lucterios.CORE.parameters import Params
 from lucterios.contacts.models import Individual
 
 from diacamma.member.models import Activity, Adherent, Subscription, Season
+from diacamma.invoice.models import Article, Bill, Detail,\
+    get_or_create_customer
+from diacamma.accounting.models import Third, AccountThird, CostAccounting
+from django.core.exceptions import ObjectDoesNotExist
+from datetime import date
 
 
 class DegreeType(LucteriosModel):
@@ -119,6 +124,8 @@ class Event(LucteriosModel):
     event_type = models.IntegerField(verbose_name=_('event type'), choices=(
         (0, _('examination')), (1, _('trainning/outing'))), null=False, default=0, db_index=True)
     date_end = models.DateField(verbose_name=_('end date'), null=True)
+    default_article = models.ForeignKey(Article, verbose_name=_(
+        'default article'), null=True, default=None, on_delete=models.PROTECT)
 
     def __str__(self):
         if Params.getvalue("member-activite-enable"):
@@ -136,20 +143,24 @@ class Event(LucteriosModel):
     @classmethod
     def get_edit_fields(cls):
         if Params.getvalue("member-activite-enable"):
-            return [((Params.getvalue("member-activite-text"), "activity"),), 'status', 'event_type', 'date', 'date_end', 'comment']
+            return [((Params.getvalue("member-activite-text"), "activity"),), 'status', 'event_type', 'date', 'date_end', 'default_article', 'comment']
         else:
-            return ['status', 'event_type', 'date', 'date_end', 'comment']
+            return ['status', 'event_type', 'date', 'date_end', 'default_article', 'comment']
 
     @classmethod
     def get_show_fields(cls):
         if Params.getvalue("member-activite-enable"):
-            return [('date', 'date_end'), ('status', (Params.getvalue("member-activite-text"), "activity")), 'organizer_set', 'participant_set', ('comment',)]
+            return [('date', 'date_end'), ('status', (Params.getvalue("member-activite-text"), "activity")), 'organizer_set', 'participant_set', ('comment',), (('default_article', 'default_article.ref_price'), )]
         else:
-            return [('date', 'date_end'), ('status',), 'organizer_set', 'participant_set', ('comment',)]
+            return [('date', 'date_end'), ('status',), 'organizer_set', 'participant_set', ('comment',), (('default_article', 'default_article.ref_price'), )]
 
     @classmethod
     def get_search_fields(cls):
         return ['status', 'event_type', 'date', 'date_end', 'comment']
+
+    @property
+    def event_type_txt(self):
+        return get_value_if_choices(self.event_type, self._meta.get_field('event_type'))
 
     @property
     def date_txt(self):
@@ -160,7 +171,7 @@ class Event(LucteriosModel):
 
     def can_delete(self):
         if self.status > 0:
-            return _('%s validated!') % get_value_if_choices(self.event_type, self._meta.get_field('event_type'))
+            return _('%s validated!') % self.event_type_txt
         return ''
 
     def can_be_valid(self):
@@ -181,6 +192,17 @@ class Event(LucteriosModel):
         elif (self.date_end is None) or (self.date_end < self.date):
             self.date_end = self.date
         return LucteriosModel.save(self, force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
+
+    def validate(self, xfer):
+        if self.status == 0:
+            for participant in self.participant_set.all():
+                participant.give_result(xfer.getparam('degree_%d' % participant.id, 0),
+                                        xfer.getparam(
+                                            'subdegree_%d' % participant.id, 0),
+                                        xfer.getparam('comment_%d' % participant.id, ''))
+                participant.create_bill()
+            self.status = 1
+            self.save()
 
     class Meta(object):
         verbose_name = _('event')
@@ -324,6 +346,10 @@ class Participant(LucteriosModel):
     subdegree_result = models.ForeignKey(
         SubDegreeType, verbose_name=_('sub-degree result'), null=True, default=None, db_index=True, on_delete=models.CASCADE)
     comment = models.TextField(_('comment'), blank=True)
+    article = models.ForeignKey(Article, verbose_name=_(
+        'article'), null=True, default=None, on_delete=models.PROTECT)
+    bill = models.ForeignKey(Bill, verbose_name=_(
+        'bill'), null=True, default=None, on_delete=models.SET_NULL)
 
     def __str__(self):
         return six.text_type(self.contact)
@@ -335,16 +361,17 @@ class Participant(LucteriosModel):
         if Params.getvalue("event-subdegree-enable") == 1:
             fields.append(
                 (_('%s result') % Params.getvalue("event-subdegree-text"), 'subdegree_result'))
+        fields.append((_('article'), 'article.ref_price'))
         fields.append('comment')
         return fields
 
     @classmethod
     def get_edit_fields(cls):
-        return ["contact", 'comment']
+        return ["contact", 'comment', 'article']
 
     @classmethod
     def get_show_fields(cls):
-        return ["contact", 'degree_result', 'subdegree_result', 'comment']
+        return ["contact", 'degree_result', 'subdegree_result', 'comment', 'article']
 
     def get_current_degree(self):
         degree_list = Degree.objects.filter(
@@ -403,15 +430,41 @@ class Participant(LucteriosModel):
             except:
                 pass
 
+    def create_bill(self):
+        if self.bill is not None:
+            self.bill.delete()
+            self.bill = None
+            self.save()
+        if self.article is not None:
+            self.bill = Bill.objects.create(
+                bill_type=1, date=date.today(), third=get_or_create_customer(self.contact_id))
+            cost_acc = CostAccounting.objects.filter(is_default=True)
+            if len(cost_acc) > 0:
+                self.bill.cost_accounting = cost_acc[0]
+            self.bill.comment = "{[b]}%s{[/b]}: %s" % (
+                self.event.event_type_txt, self.event.date_txt)
+            self.bill.save()
+            Detail.create_for_bill(self.bill, self.article)
+            self.save()
+
     def can_delete(self):
         if self.event.status > 0:
-            return _('examination validated!')
+            return _('%s validated!') % self.event.event_type_txt
+        if self.bill is not None:
+            return self.bill.can_delete()
         return ''
+
+    def delete(self, using=None):
+        if self.bill is not None:
+            self.bill.delete()
+        LucteriosModel.delete(self, using=using)
 
     def save(self, force_insert=False, force_update=False, using=None,
              update_fields=None):
         if (self.id is None) and (self.event.event_type == 0) and ((self.comment is None) or (self.comment == '')):
             self.comment = Params.getvalue("event-comment-text")
+        if (self.id is None) and (self.event.default_article is not None):
+            self.article = self.event.default_article
         return LucteriosModel.save(self, force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
 
     class Meta(object):

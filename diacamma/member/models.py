@@ -40,7 +40,8 @@ from lucterios.framework.tools import convert_date, same_day_months_after
 from lucterios.CORE.parameters import Params
 from lucterios.contacts.models import Individual
 
-from diacamma.invoice.models import Article, Bill, Detail
+from diacamma.invoice.models import Article, Bill, Detail,\
+    get_or_create_customer
 from diacamma.accounting.tools import format_devise
 from diacamma.accounting.models import Third, AccountThird, CostAccounting
 import logging
@@ -718,15 +719,8 @@ class Subscription(LucteriosModel):
     def create_bill(self):
         if len(self.subscriptiontype.articles.all()) == 0:
             return
-        try:
-            adh_third = Third.objects.get(contact_id=self.adherent_id)
-        except ObjectDoesNotExist:
-            adh_third = Third.objects.create(
-                contact_id=self.adherent_id, status=0)
-            AccountThird.objects.create(
-                third=adh_third, code=Params.getvalue("invoice-account-third"))
         self.bill = Bill.objects.create(
-            bill_type=1, date=self.season.date_ref, third=adh_third)
+            bill_type=1, date=self.season.date_ref, third=get_or_create_customer(self.adherent_id))
         cost_acc = CostAccounting.objects.filter(is_default=True)
         if len(cost_acc) > 0:
             self.bill.cost_accounting = cost_acc[0]
@@ -735,10 +729,7 @@ class Subscription(LucteriosModel):
         self.bill.comment = "{[br/]}".join(cmt)
         self.bill.save()
         for art in self.subscriptiontype.articles.all():
-            newdetail = Detail(
-                bill=self.bill, article=art, designation=art.designation, price=art.price, unit=art.unit, quantity=1)
-            newdetail.editor.before_save(None)
-            newdetail.save()
+            Detail.create_for_bill(self.bill, art)
 
     def import_licence(self, rowdata):
         try:

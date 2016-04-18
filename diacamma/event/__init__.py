@@ -43,4 +43,4 @@ def __title__():
 
 
 def link():
-    return ["lucterios.contacts", "diacamma.member"]
+    return ["lucterios.contacts", "diacamma.member", "diacamma.accounting", "diacamma.invoice", "diacamma.payoff"]
