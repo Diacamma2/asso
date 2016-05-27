@@ -36,13 +36,13 @@ from lucterios.framework.xfersearch import XferSearchEditor
 from lucterios.CORE.xferprint import XferPrintAction
 from lucterios.CORE.xferprint import XferPrintLabel
 from lucterios.CORE.xferprint import XferPrintListing
-from lucterios.framework.tools import FORMTYPE_NOMODAL, ActionsManage, MenuManage,\
-    FORMTYPE_REFRESH, CLOSE_NO, SELECT_SINGLE, WrapAction, FORMTYPE_MODAL,\
+from lucterios.framework.tools import FORMTYPE_NOMODAL, ActionsManage, MenuManage, \
+    FORMTYPE_REFRESH, CLOSE_NO, SELECT_SINGLE, WrapAction, FORMTYPE_MODAL, \
     SELECT_MULTI, CLOSE_YES
-from lucterios.framework.xfercomponents import XferCompLabelForm,\
-    XferCompCheckList, XferCompButton, XferCompSelect, XferCompDate,\
+from lucterios.framework.xfercomponents import XferCompLabelForm, \
+    XferCompCheckList, XferCompButton, XferCompSelect, XferCompDate, \
     XferCompImage, XferCompEdit, XferCompGrid, DEFAULT_ACTION_LIST
-from lucterios.framework.xfergraphic import XferContainerAcknowledge,\
+from lucterios.framework.xfergraphic import XferContainerAcknowledge, \
     XferContainerCustom
 from lucterios.framework.error import LucteriosException, IMPORTANT
 from lucterios.framework import signal_and_lock
@@ -50,7 +50,7 @@ from lucterios.framework import signal_and_lock
 from lucterios.CORE.parameters import Params
 from lucterios.framework.tools import convert_date, same_day_months_after
 
-from diacamma.member.models import Adherent, Subscription, Season, Age, Team, Activity, License, DocAdherent,\
+from diacamma.member.models import Adherent, Subscription, Season, Age, Team, Activity, License, DocAdherent, \
     SubscriptionType
 
 
@@ -580,12 +580,33 @@ class AdherentStatisticPrint(XferPrintAction):
 
 @signal_and_lock.Signal.decorate('summary')
 def summary_member(xfer):
-    if WrapAction.is_permission(xfer.request, 'member.change_adherent'):
+    is_right = WrapAction.is_permission(xfer.request, 'member.change_adherent')
+    try:
+        current_adherent = Adherent.objects.get(user=xfer.request.user)
+    except:
+        current_adherent = None
+
+    if is_right or (current_adherent is not None):
         row = xfer.get_max_row() + 1
         lab = XferCompLabelForm('membertitle')
         lab.set_value_as_infocenter(_("Adherents"))
         lab.set_location(0, row, 4)
-        xfer.add_component(lab)
+        xfer.add_component(lab)       
+    if current_adherent is not None:
+        ident = []
+        if Params.getvalue("member-numero"):
+            ident.append("%s %s" % (_('numeros'), current_adherent.num))
+        if Params.getvalue("member-licence-enabled"):
+            current_license = current_adherent.license
+            if current_license is not None:
+                ident.append(current_license) 
+        row = xfer.get_max_row() + 1
+        lab = XferCompLabelForm('membercurrent')
+        lab.set_value_as_header("{[br/]}".join(ident))
+        lab.set_location(0, row, 4)
+        xfer.add_component(lab)        
+    if is_right:
+        row = xfer.get_max_row() + 1
         try:
             current_season = Season.current_season()
             dateref = current_season.date_ref
@@ -599,13 +620,16 @@ def summary_member(xfer):
             lab.set_value_as_header(_("Active adherents: %d") % nb_adh)
             lab.set_location(0, row + 2, 4)
             xfer.add_component(lab)
-            lab = XferCompLabelForm('member')
-            lab.set_value_as_infocenter("{[hr/]}")
-            lab.set_location(0, row + 3, 4)
-            xfer.add_component(lab)
         except LucteriosException as lerr:
             lbl = XferCompLabelForm("member_error")
             lbl.set_value_center(six.text_type(lerr))
             lbl.set_location(0, row + 1, 4)
             xfer.add_component(lbl)
-    return True
+    if is_right or (current_adherent is not None):
+        lab = XferCompLabelForm('member')
+        lab.set_value_as_infocenter("{[hr/]}")
+        lab.set_location(0, row + 3, 4)
+        xfer.add_component(lab)
+        return True
+    else:
+        return False

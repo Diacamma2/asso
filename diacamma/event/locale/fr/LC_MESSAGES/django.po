@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-04-18 15:37+0000\n"
+"POT-Creation-Date: 2016-05-27 20:38+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -66,165 +66,165 @@ msgstr "Sous-diplôme"
 msgid "event-comment-text"
 msgstr "commentaire d'examen par défaut"
 
-#: models.py:47 models.py:90
+#: models.py:48 models.py:91
 msgid "name"
 msgstr "nom"
 
-#: models.py:48 models.py:91
+#: models.py:49 models.py:92
 msgid "level"
 msgstr "niveau"
 
-#: models.py:51 models.py:118
+#: models.py:52 models.py:119
 msgid "activity"
 msgstr "activité"
 
-#: models.py:84
+#: models.py:85
 msgid "degree type"
 msgstr "type de diplôme"
 
-#: models.py:85
+#: models.py:86
 msgid "degree types"
 msgstr "type de diplômes"
 
-#: models.py:110
+#: models.py:111
 msgid "sub degree type"
 msgstr "type de sous-diplôme"
 
-#: models.py:111
+#: models.py:112
 msgid "sub degree types"
 msgstr "type de sous-diplômes"
 
-#: models.py:119 models.py:261
+#: models.py:120 models.py:262
 msgid "date"
 msgstr "date"
 
-#: models.py:120 models.py:347
+#: models.py:121 models.py:348
 msgid "comment"
 msgstr "commentaire"
 
-#: models.py:121
+#: models.py:122
 msgid "status"
 msgstr "status"
 
-#: models.py:122
+#: models.py:123
 msgid "building"
 msgstr "en construction"
 
-#: models.py:122
+#: models.py:123
 msgid "valid"
 msgstr "validé"
 
-#: models.py:123
+#: models.py:124
 msgid "event type"
 msgstr "type d'évenement"
 
-#: models.py:124
+#: models.py:125
 msgid "examination"
 msgstr "examen"
 
-#: models.py:124
+#: models.py:125
 msgid "trainning/outing"
 msgstr "stage/sortie"
 
-#: models.py:125
+#: models.py:126
 msgid "end date"
 msgstr "date de fin"
 
-#: models.py:127
+#: models.py:128
 msgid "default article"
 msgstr "article par défaut"
 
-#: models.py:173 models.py:179 models.py:461
+#: models.py:174 models.py:180 models.py:452
 #, python-format
 msgid "%s validated!"
 msgstr "%s validé!"
 
-#: models.py:182
+#: models.py:183
 msgid "no responsible!"
 msgstr "pas de responsable!"
 
-#: models.py:184
+#: models.py:185
 msgid "no participant!"
 msgstr "pas de participant!"
 
-#: models.py:207 models.py:214 models.py:263 models.py:340
+#: models.py:208 models.py:215 models.py:264 models.py:341
 msgid "event"
 msgstr "évenement"
 
-#: models.py:208
+#: models.py:209
 msgid "events"
 msgstr "évenements"
 
-#: models.py:216 models.py:342
+#: models.py:217 models.py:343
 msgid "contact"
 msgstr "contact"
 
-#: models.py:218
+#: models.py:219
 msgid "responsible"
 msgstr "responsable"
 
-#: models.py:245 models.py:329
+#: models.py:246 models.py:330
 msgid "examination validated!"
 msgstr "examen validé!"
 
-#: models.py:249
+#: models.py:250
 msgid "organizer"
 msgstr "organisateur"
 
-#: models.py:250
+#: models.py:251
 msgid "organizers"
 msgstr "organisateurs"
 
-#: models.py:256
+#: models.py:257
 msgid "adherent"
 msgstr "adhérent"
 
-#: models.py:258 models.py:333
+#: models.py:259 models.py:334
 msgid "degree"
 msgstr "diplôme"
 
-#: models.py:260
+#: models.py:261
 msgid "sub degree"
 msgstr "sous-diplôme"
 
-#: models.py:334
+#: models.py:335
 msgid "degrees"
 msgstr "diplômes"
 
-#: models.py:344
+#: models.py:345
 msgid "degree result"
 msgstr "diplômes résultant"
 
-#: models.py:346
+#: models.py:347
 msgid "sub-degree result"
 msgstr "sous-diplômes résultant"
 
-#: models.py:349 models.py:363
+#: models.py:350 models.py:364
 msgid "article"
 msgstr "article"
 
-#: models.py:351
+#: models.py:352
 msgid "bill"
 msgstr "facture"
 
-#: models.py:358
+#: models.py:359
 msgid "subscript?"
 msgstr "adhérent?"
 
-#: models.py:358
+#: models.py:359
 msgid "current"
 msgstr "courrant"
 
-#: models.py:359 models.py:362
+#: models.py:360 models.py:363
 #, python-format
 msgid "%s result"
 msgstr "%s résultant"
 
-#: models.py:480
+#: models.py:471
 msgid "participant"
 msgstr "participant"
 
-#: models.py:481
+#: models.py:472
 msgid "participants"
 msgstr "participants"
 
