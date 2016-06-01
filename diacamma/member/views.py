@@ -591,7 +591,7 @@ def summary_member(xfer):
         lab = XferCompLabelForm('membertitle')
         lab.set_value_as_infocenter(_("Adherents"))
         lab.set_location(0, row, 4)
-        xfer.add_component(lab)       
+        xfer.add_component(lab)
     if current_adherent is not None:
         ident = []
         if Params.getvalue("member-numero"):
@@ -599,12 +599,12 @@ def summary_member(xfer):
         if Params.getvalue("member-licence-enabled"):
             current_license = current_adherent.license
             if current_license is not None:
-                ident.append(current_license) 
+                ident.append(current_license)
         row = xfer.get_max_row() + 1
         lab = XferCompLabelForm('membercurrent')
         lab.set_value_as_header("{[br/]}".join(ident))
         lab.set_location(0, row, 4)
-        xfer.add_component(lab)        
+        xfer.add_component(lab)
     if is_right:
         row = xfer.get_max_row() + 1
         try:
