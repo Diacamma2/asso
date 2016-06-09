@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-05-27 20:38+0000\n"
+"POT-Creation-Date: 2016-06-09 08:59+0000\n"
 "PO-Revision-Date: 2016-01-14 22:13+0000\n"
 "Last-Translator: b'Paul ARULATEDA <paul531@orange.fr>'\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -31,7 +31,7 @@ msgstr "date invalide!"
 msgid "Season exists yet!"
 msgstr "La saison existe déjà!"
 
-#: editors.py:71 editors.py:266 migrations/0001_initial.py:150 models.py:68
+#: editors.py:71 editors.py:268 migrations/0001_initial.py:150 models.py:68
 #: models.py:257 models.py:692
 msgid "begin date"
 msgstr "date de début"
@@ -48,31 +48,31 @@ msgstr "date min."
 msgid "date max."
 msgstr "date max."
 
-#: editors.py:141 views.py:436
+#: editors.py:143 views.py:436
 msgid "Bill"
 msgstr "Facture"
 
-#: editors.py:163 models.py:248
+#: editors.py:165 models.py:248
 msgid "documents needs"
 msgstr "documents demandés"
 
-#: editors.py:169 views_conf.py:52
+#: editors.py:171 views_conf.py:52
 msgid "Modify"
 msgstr "Modifier"
 
-#: editors.py:225
+#: editors.py:227
 msgid "No subscription type defined!"
 msgstr "Aucun type de cotisation défini!"
 
-#: editors.py:236 models.py:304
+#: editors.py:238 models.py:304
 msgid "annually"
 msgstr "annuelle"
 
-#: editors.py:246 models.py:295
+#: editors.py:248 models.py:295
 msgid "period"
 msgstr "période"
 
-#: editors.py:256
+#: editors.py:258
 msgid "month"
 msgstr "mois"
 

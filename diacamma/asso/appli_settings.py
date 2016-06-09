@@ -38,6 +38,16 @@ def get_subtitle():
     except LookupError:
         return ugettext("Association application")
 
+
+def get_support():
+    return """{[table style='text-align: center; width: 100%%;']}
+{[tr]}{[td]}{[img width='128px' title='Diacamma' alt='Diacamma' src='http://forum.diacamma.org/static/DiacammaForum.png'/]}{[/td]}{[/td]}
+{[tr]}{[td]}%s{[/td]}{[/td]}
+{[tr]}{[td]}{[a href='http://forum.diacamma.org' target='_blank']}http://forum.diacamma.org{[/a]}{[/td]}{[/td]}
+{[/table]}
+""" % _('Meet the {[i]}Diacamma{[/i]} community on')
+
+
 APPLIS_NAME = diacamma.asso.__title__()
 APPLIS_VERSION = diacamma.asso.__version__
 APPLI_EMAIL = "support@diacamma.org"
@@ -46,3 +56,4 @@ APPLIS_FAVICON = join(dirname(__file__), "DiacammaAsso.ico")
 APPLIS_BACKGROUND_NAME = join(dirname(__file__), "fond.jpg")
 APPLIS_COPYRIGHT = _("(c) GPL Licence")
 APPLIS_SUBTITLE = get_subtitle
+APPLI_SUPPORT = get_support

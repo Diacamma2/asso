@@ -134,6 +134,8 @@ class AdherentEditor(IndividualEditor):
 
     def show(self, xfer):
         IndividualEditor.show(self, xfer)
+        if xfer.getparam('adherent') is None:
+            xfer.params['adherent'] = xfer.getparam('individual', 0)
         img = xfer.get_components('img')
         img.set_value(get_icon_path("diacamma.member/images/adherent.png"))
 
