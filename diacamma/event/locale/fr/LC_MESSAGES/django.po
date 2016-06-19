@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-06-09 08:59+0000\n"
+"POT-Creation-Date: 2016-06-19 07:52+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -237,16 +237,16 @@ msgid "Management of events."
 msgstr "Gestion d'évenments"
 
 #: views.py:58
-msgid "Examination manage"
-msgstr "Gestion d'examen"
+msgid "Event manage"
+msgstr "Gestion d'événement"
 
 #: views.py:63
 msgid "Event"
 msgstr "Évenement"
 
 #: views.py:67
-msgid "To find an examination"
-msgstr "Pour trouver un examen"
+msgid "To find an event"
+msgstr "Pour trouver un événement"
 
 #: views.py:72
 msgid "Search event"

@@ -55,7 +55,7 @@ MenuManage.add_sub("event.actions", "association", "diacamma.event/images/event.
 
 
 @ActionsManage.affect('Event', 'list')
-@MenuManage.describ('event.change_event', FORMTYPE_NOMODAL, 'event.actions', _('Examination manage'))
+@MenuManage.describ('event.change_event', FORMTYPE_NOMODAL, 'event.actions', _('Event manage'))
 class EventList(XferListEditor):
     icon = "event.png"
     model = Event
@@ -64,7 +64,7 @@ class EventList(XferListEditor):
 
 
 @ActionsManage.affect('Event', 'search')
-@MenuManage.describ('event.change_event', FORMTYPE_NOMODAL, 'event.actions', _('To find an examination'))
+@MenuManage.describ('event.change_event', FORMTYPE_NOMODAL, 'event.actions', _('To find an event'))
 class EventSearch(XferSearchEditor):
     icon = "event.png"
     model = Event
