@@ -28,83 +28,11 @@ from datetime import date
 from django.db import migrations, models
 from django.utils.translation import ugettext_lazy as _
 
-from lucterios.CORE.models import Parameter, PrintModel
+from lucterios.CORE.models import PrintModel
 from diacamma.member.models import Adherent
 
 
 def initial_values(*args):
-    # pylint: disable=unused-argument, no-member, expression-not-assigned
-
-    param = Parameter.objects.create(
-        name="member-age-enable", typeparam=3)
-    param.title = _("member-age-enable")
-    param.args = "{}"
-    param.value = 'True'
-    param.save()
-
-    param = Parameter.objects.create(
-        name="member-team-enable", typeparam=3)
-    param.title = _("member-team-enable")
-    param.args = "{}"
-    param.value = 'True'
-    param.save()
-
-    param = Parameter.objects.create(
-        name="member-team-text", typeparam=0)
-    param.title = _("member-team-text")
-    param.args = "{'Multi':False}"
-    param.value = _('Team')
-    param.save()
-
-    param = Parameter.objects.create(
-        name="member-activite-enable", typeparam=3)
-    param.title = _("member-activite-enable")
-    param.args = "{}"
-    param.value = "True"
-    param.save()
-
-    param = Parameter.objects.create(
-        name="member-activite-text", typeparam=0)
-    param.title = _("member-activite-text")
-    param.args = "{'Multi':False}"
-    param.value = _('Activity')
-    param.save()
-
-    param = Parameter.objects.create(
-        name="member-connection", typeparam=3)
-    param.title = _("member-connection")
-    param.args = "{}"
-    param.value = 'False'
-    param.save()
-
-    param = Parameter.objects.create(
-        name="member-birth", typeparam=3)
-    param.title = _("member-birth")
-    param.args = "{}"
-    param.value = 'True'
-    param.save()
-
-    param = Parameter.objects.create(
-        name="member-filter-genre", typeparam=3)
-    param.title = _("member-filter-genre")
-    param.args = "{}"
-    param.value = 'True'
-    param.save()
-
-    param = Parameter.objects.create(
-        name="member-numero", typeparam=3)
-    param.title = _("member-numero")
-    param.args = "{}"
-    param.value = 'True'
-    param.save()
-
-    param = Parameter.objects.create(
-        name="member-licence-enabled", typeparam=3)
-    param.title = _("member-licence-enabled")
-    param.args = "{}"
-    param.value = 'True'
-    param.save()
-
     prtmdl = PrintModel.objects.create(
         name=_("adherents listing"), kind=0, modelname=Adherent.get_long_name())
     prtmdl.change_listing(297, 210, [(22, _('numeros'), '#num'),

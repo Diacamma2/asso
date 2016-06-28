@@ -27,39 +27,6 @@ from __future__ import unicode_literals
 import django.core.validators
 from django.db import migrations, models
 import django.db.models.deletion
-from django.utils.translation import ugettext_lazy as _
-
-from lucterios.CORE.models import Parameter
-
-
-def initial_values(*args):
-    param = Parameter.objects.create(
-        name="event-subdegree-enable", typeparam=3)
-    param.title = _("event-subdegree-enable")
-    param.args = "{}"
-    param.value = 'True'
-    param.save()
-
-    param = Parameter.objects.create(
-        name="event-degree-text", typeparam=0)
-    param.title = _("event-degree-text")
-    param.args = "{'Multi':False}"
-    param.value = _('Degree')
-    param.save()
-
-    param = Parameter.objects.create(
-        name="event-subdegree-text", typeparam=0)
-    param.title = _("event-subdegree-text")
-    param.args = "{'Multi':False}"
-    param.value = _('Sub-degree')
-    param.save()
-
-    param = Parameter.objects.create(
-        name="event-comment-text", typeparam=0)
-    param.title = _("event-comment-text")
-    param.args = "{'Multi':True}"
-    param.value = ''
-    param.save()
 
 
 class Migration(migrations.Migration):
@@ -202,5 +169,4 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(
                 default=None, null=True, on_delete=django.db.models.deletion.PROTECT, to='event.SubDegreeType', verbose_name='sub degree'),
         ),
-        migrations.RunPython(initial_values),
     ]

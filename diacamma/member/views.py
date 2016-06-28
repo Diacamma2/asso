@@ -223,6 +223,7 @@ class AdherentSearch(XferSearchEditor):
     model = Adherent
     field_id = 'adherent'
     caption = _("Search adherent")
+    is_renew = False
 
 
 @MenuManage.describ('member.change_adherent', FORMTYPE_NOMODAL, 'member.actions', _('List of adherents with old subscribtion not renew yet'))
@@ -362,7 +363,7 @@ class AdherentDel(XferDelete):
     caption = _("Delete adherent")
 
 
-@ActionsManage.affect_show(_('Modify'), '')
+@ActionsManage.affect_other(_('Modify'), '')
 @MenuManage.describ('contacts.add_abstractcontact')
 class AdherentDoc(XferContainerAcknowledge):
     icon = "adherent.png"
@@ -451,7 +452,7 @@ class SubscriptionShowBill(XferContainerAcknowledge):
 
     def fillresponse(self):
         if self.item.bill_id is not None:
-            self.redirect_action(ActionsManage.get_action_url('Bill', 'Show', self), close=CLOSE_NO, params={'bill': self.item.bill_id})
+            self.redirect_action(ActionsManage.get_action_url('invoice.Bill', 'Show', self), close=CLOSE_NO, params={'bill': self.item.bill_id})
 
 
 @ActionsManage.affect_grid(TITLE_ADD, "images/add.png")

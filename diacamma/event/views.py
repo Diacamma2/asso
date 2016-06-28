@@ -239,8 +239,8 @@ class ParticipantOpen(XferContainerAcknowledge):
 
     def fillresponse(self):
         current_contact = self.item.contact.get_final_child()
-        modal_name = current_contact.__class__.__name__
-        field_id = modal_name.lower()
+        modal_name = current_contact.__class__.get_long_name()
+        field_id = current_contact.__class__.__name__.lower()
         self.redirect_action(ActionsManage.get_action_url(modal_name, 'Show', self), modal=FORMTYPE_MODAL,
                              close=CLOSE_NO, params={field_id: six.text_type(current_contact.id)})
 

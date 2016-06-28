@@ -45,6 +45,8 @@ from diacamma.invoice.models import Article, Bill, Detail,\
 from diacamma.accounting.tools import format_devise
 from diacamma.accounting.models import Third, AccountThird, CostAccounting
 import logging
+from lucterios.framework.signal_and_lock import Signal
+from lucterios.CORE.models import Parameter
 
 
 class Season(LucteriosModel):
@@ -214,8 +216,7 @@ class Season(LucteriosModel):
 
 
 class Document(LucteriosModel):
-    season = models.ForeignKey(
-        Season, verbose_name=_('season'), null=False, default=None, db_index=True, on_delete=models.CASCADE)
+    season = models.ForeignKey(Season, verbose_name=_('season'), null=False, default=None, db_index=True, on_delete=models.CASCADE)
     name = models.CharField(_('name'), max_length=100)
 
     def __str__(self):
@@ -859,3 +860,17 @@ class License(LucteriosModel):
         verbose_name = _('license')
         verbose_name_plural = _('licenses')
         default_permissions = []
+
+
+@Signal.decorate('checkparam')
+def member_checkparam():
+    Parameter.check_and_create(name="member-age-enable", typeparam=3, title=_("member-age-enable"), args="{}", value='True')
+    Parameter.check_and_create(name="member-team-enable", typeparam=3, title=_("member-team-enable"), args="{}", value='True')
+    Parameter.check_and_create(name="member-team-text", typeparam=0, title=_("member-team-text"), args="{'Multi':False}", value=_('Team'))
+    Parameter.check_and_create(name="member-activite-enable", typeparam=3, title=_("member-activite-enable"), args="{}", value="True")
+    Parameter.check_and_create(name="member-activite-text", typeparam=0, title=_("member-activite-text"), args="{'Multi':False}", value=_('Activity'))
+    Parameter.check_and_create(name="member-connection", typeparam=3, title=_("member-connection"), args="{}", value='False')
+    Parameter.check_and_create(name="member-birth", typeparam=3, title=_("member-birth"), args="{}", value='True')
+    Parameter.check_and_create(name="member-filter-genre", typeparam=3, title=_("member-filter-genre"), args="{}", value='True')
+    Parameter.check_and_create(name="member-numero", typeparam=3, title=_("member-numero"), args="{}", value='True')
+    Parameter.check_and_create(name="member-licence-enabled", typeparam=3, title=_("member-licence-enabled"), args="{}", value='True')

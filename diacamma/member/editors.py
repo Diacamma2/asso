@@ -164,7 +164,7 @@ class AdherentEditor(IndividualEditor):
                 xfer.add_component(lbl)
                 btn = XferCompButton("btn_doc")
                 btn.set_location(4, row_init + 1, 1, row - row_init)
-                btn.set_action(xfer.request, ActionsManage.get_action_url("Adherent", "Doc", xfer), close=CLOSE_NO)
+                btn.set_action(xfer.request, ActionsManage.get_action_url("member.Adherent", "Doc", xfer), close=CLOSE_NO)
                 xfer.add_component(btn)
 
 

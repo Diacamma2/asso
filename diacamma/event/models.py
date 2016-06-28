@@ -42,6 +42,8 @@ from diacamma.invoice.models import Article, Bill, Detail,\
 from diacamma.accounting.models import Third, AccountThird, CostAccounting
 from django.core.exceptions import ObjectDoesNotExist
 from datetime import date
+from lucterios.framework.signal_and_lock import Signal
+from lucterios.CORE.models import Parameter
 
 
 class DegreeType(LucteriosModel):
@@ -471,3 +473,18 @@ class Participant(LucteriosModel):
         verbose_name = _('participant')
         verbose_name_plural = _('participants')
         default_permissions = []
+
+
+@Signal.decorate('checkparam')
+def event_checkparam():
+    Parameter.check_and_create(name="event-subdegree-enable", typeparam=3, title=_("event-subdegree-enable"),
+                               args="{}", value='True')
+
+    Parameter.check_and_create(name="event-degree-text", typeparam=0, title=_("event-degree-text"),
+                               args="{'Multi':False}", value=_('Degree'))
+
+    Parameter.check_and_create(name="event-subdegree-text", typeparam=0, title=_("event-subdegree-text"),
+                               args="{'Multi':False}", value=_('Sub-degree'))
+
+    Parameter.check_and_create(name="event-comment-text", typeparam=0,
+                               title=_("event-comment-text"), args="{'Multi':True}", value='')
