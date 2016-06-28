@@ -26,9 +26,11 @@ from __future__ import unicode_literals
 
 from django.utils.translation import ugettext_lazy as _
 
-from lucterios.framework.xferadvance import XferAddEditor
+from lucterios.framework.xferadvance import XferAddEditor, TITLE_DELETE,\
+    TITLE_MODIFY, TITLE_ADD
 from lucterios.framework.xferadvance import XferDelete
-from lucterios.framework.tools import ActionsManage, MenuManage, WrapAction
+from lucterios.framework.tools import ActionsManage, MenuManage, WrapAction,\
+    SELECT_SINGLE, SELECT_MULTI
 from lucterios.framework import signal_and_lock
 from lucterios.framework.xfercomponents import XferCompGrid
 
@@ -51,7 +53,8 @@ def show_contact_degree(contact, xfer):
             xfer.add_component(grid)
 
 
-@ActionsManage.affect('Degree', 'edit', 'add')
+@ActionsManage.affect_grid(TITLE_ADD, "images/add.png")
+@ActionsManage.affect_grid(TITLE_MODIFY, "images/edit.png", unique=SELECT_SINGLE)
 @MenuManage.describ('event.add_degree')
 class DegreeAddModify(XferAddEditor):
     icon = "degree.png"
@@ -61,7 +64,7 @@ class DegreeAddModify(XferAddEditor):
     caption_modify = _("Modify degree")
 
 
-@ActionsManage.affect('Degree', 'delete')
+@ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", unique=SELECT_MULTI)
 @MenuManage.describ('event.delete_degree')
 class DegreeDel(XferDelete):
     icon = "degree.png"

@@ -28,7 +28,9 @@ from django.utils.translation import ugettext_lazy as _
 from django.utils import six
 from django.db.models import Q
 
-from lucterios.framework.xferadvance import XferListEditor
+from lucterios.framework.xferadvance import XferListEditor, TITLE_OK, TITLE_ADD,\
+    TITLE_MODIFY, TITLE_EDIT, TITLE_CANCEL, TITLE_LABEL, TITLE_LISTING,\
+    TITLE_DELETE, TITLE_CLOSE, TITLE_PRINT
 from lucterios.framework.xferadvance import XferAddEditor
 from lucterios.framework.xferadvance import XferShowEditor
 from lucterios.framework.xferadvance import XferDelete
@@ -41,21 +43,18 @@ from lucterios.framework.tools import FORMTYPE_NOMODAL, ActionsManage, MenuManag
     SELECT_MULTI, CLOSE_YES
 from lucterios.framework.xfercomponents import XferCompLabelForm, \
     XferCompCheckList, XferCompButton, XferCompSelect, XferCompDate, \
-    XferCompImage, XferCompEdit, XferCompGrid, DEFAULT_ACTION_LIST
-from lucterios.framework.xfergraphic import XferContainerAcknowledge, \
-    XferContainerCustom
+    XferCompImage, XferCompEdit, XferCompGrid
+from lucterios.framework.xfergraphic import XferContainerAcknowledge, XferContainerCustom
+from lucterios.framework.tools import convert_date, same_day_months_after
 from lucterios.framework.error import LucteriosException, IMPORTANT
 from lucterios.framework import signal_and_lock
 
 from lucterios.CORE.parameters import Params
-from lucterios.framework.tools import convert_date, same_day_months_after
 
-from diacamma.member.models import Adherent, Subscription, Season, Age, Team, Activity, License, DocAdherent, \
-    SubscriptionType
+from diacamma.member.models import Adherent, Subscription, Season, Age, Team, Activity, License, DocAdherent, SubscriptionType
 
 
-MenuManage.add_sub(
-    "association", None, "diacamma.member/images/association.png", _("Association"), _("Association tools"), 30)
+MenuManage.add_sub("association", None, "diacamma.member/images/association.png", _("Association"), _("Association tools"), 30)
 
 MenuManage.add_sub("member.actions", "association", "diacamma.member/images/member.png",
                    _("Adherents"), _("Management of adherents and subscriptions."), 50)
@@ -136,7 +135,7 @@ class AdherentAbstractList(XferListEditor):
         btn = XferCompButton('btndateref')
         btn.set_location(8, row + 1)
         btn.set_action(self.request, self.get_action(_('Refresh'), ''),
-                       {'modal': FORMTYPE_REFRESH, 'close': CLOSE_NO})
+                       modal=FORMTYPE_REFRESH, close=CLOSE_NO)
         self.add_component(btn)
 
     def get_items_from_filter(self):
@@ -144,8 +143,7 @@ class AdherentAbstractList(XferListEditor):
         activity = self.getparam("activity", ())
         genre = self.getparam("genre", 0)
         age = self.getparam("age", ())
-        dateref = convert_date(
-            self.getparam("dateref", ""), Season.current_season().date_ref)
+        dateref = convert_date(self.getparam("dateref", ""), Season.current_season().date_ref)
         if self.is_renew:
             date_one_year = same_day_months_after(dateref, -12)
             date_six_month = same_day_months_after(dateref, -6)
@@ -176,8 +174,7 @@ class AdherentAbstractList(XferListEditor):
             current_filter &= age_filter
         if genre != 0:
             current_filter &= Q(genre=genre)
-        items = self.model.objects.filter(
-            current_filter).exclude(exclude_filter)
+        items = self.model.objects.filter(current_filter).exclude(exclude_filter)
         return items
 
 
@@ -188,18 +185,19 @@ class AdherentSelection(AdherentAbstractList):
     final_class = None
 
     def fillresponse(self):
+        self.model = Adherent
+        self.item = Adherent()
         self.action_list = []
         if self.final_class is not None:
-            self.add_action(
-                self.final_class.get_action(_('ok'), "images/ok.png"), {})
+            self.add_action(self.final_class.get_action(TITLE_OK, "images/ok.png"))
         AdherentAbstractList.fillresponse(self)
         self.get_components('title').colspan = 10
         self.get_components(self.field_id).colspan = 10
         self.get_components('nb_adherent').colspan = 10
         if self.select_class is not None:
             grid = self.get_components(self.field_id)
-            grid.add_action(self.request, self.select_class.get_action(_("Select"), "images/ok.png"), {
-                            'close': CLOSE_YES, 'unique': self.mode_select}, 0)
+            grid.add_action(self.request, self.select_class.get_action(_("Select"), "images/ok.png"),
+                            close=CLOSE_YES, unique=self.mode_select, pos_act=0)
 
 
 @MenuManage.describ('member.change_adherent', FORMTYPE_NOMODAL, 'member.actions', _('List of adherents with subscribtion'))
@@ -216,7 +214,7 @@ class AdherentActiveList(AdherentAbstractList):
         self.get_components('nb_adherent').colspan = 10
         if Params.getvalue("member-licence-enabled"):
             self.get_components(self.field_id).add_action(self.request, AdherentLicense.get_action(
-                _("License"), ""), {"unique": SELECT_SINGLE, "close": CLOSE_NO})
+                _("License"), ""), unique=SELECT_SINGLE, close=CLOSE_NO)
 
 
 @MenuManage.describ('member.change_adherent', FORMTYPE_NOMODAL, 'member.actions', _('To find an adherent following a set of criteria.'))
@@ -234,9 +232,6 @@ class AdherentRenewList(AdherentAbstractList):
 
     def fillresponse_header(self):
         AdherentAbstractList.fillresponse_header(self)
-        self.action_grid = [DEFAULT_ACTION_LIST[0]]
-        self.action_grid.append(
-            ('renew', _("re-new"), "images/add.png", SELECT_MULTI))
         self.fieldnames = Adherent.get_renew_fields()
 
     def fillresponse(self):
@@ -248,7 +243,8 @@ class AdherentRenewList(AdherentAbstractList):
         self.get_components('nb_adherent').colspan = 10
 
 
-@ActionsManage.affect('Adherent', 'modify', 'add')
+@ActionsManage.affect_grid(TITLE_ADD, "images/add.png")
+@ActionsManage.affect_show(TITLE_MODIFY, "images/edit.png", close=CLOSE_YES)
 @MenuManage.describ('contacts.add_abstractcontact')
 class AdherentAddModify(XferAddEditor):
     icon = "adherent.png"
@@ -258,7 +254,7 @@ class AdherentAddModify(XferAddEditor):
     caption_modify = _("Modify adherent")
 
 
-@ActionsManage.affect('Adherent', 'show')
+@ActionsManage.affect_grid(TITLE_EDIT, "images/show.png", unique=SELECT_SINGLE)
 @MenuManage.describ('contacts.change_abstractcontact')
 class AdherentShow(XferShowEditor):
     icon = "adherent.png"
@@ -320,9 +316,8 @@ class AdherentLicense(XferContainerCustom):
             lbl.set_location(2, row)
             self.add_component(lbl)
             row += 1
-        self.add_action(
-            AdherentLicenseSave.get_action(_('Ok'), 'images/ok.png'), {})
-        self.add_action(WrapAction(_('Cancel'), 'images/cancel.png'), {})
+        self.add_action(AdherentLicenseSave.get_action(TITLE_OK, 'images/ok.png'))
+        self.add_action(WrapAction(TITLE_CANCEL, 'images/cancel.png'))
 
 
 @MenuManage.describ('member.add_subscription')
@@ -340,7 +335,7 @@ class AdherentLicenseSave(XferContainerAcknowledge):
                 doc.save()
 
 
-@ActionsManage.affect('Adherent', 'renew')
+@ActionsManage.affect_grid(_("re-new"), "images/add.png", unique=SELECT_MULTI, condition=lambda xfer, gridname='': xfer.is_renew)
 @MenuManage.describ('member.add_subscription')
 class AdherentRenew(XferContainerAcknowledge):
     icon = "adherent.png"
@@ -358,7 +353,7 @@ class AdherentRenew(XferContainerAcknowledge):
                 item.renew(dateref)
 
 
-@ActionsManage.affect('Adherent', 'delete')
+@ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", unique=SELECT_MULTI)
 @MenuManage.describ('contacts.delete_abstractcontact')
 class AdherentDel(XferDelete):
     icon = "adherent.png"
@@ -367,7 +362,7 @@ class AdherentDel(XferDelete):
     caption = _("Delete adherent")
 
 
-@ActionsManage.affect('Adherent', 'doc')
+@ActionsManage.affect_show(_('Modify'), '')
 @MenuManage.describ('contacts.add_abstractcontact')
 class AdherentDoc(XferContainerAcknowledge):
     icon = "adherent.png"
@@ -383,7 +378,7 @@ class AdherentDoc(XferContainerAcknowledge):
                 doc.save()
 
 
-@ActionsManage.affect('Adherent', 'print')
+@ActionsManage.affect_show(TITLE_PRINT, "images/print.png")
 @MenuManage.describ('contacts.change_abstractcontact')
 class AdherentPrint(XferPrintAction):
     icon = "adherent.png"
@@ -393,7 +388,7 @@ class AdherentPrint(XferPrintAction):
     action_class = AdherentShow
 
 
-@ActionsManage.affect('Adherent', 'label')
+@ActionsManage.affect_list(TITLE_LABEL, "images/print.png")
 @MenuManage.describ('contacts.change_abstractcontact')
 class AdherentLabel(XferPrintLabel):
     icon = "adherent.png"
@@ -402,7 +397,7 @@ class AdherentLabel(XferPrintLabel):
     caption = _("Label adherent")
 
 
-@ActionsManage.affect('Adherent', 'listing')
+@ActionsManage.affect_list(TITLE_LISTING, "images/print.png")
 @MenuManage.describ('contacts.change_abstractcontact')
 class AdherentListing(XferPrintListing):
     icon = "adherent.png"
@@ -411,7 +406,8 @@ class AdherentListing(XferPrintListing):
     caption = _("Listing adherent")
 
 
-@ActionsManage.affect('Subscription', 'modify', 'add')
+@ActionsManage.affect_grid(TITLE_ADD, "images/add.png")
+@ActionsManage.affect_show(TITLE_MODIFY, "images/edit.png", close=CLOSE_YES)
 @MenuManage.describ('member.add_subscription')
 class SubscriptionAddModify(XferAddEditor):
     icon = "adherent.png"
@@ -422,7 +418,7 @@ class SubscriptionAddModify(XferAddEditor):
     redirect_to_show = 'bill'
 
 
-@ActionsManage.affect('Subscription', 'show')
+@ActionsManage.affect_grid(TITLE_EDIT, "images/show.png", unique=SELECT_SINGLE)
 @MenuManage.describ('member.change_subscription')
 class SubscriptionShow(XferShowEditor):
     icon = "adherent.png"
@@ -436,7 +432,7 @@ class SubscriptionShow(XferShowEditor):
             'Subscription', 'bill', _('Bill'), 'images/ok.png'), {'close': CLOSE_NO}, 0)
 
 
-@ActionsManage.affect('Subscription', 'delete')
+@ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", unique=SELECT_MULTI)
 @MenuManage.describ('member.delete_subscription')
 class SubscriptionDel(XferDelete):
     icon = "adherent.png"
@@ -445,7 +441,7 @@ class SubscriptionDel(XferDelete):
     caption = _("Delete subscription")
 
 
-@ActionsManage.affect('Subscription', 'bill')
+@ActionsManage.affect_grid(_('Bill'), 'images/ok.png', unique=SELECT_SINGLE, close=CLOSE_NO)
 @MenuManage.describ('invoice.change_bill')
 class SubscriptionShowBill(XferContainerAcknowledge):
     icon = "adherent.png"
@@ -455,11 +451,11 @@ class SubscriptionShowBill(XferContainerAcknowledge):
 
     def fillresponse(self):
         if self.item.bill_id is not None:
-            self.redirect_action(ActionsManage.get_act_changed(
-                'Bill', 'show', '', ''), {'close': CLOSE_NO, 'params': {'bill': self.item.bill_id}})
+            self.redirect_action(ActionsManage.get_action_url('Bill', 'Show', self), close=CLOSE_NO, params={'bill': self.item.bill_id})
 
 
-@ActionsManage.affect('License', 'edit', 'add')
+@ActionsManage.affect_grid(TITLE_ADD, "images/add.png")
+@ActionsManage.affect_grid(TITLE_MODIFY, "images/edit.png", unique=SELECT_SINGLE)
 @MenuManage.describ('member.add_subscription')
 class LicenseAddModify(XferAddEditor):
     icon = "adherent.png"
@@ -469,7 +465,7 @@ class LicenseAddModify(XferAddEditor):
     caption_modify = _("Modify license")
 
 
-@ActionsManage.affect('License', 'delete')
+@ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", unique=SELECT_MULTI)
 @MenuManage.describ('member.add_subscription')
 class LicenseDel(XferDelete):
     icon = "adherent.png"
@@ -503,8 +499,7 @@ class AdherentStatistic(XferContainerCustom):
         sel.set_select_query(Season.objects.all())
         sel.set_value(working_season.id)
         sel.set_location(2, 0)
-        sel.set_action(
-            self.request, self.get_action('', ''), {'modal': FORMTYPE_REFRESH, 'close': CLOSE_NO})
+        sel.set_action(self.request, self.get_action('', ''), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
         self.add_component(sel)
         stat_result = working_season.get_statistic()
         if len(stat_result) == 0:
@@ -563,9 +558,9 @@ class AdherentStatistic(XferContainerCustom):
                         cmp += 1
                     grid.set_location(0, 4)
                     self.add_component(grid)
-        self.add_action(AdherentStatisticPrint.get_action(
-            _("Print"), "images/print.png"), {'close': CLOSE_NO, 'params': {'classname': self.__class__.__name__}})
-        self.add_action(WrapAction(_('Close'), 'images/close.png'), {})
+        self.add_action(AdherentStatisticPrint.get_action(TITLE_PRINT, "images/print.png"),
+                        close=CLOSE_NO, params={'classname': self.__class__.__name__})
+        self.add_action(WrapAction(TITLE_CLOSE, 'images/close.png'))
 
 
 @MenuManage.describ('member.change_adherent')

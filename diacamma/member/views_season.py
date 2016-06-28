@@ -27,12 +27,11 @@ from __future__ import unicode_literals
 from django.utils.translation import ugettext_lazy as _
 from django.db.models import Q
 
-from lucterios.framework.xferadvance import XferListEditor
+from lucterios.framework.xferadvance import XferListEditor, TITLE_DELETE, TITLE_MODIFY, TITLE_ADD, TITLE_EDIT
 from lucterios.framework.xferadvance import XferAddEditor
 from lucterios.framework.xferadvance import XferShowEditor
 from lucterios.framework.xferadvance import XferDelete
-from lucterios.framework.tools import FORMTYPE_NOMODAL, ActionsManage, MenuManage,\
-    SELECT_SINGLE, FORMTYPE_REFRESH, CLOSE_NO
+from lucterios.framework.tools import FORMTYPE_NOMODAL, ActionsManage, MenuManage, SELECT_SINGLE, FORMTYPE_REFRESH, CLOSE_NO, SELECT_MULTI, CLOSE_YES
 from lucterios.framework.xfergraphic import XferContainerAcknowledge
 from lucterios.framework.xfercomponents import XferCompLabelForm, XferCompSelect
 
@@ -49,8 +48,6 @@ class SeasonSubscription(XferListEditor):
     caption = _("Seasons and subscriptions")
 
     def fillresponse_header(self):
-        self.action_grid.append(
-            ('active', _("Active"), "images/ok.png", SELECT_SINGLE))
         self.new_tab(_('Season'))
         show_filter = self.getparam('show_filter', 0)
         lbl = XferCompLabelForm('lbl_showing')
@@ -62,7 +59,7 @@ class SeasonSubscription(XferListEditor):
         edt.set_value(show_filter)
         edt.set_location(1, 3)
         edt.set_action(self.request, self.get_action(),
-                       {'modal': FORMTYPE_REFRESH, 'close': CLOSE_NO})
+                       modal=FORMTYPE_REFRESH, close=CLOSE_NO)
         self.add_component(edt)
         self.filter = Q()
         if show_filter == 0:
@@ -78,11 +75,10 @@ class SeasonSubscription(XferListEditor):
     def fillresponse(self):
         XferListEditor.fillresponse(self)
         self.new_tab(_('Subscriptions'))
-        self.fill_grid(
-            self.get_max_row(), SubscriptionType, "subscriptiontype", SubscriptionType.objects.all())
+        self.fill_grid(self.get_max_row(), SubscriptionType, "subscriptiontype", SubscriptionType.objects.all())
 
 
-@ActionsManage.affect('Season', 'active')
+@ActionsManage.affect_grid(_("Active"), "images/ok.png", unique=SELECT_SINGLE)
 @MenuManage.describ('member.change_season')
 class SeasonActive(XferContainerAcknowledge):
     icon = "season.png"
@@ -94,7 +90,7 @@ class SeasonActive(XferContainerAcknowledge):
         self.item.set_has_actif()
 
 
-@ActionsManage.affect('Season', 'add')
+@ActionsManage.affect_grid(TITLE_ADD, "images/add.png")
 @MenuManage.describ('member.add_season')
 class SeasonAddModify(XferAddEditor):
     icon = "season.png"
@@ -104,7 +100,7 @@ class SeasonAddModify(XferAddEditor):
     caption_modify = _("Modify season")
 
 
-@ActionsManage.affect('Season', 'show')
+@ActionsManage.affect_grid(TITLE_EDIT, "images/show.png", unique=SELECT_SINGLE)
 @MenuManage.describ('member.change_season')
 class SeasonShow(XferShowEditor):
     icon = "season.png"
@@ -112,13 +108,9 @@ class SeasonShow(XferShowEditor):
     field_id = 'season'
     caption = _("Show season")
 
-    def fillresponse(self):
-        XferShowEditor.fillresponse(self)
-        self.add_action(SeasonDocummentClone.get_action(
-            _('Import doc.'), 'images/ok.png'), {'close': CLOSE_NO}, 0)
 
-
-@ActionsManage.affect('Document', 'add', 'edit')
+@ActionsManage.affect_grid(TITLE_ADD, "images/add.png")
+@ActionsManage.affect_grid(TITLE_MODIFY, "images/edit.png", unique=SELECT_SINGLE)
 @MenuManage.describ('member.change_season')
 class DocummentAddModify(XferAddEditor):
     icon = "season.png"
@@ -128,7 +120,7 @@ class DocummentAddModify(XferAddEditor):
     caption_modify = _("Modify document")
 
 
-@ActionsManage.affect('Document', 'delete')
+@ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", unique=SELECT_MULTI)
 @MenuManage.describ('member.change_season')
 class DocummentDel(XferDelete):
     icon = "season.png"
@@ -137,6 +129,7 @@ class DocummentDel(XferDelete):
     caption = _("Delete document")
 
 
+@ActionsManage.affect_grid(_('Import doc.'), "images/clone.png", unique=SELECT_SINGLE, close=CLOSE_NO)
 @MenuManage.describ('member.change_season')
 class SeasonDocummentClone(XferContainerAcknowledge):
     icon = "season.png"
@@ -148,7 +141,8 @@ class SeasonDocummentClone(XferContainerAcknowledge):
         self.item.clone_doc_need()
 
 
-@ActionsManage.affect('Period', 'edit', 'modify', 'add')
+@ActionsManage.affect_grid(TITLE_ADD, "images/add.png")
+@ActionsManage.affect_grid(TITLE_MODIFY, "images/edit.png", unique=SELECT_SINGLE)
 @MenuManage.describ('member.add_season')
 class PeriodAddModify(XferAddEditor):
     icon = "season.png"
@@ -158,7 +152,7 @@ class PeriodAddModify(XferAddEditor):
     caption_modify = _("Modify period")
 
 
-@ActionsManage.affect('Period', 'delete')
+@ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", unique=SELECT_MULTI)
 @MenuManage.describ('member.add_season')
 class PeriodDel(XferDelete):
     icon = "season.png"
@@ -167,7 +161,9 @@ class PeriodDel(XferDelete):
     caption = _("Delete period")
 
 
-@ActionsManage.affect('SubscriptionType', 'edit', 'modify', 'add')
+@ActionsManage.affect_grid(TITLE_ADD, "images/add.png")
+@ActionsManage.affect_grid(TITLE_MODIFY, "images/edit.png", unique=SELECT_SINGLE)
+@ActionsManage.affect_show(TITLE_MODIFY, "images/edit.png", close=CLOSE_YES)
 @MenuManage.describ('member.add_subscription')
 class SubscriptionTypeAddModify(XferAddEditor):
     icon = "season.png"
@@ -177,7 +173,7 @@ class SubscriptionTypeAddModify(XferAddEditor):
     caption_modify = _("Modify subscription")
 
 
-@ActionsManage.affect('SubscriptionType', 'show')
+@ActionsManage.affect_grid(TITLE_EDIT, "images/show.png", unique=SELECT_SINGLE)
 @MenuManage.describ('member.change_subscription')
 class SubscriptionTypeShow(XferShowEditor):
     icon = "season.png"
@@ -186,7 +182,7 @@ class SubscriptionTypeShow(XferShowEditor):
     caption = _("Show subscription")
 
 
-@ActionsManage.affect('SubscriptionType', 'delete')
+@ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", unique=SELECT_MULTI)
 @MenuManage.describ('member.delete_subscription')
 class SubscriptionTypeDel(XferDelete):
     icon = "season.png"

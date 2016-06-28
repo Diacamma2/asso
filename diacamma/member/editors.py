@@ -33,13 +33,11 @@ from lucterios.framework.editors import LucteriosEditor
 from lucterios.framework.xfercomponents import XferCompLabelForm, XferCompDate, XferCompFloat,\
     XferCompSelect, XferCompCheck, XferCompButton
 from lucterios.framework.error import LucteriosException, IMPORTANT
-from lucterios.framework.tools import CLOSE_NO, FORMTYPE_REFRESH, ActionsManage,\
-    SELECT_SINGLE, get_icon_path
+from lucterios.framework.tools import CLOSE_NO, FORMTYPE_REFRESH, ActionsManage, get_icon_path
 
 from lucterios.contacts.editors import IndividualEditor
 
-from diacamma.member.models import Period, Season, SubscriptionType, License, convert_date, same_day_months_after,\
-    Activity
+from diacamma.member.models import Period, Season, SubscriptionType, License, convert_date, same_day_months_after, Activity
 
 
 class SeasonEditor(LucteriosEditor):
@@ -89,11 +87,11 @@ class PeriodEditor(LucteriosEditor):
 class SubscriptionTypeEditor(LucteriosEditor):
 
     def edit(self, xfer):
+        from diacamma.invoice.views import ArticleList
         row_init = xfer.get_max_row() + 3
         btn = XferCompButton("btn_article")
         btn.set_location(3, row_init, 2)
-        btn.set_action(xfer.request, ActionsManage.get_act_changed(
-            'Article', 'list', _('Articles'), 'diacamma.invoice/images/article.png'), {'close': CLOSE_NO})
+        btn.set_action(xfer.request, ArticleList.get_action(_('Articles'), 'diacamma.invoice/images/article.png'), close=CLOSE_NO)
         xfer.add_component(btn)
 
 
@@ -141,9 +139,6 @@ class AdherentEditor(IndividualEditor):
         img = xfer.get_components('img')
         img.set_value(get_icon_path("diacamma.member/images/adherent.png"))
 
-        xfer.get_components('subscription').add_action(xfer.request, ActionsManage.get_act_changed(
-            'Subscription', 'bill', _('Bill'), 'images/ok.png'), {'close': CLOSE_NO, 'unique': SELECT_SINGLE})
-
         if xfer.item.current_subscription() is not None:
             xfer.tab = 1
             row_init = xfer.get_max_row() + 1
@@ -169,8 +164,7 @@ class AdherentEditor(IndividualEditor):
                 xfer.add_component(lbl)
                 btn = XferCompButton("btn_doc")
                 btn.set_location(4, row_init + 1, 1, row - row_init)
-                btn.set_action(xfer.request, ActionsManage.get_act_changed(
-                    "Adherent", "doc", _('Modify'), ''), {'close': CLOSE_NO})
+                btn.set_action(xfer.request, ActionsManage.get_action_url("Adherent", "Doc", xfer), close=CLOSE_NO)
                 xfer.add_component(btn)
 
 
@@ -219,19 +213,17 @@ class SubscriptionEditor(LucteriosEditor):
                 self.item.season = Season.current_season()
                 cmp_season.set_value(self.item.season.id)
             cmp_season.set_action(xfer.request, xfer.get_action(),
-                                  {'close': CLOSE_NO, 'modal': FORMTYPE_REFRESH})
+                                  close=CLOSE_NO, modal=FORMTYPE_REFRESH)
             if (last_subscription is not None) and (xfer.getparam('subscriptiontype') is None):
                 cmp_subscriptiontype.set_value(
                     last_subscription.subscriptiontype.id)
         if self.item.subscriptiontype_id is None:
             if len(cmp_subscriptiontype.select_list) == 0:
-                raise LucteriosException(
-                    IMPORTANT, _("No subscription type defined!"))
+                raise LucteriosException(IMPORTANT, _("No subscription type defined!"))
             cmp_subscriptiontype.get_reponse_xml()
             self.item.subscriptiontype = SubscriptionType.objects.get(
                 id=cmp_subscriptiontype.value)
-        cmp_subscriptiontype.set_action(xfer.request, xfer.get_action(),
-                                        {'close': CLOSE_NO, 'modal': FORMTYPE_REFRESH})
+        cmp_subscriptiontype.set_action(xfer.request, xfer.get_action(), close=CLOSE_NO, modal=FORMTYPE_REFRESH)
         row = xfer.get_max_row() + 1
         season = self.item.season
         if self.item.subscriptiontype.duration == 0:  # annually

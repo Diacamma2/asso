@@ -26,11 +26,13 @@ from __future__ import unicode_literals
 
 from django.utils.translation import ugettext_lazy as _
 
-from lucterios.framework.xferadvance import XferListEditor
+from lucterios.framework.xferadvance import XferListEditor, TITLE_MODIFY,\
+    TITLE_ADD, TITLE_DELETE
 from lucterios.framework.xferadvance import XferAddEditor
 from lucterios.framework.xferadvance import XferDelete
 from lucterios.framework.xfercomponents import XferCompButton
-from lucterios.framework.tools import FORMTYPE_NOMODAL, ActionsManage, MenuManage
+from lucterios.framework.tools import FORMTYPE_NOMODAL, ActionsManage, MenuManage,\
+    SELECT_SINGLE, SELECT_MULTI, CLOSE_NO
 from lucterios.CORE.parameters import Params
 from lucterios.CORE.views import ParamEdit
 
@@ -49,8 +51,8 @@ class EventConf(XferListEditor):
         Params.fill(self, param_lists, 1, 1, nb_col=1)
         btn = XferCompButton('editparam')
         btn.set_location(1, self.get_max_row() + 1, 2, 1)
-        btn.set_action(self.request, ParamEdit.get_action(
-            _('Modify'), 'images/edit.png'), {'close': 0, 'params': {'params': param_lists, 'nb_col': 1}})
+        btn.set_action(self.request, ParamEdit.get_action(TITLE_MODIFY, 'images/edit.png'),
+                       close=CLOSE_NO, params={'params': param_lists, 'nb_col': 1})
         self.add_component(btn)
 
     def fillresponse_body(self):
@@ -58,11 +60,11 @@ class EventConf(XferListEditor):
         self.fill_grid(0, DegreeType, "degreetype", DegreeType.objects.all())
         if Params.getvalue("event-subdegree-enable") == 1:
             self.new_tab(Params.getvalue("event-subdegree-text"))
-            self.fill_grid(
-                0, SubDegreeType, "subdegreetype", SubDegreeType.objects.all())
+            self.fill_grid(0, SubDegreeType, "subdegreetype", SubDegreeType.objects.all())
 
 
-@ActionsManage.affect('DegreeType', 'edit', 'add')
+@ActionsManage.affect_grid(TITLE_ADD, "images/add.png")
+@ActionsManage.affect_grid(TITLE_MODIFY, "images/edit.png", unique=SELECT_SINGLE)
 @MenuManage.describ('event.add_degreetype')
 class DegreeTypeAddModify(XferAddEditor):
     icon = "degree.png"
@@ -72,7 +74,7 @@ class DegreeTypeAddModify(XferAddEditor):
     caption_modify = _("Modify degree type")
 
 
-@ActionsManage.affect('DegreeType', 'delete')
+@ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", unique=SELECT_MULTI)
 @MenuManage.describ('event.delete_degreetype')
 class DegreeTypeDel(XferDelete):
     icon = "degree.png"
@@ -81,7 +83,8 @@ class DegreeTypeDel(XferDelete):
     caption = _("Delete degree type")
 
 
-@ActionsManage.affect('SubDegreeType', 'edit', 'add')
+@ActionsManage.affect_grid(TITLE_ADD, "images/add.png")
+@ActionsManage.affect_grid(TITLE_MODIFY, "images/edit.png", unique=SELECT_SINGLE)
 @MenuManage.describ('event.add_degreetype')
 class SubDegreeTypeAddModify(XferAddEditor):
     icon = "degree.png"
@@ -91,7 +94,7 @@ class SubDegreeTypeAddModify(XferAddEditor):
     caption_modify = _("Modify sub degree type")
 
 
-@ActionsManage.affect('SubDegreeType', 'delete')
+@ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", unique=SELECT_MULTI)
 @MenuManage.describ('event.delete_degreetype')
 class SubDegreeTypeDel(XferDelete):
     icon = "degree.png"

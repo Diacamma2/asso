@@ -340,10 +340,8 @@ class EventTest(LucteriosTest):
         self.factory.xfer = ParticipantOpen()
         self.call('/diacamma.event/participantOpen',
                   {"event": 1, 'participant': '3'}, False)
-        self.assert_observer(
-            'core.acknowledge', 'diacamma.event', 'participantOpen')
-        self.assert_attrib_equal(
-            "ACTION", "id", "diacamma.member/adherentShow")
+        self.assert_observer('core.acknowledge', 'diacamma.event', 'participantOpen')
+        self.assert_attrib_equal("ACTION", "id", "diacamma.member/adherentShow")
         self.assert_count_equal("ACTION/PARAM", 1)
         self.assert_xml_equal("ACTION/PARAM[@name='adherent']", "5")
 

@@ -25,15 +25,14 @@ from __future__ import unicode_literals
 
 from django.utils.translation import ugettext_lazy as _
 
-from diacamma.member.models import Activity, Age, Team
-
-from lucterios.framework.xferadvance import XferAddEditor, XferListEditor
+from lucterios.framework.xferadvance import XferAddEditor, XferListEditor, TITLE_MODIFY, TITLE_DELETE, TITLE_ADD
 from lucterios.framework.xferadvance import XferDelete
-from lucterios.framework.tools import ActionsManage, MenuManage,\
-    FORMTYPE_NOMODAL
-from lucterios.CORE.parameters import Params
+from lucterios.framework.tools import ActionsManage, MenuManage, FORMTYPE_NOMODAL, CLOSE_NO, SELECT_MULTI, SELECT_SINGLE
 from lucterios.framework.xfercomponents import XferCompButton
+from lucterios.CORE.parameters import Params
 from lucterios.CORE.views import ParamEdit
+
+from diacamma.member.models import Activity, Age, Team
 
 
 @MenuManage.describ('CORE.change_parameter', FORMTYPE_NOMODAL, 'member.conf', _('Management of member categories'))
@@ -48,8 +47,8 @@ class CategoryConf(XferListEditor):
         Params.fill(self, param_lists, 1, 1, nb_col=2)
         btn = XferCompButton('editparam')
         btn.set_location(1, self.get_max_row() + 1, 2, 1)
-        btn.set_action(self.request, ParamEdit.get_action(
-            _('Modify'), 'images/edit.png'), {'close': 0, 'params': {'params': param_lists, 'nb_col': 2}})
+        btn.set_action(self.request, ParamEdit.get_action(TITLE_MODIFY, 'images/edit.png'),
+                       close=CLOSE_NO, params={'params': param_lists, 'nb_col': 2})
         self.add_component(btn)
 
     def fillresponse_body(self):
@@ -64,7 +63,8 @@ class CategoryConf(XferListEditor):
             self.fill_grid(0, Activity, "activity", Activity.objects.all())
 
 
-@ActionsManage.affect('Age', 'edit', 'add')
+@ActionsManage.affect_grid(TITLE_ADD, "images/add.png")
+@ActionsManage.affect_grid(TITLE_MODIFY, "images/edit.png", unique=SELECT_SINGLE)
 @MenuManage.describ('CORE.add_parameter')
 class AgeAddModify(XferAddEditor):
     icon = "config.png"
@@ -74,7 +74,7 @@ class AgeAddModify(XferAddEditor):
     caption_modify = _("Modify age")
 
 
-@ActionsManage.affect('Age', 'delete')
+@ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", unique=SELECT_MULTI)
 @MenuManage.describ('CORE.add_parameter')
 class AgeDel(XferDelete):
     icon = "config.png"
@@ -83,7 +83,8 @@ class AgeDel(XferDelete):
     caption = _("Delete age")
 
 
-@ActionsManage.affect('Team', 'edit', 'add')
+@ActionsManage.affect_grid(TITLE_ADD, "images/add.png")
+@ActionsManage.affect_grid(TITLE_MODIFY, "images/edit.png", unique=SELECT_SINGLE)
 @MenuManage.describ('CORE.add_parameter')
 class TeamAddModify(XferAddEditor):
     icon = "config.png"
@@ -93,7 +94,7 @@ class TeamAddModify(XferAddEditor):
     caption_modify = _("Modify team")
 
 
-@ActionsManage.affect('Team', 'delete')
+@ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", unique=SELECT_MULTI)
 @MenuManage.describ('CORE.add_parameter')
 class TeamDel(XferDelete):
     icon = "config.png"
@@ -102,7 +103,8 @@ class TeamDel(XferDelete):
     caption = _("Delete team")
 
 
-@ActionsManage.affect('Activity', 'edit', 'add')
+@ActionsManage.affect_grid(TITLE_ADD, "images/add.png")
+@ActionsManage.affect_grid(TITLE_MODIFY, "images/edit.png", unique=SELECT_SINGLE)
 @MenuManage.describ('CORE.add_parameter')
 class ActivityAddModify(XferAddEditor):
     icon = "config.png"
@@ -112,7 +114,7 @@ class ActivityAddModify(XferAddEditor):
     caption_modify = _("Modify activity")
 
 
-@ActionsManage.affect('Activity', 'delete')
+@ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", unique=SELECT_MULTI)
 @MenuManage.describ('CORE.add_parameter')
 class ActivityDel(XferDelete):
     icon = "config.png"

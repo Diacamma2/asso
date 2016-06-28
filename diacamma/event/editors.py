@@ -28,11 +28,8 @@ from datetime import date
 from django.utils.translation import ugettext_lazy as _
 
 from lucterios.framework.editors import LucteriosEditor
-from lucterios.framework.tools import SELECT_SINGLE, SELECT_NONE
-from lucterios.framework.xfercomponents import DEFAULT_ACTION_LIST
 from lucterios.framework.error import LucteriosException, IMPORTANT
 
-from diacamma.event.models import Participant, Organizer
 from diacamma.member.models import Activity
 
 
@@ -71,37 +68,25 @@ parent.get('lbl_date_end').setVisible(type==1);
 """
 
     def show(self, xfer):
-        organizer = xfer.get_components('organizer')
         participant = xfer.get_components('participant')
         participant.change_type_header('is_subscripter', 'bool')
-        organizer.actions = []
         if self.item.status == 0:
-            organizer.add_actions(
-                xfer, action_list=[('responsible', _("Responsible"), "images/ok.png", SELECT_SINGLE)], model=Organizer)
-            organizer.add_actions(xfer, model=Organizer)
             participant.delete_header('degree_result_simple')
             participant.delete_header('subdegree_result')
             if self.item.event_type == 0:
                 participant.delete_header('comment')
                 participant.delete_action("diacamma.event/participantModify")
-            participant.add_actions(
-                xfer, action_list=[('addct', _("Add contact"), "images/add.png", SELECT_NONE)], model=Participant)
         else:
             participant.delete_header('current_degree')
-            participant.actions = []
-            participant.add_actions(
-                xfer, action_list=DEFAULT_ACTION_LIST[:1], model=Participant)
         img = xfer.get_components('img')
         if self.item.event_type == 1:
             participant.delete_header('degree_result_simple')
             participant.delete_header('subdegree_result')
             participant.delete_header('current_degree')
             xfer.caption = _("Show trainning/outing")
-            img.set_value(
-                "/static/diacamma.event/images/outing.png")
+            img.set_value("/static/diacamma.event/images/outing.png")
         else:
             xfer.caption = _("Show examination")
             xfer.remove_component('date_end')
             xfer.remove_component('lbl_date_end')
-            img.set_value(
-                "/static/diacamma.event/images/degree.png")
+            img.set_value("/static/diacamma.event/images/degree.png")

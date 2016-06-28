@@ -27,34 +27,30 @@ from __future__ import unicode_literals
 from django.utils.translation import ugettext_lazy as _
 from django.utils import six
 
-from lucterios.framework.xferadvance import XferListEditor
+from lucterios.framework.xferadvance import XferListEditor, TITLE_PRINT,\
+    TITLE_CLOSE, TITLE_DELETE, TITLE_MODIFY, TITLE_ADD, TITLE_EDIT, TITLE_OK, TITLE_CANCEL
 from lucterios.framework.xferadvance import XferAddEditor
 from lucterios.framework.xferadvance import XferShowEditor
 from lucterios.framework.xferadvance import XferDelete
 from lucterios.framework.xfersearch import XferSearchEditor
-from lucterios.framework.xfergraphic import XferContainerAcknowledge,\
-    XferContainerCustom
+from lucterios.framework.xfergraphic import XferContainerAcknowledge, XferContainerCustom
 from lucterios.framework.tools import FORMTYPE_NOMODAL, ActionsManage, MenuManage,\
-    SELECT_MULTI, CLOSE_NO, FORMTYPE_MODAL, WrapAction, CLOSE_YES,\
-    FORMTYPE_REFRESH
-from lucterios.framework.xfercomponents import XferCompLabelForm, XferCompImage,\
-    XferCompSelect, XferCompMemo
+    SELECT_MULTI, CLOSE_NO, FORMTYPE_MODAL, WrapAction, CLOSE_YES, FORMTYPE_REFRESH, SELECT_SINGLE
+from lucterios.framework.xfercomponents import XferCompLabelForm, XferCompImage, XferCompSelect, XferCompMemo
+from lucterios.framework.models import get_value_if_choices
 from lucterios.CORE.xferprint import XferPrintAction
 from lucterios.CORE.parameters import Params
 from lucterios.contacts.tools import ContactSelection
 from lucterios.contacts.models import Individual
 
 from diacamma.member.views import AdherentSelection
-
-from diacamma.event.models import Event, Organizer, Participant, Degree
 from diacamma.member.models import Season
-from lucterios.framework.models import get_value_if_choices
+from diacamma.event.models import Event, Organizer, Participant, Degree
 
 MenuManage.add_sub("event.actions", "association", "diacamma.event/images/event.png",
                    _("Events"), _("Management of events."), 80)
 
 
-@ActionsManage.affect('Event', 'list')
 @MenuManage.describ('event.change_event', FORMTYPE_NOMODAL, 'event.actions', _('Event manage'))
 class EventList(XferListEditor):
     icon = "event.png"
@@ -63,7 +59,6 @@ class EventList(XferListEditor):
     caption = _("Event")
 
 
-@ActionsManage.affect('Event', 'search')
 @MenuManage.describ('event.change_event', FORMTYPE_NOMODAL, 'event.actions', _('To find an event'))
 class EventSearch(XferSearchEditor):
     icon = "event.png"
@@ -72,7 +67,9 @@ class EventSearch(XferSearchEditor):
     caption = _("Search event")
 
 
-@ActionsManage.affect('Event', 'edit', 'modify', 'add')
+@ActionsManage.affect_grid(TITLE_ADD, "images/add.png")
+@ActionsManage.affect_grid(TITLE_MODIFY, "images/edit.png", unique=SELECT_SINGLE)
+@ActionsManage.affect_show(TITLE_MODIFY, "images/edit.png", close=CLOSE_YES, condition=lambda xfer: xfer.item.status == 0)
 @MenuManage.describ('event.add_event')
 class EventAddModify(XferAddEditor):
     icon = "event.png"
@@ -82,7 +79,7 @@ class EventAddModify(XferAddEditor):
     caption_modify = _("Modify event")
 
 
-@ActionsManage.affect('Event', 'show')
+@ActionsManage.affect_grid(TITLE_EDIT, "images/show.png", unique=SELECT_SINGLE)
 @MenuManage.describ('event.change_event')
 class EventShow(XferShowEditor):
     icon = "event.png"
@@ -90,20 +87,8 @@ class EventShow(XferShowEditor):
     field_id = 'event'
     caption = _("Show examination")
 
-    def fillresponse(self):
-        if self.item.status == 0:
-            if self.item.event_type == 0:
-                params = {}
-            else:
-                params = {'SAVE': ''}
-            self.action_list.insert(
-                0, ('valid', _("Validation"), "images/ok.png", CLOSE_NO, params))
-        else:
-            del self.action_list[0]
-        XferShowEditor.fillresponse(self)
 
-
-@ActionsManage.affect('Event', 'valid')
+@ActionsManage.affect_show(_("Validation"), "images/ok.png", close=CLOSE_NO, condition=lambda xfer: xfer.item.status == 0)
 @MenuManage.describ('event.add_event')
 class EventValid(XferContainerAcknowledge):
     icon = "degree.png"
@@ -113,7 +98,7 @@ class EventValid(XferContainerAcknowledge):
 
     def fillresponse(self):
         self.item.can_be_valid()
-        if self.getparam('SAVE') is None:
+        if (self.item.event_type == 0) and (self.getparam('SAVE') is None):
             dlg = self.create_custom()
             dlg.item = self.item
             img = XferCompImage('img')
@@ -156,17 +141,14 @@ class EventValid(XferContainerAcknowledge):
                 edt.set_value(participant.comment)
                 edt.set_location(4, row_id)
                 dlg.add_component(edt)
-
                 row_id += 1
-            dlg.add_action(self.get_action(
-                _('Ok'), "images/ok.png"), {'close': CLOSE_YES, 'params': {'SAVE': 'YES'}})
-            dlg.add_action(WrapAction(_('Cancel'), 'images/cancel.png'), {})
-        elif (self.getparam('SAVE') != '') or self.confirme(_("Do you want to validate this %s?") % get_value_if_choices(
-                self.item.event_type, self.item._meta.get_field('event_type'))):
+            dlg.add_action(self.get_action(TITLE_OK, "images/ok.png"), close=CLOSE_YES, params={'SAVE': 'YES'})
+            dlg.add_action(WrapAction(TITLE_CANCEL, 'images/cancel.png'))
+        elif (self.getparam('SAVE') == 'YES') or self.confirme(_("Do you want to validate this %s?") % get_value_if_choices(self.item.event_type, self.item._meta.get_field('event_type'))):
             self.item.validate(self)
 
 
-@ActionsManage.affect('Event', 'delete')
+@ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", unique=SELECT_MULTI)
 @MenuManage.describ('event.delete_event')
 class EventDel(XferDelete):
     icon = "degree.png"
@@ -175,7 +157,7 @@ class EventDel(XferDelete):
     caption = _("Delete examination")
 
 
-@ActionsManage.affect('Event', 'print')
+@ActionsManage.affect_show(TITLE_PRINT, "images/print.png")
 @MenuManage.describ('event.change_event')
 class EventPrint(XferPrintAction):
     icon = "degree.png"
@@ -199,17 +181,18 @@ class OrganizerSave(XferContainerAcknowledge):
                 event_id=event, contact_id=contact_id)
 
 
-@ActionsManage.affect('Organizer', 'add')
+@ActionsManage.affect_grid(TITLE_ADD, "images/add.png", condition=lambda xfer, gridname='': xfer.item.status == 0)
 @MenuManage.describ('event.add_event')
 class OrganizerAddModify(ContactSelection):
     icon = "degree.png"
     caption = _("Add organizer")
     mode_select = SELECT_MULTI
     select_class = OrganizerSave
+    model = Organizer
     inital_model = Individual
 
 
-@ActionsManage.affect('Organizer', 'delete')
+@ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", unique=SELECT_MULTI, condition=lambda xfer, gridname='': xfer.item.status == 0)
 @MenuManage.describ('event.add_event')
 class OrganizerDel(XferDelete):
     icon = "degree.png"
@@ -218,7 +201,7 @@ class OrganizerDel(XferDelete):
     caption = _("Delete organizer")
 
 
-@ActionsManage.affect('Organizer', 'responsible')
+@ActionsManage.affect_grid(_("Responsible"), "images/ok.png", unique=SELECT_SINGLE, condition=lambda xfer, gridname='': xfer.item.status == 0)
 @MenuManage.describ('event.add_event')
 class OrganizerResponsible(XferContainerAcknowledge):
     icon = "degree.png"
@@ -246,7 +229,7 @@ class ParticipantSave(XferContainerAcknowledge):
                     event_id=event, contact_id=contact_id)
 
 
-@ActionsManage.affect('Participant', 'show')
+@ActionsManage.affect_grid(TITLE_EDIT, "images/show.png", unique=SELECT_SINGLE)
 @MenuManage.describ('event.change_event')
 class ParticipantOpen(XferContainerAcknowledge):
     icon = "degree.png"
@@ -258,30 +241,32 @@ class ParticipantOpen(XferContainerAcknowledge):
         current_contact = self.item.contact.get_final_child()
         modal_name = current_contact.__class__.__name__
         field_id = modal_name.lower()
-        self.redirect_action(ActionsManage.get_act_changed(modal_name, 'show', '', ''), {
-                             'modal': FORMTYPE_MODAL, 'close': CLOSE_NO, 'params': {field_id: six.text_type(current_contact.id)}})
+        self.redirect_action(ActionsManage.get_action_url(modal_name, 'Show', self), modal=FORMTYPE_MODAL,
+                             close=CLOSE_NO, params={field_id: six.text_type(current_contact.id)})
 
 
-@ActionsManage.affect('Participant', 'add')
+@ActionsManage.affect_grid(TITLE_ADD, "images/add.png", condition=lambda xfer, gridname='': hasattr(xfer.item, 'status') and (xfer.item.status == 0))
 @MenuManage.describ('event.add_event')
 class ParticipantAdd(AdherentSelection):
     icon = "degree.png"
     caption = _("Add participant")
     mode_select = SELECT_MULTI
+    model = Participant
     select_class = ParticipantSave
 
 
-@ActionsManage.affect('Participant', 'addct')
+@ActionsManage.affect_grid(_("Add contact"), "images/add.png", condition=lambda xfer, gridname='': xfer.item.status == 0)
 @MenuManage.describ('event.add_event')
 class ParticipantAddContact(ContactSelection):
     icon = "degree.png"
     caption = _("Add participant")
     mode_select = SELECT_MULTI
     select_class = ParticipantSave
+    model = Participant
     inital_model = Individual
 
 
-@ActionsManage.affect('Participant', 'edit')
+@ActionsManage.affect_grid(TITLE_MODIFY, "images/edit.png", unique=SELECT_SINGLE, condition=lambda xfer, gridname='': (xfer.item.status == 0) and (xfer.item.event_type == 1))
 @MenuManage.describ('event.add_event')
 class ParticipantModify(XferAddEditor):
     icon = "degree.png"
@@ -292,7 +277,7 @@ class ParticipantModify(XferAddEditor):
     redirect_to_show = None
 
 
-@ActionsManage.affect('Participant', 'delete')
+@ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", unique=SELECT_MULTI, condition=lambda xfer, gridname='': xfer.item.status == 0)
 @MenuManage.describ('event.add_event')
 class ParticipantDel(XferDelete):
     icon = "degree.png"
@@ -326,8 +311,7 @@ class DegreeStatistic(XferContainerCustom):
         sel.set_select_query(Season.objects.all())
         sel.set_value(working_season.id)
         sel.set_location(2, 0)
-        sel.set_action(
-            self.request, self.get_action('', ''), {'modal': FORMTYPE_REFRESH, 'close': CLOSE_NO})
+        sel.set_action(self.request, self.get_action('', ''), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
         self.add_component(sel)
         stat_result = Degree.get_statistic(working_season)
         if len(stat_result) == 0:
@@ -379,9 +363,9 @@ class DegreeStatistic(XferContainerCustom):
             lab.set_value_as_name(six.text_type(subtotal))
             lab.set_location(2, pos_y)
             self.add_component(lab)
-        self.add_action(DegreeStatisticPrint.get_action(
-            _("Print"), "images/print.png"), {'close': CLOSE_NO, 'params': {'classname': self.__class__.__name__}})
-        self.add_action(WrapAction(_('Close'), 'images/close.png'), {})
+        self.add_action(DegreeStatisticPrint.get_action(TITLE_PRINT, "images/print.png"),
+                        close=CLOSE_NO, params={'classname': self.__class__.__name__})
+        self.add_action(WrapAction(TITLE_CLOSE, 'images/close.png'))
 
 
 @MenuManage.describ('event.change_event')
