@@ -416,7 +416,7 @@ class SubscriptionAddModify(XferAddEditor):
     field_id = 'subscription'
     caption_add = _("Add subscription")
     caption_modify = _("Modify subscription")
-    redirect_to_show = 'bill'
+    redirect_to_show = 'Bill'
 
 
 @ActionsManage.affect_grid(TITLE_EDIT, "images/show.png", unique=SELECT_SINGLE)
