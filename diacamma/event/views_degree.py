@@ -47,7 +47,7 @@ def show_contact_degree(contact, xfer):
             xfer.new_tab(_("Degree"))
             grid = XferCompGrid('degrees')
             grid.set_model(degrees, None, xfer)
-            grid.add_actions(xfer, model=Degree)
+            grid.add_action_notified(xfer, Degree)
             grid.set_location(0, xfer.get_max_row() + 1, 2)
             grid.set_size(200, 500)
             xfer.add_component(grid)
