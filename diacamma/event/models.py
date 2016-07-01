@@ -44,6 +44,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from datetime import date
 from lucterios.framework.signal_and_lock import Signal
 from lucterios.CORE.models import Parameter
+from django_fsm import transition, FSMIntegerField
 
 
 class DegreeType(LucteriosModel):
@@ -121,7 +122,7 @@ class Event(LucteriosModel):
         'activity'), null=False, default=None, db_index=True, on_delete=models.PROTECT)
     date = models.DateField(verbose_name=_('date'), null=False)
     comment = models.TextField(_('comment'), blank=False)
-    status = models.IntegerField(verbose_name=_('status'), choices=(
+    status = FSMIntegerField(verbose_name=_('status'), choices=(
         (0, _('building')), (1, _('valid'))), null=False, default=0, db_index=True)
     event_type = models.IntegerField(verbose_name=_('event type'), choices=(
         (0, _('examination')), (1, _('trainning/outing'))), null=False, default=0, db_index=True)
@@ -176,7 +177,14 @@ class Event(LucteriosModel):
             return _('%s validated!') % self.event_type_txt
         return ''
 
-    def can_be_valid(self):
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        if self.event_type == 0:
+            self.date_end = None
+        elif (self.date_end is None) or (self.date_end < self.date):
+            self.date_end = self.date
+        return LucteriosModel.save(self, force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
+
+    def chech_validity(self):
         msg = ''
         if self.status > 0:
             msg = _('%s validated!') % get_value_if_choices(
@@ -185,26 +193,22 @@ class Event(LucteriosModel):
             msg = _('no responsible!')
         elif len(self.participant_set.all()) == 0:
             msg = _('no participant!')
+        return msg
+
+    def can_be_valid(self):
+        msg = self.chech_validity()
         if msg != '':
             raise LucteriosException(IMPORTANT, msg)
 
-    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
-        if self.event_type == 0:
-            self.date_end = None
-        elif (self.date_end is None) or (self.date_end < self.date):
-            self.date_end = self.date
-        return LucteriosModel.save(self, force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
+    transitionname__validate = _("Validation")
 
-    def validate(self, xfer):
-        if self.status == 0:
-            for participant in self.participant_set.all():
-                participant.give_result(xfer.getparam('degree_%d' % participant.id, 0),
-                                        xfer.getparam(
-                                            'subdegree_%d' % participant.id, 0),
-                                        xfer.getparam('comment_%d' % participant.id, ''))
-                participant.create_bill()
-            self.status = 1
-            self.save()
+    @transition(field=status, source=0, target=1, conditions=[lambda item:item.chech_validity() == ''])
+    def validate(self):
+        for participant in self.participant_set.all():
+            participant.give_result(self.xfer.getparam('degree_%d' % participant.id, 0),
+                                    self.xfer.getparam('subdegree_%d' % participant.id, 0),
+                                    self.xfer.getparam('comment_%d' % participant.id, ''))
+            participant.create_bill()
 
     class Meta(object):
         verbose_name = _('event')

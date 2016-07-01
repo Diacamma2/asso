@@ -38,7 +38,7 @@ from diacamma.event.test_tools import default_event_params, add_default_degree
 from diacamma.event.views import EventList, EventAddModify, EventDel, EventShow,\
     OrganizerAddModify, OrganizerSave, OrganizerResponsible, OrganizerDel,\
     ParticipantAdd, ParticipantSave, ParticipantDel, ParticipantOpen,\
-    EventValid, ParticipantModify
+    EventTransition, ParticipantModify
 from diacamma.invoice.views import BillList
 
 
@@ -350,8 +350,8 @@ class EventTest(LucteriosTest):
         self.call('/diacamma.event/eventAddModify',
                   {"SAVE": "YES", "date": "2014-10-12", "activity": "1", "event_type": 0, "comment": "new examination", 'default_article': 0}, False)
 
-        self.factory.xfer = EventValid()
-        self.call('/diacamma.event/eventShow', {"event": 1}, False)
+        self.factory.xfer = EventTransition()
+        self.call('/diacamma.event/eventShow', {"event": 1, 'TRANSITION': 'validate'}, False)
         self.assert_observer(
             'core.exception', 'diacamma.event', 'eventShow')
 
@@ -361,8 +361,8 @@ class EventTest(LucteriosTest):
         self.assert_observer(
             'core.acknowledge', 'diacamma.event', 'organizerSave')
 
-        self.factory.xfer = EventValid()
-        self.call('/diacamma.event/eventShow', {"event": 1}, False)
+        self.factory.xfer = EventTransition()
+        self.call('/diacamma.event/eventShow', {"event": 1, 'TRANSITION': 'validate'}, False)
         self.assert_observer(
             'core.exception', 'diacamma.event', 'eventShow')
 
@@ -372,8 +372,8 @@ class EventTest(LucteriosTest):
         self.assert_observer(
             'core.acknowledge', 'diacamma.event', 'organizerResponsible')
 
-        self.factory.xfer = EventValid()
-        self.call('/diacamma.event/eventShow', {"event": 1}, False)
+        self.factory.xfer = EventTransition()
+        self.call('/diacamma.event/eventShow', {"event": 1, 'TRANSITION': 'validate'}, False)
         self.assert_observer(
             'core.exception', 'diacamma.event', 'eventShow')
 
@@ -383,8 +383,8 @@ class EventTest(LucteriosTest):
         self.assert_observer(
             'core.acknowledge', 'diacamma.event', 'participantSave')
 
-        self.factory.xfer = EventValid()
-        self.call('/diacamma.event/eventShow', {"event": 1}, False)
+        self.factory.xfer = EventTransition()
+        self.call('/diacamma.event/eventShow', {"event": 1, 'TRANSITION': 'validate'}, False)
         self.assert_observer(
             'core.custom', 'diacamma.event', 'eventShow')
         self.assert_count_equal('COMPONENTS/*', 7 + 5 * 3)
@@ -410,10 +410,10 @@ class EventTest(LucteriosTest):
         self.assert_xml_equal(
             'COMPONENTS/MEMO[@name="comment_3"]', "Epreuve 1:{[br/]}Epreuve 2:{[br/]}")
 
-        self.factory.xfer = EventValid()
+        self.factory.xfer = EventTransition()
         self.call('/diacamma.event/eventShow',
-                  {"event": 1, 'SAVE': 'YES', 'comment_1': 'trop nul!', 'degree_2': 5, 'comment_2': 'ça va...',
-                   'degree_3': 3, 'subdegree_3': 4, 'comment_3': 'bien :)'}, False)
+                  {"event": 1, 'CONFIRME': 'YES', 'comment_1': 'trop nul!', 'degree_2': 5, 'comment_2': 'ça va...',
+                   'degree_3': 3, 'subdegree_3': 4, 'comment_3': 'bien :)', 'TRANSITION': 'validate'}, False)
         self.assert_observer(
             'core.acknowledge', 'diacamma.event', 'eventShow')
 
@@ -563,8 +563,8 @@ class EventTest(LucteriosTest):
         self.assert_xml_equal(
             'COMPONENTS/GRID[@name="degrees"]/RECORD[2]/VALUE[@name="date"]', "21 septembre 2010")
 
-        self.factory.xfer = EventValid()
-        self.call('/diacamma.event/eventShow', {"event": 1}, False)
+        self.factory.xfer = EventTransition()
+        self.call('/diacamma.event/eventShow', {"event": 1, 'TRANSITION': 'validate'}, False)
         self.assert_observer(
             'core.exception', 'diacamma.event', 'eventShow')
 
@@ -635,8 +635,8 @@ class EventTest(LucteriosTest):
         self.assert_observer(
             'core.acknowledge', 'diacamma.event', 'participantSave')
 
-        self.factory.xfer = EventValid()
-        self.call('/diacamma.event/eventShow', {"event": 1}, False)
+        self.factory.xfer = EventTransition()
+        self.call('/diacamma.event/eventShow', {"event": 1, 'TRANSITION': 'validate'}, False)
         self.assert_observer(
             'core.custom', 'diacamma.event', 'eventShow')
         self.assert_count_equal('COMPONENTS/*', 7 + 4 * 3)
@@ -656,10 +656,10 @@ class EventTest(LucteriosTest):
         self.assert_xml_equal(
             'COMPONENTS/MEMO[@name="comment_3"]', "Epreuve 1:{[br/]}Epreuve 2:{[br/]}")
 
-        self.factory.xfer = EventValid()
+        self.factory.xfer = EventTransition()
         self.call('/diacamma.event/eventShow',
-                  {"event": 1, 'SAVE': 'YES', 'comment_1': 'trop nul!', 'degree_2': 5, 'comment_2': 'ça va...',
-                   'degree_3': 3, 'comment_3': 'bien :)'}, False)
+                  {"event": 1, 'CONFIRME': 'YES', 'comment_1': 'trop nul!', 'degree_2': 5, 'comment_2': 'ça va...',
+                   'degree_3': 3, 'comment_3': 'bien :)', 'TRANSITION': 'validate'}, False)
         self.assert_observer(
             'core.acknowledge', 'diacamma.event', 'eventShow')
 
@@ -764,14 +764,14 @@ class EventTest(LucteriosTest):
         self.assert_xml_equal(
             'COMPONENTS/LABELFORM[@name="default_article.ref_price"]', "---")
 
-        self.factory.xfer = EventValid()
-        self.call('/diacamma.event/eventShow', {"event": 1, 'SAVE': ''}, False)
+        self.factory.xfer = EventTransition()
+        self.call('/diacamma.event/eventShow', {"event": 1, 'TRANSITION': 'validate'}, False)
         self.assert_observer(
             'core.dialogbox', 'diacamma.event', 'eventShow')
 
-        self.factory.xfer = EventValid()
+        self.factory.xfer = EventTransition()
         self.call('/diacamma.event/eventShow',
-                  {"event": 1, 'SAVE': 'YES'}, False)
+                  {"event": 1, 'CONFIRME': 'YES', 'TRANSITION': 'validate'}, False)
         self.assert_observer(
             'core.acknowledge', 'diacamma.event', 'eventShow')
 
@@ -903,9 +903,9 @@ class EventTest(LucteriosTest):
         self.assert_count_equal('COMPONENTS/GRID[@name="bill"]/RECORD', 0)
         self.assert_count_equal('COMPONENTS/GRID[@name="bill"]/HEADER', 7)
 
-        self.factory.xfer = EventValid()
+        self.factory.xfer = EventTransition()
         self.call('/diacamma.event/eventShow',
-                  {"event": 1, 'SAVE': 'YES'}, False)
+                  {"event": 1, 'CONFIRME': 'YES', 'TRANSITION': 'validate'}, False)
         self.assert_observer(
             'core.acknowledge', 'diacamma.event', 'eventShow')
 

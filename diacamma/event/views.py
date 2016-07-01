@@ -28,7 +28,8 @@ from django.utils.translation import ugettext_lazy as _
 from django.utils import six
 
 from lucterios.framework.xferadvance import XferListEditor, TITLE_PRINT,\
-    TITLE_CLOSE, TITLE_DELETE, TITLE_MODIFY, TITLE_ADD, TITLE_EDIT, TITLE_OK, TITLE_CANCEL
+    TITLE_CLOSE, TITLE_DELETE, TITLE_MODIFY, TITLE_ADD, TITLE_EDIT, TITLE_OK, TITLE_CANCEL,\
+    XferTransition
 from lucterios.framework.xferadvance import XferAddEditor
 from lucterios.framework.xferadvance import XferShowEditor
 from lucterios.framework.xferadvance import XferDelete
@@ -88,64 +89,62 @@ class EventShow(XferShowEditor):
     caption = _("Show examination")
 
 
-@ActionsManage.affect_show(_("Validation"), "images/ok.png", close=CLOSE_NO, condition=lambda xfer: xfer.item.status == 0)
+@ActionsManage.affect_transition("status")
 @MenuManage.describ('event.add_event')
-class EventValid(XferContainerAcknowledge):
+class EventTransition(XferTransition):
     icon = "degree.png"
     model = Event
     field_id = 'event'
-    caption = _("Validation of an examination")
 
-    def fillresponse(self):
+    def fill_dlg(self):
         self.item.can_be_valid()
-        if (self.item.event_type == 0) and (self.getparam('SAVE') is None):
-            dlg = self.create_custom()
-            dlg.item = self.item
-            img = XferCompImage('img')
-            img.set_value(self.icon_path())
-            img.set_location(0, 0, 1, 3)
-            dlg.add_component(img)
-            lbl = XferCompLabelForm('title')
-            lbl.set_value_as_title(self.caption)
-            lbl.set_location(1, 0, 6)
+        dlg = self.create_custom()
+        dlg.item = self.item
+        img = XferCompImage('img')
+        img.set_value(self.icon_path())
+        img.set_location(0, 0, 1, 3)
+        dlg.add_component(img)
+        lbl = XferCompLabelForm('title')
+        lbl.set_value_as_title(self.caption)
+        lbl.set_location(1, 0, 6)
+        dlg.add_component(lbl)
+        dlg.fill_from_model(1, 1, True, ['activity', 'date'])
+        lbl = XferCompLabelForm('sep')
+        lbl.set_value("{[hr/]}")
+        lbl.set_location(0, 4, 7)
+        dlg.add_component(lbl)
+        row_id = 5
+        for participant in self.item.participant_set.all():
+            lbl = XferCompLabelForm('name_%d' % participant.id)
+            lbl.set_value_as_name(six.text_type(participant))
+            lbl.set_location(0, row_id)
             dlg.add_component(lbl)
-            dlg.fill_from_model(1, 1, True, ['activity', 'date'])
-            lbl = XferCompLabelForm('sep')
-            lbl.set_value("{[hr/]}")
-            lbl.set_location(0, 4, 7)
+            lbl = XferCompLabelForm('current_%d' % participant.id)
+            lbl.set_value(participant.current_degree)
+            lbl.set_location(1, row_id)
             dlg.add_component(lbl)
-            row_id = 5
-            for participant in self.item.participant_set.all():
-                lbl = XferCompLabelForm('name_%d' % participant.id)
-                lbl.set_value_as_name(six.text_type(participant))
-                lbl.set_location(0, row_id)
-                dlg.add_component(lbl)
-
-                lbl = XferCompLabelForm('current_%d' % participant.id)
-                lbl.set_value(participant.current_degree)
-                lbl.set_location(1, row_id)
-                dlg.add_component(lbl)
-
-                sel = XferCompSelect('degree_%d' % participant.id)
-                sel.set_select_query(participant.allow_degree())
-                sel.set_location(2, row_id)
+            sel = XferCompSelect('degree_%d' % participant.id)
+            sel.set_select_query(participant.allow_degree())
+            sel.set_location(2, row_id)
+            dlg.add_component(sel)
+            if Params.getvalue("event-subdegree-enable") == 1:
+                sel = XferCompSelect('subdegree_%d' % participant.id)
+                sel.set_select_query(participant.allow_subdegree())
+                sel.set_location(3, row_id)
                 dlg.add_component(sel)
+            edt = XferCompMemo('comment_%d' % participant.id)
+            edt.set_value(participant.comment)
+            edt.set_location(4, row_id)
+            dlg.add_component(edt)
+            row_id += 1
+        dlg.add_action(self.get_action(TITLE_OK, "images/ok.png"), close=CLOSE_YES, params={'CONFIRME': 'YES'})
+        dlg.add_action(WrapAction(TITLE_CANCEL, 'images/cancel.png'))
 
-                if Params.getvalue("event-subdegree-enable") == 1:
-                    sel = XferCompSelect('subdegree_%d' % participant.id)
-                    sel.set_select_query(participant.allow_subdegree())
-                    sel.set_location(3, row_id)
-                    dlg.add_component(sel)
-
-                edt = XferCompMemo('comment_%d' % participant.id)
-                edt.set_value(participant.comment)
-                edt.set_location(4, row_id)
-                dlg.add_component(edt)
-                row_id += 1
-            dlg.add_action(self.get_action(TITLE_OK, "images/ok.png"), close=CLOSE_YES, params={'SAVE': 'YES'})
-            dlg.add_action(WrapAction(TITLE_CANCEL, 'images/cancel.png'))
-        elif (self.getparam('SAVE') == 'YES') or self.confirme(_("Do you want to validate this %s?") % get_value_if_choices(self.item.event_type, self.item._meta.get_field('event_type'))):
-            self.item.validate(self)
+    def fill_confirm(self, transition, trans):
+        if (transition == 'validate') and (self.item.event_type == 0) and (self.getparam('CONFIRME') is None):
+            self.fill_dlg()
+        else:
+            XferTransition.fill_confirm(self, transition, trans)
 
 
 @ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", unique=SELECT_MULTI)
@@ -201,7 +200,7 @@ class OrganizerDel(XferDelete):
     caption = _("Delete organizer")
 
 
-@ActionsManage.affect_grid(_("Responsible"), "images/ok.png", unique=SELECT_SINGLE, condition=lambda xfer, gridname='': xfer.item.status == 0)
+@ActionsManage.affect_grid(_("Responsible"), "images/ok.png", unique=SELECT_SINGLE, intop=True, condition=lambda xfer, gridname='': xfer.item.status == 0)
 @MenuManage.describ('event.add_event')
 class OrganizerResponsible(XferContainerAcknowledge):
     icon = "degree.png"
