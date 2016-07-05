@@ -39,8 +39,9 @@ from diacamma.member.test_tools import default_season, default_financial, defaul
 from diacamma.member.views import AdherentActiveList, AdherentAddModify, AdherentShow,\
     SubscriptionAddModify, SubscriptionShow, LicenseAddModify, LicenseDel,\
     AdherentDoc, AdherentLicense, AdherentLicenseSave, AdherentStatistic,\
-    AdherentRenewList, AdherentRenew
-from diacamma.invoice.views import BillList
+    AdherentRenewList, AdherentRenew, SubscriptionTransition
+from diacamma.invoice.views import BillList, BillTransition, BillFromQuotation,\
+    BillAddModify
 
 
 class AdherentTest(LucteriosTest):
@@ -262,6 +263,10 @@ class AdherentTest(LucteriosTest):
             'COMPONENTS/*', 17)
         self.assert_xml_equal(
             'COMPONENTS/SELECT[@name="season"]', '10')
+        self.assert_count_equal(
+            'COMPONENTS/SELECT[@name="status"]/CASE', 2)
+        self.assert_xml_equal(
+            'COMPONENTS/SELECT[@name="status"]', '2')
         self.assert_xml_equal(
             'COMPONENTS/SELECT[@name="subscriptiontype"]', '1')
         self.assert_xml_equal(
@@ -269,7 +274,7 @@ class AdherentTest(LucteriosTest):
 
         self.factory.xfer = SubscriptionAddModify()
         self.call('/diacamma.member/subscriptionAddModify',
-                  {'SAVE': 'YES', 'adherent': 2, 'dateref': '2014-10-01', 'subscriptiontype': 1, 'season': 10, 'team': 2, 'activity': 1, 'value': 'abc123'}, False)
+                  {'SAVE': 'YES', 'adherent': 2, 'status': 2, 'dateref': '2014-10-01', 'subscriptiontype': 1, 'season': 10, 'team': 2, 'activity': 1, 'value': 'abc123'}, False)
         self.assert_observer(
             'core.acknowledge', 'diacamma.member', 'subscriptionAddModify')
 
@@ -282,6 +287,8 @@ class AdherentTest(LucteriosTest):
             'COMPONENTS/GRID[@name="subscription"]/RECORD', 1)
         self.assert_xml_equal(
             'COMPONENTS/GRID[@name="subscription"]/RECORD[1]/VALUE[@name="season"]', "2009/2010")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="subscription"]/RECORD[1]/VALUE[@name="status"]', "validé")
         self.assert_xml_equal(
             'COMPONENTS/GRID[@name="subscription"]/RECORD[1]/VALUE[@name="subscriptiontype"]', "Annually")
         self.assert_xml_equal(
@@ -427,7 +434,7 @@ class AdherentTest(LucteriosTest):
 
         self.factory.xfer = SubscriptionAddModify()
         self.call('/diacamma.member/subscriptionAddModify',
-                  {'SAVE': 'YES', 'adherent': 2, 'dateref': '2014-10-01', 'subscriptiontype': 1, 'season': 10, 'team': 2, 'activity': 1, 'value': 'abc123'}, False)
+                  {'SAVE': 'YES', 'status': 2, 'adherent': 2, 'dateref': '2014-10-01', 'subscriptiontype': 1, 'season': 10, 'team': 2, 'activity': 1, 'value': 'abc123'}, False)
         self.assert_observer(
             'core.acknowledge', 'diacamma.member', 'subscriptionAddModify')
 
@@ -437,6 +444,8 @@ class AdherentTest(LucteriosTest):
         self.assert_observer(
             'core.custom', 'diacamma.member', 'subscriptionShow')
         self.assert_count_equal('COMPONENTS/*', 15)
+        self.assert_xml_equal(
+            'COMPONENTS/LABELFORM[@name="status"]', 'validé')
         self.assert_count_equal(
             'COMPONENTS/GRID[@name="license"]/HEADER', 3)
         self.assert_xml_equal(
@@ -533,6 +542,8 @@ class AdherentTest(LucteriosTest):
         self.assert_observer('core.custom', 'diacamma.invoice', 'billList')
         self.assert_count_equal('COMPONENTS/GRID[@name="bill"]/RECORD', 1)
         self.assert_count_equal('COMPONENTS/GRID[@name="bill"]/HEADER', 7)
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="bill"]/RECORD[1]/VALUE[@name="bill_type"]', "facture")
         self.assert_xml_equal(
             'COMPONENTS/GRID[@name="bill"]/RECORD[1]/VALUE[@name="total"]', "76.44€")
 
@@ -1211,3 +1222,218 @@ class AdherentTest(LucteriosTest):
         self.call('/diacamma.invoice/billList', {}, False)
         self.assert_observer('core.custom', 'diacamma.invoice', 'billList')
         self.assert_count_equal('COMPONENTS/GRID[@name="bill"]/RECORD', 10)
+
+    def test_status_subscription(self):
+        default_adherents()
+        default_subscription()
+
+        self.factory.xfer = BillList()
+        self.call('/diacamma.invoice/billList', {}, False)
+        self.assert_observer('core.custom', 'diacamma.invoice', 'billList')
+        self.assert_count_equal('COMPONENTS/GRID[@name="bill"]/RECORD', 0)
+        self.assert_count_equal('COMPONENTS/GRID[@name="bill"]/HEADER', 7)
+
+        self.factory.xfer = SubscriptionAddModify()
+        self.call('/diacamma.member/subscriptionAddModify',
+                  {'SAVE': 'YES', 'status': 1, 'adherent': 2, 'dateref': '2014-10-01', 'subscriptiontype': 1, 'season': 10, 'team': 2, 'activity': 1, 'value': 'abc123'}, False)
+        self.assert_observer(
+            'core.acknowledge', 'diacamma.member', 'subscriptionAddModify')
+
+        self.factory.xfer = SubscriptionShow()
+        self.call('/diacamma.member/subscriptionShow',
+                  {'adherent': 2, 'dateref': '2014-10-01', 'subscription': 1}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.member', 'subscriptionShow')
+        self.assert_count_equal('COMPONENTS/*', 15)
+        self.assert_xml_equal(
+            'COMPONENTS/LABELFORM[@name="status"]', 'en création')
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="license"]/HEADER', 3)
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="license"]/HEADER[@name="team"]', "group")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="license"]/HEADER[@name="activity"]', "passion")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="license"]/HEADER[@name="value"]', "N° licence")
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="license"]/RECORD', 1)
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="license"]/RECORD[1]/VALUE[@name="team"]', "team2")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="license"]/RECORD[1]/VALUE[@name="activity"]', "activity1")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="license"]/RECORD[1]/VALUE[@name="value"]', "abc123")
+
+        self.factory.xfer = AdherentActiveList()
+        self.call('/diacamma.member/adherentList', {'dateref': '2009-10-01'}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentList')
+        self.assert_count_equal('COMPONENTS/GRID[@name="adherent"]/RECORD', 1)
+
+        self.factory.xfer = AdherentActiveList()
+        self.call('/diacamma.member/adherentList', {'dateref': '2009-10-01', 'status': 1}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentList')
+        self.assert_count_equal('COMPONENTS/GRID[@name="adherent"]/RECORD', 1)
+
+        self.factory.xfer = AdherentActiveList()
+        self.call('/diacamma.member/adherentList', {'dateref': '2009-10-01', 'status': 2}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentList')
+        self.assert_count_equal('COMPONENTS/GRID[@name="adherent"]/RECORD', 0)
+
+        self.factory.xfer = BillList()
+        self.call('/diacamma.invoice/billList', {}, False)
+        self.assert_observer('core.custom', 'diacamma.invoice', 'billList')
+        self.assert_count_equal('COMPONENTS/GRID[@name="bill"]/RECORD', 1)
+        self.assert_count_equal('COMPONENTS/GRID[@name="bill"]/HEADER', 7)
+        self.assert_xml_equal('COMPONENTS/GRID[@name="bill"]/RECORD[1]/VALUE[@name="bill_type"]', "devis")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="bill"]/RECORD[1]/VALUE[@name="total"]', "76.44€")
+
+        self.factory.xfer = SubscriptionTransition()
+        self.call('/diacamma.member/subscriptionTransition', {'CONFIRME': 'YES', 'subscription': 1, 'TRANSITION': 'validate'}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.member', 'subscriptionTransition')
+
+        self.factory.xfer = SubscriptionShow()
+        self.call('/diacamma.member/subscriptionShow',
+                  {'adherent': 2, 'dateref': '2014-10-01', 'subscription': 1}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'subscriptionShow')
+        self.assert_count_equal('COMPONENTS/*', 15)
+        self.assert_xml_equal('COMPONENTS/LABELFORM[@name="status"]', 'validé')
+
+        self.factory.xfer = AdherentActiveList()
+        self.call('/diacamma.member/adherentList', {'dateref': '2009-10-01'}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentList')
+        self.assert_count_equal('COMPONENTS/GRID[@name="adherent"]/RECORD', 1)
+
+        self.factory.xfer = AdherentActiveList()
+        self.call('/diacamma.member/adherentList', {'dateref': '2009-10-01', 'status': 1}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentList')
+        self.assert_count_equal('COMPONENTS/GRID[@name="adherent"]/RECORD', 0)
+
+        self.factory.xfer = AdherentActiveList()
+        self.call('/diacamma.member/adherentList', {'dateref': '2009-10-01', 'status': 2}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentList')
+        self.assert_count_equal('COMPONENTS/GRID[@name="adherent"]/RECORD', 1)
+
+        self.factory.xfer = BillList()
+        self.call('/diacamma.invoice/billList', {}, False)
+        self.assert_observer('core.custom', 'diacamma.invoice', 'billList')
+        self.assert_count_equal('COMPONENTS/GRID[@name="bill"]/RECORD', 1)
+        self.assert_count_equal('COMPONENTS/GRID[@name="bill"]/HEADER', 7)
+        self.assert_xml_equal('COMPONENTS/GRID[@name="bill"]/RECORD[1]/VALUE[@name="bill_type"]', "facture")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="bill"]/RECORD[1]/VALUE[@name="total"]', "76.44€")
+
+    def test_valid_bill_of_subscription(self):
+        default_adherents()
+        default_subscription()
+
+        self.factory.xfer = BillList()
+        self.call('/diacamma.invoice/billList', {}, False)
+        self.assert_observer('core.custom', 'diacamma.invoice', 'billList')
+        self.assert_count_equal('COMPONENTS/GRID[@name="bill"]/RECORD', 0)
+        self.assert_count_equal('COMPONENTS/GRID[@name="bill"]/HEADER', 7)
+
+        self.factory.xfer = SubscriptionAddModify()
+        self.call('/diacamma.member/subscriptionAddModify',
+                  {'SAVE': 'YES', 'status': 1, 'adherent': 2, 'dateref': '2014-10-01', 'subscriptiontype': 1, 'season': 10, 'team': 2, 'activity': 1, 'value': 'abc123'}, False)
+        self.assert_observer(
+            'core.acknowledge', 'diacamma.member', 'subscriptionAddModify')
+
+        self.factory.xfer = SubscriptionShow()
+        self.call('/diacamma.member/subscriptionShow',
+                  {'adherent': 2, 'dateref': '2014-10-01', 'subscription': 1}, False)
+        self.assert_observer(
+            'core.custom', 'diacamma.member', 'subscriptionShow')
+        self.assert_count_equal('COMPONENTS/*', 15)
+        self.assert_xml_equal(
+            'COMPONENTS/LABELFORM[@name="status"]', 'en création')
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="license"]/HEADER', 3)
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="license"]/HEADER[@name="team"]', "group")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="license"]/HEADER[@name="activity"]', "passion")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="license"]/HEADER[@name="value"]', "N° licence")
+        self.assert_count_equal(
+            'COMPONENTS/GRID[@name="license"]/RECORD', 1)
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="license"]/RECORD[1]/VALUE[@name="team"]', "team2")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="license"]/RECORD[1]/VALUE[@name="activity"]', "activity1")
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="license"]/RECORD[1]/VALUE[@name="value"]', "abc123")
+
+        self.factory.xfer = AdherentActiveList()
+        self.call('/diacamma.member/adherentList', {'dateref': '2009-10-01'}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentList')
+        self.assert_count_equal('COMPONENTS/GRID[@name="adherent"]/RECORD', 1)
+
+        self.factory.xfer = AdherentActiveList()
+        self.call('/diacamma.member/adherentList', {'dateref': '2009-10-01', 'status': 1}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentList')
+        self.assert_count_equal('COMPONENTS/GRID[@name="adherent"]/RECORD', 1)
+
+        self.factory.xfer = AdherentActiveList()
+        self.call('/diacamma.member/adherentList', {'dateref': '2009-10-01', 'status': 2}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentList')
+        self.assert_count_equal('COMPONENTS/GRID[@name="adherent"]/RECORD', 0)
+
+        self.factory.xfer = BillAddModify()
+        self.call('/diacamma.invoice/billAddModify',
+                  {'bill': 1, 'date': '2015-04-01', 'SAVE': 'YES'}, False)
+        self.assert_observer(
+            'core.acknowledge', 'diacamma.invoice', 'billAddModify')
+
+        self.factory.xfer = BillList()
+        self.call('/diacamma.invoice/billList', {}, False)
+        self.assert_observer('core.custom', 'diacamma.invoice', 'billList')
+        self.assert_count_equal('COMPONENTS/GRID[@name="bill"]/RECORD', 1)
+        self.assert_count_equal('COMPONENTS/GRID[@name="bill"]/HEADER', 7)
+        self.assert_xml_equal('COMPONENTS/GRID[@name="bill"]/RECORD[1]/VALUE[@name="status"]', "en création")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="bill"]/RECORD[1]/VALUE[@name="bill_type"]', "devis")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="bill"]/RECORD[1]/VALUE[@name="total"]', "76.44€")
+
+        self.factory.xfer = BillTransition()
+        self.call('/diacamma.invoice/billValid',
+                  {'CONFIRME': 'YES', 'bill': 1, 'withpayoff': False, 'TRANSITION': 'valid'}, False)
+        self.assert_observer(
+            'core.acknowledge', 'diacamma.invoice', 'billValid')
+
+        self.factory.xfer = BillFromQuotation()
+        self.call('/diacamma.invoice/billFromQuotation',
+                  {'CONFIRME': 'YES', 'bill': 1}, False)
+        self.assert_observer(
+            'core.acknowledge', 'diacamma.invoice', 'billFromQuotation')
+        self.assert_attrib_equal(
+            "ACTION", "id", "diacamma.invoice/billShow")
+        self.assert_count_equal("ACTION/PARAM", 1)
+        self.assert_xml_equal("ACTION/PARAM[@name='bill']", "2")
+
+        self.factory.xfer = SubscriptionShow()
+        self.call('/diacamma.member/subscriptionShow',
+                  {'adherent': 2, 'dateref': '2014-10-01', 'subscription': 1}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'subscriptionShow')
+        self.assert_count_equal('COMPONENTS/*', 15)
+        self.assert_xml_equal('COMPONENTS/LABELFORM[@name="status"]', 'validé')
+
+        self.factory.xfer = AdherentActiveList()
+        self.call('/diacamma.member/adherentList', {'dateref': '2009-10-01'}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentList')
+        self.assert_count_equal('COMPONENTS/GRID[@name="adherent"]/RECORD', 1)
+
+        self.factory.xfer = AdherentActiveList()
+        self.call('/diacamma.member/adherentList', {'dateref': '2009-10-01', 'status': 1}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentList')
+        self.assert_count_equal('COMPONENTS/GRID[@name="adherent"]/RECORD', 0)
+
+        self.factory.xfer = AdherentActiveList()
+        self.call('/diacamma.member/adherentList', {'dateref': '2009-10-01', 'status': 2}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentList')
+        self.assert_count_equal('COMPONENTS/GRID[@name="adherent"]/RECORD', 1)
+
+        self.factory.xfer = BillList()
+        self.call('/diacamma.invoice/billList', {}, False)
+        self.assert_observer('core.custom', 'diacamma.invoice', 'billList')
+        self.assert_count_equal('COMPONENTS/GRID[@name="bill"]/RECORD', 1)
+        self.assert_count_equal('COMPONENTS/GRID[@name="bill"]/HEADER', 7)
+        self.assert_xml_equal('COMPONENTS/GRID[@name="bill"]/RECORD[1]/VALUE[@name="bill_type"]', "facture")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="bill"]/RECORD[1]/VALUE[@name="total"]', "76.44€")

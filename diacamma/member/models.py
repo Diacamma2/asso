@@ -727,13 +727,14 @@ class Subscription(LucteriosModel):
             if (self.status == 2) and (self.bill is not None) and (self.bill.bill_type == 0) and (self.bill.status == 1):
                 self.bill = self.bill.convert_to_bill()
             create_bill = (self.bill is None)
+            if self.status == 1:
+                bill_type = 0
+            else:
+                bill_type = 1
             if create_bill:
-                if self.status == 1:
-                    bill_type = 0
-                else:
-                    bill_type = 1
                 self.bill = Bill.objects.create(bill_type=bill_type, date=self.season.date_ref, third=get_or_create_customer(self.adherent_id))
             if (self.bill.status == 0):
+                self.bill.bill_type = bill_type
                 self.bill.date = self.season.date_ref
                 cost_acc = CostAccounting.objects.filter(is_default=True)
                 if len(cost_acc) > 0:
