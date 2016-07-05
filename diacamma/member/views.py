@@ -658,3 +658,13 @@ def summary_member(xfer):
         return True
     else:
         return False
+
+
+@signal_and_lock.Signal.decorate('change_bill')
+def change_bill_member(action, old_bill, new_bill):
+    if action == 'convert':
+        for sub in Subscription.objects.filter(bill=old_bill):
+            sub.bill = new_bill
+            if sub.status == 1:
+                sub.validate()
+            sub.save()

@@ -27,7 +27,6 @@ from __future__ import unicode_literals
 from os.path import join, dirname
 
 from lucterios.framework import signal_and_lock
-from lucterios.framework.xfercomponents import XferCompLabelForm
 
 
 @signal_and_lock.Signal.decorate('initial_account')
@@ -35,5 +34,3 @@ def initial_account_asso(account_list):
     if isinstance(account_list, list):
         account_list.append(join(dirname(__file__), 'init_french.csv'))
     return True
-
-
