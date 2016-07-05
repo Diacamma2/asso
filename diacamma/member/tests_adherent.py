@@ -69,11 +69,13 @@ class AdherentTest(LucteriosTest):
         self.call('/diacamma.member/adherentList', {}, False)
         self.assert_observer(
             'core.custom', 'diacamma.member', 'adherentList')
-        self.assert_count_equal('COMPONENTS/*', 2 + 11 + 2)
+        self.assert_count_equal('COMPONENTS/*', 2 + 11 + 2 + 2)
         self.assert_xml_equal(
             'COMPONENTS/LABELFORM[@name="lblteam"]', '{[b]}group{[/b]}')
         self.assert_xml_equal(
             'COMPONENTS/LABELFORM[@name="lblactivity"]', '{[b]}passion{[/b]}')
+        self.assert_count_equal(
+            'COMPONENTS/SELECT[@name="status"]/CASE', 3)
         self.assert_count_equal(
             'COMPONENTS/CHECKLIST[@name="age"]/CASE', 8)
         self.assert_count_equal(
@@ -143,7 +145,7 @@ class AdherentTest(LucteriosTest):
         self.assert_xml_equal(
             'COMPONENTS/LABELFORM[@name="age_category"]', "Benjamins")
         self.assert_count_equal(
-            'COMPONENTS/GRID[@name="subscription"]/HEADER', 5)
+            'COMPONENTS/GRID[@name="subscription"]/HEADER', 6)
         self.assert_count_equal(
             'COMPONENTS/GRID[@name="subscription"]/RECORD', 0)
 
@@ -195,7 +197,9 @@ class AdherentTest(LucteriosTest):
         self.assert_xml_equal(
             'COMPONENTS/LABELFORM[@name="lastname"]', "Dalton")
         self.assert_count_equal(
-            'COMPONENTS/GRID[@name="subscription"]/HEADER', 5)
+            'COMPONENTS/GRID[@name="subscription"]/HEADER', 6)
+        self.assert_xml_equal(
+            'COMPONENTS/GRID[@name="subscription"]/HEADER[@name="status"]', "status")
         self.assert_xml_equal(
             'COMPONENTS/GRID[@name="subscription"]/HEADER[@name="season"]', "saison")
         self.assert_xml_equal(
@@ -223,7 +227,7 @@ class AdherentTest(LucteriosTest):
         self.assert_observer(
             'core.custom', 'diacamma.member', 'subscriptionAddModify')
         self.assert_count_equal(
-            'COMPONENTS/*', 13)
+            'COMPONENTS/*', 17)
         self.assert_count_equal(
             'COMPONENTS/SELECT[@name="season"]/CASE', 20)
         self.assert_count_equal(
@@ -255,7 +259,7 @@ class AdherentTest(LucteriosTest):
         self.assert_observer(
             'core.custom', 'diacamma.member', 'subscriptionAddModify')
         self.assert_count_equal(
-            'COMPONENTS/*', 13)
+            'COMPONENTS/*', 17)
         self.assert_xml_equal(
             'COMPONENTS/SELECT[@name="season"]', '10')
         self.assert_xml_equal(
@@ -297,7 +301,7 @@ class AdherentTest(LucteriosTest):
         self.assert_observer(
             'core.custom', 'diacamma.member', 'subscriptionAddModify')
         self.assert_count_equal(
-            'COMPONENTS/*', 13)
+            'COMPONENTS/*', 17)
         self.assert_xml_equal(
             'COMPONENTS/SELECT[@name="season"]', '10')
         self.assert_xml_equal(
@@ -339,7 +343,7 @@ class AdherentTest(LucteriosTest):
         self.assert_observer(
             'core.custom', 'diacamma.member', 'subscriptionAddModify')
         self.assert_count_equal(
-            'COMPONENTS/*', 13)
+            'COMPONENTS/*', 17)
         self.assert_xml_equal(
             'COMPONENTS/SELECT[@name="season"]', '10')
         self.assert_xml_equal(
@@ -381,7 +385,7 @@ class AdherentTest(LucteriosTest):
         self.assert_observer(
             'core.custom', 'diacamma.member', 'subscriptionAddModify')
         self.assert_count_equal(
-            'COMPONENTS/*', 13)
+            'COMPONENTS/*', 17)
         self.assert_xml_equal(
             'COMPONENTS/SELECT[@name="season"]', '10')
         self.assert_xml_equal(
@@ -432,7 +436,7 @@ class AdherentTest(LucteriosTest):
                   {'adherent': 2, 'dateref': '2014-10-01', 'subscription': 1}, False)
         self.assert_observer(
             'core.custom', 'diacamma.member', 'subscriptionShow')
-        self.assert_count_equal('COMPONENTS/*', 11)
+        self.assert_count_equal('COMPONENTS/*', 15)
         self.assert_count_equal(
             'COMPONENTS/GRID[@name="license"]/HEADER', 3)
         self.assert_xml_equal(
@@ -569,7 +573,7 @@ class AdherentTest(LucteriosTest):
             '/diacamma.member/adherentList', {'dateref': '2009-10-01'}, False)
         self.assert_observer(
             'core.custom', 'diacamma.member', 'adherentList')
-        self.assert_count_equal('COMPONENTS/*', 2 + 11 + 3)
+        self.assert_count_equal('COMPONENTS/*', 2 + 11 + 3 + 2)
         self.assert_count_equal(
             'COMPONENTS/GRID[@name="adherent"]/RECORD', 5)
         self.assert_count_equal(
@@ -799,7 +803,7 @@ class AdherentTest(LucteriosTest):
         self.call('/diacamma.member/adherentList', {}, False)
         self.assert_observer(
             'core.custom', 'diacamma.member', 'adherentList')
-        self.assert_count_equal('COMPONENTS/*', 2 + 3 + 3)
+        self.assert_count_equal('COMPONENTS/*', 2 + 3 + 3 + 2)
 
         self.assert_count_equal(
             'COMPONENTS/GRID[@name="adherent"]/HEADER', 5)
@@ -814,29 +818,25 @@ class AdherentTest(LucteriosTest):
         self.assert_count_equal(
             'COMPONENTS/*', 1 + 1 + 2 * (8 + 4 + 2) + 1 + 2 + (2 * 2 + 3) + 2 + 2)
         self.assert_count_equal(
-            'COMPONENTS/GRID[@name="subscription"]/HEADER', 4)
+            'COMPONENTS/GRID[@name="subscription"]/HEADER', 5)
 
         self.factory.xfer = AdherentAddModify()
         self.call('/diacamma.member/adherentAddModify',
                   {'adherent': 2, 'dateref': '2009-10-01'}, False)
-        self.assert_observer(
-            'core.custom', 'diacamma.member', 'adherentAddModify')
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentAddModify')
         self.assert_count_equal('COMPONENTS/*', 1 + 2 * (8 + 3 + 0) + 2)
 
         self.factory.xfer = SubscriptionAddModify()
         self.call('/diacamma.member/subscriptionAddModify',
                   {'adherent': 2, 'dateref': '2014-10-01'}, False)
-        self.assert_observer(
-            'core.custom', 'diacamma.member', 'subscriptionAddModify')
-        self.assert_count_equal(
-            'COMPONENTS/*', 7)
+        self.assert_observer('core.custom', 'diacamma.member', 'subscriptionAddModify')
+        self.assert_count_equal('COMPONENTS/*', 11)
 
         self.factory.xfer = SubscriptionShow()
         self.call('/diacamma.member/subscriptionShow',
                   {'adherent': 2, 'dateref': '2014-10-01', 'subscription': 1}, False)
-        self.assert_observer(
-            'core.custom', 'diacamma.member', 'subscriptionShow')
-        self.assert_count_equal('COMPONENTS/*', 9)
+        self.assert_observer('core.custom', 'diacamma.member', 'subscriptionShow')
+        self.assert_count_equal('COMPONENTS/*', 13)
 
     def test_statistic(self):
         self.add_subscriptions()

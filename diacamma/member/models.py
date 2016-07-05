@@ -25,6 +25,7 @@ along with Lucterios.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import unicode_literals
 from datetime import date, datetime, timedelta
+import logging
 
 from django.db import models
 from django.db.models.aggregates import Min, Max, Count
@@ -36,17 +37,16 @@ from django.core.exceptions import ObjectDoesNotExist
 from lucterios.framework.models import LucteriosModel
 from lucterios.framework.error import LucteriosException, IMPORTANT
 from lucterios.framework.tools import convert_date, same_day_months_after
+from lucterios.framework.signal_and_lock import Signal
 
+from lucterios.CORE.models import Parameter
 from lucterios.CORE.parameters import Params
 from lucterios.contacts.models import Individual
 
-from diacamma.invoice.models import Article, Bill, Detail,\
-    get_or_create_customer
+from diacamma.invoice.models import Article, Bill, Detail, get_or_create_customer
 from diacamma.accounting.tools import format_devise
-from diacamma.accounting.models import Third, AccountThird, CostAccounting
-import logging
-from lucterios.framework.signal_and_lock import Signal
-from lucterios.CORE.models import Parameter
+from diacamma.accounting.models import CostAccounting
+from django_fsm import FSMIntegerField, transition
 
 
 class Season(LucteriosModel):
@@ -497,7 +497,7 @@ class Adherent(Individual):
         ident_field.extend(super(Adherent, cls).get_search_fields())
         if Params.getvalue("member-birth"):
             ident_field.extend(['birthday', 'birthplace'])
-        ident_field.extend(['subscription_set.season', 'subscription_set.subscriptiontype',
+        ident_field.extend(['subscription_set.status', 'subscription_set.season', 'subscription_set.subscriptiontype',
                             'subscription_set.begin_date', 'subscription_set.end_date'])
         if Params.getvalue("member-team-enable"):
             # Params.getvalue("member-team-text")
@@ -689,9 +689,11 @@ class Subscription(LucteriosModel):
     subscriptiontype = models.ForeignKey(
         SubscriptionType, verbose_name=_('subscription type'), null=False, default=None, db_index=True, on_delete=models.PROTECT)
     bill = models.ForeignKey(
-        Bill, verbose_name=_('bill'), null=True, default=None, db_index=True, on_delete=models.PROTECT)
+        Bill, verbose_name=_('bill'), null=True, default=None, db_index=True, on_delete=models.SET_NULL)
     begin_date = models.DateField(verbose_name=_('begin date'), null=False)
     end_date = models.DateField(verbose_name=_('end date'), null=False)
+    status = FSMIntegerField(verbose_name=_('status'),
+                             choices=((0, _('waiting')), (1, _('building')), (2, _('valid')), (3, _('cancel')), (4, _('disbarred'))), null=False, default=2, db_index=True)
 
     def __str__(self):
         if not isinstance(self.begin_date, six.text_type) and not isinstance(self.end_date, six.text_type):
@@ -701,36 +703,56 @@ class Subscription(LucteriosModel):
 
     @classmethod
     def get_default_fields(cls):
-        fields = ["season", "subscriptiontype", "begin_date", "end_date"]
+        fields = ["season", "subscriptiontype", "status", "begin_date", "end_date"]
         if Params.getvalue("member-licence-enabled"):
             fields.append("license_set")
         return fields
 
     @classmethod
     def get_edit_fields(cls):
-        return ["season", "subscriptiontype"]
+        return ["adherent", "season", "subscriptiontype", "status"]
 
     @classmethod
     def get_show_fields(cls):
-        fields = ["season", "subscriptiontype", "begin_date", "end_date"]
+        fields = ["adherent", "season", "subscriptiontype", "status", "begin_date", "end_date"]
         if Params.getvalue("member-licence-enabled") or Params.getvalue("member-team-enable") or Params.getvalue("member-activite-enable"):
             fields.append("license_set")
         return fields
 
-    def create_bill(self):
+    def change_bill(self):
         if len(self.subscriptiontype.articles.all()) == 0:
             return
-        self.bill = Bill.objects.create(
-            bill_type=1, date=self.season.date_ref, third=get_or_create_customer(self.adherent_id))
-        cost_acc = CostAccounting.objects.filter(is_default=True)
-        if len(cost_acc) > 0:
-            self.bill.cost_accounting = cost_acc[0]
-        cmt = ["{[b]}%s{[/b]}" % _("subscription"), "{[i]}%s{[/i]}: %s" %
-               (_('subscription type'), six.text_type(self.subscriptiontype))]
-        self.bill.comment = "{[br/]}".join(cmt)
-        self.bill.save()
-        for art in self.subscriptiontype.articles.all():
-            Detail.create_for_bill(self.bill, art)
+        self.status = int(self.status)
+        if self.status in (1, 2):
+            if (self.status == 2) and (self.bill is not None) and (self.bill.bill_type == 0) and (self.bill.status == 1):
+                self.bill = self.bill.convert_to_bill()
+            create_bill = (self.bill is None)
+            if create_bill:
+                if self.status == 1:
+                    bill_type = 0
+                else:
+                    bill_type = 1
+                self.bill = Bill.objects.create(bill_type=bill_type, date=self.season.date_ref, third=get_or_create_customer(self.adherent_id))
+            if (self.bill.status == 0):
+                self.bill.date = self.season.date_ref
+                cost_acc = CostAccounting.objects.filter(is_default=True)
+                if len(cost_acc) > 0:
+                    self.bill.cost_accounting = cost_acc[0]
+                cmt = ["{[b]}%s{[/b]}" % _("subscription"), "{[i]}%s{[/i]}: %s" %
+                       (_('subscription type'), six.text_type(self.subscriptiontype))]
+                self.bill.comment = "{[br/]}".join(cmt)
+                self.bill.save()
+                self.bill.detail_set.all().delete()
+                for art in self.subscriptiontype.articles.all():
+                    Detail.create_for_bill(self.bill, art)
+        if (self.status == 3) and (self.bill is not None):
+            if self.bill.status == 0:
+                self.bill.delete()
+                self.bill = None
+            elif self.bill.status == 1:
+                new_assetid = self.bill.cancel()
+                if new_assetid is not None:
+                    self.bill = Bill.objects.get(id=new_assetid)
 
     def import_licence(self, rowdata):
         try:
@@ -758,14 +780,43 @@ class Subscription(LucteriosModel):
             Q(begin_date__lte=self.begin_date) & Q(end_date__gte=self.begin_date))
         if is_new and (len(self.adherent.subscription_set.filter((Q(subscriptiontype__duration=0) & Q(season=self.season)) | (Q(subscriptiontype__duration__gt=0) & query_dates))) > 0):
             raise LucteriosException(IMPORTANT, _("dates always used!"))
-        if not force_insert and is_new:
-            self.create_bill()
+        if not force_insert:
+            self.change_bill()
         LucteriosModel.save(self, force_insert=force_insert,
                             force_update=force_update, using=using, update_fields=update_fields)
         if is_new:
             for doc in self.season.document_set.all():
                 DocAdherent.objects.create(
                     subscription=self, document=doc, value=False)
+
+    transitionname__moderate = _("Moderate")
+
+    @transition(field=status, source=0, target=1)
+    def moderate(self):
+        pass
+
+    transitionname__validate = _("Validate")
+
+    @transition(field=status, source=1, target=2)
+    def validate(self):
+        pass
+
+    transitionname__cancel = _("Cancel")
+
+    @transition(field=status, source=1, target=3)
+    def cancel(self):
+        pass
+
+    transitionname__remove = _("Disbar")
+
+    @transition(field=status, source=2, target=4)
+    def disbar(self):
+        pass
+
+    def can_delete(self):
+        if self.status != 0:
+            return _('You cannot delete this subscription!')
+        return ""
 
     class Meta(object):
         verbose_name = _('subscription')

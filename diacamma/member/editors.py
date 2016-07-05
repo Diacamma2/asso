@@ -203,6 +203,11 @@ class SubscriptionEditor(LucteriosEditor):
                 subscription=self.item, value=value, activity_id=activity_id, team_id=team_id)
 
     def edit(self, xfer):
+        xfer.change_to_readonly("adherent")
+        cmp_status = xfer.get_components('status')
+        del cmp_status.select_list[0]
+        del cmp_status.select_list[-2]
+        del cmp_status.select_list[-1]
         last_subscription = self.item.adherent.last_subscription
         cmp_subscriptiontype = xfer.get_components('subscriptiontype')
         if self.item.id is not None:

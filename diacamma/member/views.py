@@ -30,7 +30,7 @@ from django.db.models import Q
 
 from lucterios.framework.xferadvance import XferListEditor, TITLE_OK, TITLE_ADD,\
     TITLE_MODIFY, TITLE_EDIT, TITLE_CANCEL, TITLE_LABEL, TITLE_LISTING,\
-    TITLE_DELETE, TITLE_CLOSE, TITLE_PRINT
+    TITLE_DELETE, TITLE_CLOSE, TITLE_PRINT, XferTransition
 from lucterios.framework.xferadvance import XferAddEditor
 from lucterios.framework.xferadvance import XferShowEditor
 from lucterios.framework.xferadvance import XferDelete
@@ -72,6 +72,7 @@ class AdherentAbstractList(XferListEditor):
         activity = self.getparam("activity", ())
         genre = self.getparam("genre", 0)
         age = self.getparam("age", ())
+        status = self.getparam("status", -1)
         dateref = convert_date(
             self.getparam("dateref", ""), Season.current_season().date_ref)
 
@@ -132,8 +133,23 @@ class AdherentAbstractList(XferListEditor):
             sel.set_value(genre)
             self.add_component(sel)
 
+        lbl = XferCompLabelForm('lblstatus')
+        lbl.set_value_as_name(_("status"))
+        lbl.set_location(6, row + 2)
+        self.add_component(lbl)
+        sel = XferCompSelect('status')
+        list_status = list(Subscription.get_field_by_name('status').choices)
+        del list_status[0]
+        del list_status[-2]
+        del list_status[-1]
+        list_status.insert(0, (-1, '%s & %s' % (_('building'), _('valid'))))
+        sel.set_select(list_status)
+        sel.set_location(7, row + 2)
+        sel.set_value(status)
+        self.add_component(sel)
+
         btn = XferCompButton('btndateref')
-        btn.set_location(8, row + 1)
+        btn.set_location(8, row + 1, 1, 2)
         btn.set_action(self.request, self.get_action(_('Refresh'), ''),
                        modal=FORMTYPE_REFRESH, close=CLOSE_NO)
         self.add_component(btn)
@@ -143,6 +159,7 @@ class AdherentAbstractList(XferListEditor):
         activity = self.getparam("activity", ())
         genre = self.getparam("genre", 0)
         age = self.getparam("age", ())
+        status = self.getparam("status", -1)
         dateref = convert_date(self.getparam("dateref", ""), Season.current_season().date_ref)
         if self.is_renew:
             date_one_year = same_day_months_after(dateref, -12)
@@ -174,6 +191,10 @@ class AdherentAbstractList(XferListEditor):
             current_filter &= age_filter
         if genre != 0:
             current_filter &= Q(genre=genre)
+        if status == -1:
+            current_filter &= Q(subscription__status__in=(1, 2))
+        else:
+            current_filter &= Q(subscription__status=status)
         items = self.model.objects.filter(current_filter).exclude(exclude_filter)
         return items
 
@@ -440,6 +461,14 @@ class SubscriptionDel(XferDelete):
     model = Subscription
     field_id = 'subscription'
     caption = _("Delete subscription")
+
+
+@ActionsManage.affect_transition("status")
+@MenuManage.describ('member.add_subscription')
+class SubscriptionTransition(XferTransition):
+    icon = "adherent.png"
+    model = Subscription
+    field_id = 'subscription'
 
 
 @ActionsManage.affect_grid(_('Bill'), 'images/ok.png', unique=SELECT_SINGLE, close=CLOSE_NO)
