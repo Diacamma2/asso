@@ -34,11 +34,11 @@ from lucterios.CORE.models import PrintModel
 
 def initial_values(*args):
     translation.activate(settings.LANGUAGE_CODE)
-    PrintModel().load_model("diacamma.member", "Adherent_0001")
-    PrintModel().load_model("diacamma.member", "Adherent_0002")
-    PrintModel().load_model("diacamma.member", "Adherent_0003")
-    PrintModel().load_model("diacamma.member", "Adherent_0004")
-    PrintModel().load_model("diacamma.member", "Adherent_0005")
+    PrintModel().load_model("diacamma.member", "Adherent_0001", is_default=True)
+    PrintModel().load_model("diacamma.member", "Adherent_0002", is_default=False)
+    PrintModel().load_model("diacamma.member", "Adherent_0003", is_default=False)
+    PrintModel().load_model("diacamma.member", "Adherent_0004", is_default=True)
+    PrintModel().load_model("diacamma.member", "Adherent_0005", is_default=False)
 
 
 class Migration(migrations.Migration):
