@@ -42,7 +42,7 @@ from lucterios.framework.tools import convert_date, same_day_months_after
 from lucterios.framework.signal_and_lock import Signal
 from lucterios.framework.filetools import get_tmp_dir
 
-from lucterios.CORE.models import Parameter
+from lucterios.CORE.models import Parameter, PrintModel
 from lucterios.CORE.parameters import Params
 from lucterios.contacts.models import Individual
 
@@ -52,6 +52,7 @@ from diacamma.accounting.models import CostAccounting
 from django_fsm import FSMIntegerField, transition
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db.models.query import QuerySet
+from diacamma.payoff.views import get_html_payment
 
 
 class Season(LucteriosModel):
@@ -629,25 +630,8 @@ class Adherent(Individual):
     def renew(self, dateref):
         last_subscription = self.last_subscription
         if last_subscription is not None:
-            current_season = Season.get_from_date(dateref)
-            new_subscription = Subscription(
-                adherent=self, subscriptiontype=last_subscription.subscriptiontype, season=current_season)
-            if new_subscription.subscriptiontype.duration == 0:  # periodic
-                new_subscription.begin_date = current_season.begin_date
-                new_subscription.end_date = current_season.end_date
-            elif new_subscription.subscriptiontype.duration == 1:  # periodic
-                period = current_season.get_period_from_date(dateref)
-                new_subscription.begin_date = period.begin_date
-                new_subscription.end_date = period.end_date
-            elif new_subscription.subscriptiontype.duration == 2:  # monthly
-                new_subscription.begin_date = convert_date(
-                    '%4d-%02d-01' % (dateref.year, dateref.month))
-                new_subscription.end_date = same_day_months_after(
-                    new_subscription.begin_date, 1) - timedelta(days=1)
-            elif new_subscription.subscriptiontype.duration == 3:  # calendar
-                new_subscription.begin_date = dateref
-                new_subscription.end_date = same_day_months_after(
-                    new_subscription.begin_date, 12) - timedelta(days=1)
+            new_subscription = Subscription(adherent=self, subscriptiontype=last_subscription.subscriptiontype)
+            new_subscription.set_periode(dateref)
             new_subscription.save()
             for license_item in last_subscription.license_set.all():
                 license_item.id = None
@@ -724,6 +708,23 @@ class Subscription(LucteriosModel):
             fields.append("license_set")
         return fields
 
+    def set_periode(self, dateref):
+        self.dateref = dateref
+        self.season = Season.get_from_date(dateref)
+        if self.subscriptiontype.duration == 0:  # periodic
+            self.begin_date = self.season.begin_date
+            self.end_date = self.season.end_date
+        elif self.subscriptiontype.duration == 1:  # periodic
+            period = self.season.get_period_from_date(dateref)
+            self.begin_date = period.begin_date
+            self.end_date = period.end_date
+        elif self.subscriptiontype.duration == 2:  # monthly
+            self.begin_date = convert_date('%4d-%02d-01' % (dateref.year, dateref.month))
+            self.end_date = same_day_months_after(self.begin_date, 1) - timedelta(days=1)
+        elif self.subscriptiontype.duration == 3:  # calendar
+            self.begin_date = dateref
+            self.end_date = same_day_months_after(self.begin_date, 12) - timedelta(days=1)
+
     def change_bill(self):
         if len(self.subscriptiontype.articles.all()) == 0:
             return
@@ -740,7 +741,14 @@ class Subscription(LucteriosModel):
                 self.bill = Bill.objects.create(bill_type=bill_type, date=self.season.date_ref, third=get_or_create_customer(self.adherent_id))
             if (self.bill.status == 0):
                 self.bill.bill_type = bill_type
-                self.bill.date = self.season.date_ref
+                if hasattr(self, 'xfer'):
+                    self.bill.date = convert_date(self.xfer.getparam('dateref'), self.season.date_ref)
+                elif hasattr(self, 'dateref'):
+                    self.bill.date = convert_date(self.dateref, self.season.date_ref)
+                else:
+                    self.bill.date = self.season.date_ref
+                if (self.bill.date < self.season.begin_date) or (self.bill.date > self.season.end_date):
+                    self.bill.date = self.season.date_ref
                 cost_acc = CostAccounting.objects.filter(is_default=True)
                 if len(cost_acc) > 0:
                     self.bill.cost_accounting = cost_acc[0]
@@ -1020,6 +1028,52 @@ class CommandManager(object):
             self.commands.remove(cmd_to_del)
             self.write()
 
+    def create_subscription(self, dateref, sendemail=None):
+        nb_sub = 0
+        nb_bill = 0
+        for content_item in self.commands:
+            new_subscription = Subscription(adherent_id=content_item["adherent"], subscriptiontype_id=content_item["type"], status=1)
+            new_subscription.set_periode(dateref)
+            new_subscription.save()
+            teams = content_item["team"]
+            activities = content_item["activity"]
+            licences = content_item["licence"]
+            for license_id in range(max(len(teams), len(activities), len(licences))):
+                license_item = License()
+                license_item.subscription = new_subscription
+                try:
+                    license_item.value = licences[license_id]
+                except:
+                    license_item.value = ''
+                try:
+                    license_item.team_id = teams[license_id]
+                except:
+                    license_item.team_id = None
+                try:
+                    license_item.activity_id = activities[license_id]
+                except:
+                    license_item.activity_id = 0
+                license_item.save()
+            nb_sub += 1
+            if new_subscription.bill is not None:
+                details = new_subscription.bill.detail_set.all().order_by('-id')
+                details[0].reduce = content_item["reduce"]
+                details[0].save()
+                if sendemail is not None:
+                    six.print_('date: %s - get_info_state:%s' % (new_subscription.bill.date, new_subscription.bill.get_info_state()))
+                    new_subscription.bill.valid()
+                    if new_subscription.adherent.email != '':
+                        subscription_message = Params.getvalue("member-subscription-message")
+                        subscription_message = subscription_message.replace('\n', '<br/>')
+                        subscription_message = subscription_message.replace('{[', '<')
+                        subscription_message = subscription_message.replace(']}', '>')
+                        if new_subscription.bill.payoff_have_payment():
+                            subscription_message += get_html_payment(sendemail[0], sendemail[1], new_subscription.bill)
+                        new_subscription.bill.send_email(_('New subscription'), "<html>%s</html>" % subscription_message,
+                                                         PrintModel.get_print_default(2, Bill))
+                        nb_bill += 1
+        return (nb_sub, nb_bill)
+
 
 @Signal.decorate('checkparam')
 def member_checkparam():
@@ -1033,3 +1087,5 @@ def member_checkparam():
     Parameter.check_and_create(name="member-filter-genre", typeparam=3, title=_("member-filter-genre"), args="{}", value='True')
     Parameter.check_and_create(name="member-numero", typeparam=3, title=_("member-numero"), args="{}", value='True')
     Parameter.check_and_create(name="member-licence-enabled", typeparam=3, title=_("member-licence-enabled"), args="{}", value='True')
+    Parameter.check_and_create(name="member-subscription-message", typeparam=0, title=_("member-subscription-message"),
+                               args="{'Multi':True}", value=_('Welcome,\n\nYou have a new subscription.Joint, the quotation relative.\n\nRegards,'))

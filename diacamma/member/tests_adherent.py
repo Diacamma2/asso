@@ -28,11 +28,14 @@ from datetime import date
 from _io import StringIO
 
 from django.utils import formats, six
+from os.path import isfile
+from base64 import b64decode
 
 from lucterios.framework.test import LucteriosTest
 from lucterios.framework.xfergraphic import XferContainerAcknowledge
 from lucterios.framework.filetools import get_user_dir
 from lucterios.contacts.views import ContactImport
+from lucterios.contacts.tests_contacts import change_ourdetail
 
 from diacamma.member.test_tools import default_season, default_financial, default_params,\
     default_adherents, default_subscription, set_parameters
@@ -43,7 +46,8 @@ from diacamma.member.views import AdherentActiveList, AdherentAddModify, Adheren
     AdherentCommandDelete, AdherentCommandModify
 from diacamma.invoice.views import BillList, BillTransition, BillFromQuotation,\
     BillAddModify
-from os.path import isfile
+
+from diacamma.member.models import Season
 
 
 class AdherentTest(LucteriosTest):
@@ -549,32 +553,32 @@ class AdherentTest(LucteriosTest):
         self.assert_xml_equal(
             'COMPONENTS/GRID[@name="bill"]/RECORD[1]/VALUE[@name="total"]', "76.44€")
 
-    def add_subscriptions(self):
+    def add_subscriptions(self, year=2009, season_id=10):
         default_adherents()
         default_subscription()
         self.factory.xfer = SubscriptionAddModify()
         self.call('/diacamma.member/subscriptionAddModify',
-                  {'SAVE': 'YES', 'adherent': 2, 'dateref': '2009-10-01', 'subscriptiontype': 1, 'season': 10, 'team': 2, 'activity': 1, 'value': '132'}, False)
+                  {'SAVE': 'YES', 'adherent': 2, 'dateref': '%s-10-01' % year, 'subscriptiontype': 1, 'season': season_id, 'team': 2, 'activity': 1, 'value': '132'}, False)
         self.assert_observer(
             'core.acknowledge', 'diacamma.member', 'subscriptionAddModify')
         self.factory.xfer = SubscriptionAddModify()
-        self.call('/diacamma.member/subscriptionAddModify', {'SAVE': 'YES', 'adherent': 3, 'dateref': '2009-10-01',
-                                                             'subscriptiontype': 2, 'period': 37, 'season': 10, 'team': 1, 'activity': 1, 'value': '645'}, False)
+        self.call('/diacamma.member/subscriptionAddModify', {'SAVE': 'YES', 'adherent': 3, 'dateref': '%s-10-01' % year,
+                                                             'subscriptiontype': 2, 'period': 37 + (year - 2009) * 4, 'season': season_id, 'team': 1, 'activity': 1, 'value': '645'}, False)
         self.assert_observer(
             'core.acknowledge', 'diacamma.member', 'subscriptionAddModify')
         self.factory.xfer = SubscriptionAddModify()
-        self.call('/diacamma.member/subscriptionAddModify', {'SAVE': 'YES', 'adherent': 4, 'dateref': '2009-10-01',
-                                                             'subscriptiontype': 3, 'month': '2009-10', 'season': 10, 'team': 3, 'activity': 1, 'value': '489'}, False)
+        self.call('/diacamma.member/subscriptionAddModify', {'SAVE': 'YES', 'adherent': 4, 'dateref': '%s-10-01' % year,
+                                                             'subscriptiontype': 3, 'month': '%s-10' % year, 'season': season_id, 'team': 3, 'activity': 1, 'value': '489'}, False)
         self.assert_observer(
             'core.acknowledge', 'diacamma.member', 'subscriptionAddModify')
         self.factory.xfer = SubscriptionAddModify()
-        self.call('/diacamma.member/subscriptionAddModify', {'SAVE': 'YES', 'adherent': 5, 'dateref': '2009-10-01',
-                                                             'subscriptiontype': 4, 'begin_date': '2009-09-15', 'season': 10, 'team': 3, 'activity': 2, 'value': '470'}, False)
+        self.call('/diacamma.member/subscriptionAddModify', {'SAVE': 'YES', 'adherent': 5, 'dateref': '%s-10-01' % year,
+                                                             'subscriptiontype': 4, 'begin_date': '%s-09-15' % year, 'season': season_id, 'team': 3, 'activity': 2, 'value': '470'}, False)
         self.assert_observer(
             'core.acknowledge', 'diacamma.member', 'subscriptionAddModify')
         self.factory.xfer = SubscriptionAddModify()
         self.call('/diacamma.member/subscriptionAddModify',
-                  {'SAVE': 'YES', 'adherent': 6, 'dateref': '2009-10-01', 'subscriptiontype': 1, 'season': 10, 'team': 1, 'activity': 2, 'value': '159'}, False)
+                  {'SAVE': 'YES', 'adherent': 6, 'dateref': '%s-10-01' % year, 'subscriptiontype': 1, 'season': season_id, 'team': 1, 'activity': 2, 'value': '159'}, False)
         self.assert_observer(
             'core.acknowledge', 'diacamma.member', 'subscriptionAddModify')
 
@@ -1441,10 +1445,12 @@ class AdherentTest(LucteriosTest):
         self.assert_xml_equal('COMPONENTS/GRID[@name="bill"]/RECORD[1]/VALUE[@name="total"]', "76.44€")
 
     def test_command(self):
-        self.add_subscriptions()
+        from lucterios.mailing.test_tools import configSMTP, TestReceiver, decode_b64
+        Season.objects.get(id=16).set_has_actif()
+        self.add_subscriptions(year=2014, season_id=15)
 
         self.factory.xfer = AdherentRenewList()
-        self.call('/diacamma.member/adherentRenewList', {'dateref': '2010-10-01'}, False)
+        self.call('/diacamma.member/adherentRenewList', {'dateref': '2015-10-01'}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'adherentRenewList')
         self.assert_count_equal('COMPONENTS/GRID[@name="adherent"]/RECORD', 3)
         self.assert_count_equal('COMPONENTS/GRID[@name="adherent"]/RECORD[@id="2"]', 1)
@@ -1452,12 +1458,12 @@ class AdherentTest(LucteriosTest):
         self.assert_count_equal('COMPONENTS/GRID[@name="adherent"]/RECORD[@id="6"]', 1)
 
         self.factory.xfer = AdherentCommand()
-        self.call('/diacamma.member/adherentCommand', {'dateref': '2010-10-01'}, False)
+        self.call('/diacamma.member/adherentCommand', {'dateref': '2015-10-01'}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'adherentCommand')
         self.assert_count_equal('COMPONENTS/GRID[@name="AdhCmd"]/RECORD', 0)
 
         self.factory.xfer = AdherentCommand()
-        self.call('/diacamma.member/adherentCommand', {'dateref': '2010-10-01', 'adherent': '2;5;6'}, False)
+        self.call('/diacamma.member/adherentCommand', {'dateref': '2015-10-01', 'adherent': '2;5;6'}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'adherentCommand')
         self.assert_count_equal('COMPONENTS/GRID[@name="AdhCmd"]/RECORD', 3)
         self.assert_count_equal('COMPONENTS/GRID[@name="AdhCmd"]/HEADER', 7)
@@ -1481,7 +1487,7 @@ class AdherentTest(LucteriosTest):
         self.assertTrue(isfile(cmd_file))
 
         self.factory.xfer = AdherentCommand()
-        self.call('/diacamma.member/adherentCommand', {'dateref': '2010-10-01', 'CMD_FILE': cmd_file}, False)
+        self.call('/diacamma.member/adherentCommand', {'dateref': '2015-10-01', 'CMD_FILE': cmd_file}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'adherentCommand')
         self.assert_count_equal('COMPONENTS/GRID[@name="AdhCmd"]/RECORD', 3)
 
@@ -1490,23 +1496,23 @@ class AdherentTest(LucteriosTest):
         self.assert_observer('core.acknowledge', 'diacamma.member', 'adherentCommandDelete')
 
         self.factory.xfer = AdherentCommand()
-        self.call('/diacamma.member/adherentCommand', {'dateref': '2010-10-01', 'CMD_FILE': cmd_file}, False)
+        self.call('/diacamma.member/adherentCommand', {'dateref': '2015-10-01', 'CMD_FILE': cmd_file}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'adherentCommand')
         self.assert_count_equal('COMPONENTS/GRID[@name="AdhCmd"]/RECORD', 2)
 
         self.factory.xfer = AdherentCommandModify()
-        self.call('/diacamma.member/adherentCommandModify', {'dateref': '2010-10-01', 'CMD_FILE': cmd_file, 'AdhCmd': '5'}, False)
+        self.call('/diacamma.member/adherentCommandModify', {'dateref': '2015-10-01', 'CMD_FILE': cmd_file, 'AdhCmd': '5'}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'adherentCommandModify')
         self.assert_count_equal('COMPONENTS/*', 16)
         self.assert_xml_equal('COMPONENTS/LABELFORM[@name="adherent"]', 'Dalton Joe')
 
         self.factory.xfer = AdherentCommandModify()
-        self.call('/diacamma.member/adherentCommandModify', {'dateref': '2010-10-01', 'SAVE': 'YES', 'CMD_FILE': cmd_file,
+        self.call('/diacamma.member/adherentCommandModify', {'dateref': '2015-10-01', 'SAVE': 'YES', 'CMD_FILE': cmd_file,
                                                              'AdhCmd': '5', 'type': '3', 'team': '2', 'activity': '1', 'reduce': '7.5'}, False)
         self.assert_observer('core.acknowledge', 'diacamma.member', 'adherentCommandModify')
 
         self.factory.xfer = AdherentCommand()
-        self.call('/diacamma.member/adherentCommand', {'dateref': '2010-10-01', 'CMD_FILE': cmd_file}, False)
+        self.call('/diacamma.member/adherentCommand', {'dateref': '2015-10-01', 'CMD_FILE': cmd_file}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'adherentCommand')
         self.assert_count_equal('COMPONENTS/GRID[@name="AdhCmd"]/RECORD', 2)
         self.assert_count_equal('COMPONENTS/GRID[@name="AdhCmd"]/HEADER', 7)
@@ -1520,3 +1526,29 @@ class AdherentTest(LucteriosTest):
         self.assert_xml_equal('COMPONENTS/GRID[@name="AdhCmd"]/RECORD[2]/VALUE[@name="team"]', "team1")
         self.assert_xml_equal('COMPONENTS/GRID[@name="AdhCmd"]/RECORD[2]/VALUE[@name="activity"]', "activity2")
         self.assert_xml_equal('COMPONENTS/GRID[@name="AdhCmd"]/RECORD[2]/VALUE[@name="reduce"]', "0.00€")
+
+        configSMTP('localhost', 1025)
+        change_ourdetail()
+        server = TestReceiver()
+        server.start(1025)
+        try:
+            self.assertEqual(0, server.count())
+
+            self.factory.xfer = AdherentCommand()
+            self.call('/diacamma.member/adherentCommand', {'dateref': '2015-10-01', 'SAVE': 'YES', 'CMD_FILE': cmd_file, 'send_email': True}, False)
+            self.assert_observer('core.dialogbox', 'diacamma.member', 'adherentCommand')
+
+            self.assertEqual(2, server.count())
+            self.assertEqual('mr-sylvestre@worldcompany.com', server.get(0)[1])
+            self.assertEqual(['Joe.Dalton@worldcompany.com', 'mr-sylvestre@worldcompany.com'], server.get(0)[2])
+            self.assertEqual('mr-sylvestre@worldcompany.com', server.get(1)[1])
+            self.assertEqual(['Lucky.Luke@worldcompany.com', 'mr-sylvestre@worldcompany.com'], server.get(1)[2])
+            msg, msg_file = server.check_first_message('Nouvelle cotisation', 2, {'To': 'Joe.Dalton@worldcompany.com'})
+            self.assertEqual('text/html', msg.get_content_type())
+            self.assertEqual('base64', msg.get('Content-Transfer-Encoding', ''))
+            message = decode_b64(msg.get_payload())
+            self.assertTrue('Bienvenu' in message, message)
+            self.assertTrue('devis_A-1_Dalton Joe.pdf' in msg_file.get('Content-Type', ''), msg_file.get('Content-Type', ''))
+            self.assertEqual("%PDF".encode('ascii', 'ignore'), b64decode(msg_file.get_payload())[:4])
+        finally:
+            server.stop()

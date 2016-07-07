@@ -45,7 +45,7 @@ from lucterios.framework.tools import FORMTYPE_NOMODAL, ActionsManage, MenuManag
     SELECT_MULTI, CLOSE_YES, SELECT_NONE
 from lucterios.framework.xfercomponents import XferCompLabelForm, \
     XferCompCheckList, XferCompButton, XferCompSelect, XferCompDate, \
-    XferCompImage, XferCompEdit, XferCompGrid, XferCompFloat
+    XferCompImage, XferCompEdit, XferCompGrid, XferCompFloat, XferCompCheck
 from lucterios.framework.xfergraphic import XferContainerAcknowledge, XferContainerCustom
 from lucterios.framework.tools import convert_date, same_day_months_after
 from lucterios.framework.filetools import get_tmp_dir
@@ -372,8 +372,7 @@ class AdherentRenew(XferContainerAcknowledge):
         text = _(
             "{[b]}Do you want that those %d old selected adherent(s) has been renew?{[/b]}{[br/]}Same subscription(s) will be applicated.{[br/]}No validated bill will be created for each subscritpion.") % len(self.items)
         if self.confirme(text):
-            dateref = convert_date(
-                self.getparam("dateref", ""), Season.current_season().date_ref)
+            dateref = convert_date(self.getparam("dateref", ""), Season.current_season().date_ref)
             for item in self.items:
                 item.renew(dateref)
 
@@ -386,7 +385,7 @@ class AdherentCommand(XferContainerAcknowledge):
     field_id = 'adherent'
     caption = _("Command subscription")
 
-    def fillresponse(self):
+    def fillresponse(self, send_email=True):
         cmd_manager = CommandManager(self.getparam('CMD_FILE', ''), self.items)
         if self.getparam('SAVE') is None:
             dlg = self.create_custom(self.model)
@@ -396,7 +395,7 @@ class AdherentCommand(XferContainerAcknowledge):
             dlg.add_component(img)
             lab = XferCompLabelForm('lbl_title')
             lab.set_value_as_title(self.caption)
-            lab.set_location(1, 0)
+            lab.set_location(1, 0, 2)
             dlg.add_component(lab)
             grid = XferCompGrid('AdhCmd')
             for fname, ftitle in cmd_manager.get_fields():
@@ -404,16 +403,34 @@ class AdherentCommand(XferContainerAcknowledge):
             for cmd_id, cmd_item in cmd_manager.get_content_txt():
                 for head_name, value in cmd_item.items():
                     grid.set_value(cmd_id, head_name, value)
-            grid.set_location(1, 2)
+            grid.set_location(1, 2, 2)
             grid.add_action(self.request, AdherentCommandModify.get_action(TITLE_MODIFY, "images/edit.png"), close=CLOSE_NO, unique=SELECT_SINGLE)
             grid.add_action(self.request, AdherentCommandDelete.get_action(TITLE_DELETE, "images/delete.png"), close=CLOSE_NO, unique=SELECT_SINGLE)
             dlg.params['CMD_FILE'] = cmd_manager.file_name
             dlg.add_component(grid)
             if len(grid.records) > 0:
+                lab = XferCompLabelForm('lbl_send_email')
+                lab.set_value_as_name(_('Send quotition by email for each adherent.'))
+                lab.set_location(1, 3)
+                dlg.add_component(lab)
+                chk = XferCompCheck('send_email')
+                chk.set_value(send_email)
+                chk.set_location(2, 3)
+                dlg.add_component(chk)
                 dlg.add_action(AdherentCommand.get_action(TITLE_OK, "images/ok.png"), close=CLOSE_YES, params={'SAVE': 'YES'})
             dlg.add_action(WrapAction(TITLE_CLOSE, 'images/close.png'))
         else:
-            pass
+            dateref = convert_date(self.getparam("dateref", ""), Season.current_season().date_ref)
+            if send_email:
+                param_email = self.request.META.get('HTTP_REFERER', self.request.build_absolute_uri()), self.language
+            else:
+                param_email = None
+            nb_sub, nb_bill = cmd_manager.create_subscription(dateref, param_email)
+            if send_email:
+                msg = _('%(nbsub)d new subscription and %(nbbill)d quotation have been sent.') % {'nbsub': nb_sub, 'nbbill': nb_bill}
+            else:
+                msg = _('%d new subscription have been prepared.') % nb_sub
+            self.message(msg)
 
 
 @MenuManage.describ('member.add_subscription')
