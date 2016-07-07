@@ -25,7 +25,9 @@ along with Lucterios.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import unicode_literals
 from datetime import date, datetime, timedelta
+from os.path import isfile, join
 import logging
+from os import unlink
 
 from django.db import models
 from django.db.models.aggregates import Min, Max, Count
@@ -38,6 +40,7 @@ from lucterios.framework.models import LucteriosModel
 from lucterios.framework.error import LucteriosException, IMPORTANT
 from lucterios.framework.tools import convert_date, same_day_months_after
 from lucterios.framework.signal_and_lock import Signal
+from lucterios.framework.filetools import get_tmp_dir
 
 from lucterios.CORE.models import Parameter
 from lucterios.CORE.parameters import Params
@@ -47,6 +50,8 @@ from diacamma.invoice.models import Article, Bill, Detail, get_or_create_custome
 from diacamma.accounting.tools import format_devise
 from diacamma.accounting.models import CostAccounting
 from django_fsm import FSMIntegerField, transition
+from django.core.validators import MinValueValidator, MaxValueValidator
+from django.db.models.query import QuerySet
 
 
 class Season(LucteriosModel):
@@ -912,6 +917,108 @@ class License(LucteriosModel):
         verbose_name = _('license')
         verbose_name_plural = _('licenses')
         default_permissions = []
+
+
+class CommandManager(object):
+
+    def __init__(self, file_name, items):
+        self.file_name = file_name
+        self.commands = []
+        self.items = items
+        self.read()
+
+    def get_fields(self):
+        fields = []
+        fields.append(("adherent", _('adherent')))
+        fields.append(("type", _('subscription type')))
+        if Params.getvalue("member-age-enable"):
+            fields.append(("age", _("age category")))
+        if Params.getvalue("member-team-enable"):
+            fields.append(("team", Params.getvalue("member-team-text")))
+        if Params.getvalue("member-activite-enable"):
+            fields.append(("activity", Params.getvalue("member-activite-text")))
+        if Params.getvalue("member-licence-enabled"):
+            fields.append(("licence", "Licence"))
+        fields.append(("reduce", _('reduce')))
+        return fields
+
+    def read(self):
+        import json
+        if (self.file_name != '') and isfile(self.file_name):
+            with open(self.file_name) as data_file:
+                self.commands = json.load(data_file)
+        elif self.items is not None:
+            for item in self.items:
+                cmd_value = {}
+                cmd_value["adherent"] = item.id
+                cmd_value["type"] = item.last_subscription.subscriptiontype.id
+                team = []
+                activity = []
+                licence = []
+                for lic in item.last_subscription.license_set.all():
+                    team.append(lic.team.id)
+                    activity.append(lic.activity.id)
+                    licence.append(lic.value)
+                cmd_value["team"] = team
+                cmd_value["activity"] = activity
+                cmd_value["licence"] = licence
+                cmd_value["reduce"] = 0.0
+                self.commands.append(cmd_value)
+            self.write()
+
+    def write(self):
+        import json
+        self.file_name = join(get_tmp_dir(), 'list.cmd')
+        if isfile(self.file_name):
+            unlink(self.file_name)
+        with open(self.file_name, 'w') as f:
+            json.dump(self.commands, f, ensure_ascii=False)
+
+    def get_content_txt(self):
+        content = []
+        for content_item in self.commands:
+            content.append((content_item["adherent"], self.get_txt(content_item)))
+        return content
+
+    def get_txt(self, content_item):
+        item = Adherent.objects.get(id=content_item["adherent"])
+        cmd_value = {}
+        cmd_value["adherent"] = six.text_type(item)
+        cmd_value["type"] = SubscriptionType.objects.get(id=content_item["type"]).get_text_value()
+        cmd_value["age"] = item.age_category
+        teams = []
+        for team in Team.objects.filter(id__in=content_item["team"]):
+            teams.append(six.text_type(team))
+        cmd_value["team"] = '{[br/]}'.join(teams)
+        activities = []
+        for team in Activity.objects.filter(id__in=content_item["activity"]):
+            activities.append(six.text_type(team))
+        cmd_value["activity"] = '{[br/]}'.join(activities)
+        cmd_value["licence"] = '{[br/]}'.join(content_item["licence"])
+        cmd_value["reduce"] = format_devise(content_item["reduce"], 5)
+        return cmd_value
+
+    def get(self, adherentid):
+        cmd_to_select = None
+        for content_item in self.commands:
+            if content_item["adherent"] == adherentid:
+                cmd_to_select = content_item
+        return cmd_to_select
+
+    def set(self, adherentid, item):
+        cmd_to_change = self.get(adherentid)
+        if cmd_to_change is not None:
+            for fname in ["team", "activity", "licence"]:
+                if not isinstance(item[fname], list):
+                    item[fname] = [item[fname]]
+            self.commands[self.commands.index(cmd_to_change)] = item
+            self.write()
+
+    def delete(self, adherentid):
+        cmd_to_del = self.get(adherentid)
+        if cmd_to_del is not None:
+            self.commands.remove(cmd_to_del)
+            self.write()
 
 
 @Signal.decorate('checkparam')

@@ -39,9 +39,11 @@ from diacamma.member.test_tools import default_season, default_financial, defaul
 from diacamma.member.views import AdherentActiveList, AdherentAddModify, AdherentShow,\
     SubscriptionAddModify, SubscriptionShow, LicenseAddModify, LicenseDel,\
     AdherentDoc, AdherentLicense, AdherentLicenseSave, AdherentStatistic,\
-    AdherentRenewList, AdherentRenew, SubscriptionTransition
+    AdherentRenewList, AdherentRenew, SubscriptionTransition, AdherentCommand,\
+    AdherentCommandDelete, AdherentCommandModify
 from diacamma.invoice.views import BillList, BillTransition, BillFromQuotation,\
     BillAddModify
+from os.path import isfile
 
 
 class AdherentTest(LucteriosTest):
@@ -1437,3 +1439,84 @@ class AdherentTest(LucteriosTest):
         self.assert_count_equal('COMPONENTS/GRID[@name="bill"]/HEADER', 7)
         self.assert_xml_equal('COMPONENTS/GRID[@name="bill"]/RECORD[1]/VALUE[@name="bill_type"]', "facture")
         self.assert_xml_equal('COMPONENTS/GRID[@name="bill"]/RECORD[1]/VALUE[@name="total"]', "76.44€")
+
+    def test_command(self):
+        self.add_subscriptions()
+
+        self.factory.xfer = AdherentRenewList()
+        self.call('/diacamma.member/adherentRenewList', {'dateref': '2010-10-01'}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentRenewList')
+        self.assert_count_equal('COMPONENTS/GRID[@name="adherent"]/RECORD', 3)
+        self.assert_count_equal('COMPONENTS/GRID[@name="adherent"]/RECORD[@id="2"]', 1)
+        self.assert_count_equal('COMPONENTS/GRID[@name="adherent"]/RECORD[@id="5"]', 1)
+        self.assert_count_equal('COMPONENTS/GRID[@name="adherent"]/RECORD[@id="6"]', 1)
+
+        self.factory.xfer = AdherentCommand()
+        self.call('/diacamma.member/adherentCommand', {'dateref': '2010-10-01'}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentCommand')
+        self.assert_count_equal('COMPONENTS/GRID[@name="AdhCmd"]/RECORD', 0)
+
+        self.factory.xfer = AdherentCommand()
+        self.call('/diacamma.member/adherentCommand', {'dateref': '2010-10-01', 'adherent': '2;5;6'}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentCommand')
+        self.assert_count_equal('COMPONENTS/GRID[@name="AdhCmd"]/RECORD', 3)
+        self.assert_count_equal('COMPONENTS/GRID[@name="AdhCmd"]/HEADER', 7)
+        self.assert_xml_equal('COMPONENTS/GRID[@name="AdhCmd"]/RECORD[1]/VALUE[@name="adherent"]', "Dalton Avrel")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="AdhCmd"]/RECORD[1]/VALUE[@name="type"]', "Annually [76.44€]")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="AdhCmd"]/RECORD[1]/VALUE[@name="team"]', "team2")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="AdhCmd"]/RECORD[1]/VALUE[@name="activity"]', "activity1")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="AdhCmd"]/RECORD[1]/VALUE[@name="reduce"]', "0.00€")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="AdhCmd"]/RECORD[2]/VALUE[@name="adherent"]', "Dalton Joe")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="AdhCmd"]/RECORD[2]/VALUE[@name="type"]', "Calendar [76.44€]")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="AdhCmd"]/RECORD[2]/VALUE[@name="team"]', "team3")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="AdhCmd"]/RECORD[2]/VALUE[@name="activity"]', "activity2")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="AdhCmd"]/RECORD[2]/VALUE[@name="reduce"]', "0.00€")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="AdhCmd"]/RECORD[3]/VALUE[@name="adherent"]', "Luke Lucky")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="AdhCmd"]/RECORD[3]/VALUE[@name="type"]', "Annually [76.44€]")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="AdhCmd"]/RECORD[3]/VALUE[@name="team"]', "team1")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="AdhCmd"]/RECORD[3]/VALUE[@name="activity"]', "activity2")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="AdhCmd"]/RECORD[3]/VALUE[@name="reduce"]', "0.00€")
+        cmd_file = self.get_first_xpath('CONTEXT/PARAM[@name="CMD_FILE"]').text
+        self.assertEqual(cmd_file[-13:], '/tmp/list.cmd')
+        self.assertTrue(isfile(cmd_file))
+
+        self.factory.xfer = AdherentCommand()
+        self.call('/diacamma.member/adherentCommand', {'dateref': '2010-10-01', 'CMD_FILE': cmd_file}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentCommand')
+        self.assert_count_equal('COMPONENTS/GRID[@name="AdhCmd"]/RECORD', 3)
+
+        self.factory.xfer = AdherentCommandDelete()
+        self.call('/diacamma.member/adherentCommandDelete', {'dateref': '2010-10-01', 'CMD_FILE': cmd_file, 'AdhCmd': '2'}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.member', 'adherentCommandDelete')
+
+        self.factory.xfer = AdherentCommand()
+        self.call('/diacamma.member/adherentCommand', {'dateref': '2010-10-01', 'CMD_FILE': cmd_file}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentCommand')
+        self.assert_count_equal('COMPONENTS/GRID[@name="AdhCmd"]/RECORD', 2)
+
+        self.factory.xfer = AdherentCommandModify()
+        self.call('/diacamma.member/adherentCommandModify', {'dateref': '2010-10-01', 'CMD_FILE': cmd_file, 'AdhCmd': '5'}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentCommandModify')
+        self.assert_count_equal('COMPONENTS/*', 16)
+        self.assert_xml_equal('COMPONENTS/LABELFORM[@name="adherent"]', 'Dalton Joe')
+
+        self.factory.xfer = AdherentCommandModify()
+        self.call('/diacamma.member/adherentCommandModify', {'dateref': '2010-10-01', 'SAVE': 'YES', 'CMD_FILE': cmd_file,
+                                                             'AdhCmd': '5', 'type': '3', 'team': '2', 'activity': '1', 'reduce': '7.5'}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.member', 'adherentCommandModify')
+
+        self.factory.xfer = AdherentCommand()
+        self.call('/diacamma.member/adherentCommand', {'dateref': '2010-10-01', 'CMD_FILE': cmd_file}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentCommand')
+        self.assert_count_equal('COMPONENTS/GRID[@name="AdhCmd"]/RECORD', 2)
+        self.assert_count_equal('COMPONENTS/GRID[@name="AdhCmd"]/HEADER', 7)
+        self.assert_xml_equal('COMPONENTS/GRID[@name="AdhCmd"]/RECORD[1]/VALUE[@name="adherent"]', "Dalton Joe")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="AdhCmd"]/RECORD[1]/VALUE[@name="type"]', "Monthly [76.44€]")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="AdhCmd"]/RECORD[1]/VALUE[@name="team"]', "team2")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="AdhCmd"]/RECORD[1]/VALUE[@name="activity"]', "activity1")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="AdhCmd"]/RECORD[1]/VALUE[@name="reduce"]', "7.50€")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="AdhCmd"]/RECORD[2]/VALUE[@name="adherent"]', "Luke Lucky")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="AdhCmd"]/RECORD[2]/VALUE[@name="type"]', "Annually [76.44€]")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="AdhCmd"]/RECORD[2]/VALUE[@name="team"]', "team1")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="AdhCmd"]/RECORD[2]/VALUE[@name="activity"]', "activity2")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="AdhCmd"]/RECORD[2]/VALUE[@name="reduce"]', "0.00€")

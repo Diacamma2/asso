@@ -23,6 +23,8 @@ along with Lucterios.  If not, see <http://www.gnu.org/licenses/>.
 '''
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+from os.path import isfile, join
+from os import unlink
 
 from django.utils.translation import ugettext_lazy as _
 from django.utils import six
@@ -40,18 +42,19 @@ from lucterios.CORE.xferprint import XferPrintLabel
 from lucterios.CORE.xferprint import XferPrintListing
 from lucterios.framework.tools import FORMTYPE_NOMODAL, ActionsManage, MenuManage, \
     FORMTYPE_REFRESH, CLOSE_NO, SELECT_SINGLE, WrapAction, FORMTYPE_MODAL, \
-    SELECT_MULTI, CLOSE_YES
+    SELECT_MULTI, CLOSE_YES, SELECT_NONE
 from lucterios.framework.xfercomponents import XferCompLabelForm, \
     XferCompCheckList, XferCompButton, XferCompSelect, XferCompDate, \
-    XferCompImage, XferCompEdit, XferCompGrid
+    XferCompImage, XferCompEdit, XferCompGrid, XferCompFloat
 from lucterios.framework.xfergraphic import XferContainerAcknowledge, XferContainerCustom
 from lucterios.framework.tools import convert_date, same_day_months_after
+from lucterios.framework.filetools import get_tmp_dir
 from lucterios.framework.error import LucteriosException, IMPORTANT
 from lucterios.framework import signal_and_lock
 
 from lucterios.CORE.parameters import Params
 
-from diacamma.member.models import Adherent, Subscription, Season, Age, Team, Activity, License, DocAdherent, SubscriptionType
+from diacamma.member.models import Adherent, Subscription, Season, Age, Team, Activity, License, DocAdherent, SubscriptionType, CommandManager
 
 
 MenuManage.add_sub("association", None, "diacamma.member/images/association.png", _("Association"), _("Association tools"), 30)
@@ -363,7 +366,7 @@ class AdherentRenew(XferContainerAcknowledge):
     icon = "adherent.png"
     model = Adherent
     field_id = 'adherent'
-    caption = _("License")
+    caption = _("re-new")
 
     def fillresponse(self):
         text = _(
@@ -373,6 +376,122 @@ class AdherentRenew(XferContainerAcknowledge):
                 self.getparam("dateref", ""), Season.current_season().date_ref)
             for item in self.items:
                 item.renew(dateref)
+
+
+@ActionsManage.affect_grid(_("command"), "images/add.png", unique=SELECT_MULTI, condition=lambda xfer, gridname='': xfer.is_renew)
+@MenuManage.describ('member.add_subscription')
+class AdherentCommand(XferContainerAcknowledge):
+    icon = "adherent.png"
+    model = Adherent
+    field_id = 'adherent'
+    caption = _("Command subscription")
+
+    def fillresponse(self):
+        cmd_manager = CommandManager(self.getparam('CMD_FILE', ''), self.items)
+        if self.getparam('SAVE') is None:
+            dlg = self.create_custom(self.model)
+            img = XferCompImage('img')
+            img.set_value(self.icon_path())
+            img.set_location(0, 0, 1, 4)
+            dlg.add_component(img)
+            lab = XferCompLabelForm('lbl_title')
+            lab.set_value_as_title(self.caption)
+            lab.set_location(1, 0)
+            dlg.add_component(lab)
+            grid = XferCompGrid('AdhCmd')
+            for fname, ftitle in cmd_manager.get_fields():
+                grid.add_header(fname, ftitle)
+            for cmd_id, cmd_item in cmd_manager.get_content_txt():
+                for head_name, value in cmd_item.items():
+                    grid.set_value(cmd_id, head_name, value)
+            grid.set_location(1, 2)
+            grid.add_action(self.request, AdherentCommandModify.get_action(TITLE_MODIFY, "images/edit.png"), close=CLOSE_NO, unique=SELECT_SINGLE)
+            grid.add_action(self.request, AdherentCommandDelete.get_action(TITLE_DELETE, "images/delete.png"), close=CLOSE_NO, unique=SELECT_SINGLE)
+            dlg.params['CMD_FILE'] = cmd_manager.file_name
+            dlg.add_component(grid)
+            if len(grid.records) > 0:
+                dlg.add_action(AdherentCommand.get_action(TITLE_OK, "images/ok.png"), close=CLOSE_YES, params={'SAVE': 'YES'})
+            dlg.add_action(WrapAction(TITLE_CLOSE, 'images/close.png'))
+        else:
+            pass
+
+
+@MenuManage.describ('member.add_subscription')
+class AdherentCommandDelete(XferContainerAcknowledge):
+    icon = "adherent.png"
+    caption = _("Delete subscription command")
+
+    def fillresponse(self, AdhCmd=0):
+        cmd_manager = CommandManager(self.getparam('CMD_FILE', ''), self.items)
+        cmd_manager.delete(AdhCmd)
+
+
+@MenuManage.describ('member.add_subscription')
+class AdherentCommandModify(XferContainerAcknowledge):
+    icon = "adherent.png"
+    caption = _("Modify subscription command")
+
+    def fillresponse(self, AdhCmd=0):
+        cmd_manager = CommandManager(self.getparam('CMD_FILE', ''), self.items)
+        if self.getparam('SAVE') is None:
+            dlg = self.create_custom(self.model)
+            img = XferCompImage('img')
+            img.set_value(self.icon_path())
+            img.set_location(0, 0, 1, 4)
+            dlg.add_component(img)
+            lab = XferCompLabelForm('lbl_title')
+            lab.set_value_as_title(self.caption)
+            lab.set_location(1, 0)
+            dlg.add_component(lab)
+            row = dlg.get_max_row() + 1
+            cmd_item = cmd_manager.get(AdhCmd)
+            cmd_item_txt = cmd_manager.get_txt(cmd_item)
+            for fname, ftitle in cmd_manager.get_fields():
+                lbl = XferCompLabelForm("lbl" + fname)
+                lbl.set_value_as_name(ftitle)
+                lbl.set_location(1, row)
+                dlg.add_component(lbl)
+                if fname == "type":
+                    sel = XferCompSelect(fname)
+                    sel.set_select_query(SubscriptionType.objects.all())
+                    sel.set_value(cmd_item[fname])
+                    sel.set_needed(True)
+                    sel.set_location(2, row)
+                    dlg.add_component(sel)
+                elif fname == "team":
+                    sel = XferCompSelect(fname)
+                    sel.set_select_query(Team.objects.all())
+                    sel.set_value(cmd_item[fname][0])
+                    sel.set_needed(True)
+                    sel.set_location(2, row)
+                    dlg.add_component(sel)
+                elif fname == "activity":
+                    sel = XferCompSelect(fname)
+                    sel.set_select_query(Activity.objects.all())
+                    sel.set_value(cmd_item[fname][0])
+                    sel.set_needed(True)
+                    sel.set_location(2, row)
+                    dlg.add_component(sel)
+                elif fname == "reduce":
+                    sel = XferCompFloat(fname)
+                    sel.set_value(cmd_item[fname])
+                    sel.set_location(2, row)
+                    dlg.add_component(sel)
+                else:
+                    lbl = XferCompLabelForm(fname)
+                    lbl.set_value(cmd_item_txt[fname])
+                    lbl.set_location(2, row)
+                    dlg.add_component(lbl)
+                row += 1
+            dlg.add_action(self.get_action(TITLE_OK, "images/ok.png"), close=CLOSE_YES, params={'SAVE': 'YES'})
+            dlg.add_action(WrapAction(TITLE_CLOSE, 'images/close.png'))
+        else:
+            cmd_item = cmd_manager.get(AdhCmd)
+            cmd_item['type'] = self.getparam("type", cmd_item['type'])
+            cmd_item['team'] = self.getparam("team", cmd_item['team'])
+            cmd_item['activity'] = self.getparam("activity", cmd_item['activity'])
+            cmd_item['reduce'] = self.getparam("reduce", cmd_item['reduce'])
+            cmd_manager.set(AdhCmd, cmd_item)
 
 
 @ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", unique=SELECT_MULTI)
