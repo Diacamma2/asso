@@ -140,8 +140,7 @@ class AdherentAbstractList(XferListEditor):
         self.add_component(lbl)
         sel = XferCompSelect('status')
         list_status = list(Subscription.get_field_by_name('status').choices)
-        if Params.getvalue("member-subscription-mode") != 1:
-            del list_status[0]
+        del list_status[0]
         del list_status[-2]
         del list_status[-1]
         list_status.insert(0, (-1, '%s & %s' % (_('building'), _('valid'))))
@@ -239,6 +238,9 @@ class AdherentActiveList(AdherentAbstractList):
             self.get_components(self.field_id).add_action(self.request, AdherentLicense.get_action(
                 _("License"), ""), unique=SELECT_SINGLE, close=CLOSE_NO)
 
+        if Params.getvalue("member-subscription-mode") == 1:
+            self.add_action(SubscriptionModerate.get_action(_("Moderation"), "images/up.png"), pos_act=0, close=CLOSE_NO)
+
 
 @MenuManage.describ('member.change_adherent', FORMTYPE_NOMODAL, 'member.actions', _('To find an adherent following a set of criteria.'))
 class AdherentSearch(XferSearchEditor):
@@ -265,6 +267,8 @@ class AdherentRenewList(AdherentAbstractList):
         self.get_components('title').colspan = 10
         self.get_components(self.field_id).colspan = 10
         self.get_components('nb_adherent').colspan = 10
+        if Params.getvalue("member-subscription-mode") == 1:
+            self.add_action(SubscriptionModerate.get_action(_("Moderation"), "images/up.png"), pos_act=0, close=CLOSE_NO)
 
 
 @ActionsManage.affect_grid(TITLE_ADD, "images/add.png")
@@ -563,7 +567,34 @@ class AdherentListing(XferPrintListing):
     caption = _("Listing adherent")
 
 
-@ActionsManage.affect_grid(TITLE_ADD, "images/add.png")
+@MenuManage.describ('member.change_subscription')
+class SubscriptionModerate(XferListEditor):
+    icon = "adherent.png"
+    model = Subscription
+    field_id = 'subscription'
+    caption = _("Subscriptions to moderate")
+
+    def fillresponse_header(self):
+        self.fieldnames = ["adherent", "season", "subscriptiontype", "begin_date", "end_date"]
+        self.filter = Q(status=0)
+        self.params['status_filter'] = 0
+
+
+@ActionsManage.affect_grid(_("Show adherent"), "", intop=True, unique=SELECT_SINGLE, condition=lambda xfer, gridname: (xfer.getparam('adherent') == None))
+@MenuManage.describ('member.add_subscription')
+class SubscriptionOpenAdherent(XferContainerAcknowledge):
+    icon = "adherent.png"
+    model = Subscription
+    field_id = 'subscription'
+    caption = _("Show adherent")
+
+    def fillresponse(self):
+        if 'status_filter' in self.params:
+            del self.params['status_filter']
+        self.redirect_action(AdherentShow.get_action(), params={'adherent': self.item.adherent_id})
+
+
+@ActionsManage.affect_grid(TITLE_ADD, "images/add.png", condition=lambda xfer, gridname: (xfer.getparam('adherent') != None))
 @ActionsManage.affect_show(TITLE_MODIFY, "images/edit.png", close=CLOSE_YES)
 @MenuManage.describ('member.add_subscription')
 class SubscriptionAddModify(XferAddEditor):
@@ -611,7 +642,7 @@ class SubscriptionTransition(XferTransition):
         XferTransition.fillresponse(self)
 
 
-@ActionsManage.affect_grid(_('Bill'), 'images/ok.png', unique=SELECT_SINGLE, close=CLOSE_NO)
+@ActionsManage.affect_grid(_('Bill'), 'images/ok.png', unique=SELECT_SINGLE, close=CLOSE_NO, condition=lambda xfer, gridname: (xfer.getparam('status_filter') == None) or (xfer.getparam('status_filter', -1) > 1))
 @MenuManage.describ('invoice.change_bill')
 class SubscriptionShowBill(XferContainerAcknowledge):
     icon = "adherent.png"
