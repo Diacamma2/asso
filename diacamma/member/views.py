@@ -580,7 +580,7 @@ class SubscriptionModerate(XferListEditor):
         self.params['status_filter'] = 0
 
 
-@ActionsManage.affect_grid(_("Show adherent"), "", intop=True, unique=SELECT_SINGLE, condition=lambda xfer, gridname: (xfer.getparam('adherent') == None))
+@ActionsManage.affect_grid(_("Show adherent"), "", intop=True, unique=SELECT_SINGLE, condition=lambda xfer, gridname='': (xfer.getparam('adherent') == None))
 @MenuManage.describ('member.add_subscription')
 class SubscriptionOpenAdherent(XferContainerAcknowledge):
     icon = "adherent.png"
@@ -594,7 +594,7 @@ class SubscriptionOpenAdherent(XferContainerAcknowledge):
         self.redirect_action(AdherentShow.get_action(), params={'adherent': self.item.adherent_id})
 
 
-@ActionsManage.affect_grid(TITLE_ADD, "images/add.png", condition=lambda xfer, gridname: (xfer.getparam('adherent') != None))
+@ActionsManage.affect_grid(TITLE_ADD, "images/add.png", condition=lambda xfer, gridname='': (xfer.getparam('adherent') != None))
 @ActionsManage.affect_show(TITLE_MODIFY, "images/edit.png", close=CLOSE_YES)
 @MenuManage.describ('member.add_subscription')
 class SubscriptionAddModify(XferAddEditor):
@@ -642,7 +642,7 @@ class SubscriptionTransition(XferTransition):
         XferTransition.fillresponse(self)
 
 
-@ActionsManage.affect_grid(_('Bill'), 'images/ok.png', unique=SELECT_SINGLE, close=CLOSE_NO, condition=lambda xfer, gridname: (xfer.getparam('status_filter') == None) or (xfer.getparam('status_filter', -1) > 1))
+@ActionsManage.affect_grid(_('Bill'), 'images/ok.png', unique=SELECT_SINGLE, close=CLOSE_NO, condition=lambda xfer, gridname='': (xfer.getparam('status_filter') == None) or (xfer.getparam('status_filter', -1) > 1))
 @MenuManage.describ('invoice.change_bill')
 class SubscriptionShowBill(XferContainerAcknowledge):
     icon = "adherent.png"
