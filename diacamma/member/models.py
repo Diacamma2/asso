@@ -759,6 +759,8 @@ class Subscription(LucteriosModel):
                 self.bill.detail_set.all().delete()
                 for art in self.subscriptiontype.articles.all():
                     Detail.create_for_bill(self.bill, art)
+                if hasattr(self, 'send_email_param'):
+                    self.sendemail(self.send_email_param)
         if (self.status == 3) and (self.bill is not None):
             if self.bill.status == 0:
                 self.bill.delete()
@@ -831,6 +833,20 @@ class Subscription(LucteriosModel):
         if self.status != 0:
             return _('You cannot delete this subscription!')
         return ""
+
+    def sendemail(self, sendemail):
+        if sendemail is not None:
+            self.bill.valid()
+            if self.adherent.email != '':
+                subscription_message = Params.getvalue("member-subscription-message")
+                subscription_message = subscription_message.replace('\n', '<br/>')
+                subscription_message = subscription_message.replace('{[', '<')
+                subscription_message = subscription_message.replace(']}', '>')
+                if self.bill.payoff_have_payment():
+                    subscription_message += get_html_payment(sendemail[0], sendemail[1], self.bill)
+                self.bill.send_email(_('New subscription'), "<html>%s</html>" % subscription_message, PrintModel.get_print_default(2, Bill))
+                return True
+        return False
 
     class Meta(object):
         verbose_name = _('subscription')
@@ -1059,19 +1075,8 @@ class CommandManager(object):
                 details = new_subscription.bill.detail_set.all().order_by('-id')
                 details[0].reduce = content_item["reduce"]
                 details[0].save()
-                if sendemail is not None:
-                    six.print_('date: %s - get_info_state:%s' % (new_subscription.bill.date, new_subscription.bill.get_info_state()))
-                    new_subscription.bill.valid()
-                    if new_subscription.adherent.email != '':
-                        subscription_message = Params.getvalue("member-subscription-message")
-                        subscription_message = subscription_message.replace('\n', '<br/>')
-                        subscription_message = subscription_message.replace('{[', '<')
-                        subscription_message = subscription_message.replace(']}', '>')
-                        if new_subscription.bill.payoff_have_payment():
-                            subscription_message += get_html_payment(sendemail[0], sendemail[1], new_subscription.bill)
-                        new_subscription.bill.send_email(_('New subscription'), "<html>%s</html>" % subscription_message,
-                                                         PrintModel.get_print_default(2, Bill))
-                        nb_bill += 1
+                if new_subscription.sendemail(sendemail):
+                    nb_bill += 1
         return (nb_sub, nb_bill)
 
 
@@ -1089,3 +1094,6 @@ def member_checkparam():
     Parameter.check_and_create(name="member-licence-enabled", typeparam=3, title=_("member-licence-enabled"), args="{}", value='True')
     Parameter.check_and_create(name="member-subscription-message", typeparam=0, title=_("member-subscription-message"),
                                args="{'Multi':True}", value=_('Welcome,\n\nYou have a new subscription.Joint, the quotation relative.\n\nRegards,'))
+    Parameter.check_and_create(name="member-subscription-mode", typeparam=4, title=_("member-subscription-mode"), args="{'Enum':3}", value='0',
+                               param_titles=(_("member-subscription-mode.0"), _("member-subscription-mode.1"), _("member-subscription-mode.2")))
+    

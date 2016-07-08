@@ -37,7 +37,10 @@ from lucterios.framework.tools import CLOSE_NO, FORMTYPE_REFRESH, ActionsManage,
 
 from lucterios.contacts.editors import IndividualEditor
 
-from diacamma.member.models import Period, Season, SubscriptionType, License, convert_date, same_day_months_after, Activity
+from diacamma.member.models import Period, Season, SubscriptionType, License, convert_date, same_day_months_after, Activity,\
+    Adherent
+from lucterios.CORE.parameters import Params
+from lucterios.contacts.models import Individual
 
 
 class SeasonEditor(LucteriosEditor):
@@ -172,6 +175,17 @@ class SubscriptionEditor(LucteriosEditor):
 
     def before_save(self, xfer):
         xfer.is_new = (self.item.id is None)
+        if xfer.getparam('autocreate', 0) == 1:
+            self.item.send_email_param = (xfer.request.META.get('HTTP_REFERER', xfer.request.build_absolute_uri()), xfer.language)
+            self.item.season = Season.current_season()
+            if self.item.adherent_id is None:
+                current_contact = Individual.objects.get(user=xfer.request.user)
+                current_contact = current_contact.get_final_child()
+                self.item.adherent = Adherent(id=current_contact.pk)
+                self.item.adherent.save(new_num=True)
+                self.item.adherent.__dict__.update(current_contact.__dict__)
+                self.item.adherent.save()
+                self.item.adherent_id = self.item.adherent.id
         if self.item.subscriptiontype.duration == 0:  # periodic
             season = self.item.season
             self.item.begin_date = season.begin_date
@@ -203,14 +217,26 @@ class SubscriptionEditor(LucteriosEditor):
                 subscription=self.item, value=value, activity_id=activity_id, team_id=team_id)
 
     def edit(self, xfer):
+        autocreate = xfer.getparam('autocreate', 0) == 1
         xfer.change_to_readonly("adherent")
         cmp_status = xfer.get_components('status')
-        del cmp_status.select_list[0]
-        del cmp_status.select_list[-2]
-        del cmp_status.select_list[-1]
+        if autocreate:
+            if Params.getvalue("member-subscription-mode") == 2:
+                status = 1
+            else:
+                status = 0
+            cmp_status.set_value(status)
+            xfer.change_to_readonly("status")
+            xfer.params['status'] = status
+        elif self.item.id is None:
+            del cmp_status.select_list[0]
+            del cmp_status.select_list[-2]
+            del cmp_status.select_list[-1]
+        else:
+            xfer.change_to_readonly("status")
         last_subscription = self.item.adherent.last_subscription
         cmp_subscriptiontype = xfer.get_components('subscriptiontype')
-        if self.item.id is not None:
+        if (self.item.id is not None) or autocreate:
             xfer.change_to_readonly('season')
         else:
             cmp_season = xfer.get_components('season')

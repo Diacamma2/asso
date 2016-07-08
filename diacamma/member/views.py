@@ -23,8 +23,6 @@ along with Lucterios.  If not, see <http://www.gnu.org/licenses/>.
 '''
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-from os.path import isfile, join
-from os import unlink
 
 from django.utils.translation import ugettext_lazy as _
 from django.utils import six
@@ -42,19 +40,19 @@ from lucterios.CORE.xferprint import XferPrintLabel
 from lucterios.CORE.xferprint import XferPrintListing
 from lucterios.framework.tools import FORMTYPE_NOMODAL, ActionsManage, MenuManage, \
     FORMTYPE_REFRESH, CLOSE_NO, SELECT_SINGLE, WrapAction, FORMTYPE_MODAL, \
-    SELECT_MULTI, CLOSE_YES, SELECT_NONE
+    SELECT_MULTI, CLOSE_YES
 from lucterios.framework.xfercomponents import XferCompLabelForm, \
     XferCompCheckList, XferCompButton, XferCompSelect, XferCompDate, \
     XferCompImage, XferCompEdit, XferCompGrid, XferCompFloat, XferCompCheck
 from lucterios.framework.xfergraphic import XferContainerAcknowledge, XferContainerCustom
 from lucterios.framework.tools import convert_date, same_day_months_after
-from lucterios.framework.filetools import get_tmp_dir
 from lucterios.framework.error import LucteriosException, IMPORTANT
 from lucterios.framework import signal_and_lock
 
 from lucterios.CORE.parameters import Params
 
 from diacamma.member.models import Adherent, Subscription, Season, Age, Team, Activity, License, DocAdherent, SubscriptionType, CommandManager
+from lucterios.contacts.models import Individual
 
 
 MenuManage.add_sub("association", None, "diacamma.member/images/association.png", _("Association"), _("Association tools"), 30)
@@ -142,7 +140,8 @@ class AdherentAbstractList(XferListEditor):
         self.add_component(lbl)
         sel = XferCompSelect('status')
         list_status = list(Subscription.get_field_by_name('status').choices)
-        del list_status[0]
+        if Params.getvalue("member-subscription-mode") != 1:
+            del list_status[0]
         del list_status[-2]
         del list_status[-1]
         list_status.insert(0, (-1, '%s & %s' % (_('building'), _('valid'))))
@@ -606,6 +605,11 @@ class SubscriptionTransition(XferTransition):
     model = Subscription
     field_id = 'subscription'
 
+    def fillresponse(self):
+        if self.item.status == 0:
+            self.item.send_email_param = (self.request.META.get('HTTP_REFERER', self.request.build_absolute_uri()), self.language)
+        XferTransition.fillresponse(self)
+
 
 @ActionsManage.affect_grid(_('Bill'), 'images/ok.png', unique=SELECT_SINGLE, close=CLOSE_NO)
 @MenuManage.describ('invoice.change_bill')
@@ -739,6 +743,23 @@ class AdherentStatisticPrint(XferPrintAction):
     with_text_export = True
 
 
+@MenuManage.describ(None)
+class SubscriptionAddForCurrent(SubscriptionAddModify):
+    redirect_to_show = False
+
+    def fillresponse(self):
+        self.params['autocreate'] = 1
+        current_contact = Individual.objects.get(user=self.request.user)
+        current_contact = current_contact.get_final_child()
+        if isinstance(current_contact, Adherent):
+            self.item.adherent = current_contact
+            self.params['adherent'] = current_contact.id
+        else:
+            self.item.adherent = Adherent()
+        self.item.season = Season.current_season()
+        SubscriptionAddModify.fillresponse(self)
+
+
 @signal_and_lock.Signal.decorate('summary')
 def summary_member(xfer):
     is_right = WrapAction.is_permission(xfer.request, 'member.change_adherent')
@@ -775,12 +796,23 @@ def summary_member(xfer):
             lab.set_value_as_headername(six.text_type(current_season))
             lab.set_location(0, row + 1, 4)
             xfer.add_component(lab)
-            nb_adh = len(Adherent.objects.filter(Q(subscription__begin_date__lte=dateref) & Q(
-                subscription__end_date__gte=dateref)))
+            nb_adh = len(Adherent.objects.filter(Q(subscription__begin_date__lte=dateref) & Q(subscription__end_date__gte=dateref) & Q(subscription__status=2)))
             lab = XferCompLabelForm('membernb')
             lab.set_value_as_header(_("Active adherents: %d") % nb_adh)
             lab.set_location(0, row + 2, 4)
             xfer.add_component(lab)
+            nb_adhcreat = len(Adherent.objects.filter(Q(subscription__begin_date__lte=dateref) & Q(subscription__end_date__gte=dateref) & Q(subscription__status=1)))
+            if nb_adhcreat > 0:
+                lab = XferCompLabelForm('memberadhcreat')
+                lab.set_value_as_header(_("No validated adherents: %d") % nb_adhcreat)
+                lab.set_location(0, row + 3, 4)
+                xfer.add_component(lab)
+            nb_adhwait = len(Adherent.objects.filter(Q(subscription__begin_date__lte=dateref) & Q(subscription__end_date__gte=dateref) & Q(subscription__status=0)))
+            if nb_adhwait > 0:
+                lab = XferCompLabelForm('memberadhwait')
+                lab.set_value_as_header(_("Adherents waiting moderation: %d") % nb_adhwait)
+                lab.set_location(0, row + 4, 4)
+                xfer.add_component(lab)
         except LucteriosException as lerr:
             lbl = XferCompLabelForm("member_error")
             lbl.set_value_center(six.text_type(lerr))
@@ -789,7 +821,7 @@ def summary_member(xfer):
     if is_right or (current_adherent is not None):
         lab = XferCompLabelForm('member')
         lab.set_value_as_infocenter("{[hr/]}")
-        lab.set_location(0, row + 3, 4)
+        lab.set_location(0, row + 5, 4)
         xfer.add_component(lab)
         return True
     else:
@@ -804,3 +836,16 @@ def change_bill_member(action, old_bill, new_bill):
             if sub.status == 1:
                 sub.validate()
             sub.save()
+
+
+@signal_and_lock.Signal.decorate('add_account')
+def add_account_subscription(current_contact, xfer):
+    if Params.getvalue("member-subscription-mode") > 0:
+        current_subscription = Subscription.objects.filter(adherent_id=current_contact.id, season=Season.current_season())
+        if len(current_subscription) == 0:
+            xfer.new_tab(_('002@Subscription'))
+            row = xfer.get_max_row() + 1
+            btn = XferCompButton('btnnewsubscript')
+            btn.set_location(1, row)
+            btn.set_action(xfer.request, SubscriptionAddForCurrent.get_action(_('Subscription'), 'diacamma.member/images/adherent.png'), close=CLOSE_NO)
+            xfer.add_component(btn)

@@ -43,7 +43,7 @@ class CategoryConf(XferListEditor):
     def fillresponse_header(self):
         self.new_tab(_('Parameters'))
         param_lists = ["member-team-enable", "member-team-text", "member-activite-enable", "member-activite-text", "member-age-enable",
-                       "member-licence-enabled", "member-filter-genre", "member-numero", "member-birth", "member-connection", "member-subscription-message"]
+                       "member-licence-enabled", "member-filter-genre", "member-numero", "member-birth", "member-connection", "member-subscription-mode", "member-subscription-message"]
         Params.fill(self, param_lists, 1, 1, nb_col=2)
         btn = XferCompButton('editparam')
         btn.set_location(1, self.get_max_row() + 1, 2, 1)
