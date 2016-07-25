@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-07-08 19:58+0000\n"
+"POT-Creation-Date: 2016-07-25 14:18+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: __init__.py:42
+#: __init__.py:42 views_conf.py:117 views_conf.py:120
 msgid "Diacamma event"
 msgstr "Diacamma event"
 
@@ -311,41 +311,49 @@ msgstr "no degree!"
 msgid "Total"
 msgstr "Total"
 
-#: views_conf.py:42
+#: views_conf.py:54
 msgid "Management of degrees"
 msgstr "Management of degrees"
 
-#: views_conf.py:45
+#: views_conf.py:57
 msgid "Configuration of degrees"
 msgstr "Configuration of degrees"
 
-#: views_conf.py:48
+#: views_conf.py:60 views_conf.py:117
 msgid "Parameters"
 msgstr "Parameters"
 
-#: views_conf.py:73
+#: views_conf.py:78
 msgid "Add degree type"
 msgstr "Add degree type"
 
-#: views_conf.py:74
+#: views_conf.py:79
 msgid "Modify degree type"
 msgstr "Modify degree type"
 
-#: views_conf.py:83
+#: views_conf.py:88
 msgid "Delete degree type"
 msgstr "Delete degree type"
 
-#: views_conf.py:93
+#: views_conf.py:98
 msgid "Add sub degree type"
 msgstr "Add sub degree type"
 
-#: views_conf.py:94
+#: views_conf.py:99
 msgid "Modify sub degree type"
 msgstr "Modify sub degree type"
 
-#: views_conf.py:103
+#: views_conf.py:108
 msgid "Delete sub degree type"
 msgstr "Delete sub degree type"
+
+#: views_conf.py:117 views_conf.py:120
+msgid "Configuration of degree parameters"
+msgstr "Define the configuration of your degrees and add them."
+
+#: views_conf.py:120
+msgid "Categories"
+msgstr "Categories"
 
 #: views_degree.py:63
 msgid "Add degree"
@@ -358,24 +366,3 @@ msgstr "Modify degree"
 #: views_degree.py:73
 msgid "Delete degree"
 msgstr "Delete degree"
-
-#~ msgid "Validation of an examination"
-#~ msgstr "Validation of an examination"
-
-#~ msgid "Do you want to validate this %s?"
-#~ msgstr "Do you want to validate this %s?"
-
-#~ msgid "Ok"
-#~ msgstr "Ok"
-
-#~ msgid "Cancel"
-#~ msgstr "Cancel"
-
-#~ msgid "Print"
-#~ msgstr "Print"
-
-#~ msgid "Close"
-#~ msgstr "Close"
-
-#~ msgid "Modify"
-#~ msgstr "Modify"

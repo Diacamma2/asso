@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-07-08 19:58+0000\n"
+"POT-Creation-Date: 2016-07-25 14:18+0000\n"
 "PO-Revision-Date: 2016-01-14 22:13+0000\n"
 "Last-Translator: b'Paul ARULATEDA <paul531@orange.fr>'\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -19,7 +19,8 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 "X-Translated-Using: django-rosetta 0.7.8\n"
 
-#: __init__.py:42
+#: __init__.py:42 views_conf.py:145 views_conf.py:157 views_conf.py:160
+#: views_conf.py:165
 msgid "Diacamma member"
 msgstr "Adhérent Diacamma "
 
@@ -223,7 +224,7 @@ msgstr "licence"
 msgid "age category"
 msgstr "catégorie d'age"
 
-#: models.py:493 views.py:877
+#: models.py:493 views.py:880
 msgid "002@Subscription"
 msgstr "Cotisation"
 
@@ -483,7 +484,7 @@ msgstr "Adhérents"
 msgid "Management of adherents and subscriptions."
 msgstr "Gestion des adhérents et des cotisations"
 
-#: views.py:82 views_conf.py:56
+#: views.py:82 views_conf.py:67 views_conf.py:148
 msgid "Age"
 msgstr "Age"
 
@@ -701,72 +702,101 @@ msgstr "Résultat par type"
 msgid "type"
 msgstr "type"
 
-#: views.py:832
+#: views.py:833
 #, python-format
 msgid "Active adherents: %d"
 msgstr "Adhérents actifs: %d"
 
-#: views.py:838
+#: views.py:840
 #, python-format
 msgid "No validated adherents: %d"
 msgstr "Adhérents non-validés: %d"
 
-#: views.py:844
+#: views.py:847
 #, python-format
 msgid "Adherents waiting moderation: %d"
 msgstr "Adhérents en attentes de modération: %d"
 
-#: views.py:881
+#: views.py:885
 msgid "Subscription"
 msgstr "Cotisation"
 
-#: views_conf.py:38
+#: views_conf.py:56
 msgid "Management of member categories"
 msgstr "Gestion des catégories d'adhésion"
 
-#: views_conf.py:41
+#: views_conf.py:59 views_conf.py:145
 msgid "Categories"
 msgstr "Catégories"
 
-#: views_conf.py:44
+#: views_conf.py:62 views_conf.py:165
 msgid "Parameters"
 msgstr "Paramètres"
 
-#: views_conf.py:73
+#: views_conf.py:84
 msgid "Add age"
 msgstr "Ajouter un age"
 
-#: views_conf.py:74
+#: views_conf.py:85
 msgid "Modify age"
 msgstr "Modification d'un age"
 
-#: views_conf.py:83
+#: views_conf.py:94
 msgid "Delete age"
 msgstr "Suppression d'un age"
 
-#: views_conf.py:93
+#: views_conf.py:104
 msgid "Add team"
 msgstr "Ajout d'une équipe"
 
-#: views_conf.py:94
+#: views_conf.py:105
 msgid "Modify team"
 msgstr "Modification d'une équipe"
 
-#: views_conf.py:103
+#: views_conf.py:114
 msgid "Delete team"
 msgstr "Suppression d'une équipe"
 
-#: views_conf.py:113
+#: views_conf.py:124
 msgid "Add activity"
 msgstr "Ajouter une activité"
 
-#: views_conf.py:114
+#: views_conf.py:125
 msgid "Modify activity"
 msgstr "Modification d'une activité"
 
-#: views_conf.py:123
+#: views_conf.py:134
 msgid "Delete activity"
 msgstr "Suppression d'une activité"
+
+#: views_conf.py:145
+msgid "Configuration of categories"
+msgstr ""
+"Définissez vos différentes catégories pour votre association. {[br/]} Dans "
+"la première, activer ou désactiver les paramètres de catégorie. {[br/]} "
+"Après, ajoutez vos catégories."
+
+#: views_conf.py:157 views_season.py:51
+msgid "Season"
+msgstr "Saison"
+
+#: views_conf.py:157
+msgid "Configuration of season"
+msgstr "Ajoutez votre saison et activez la."
+
+#: views_conf.py:160 views_season.py:77
+msgid "Subscriptions"
+msgstr "Les cotisations"
+
+#: views_conf.py:160
+msgid "Configuration of subscription"
+msgstr ""
+"Dans cet écran, vous pouvez ajouter vos différentes type d'adhésions pour "
+"votre association."
+
+#: views_conf.py:165
+msgid "Configuration of main parameters"
+msgstr "Configuration d'autres paramètres d'adhésion"
 
 #: views_season.py:40
 msgid "Member"
@@ -780,10 +810,6 @@ msgstr "Gestion des saisons et des cotisations"
 msgid "Seasons and subscriptions"
 msgstr "Les saisons et les cotisations"
 
-#: views_season.py:51
-msgid "Season"
-msgstr "Saison"
-
 #: views_season.py:54 views_season.py:109
 msgid "Show season"
 msgstr "Afficher une saison"
@@ -795,10 +821,6 @@ msgstr "Proche de l'active"
 #: views_season.py:58
 msgid "All"
 msgstr "Tous"
-
-#: views_season.py:77
-msgid "Subscriptions"
-msgstr "Les cotisations"
 
 #: views_season.py:81
 msgid "Active"

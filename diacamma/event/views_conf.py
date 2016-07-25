@@ -37,6 +37,18 @@ from lucterios.CORE.parameters import Params
 from lucterios.CORE.views import ParamEdit
 
 from diacamma.event.models import DegreeType, SubDegreeType
+from lucterios.framework import signal_and_lock
+
+
+def fill_params(xfer):
+    param_lists = ["event-degree-text", "event-subdegree-enable",
+                   "event-subdegree-text", "event-comment-text"]
+    Params.fill(xfer, param_lists, 1, xfer.get_max_row() + 1, nb_col=1)
+    btn = XferCompButton('editparam')
+    btn.set_location(1, xfer.get_max_row() + 1, 2, 1)
+    btn.set_action(xfer.request, ParamEdit.get_action(TITLE_MODIFY, 'images/edit.png'),
+                   close=CLOSE_NO, params={'params': param_lists, 'nb_col': 1})
+    xfer.add_component(btn)
 
 
 @MenuManage.describ('event.change_degreetype', FORMTYPE_NOMODAL, 'member.conf', _('Management of degrees'))
@@ -46,14 +58,7 @@ class EventConf(XferListEditor):
 
     def fillresponse_header(self):
         self.new_tab(_('Parameters'))
-        param_lists = ["event-degree-text", "event-subdegree-enable",
-                       "event-subdegree-text", "event-comment-text"]
-        Params.fill(self, param_lists, 1, 1, nb_col=1)
-        btn = XferCompButton('editparam')
-        btn.set_location(1, self.get_max_row() + 1, 2, 1)
-        btn.set_action(self.request, ParamEdit.get_action(TITLE_MODIFY, 'images/edit.png'),
-                       close=CLOSE_NO, params={'params': param_lists, 'nb_col': 1})
-        self.add_component(btn)
+        fill_params(self)
 
     def fillresponse_body(self):
         self.new_tab(Params.getvalue("event-degree-text"))
@@ -101,3 +106,20 @@ class SubDegreeTypeDel(XferDelete):
     model = SubDegreeType
     field_id = 'subdegreetype'
     caption = _("Delete sub degree type")
+
+
+@signal_and_lock.Signal.decorate('conf_wizard')
+def conf_wizard_event(wizard_ident, xfer):
+    if isinstance(wizard_ident, list) and (xfer is None):
+        wizard_ident.append(("event_params", 60))
+        wizard_ident.append(("event_degree", 61))
+    elif (xfer is not None) and (wizard_ident == "event_params"):
+        xfer.add_title(_("Diacamma event"), _('Parameters'), _('Configuration of degree parameters'))
+        fill_params(xfer)
+    elif (xfer is not None) and (wizard_ident == "event_degree"):
+        xfer.add_title(_("Diacamma event"), _("Categories"), _('Configuration of degree parameters'))
+        xfer.new_tab(Params.getvalue("event-degree-text"))
+        xfer.fill_grid(1, DegreeType, "degreetype", DegreeType.objects.all())
+        if Params.getvalue("event-subdegree-enable") == 1:
+            xfer.new_tab(Params.getvalue("event-subdegree-text"))
+            xfer.fill_grid(1, SubDegreeType, "subdegreetype", SubDegreeType.objects.all())

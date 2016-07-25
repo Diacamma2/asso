@@ -827,18 +827,21 @@ def summary_member(xfer):
             lab.set_value_as_headername(six.text_type(current_season))
             lab.set_location(0, row + 1, 4)
             xfer.add_component(lab)
-            nb_adh = len(Adherent.objects.filter(Q(subscription__begin_date__lte=dateref) & Q(subscription__end_date__gte=dateref) & Q(subscription__status=2)))
+            nb_adh = len(Adherent.objects.filter(Q(subscription__begin_date__lte=dateref) & Q(
+                subscription__end_date__gte=dateref) & Q(subscription__status=2)))
             lab = XferCompLabelForm('membernb')
             lab.set_value_as_header(_("Active adherents: %d") % nb_adh)
             lab.set_location(0, row + 2, 4)
             xfer.add_component(lab)
-            nb_adhcreat = len(Adherent.objects.filter(Q(subscription__begin_date__lte=dateref) & Q(subscription__end_date__gte=dateref) & Q(subscription__status=1)))
+            nb_adhcreat = len(Adherent.objects.filter(
+                Q(subscription__begin_date__lte=dateref) & Q(subscription__end_date__gte=dateref) & Q(subscription__status=1)))
             if nb_adhcreat > 0:
                 lab = XferCompLabelForm('memberadhcreat')
                 lab.set_value_as_header(_("No validated adherents: %d") % nb_adhcreat)
                 lab.set_location(0, row + 3, 4)
                 xfer.add_component(lab)
-            nb_adhwait = len(Adherent.objects.filter(Q(subscription__begin_date__lte=dateref) & Q(subscription__end_date__gte=dateref) & Q(subscription__status=0)))
+            nb_adhwait = len(Adherent.objects.filter(
+                Q(subscription__begin_date__lte=dateref) & Q(subscription__end_date__gte=dateref) & Q(subscription__status=0)))
             if nb_adhwait > 0:
                 lab = XferCompLabelForm('memberadhwait')
                 lab.set_value_as_header(_("Adherents waiting moderation: %d") % nb_adhwait)
@@ -878,5 +881,6 @@ def add_account_subscription(current_contact, xfer):
             row = xfer.get_max_row() + 1
             btn = XferCompButton('btnnewsubscript')
             btn.set_location(1, row)
-            btn.set_action(xfer.request, SubscriptionAddForCurrent.get_action(_('Subscription'), 'diacamma.member/images/adherent.png'), close=CLOSE_NO)
+            btn.set_action(xfer.request, SubscriptionAddForCurrent.get_action(
+                _('Subscription'), 'diacamma.member/images/adherent.png'), close=CLOSE_NO)
             xfer.add_component(btn)

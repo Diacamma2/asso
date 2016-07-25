@@ -29,10 +29,28 @@ from lucterios.framework.xferadvance import XferAddEditor, XferListEditor, TITLE
 from lucterios.framework.xferadvance import XferDelete
 from lucterios.framework.tools import ActionsManage, MenuManage, FORMTYPE_NOMODAL, CLOSE_NO, SELECT_MULTI, SELECT_SINGLE
 from lucterios.framework.xfercomponents import XferCompButton
+from lucterios.framework import signal_and_lock
 from lucterios.CORE.parameters import Params
 from lucterios.CORE.views import ParamEdit
 
-from diacamma.member.models import Activity, Age, Team
+from diacamma.member.models import Activity, Age, Team, Season, SubscriptionType
+
+
+def fill_params(xfer, param_lists=None, smallbtn=False):
+    if param_lists is None:
+        param_lists = ["member-team-enable", "member-team-text", "member-activite-enable", "member-activite-text", "member-age-enable",
+                       "member-licence-enabled", "member-filter-genre", "member-numero", "member-birth", "member-connection", "member-subscription-mode", "member-subscription-message"]
+    if len(param_lists) >= 3:
+        nb_col = 2
+    else:
+        nb_col = 1
+    Params.fill(xfer, param_lists, 1, xfer.get_max_row() + 1, nb_col=nb_col)
+    btn = XferCompButton('editparam')
+    btn.set_is_mini(smallbtn)
+    btn.set_location(3, xfer.get_max_row() + 1)
+    btn.set_action(xfer.request, ParamEdit.get_action(TITLE_MODIFY, 'images/edit.png'),
+                   close=CLOSE_NO, params={'params': param_lists, 'nb_col': 2})
+    xfer.add_component(btn)
 
 
 @MenuManage.describ('CORE.change_parameter', FORMTYPE_NOMODAL, 'member.conf', _('Management of member categories'))
@@ -42,14 +60,7 @@ class CategoryConf(XferListEditor):
 
     def fillresponse_header(self):
         self.new_tab(_('Parameters'))
-        param_lists = ["member-team-enable", "member-team-text", "member-activite-enable", "member-activite-text", "member-age-enable",
-                       "member-licence-enabled", "member-filter-genre", "member-numero", "member-birth", "member-connection", "member-subscription-mode", "member-subscription-message"]
-        Params.fill(self, param_lists, 1, 1, nb_col=2)
-        btn = XferCompButton('editparam')
-        btn.set_location(1, self.get_max_row() + 1, 2, 1)
-        btn.set_action(self.request, ParamEdit.get_action(TITLE_MODIFY, 'images/edit.png'),
-                       close=CLOSE_NO, params={'params': param_lists, 'nb_col': 2})
-        self.add_component(btn)
+        fill_params(self)
 
     def fillresponse_body(self):
         if Params.getvalue("member-age-enable") == 1:
@@ -121,3 +132,35 @@ class ActivityDel(XferDelete):
     model = Activity
     field_id = 'activity'
     caption = _("Delete activity")
+
+
+@signal_and_lock.Signal.decorate('conf_wizard')
+def conf_wizard_member(wizard_ident, xfer):
+    if isinstance(wizard_ident, list) and (xfer is None):
+        wizard_ident.append(("member_season", 11))
+        wizard_ident.append(("member_subscriptiontype", 12))
+        wizard_ident.append(("member_category", 13))
+        wizard_ident.append(("member_params", 14))
+    elif (xfer is not None) and (wizard_ident == "member_season"):
+        xfer.add_title(_("Diacamma member"), _('Season'), _('Configuration of season'))
+        xfer.fill_grid(5, Season, "season", Season.objects.all())
+    elif (xfer is not None) and (wizard_ident == "member_subscriptiontype"):
+        xfer.add_title(_("Diacamma member"), _('Subscriptions'), _('Configuration of subscription'))
+        fill_params(xfer, ["member-subscription-mode", "member-subscription-message"], True)
+        xfer.fill_grid(15, SubscriptionType, "subscriptiontype", SubscriptionType.objects.all())
+        xfer.get_components("subscriptiontype").colspan = 6
+    elif (xfer is not None) and (wizard_ident == "member_category"):
+        xfer.add_title(_("Diacamma member"), _("Categories"), _('Configuration of categories'))
+        fill_params(xfer, ["member-team-enable", "member-team-text", "member-activite-enable", "member-activite-text", "member-age-enable"], True)
+        if Params.getvalue("member-age-enable") == 1:
+            xfer.new_tab(_('Age'))
+            xfer.fill_grid(1, Age, "age", Age.objects.all())
+        if Params.getvalue("member-team-enable") == 1:
+            xfer.new_tab(Params.getvalue("member-team-text"))
+            xfer.fill_grid(1, Team, "team", Team.objects.all())
+        if Params.getvalue("member-activite-enable") == 1:
+            xfer.new_tab(Params.getvalue("member-activite-text"))
+            xfer.fill_grid(1, Activity, "activity", Activity.objects.all())
+    elif (xfer is not None) and (wizard_ident == "member_params"):
+        xfer.add_title(_("Diacamma member"), _('Parameters'), _('Configuration of main parameters'))
+        fill_params(xfer, ["member-licence-enabled", "member-filter-genre", "member-numero", "member-birth", "member-connection"], True)
