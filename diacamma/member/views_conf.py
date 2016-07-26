@@ -49,7 +49,7 @@ def fill_params(xfer, param_lists=None, smallbtn=False):
     btn.set_is_mini(smallbtn)
     btn.set_location(3, xfer.get_max_row() + 1)
     btn.set_action(xfer.request, ParamEdit.get_action(TITLE_MODIFY, 'images/edit.png'),
-                   close=CLOSE_NO, params={'params': param_lists, 'nb_col': 2})
+                   close=CLOSE_NO, params={'params': param_lists, 'nb_col': nb_col})
     xfer.add_component(btn)
 
 
@@ -146,11 +146,12 @@ def conf_wizard_member(wizard_ident, xfer):
         xfer.fill_grid(5, Season, "season", Season.objects.all())
     elif (xfer is not None) and (wizard_ident == "member_subscriptiontype"):
         xfer.add_title(_("Diacamma member"), _('Subscriptions'), _('Configuration of subscription'))
-        fill_params(xfer, ["member-subscription-mode", "member-subscription-message"], True)
         xfer.fill_grid(15, SubscriptionType, "subscriptiontype", SubscriptionType.objects.all())
         xfer.get_components("subscriptiontype").colspan = 6
+        fill_params(xfer, ["member-subscription-mode", "member-subscription-message"], True)
     elif (xfer is not None) and (wizard_ident == "member_category"):
         xfer.add_title(_("Diacamma member"), _("Categories"), _('Configuration of categories'))
+        xfer.new_tab(_('Parameters'))
         fill_params(xfer, ["member-team-enable", "member-team-text", "member-activite-enable", "member-activite-text", "member-age-enable"], True)
         if Params.getvalue("member-age-enable") == 1:
             xfer.new_tab(_('Age'))

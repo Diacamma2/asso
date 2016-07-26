@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-07-25 14:18+0000\n"
+"POT-Creation-Date: 2016-07-26 12:17+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: __init__.py:42 views_conf.py:145 views_conf.py:157 views_conf.py:160
+#: __init__.py:42 views_conf.py:145 views_conf.py:148 views_conf.py:153
 #: views_conf.py:165
 msgid "Diacamma member"
 msgstr "Diacamma member"
@@ -482,7 +482,7 @@ msgstr "Adherents"
 msgid "Management of adherents and subscriptions."
 msgstr "Management of adherents and subscriptions."
 
-#: views.py:82 views_conf.py:67 views_conf.py:148
+#: views.py:82 views_conf.py:67 views_conf.py:156
 msgid "Age"
 msgstr "Age"
 
@@ -722,7 +722,7 @@ msgstr "Subscription"
 msgid "Management of member categories"
 msgstr "Management of member categories"
 
-#: views_conf.py:59 views_conf.py:145
+#: views_conf.py:59 views_conf.py:153
 msgid "Categories"
 msgstr "Categories"
 
@@ -766,29 +766,29 @@ msgstr "Modify activity"
 msgid "Delete activity"
 msgstr "Delete activity"
 
-#: views_conf.py:145
-msgid "Configuration of categories"
-msgstr ""
-"Define your different categories for your association.{[br/]}In first, "
-"enable or disable the category parameters.{[br/]}After, add your categories."
-
-#: views_conf.py:157 views_season.py:51
+#: views_conf.py:145 views_season.py:51
 msgid "Season"
 msgstr "Season"
 
-#: views_conf.py:157
+#: views_conf.py:145
 msgid "Configuration of season"
 msgstr "Add your season and active it."
 
-#: views_conf.py:160 views_season.py:77
+#: views_conf.py:148 views_season.py:77
 msgid "Subscriptions"
 msgstr "Subscriptions"
 
-#: views_conf.py:160
+#: views_conf.py:148
 msgid "Configuration of subscription"
 msgstr ""
 "In this screen, you can add your different subscriptions for your "
 "association."
+
+#: views_conf.py:153
+msgid "Configuration of categories"
+msgstr ""
+"Define your different categories for your association.{[br/]}In first, "
+"enable or disable the category parameters.{[br/]}After, add your categories."
 
 #: views_conf.py:165
 msgid "Configuration of main parameters"

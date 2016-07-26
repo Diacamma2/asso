@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-07-25 14:18+0000\n"
+"POT-Creation-Date: 2016-07-26 12:17+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: __init__.py:42 views_conf.py:117 views_conf.py:120
+#: __init__.py:42 views_conf.py:116
 msgid "Diacamma event"
 msgstr "Évenement Diacamma"
 
@@ -348,13 +348,13 @@ msgstr "Modifier un type de sous-diplôme"
 msgid "Delete sub degree type"
 msgstr "Supprimer un type de sous-diplôme"
 
-#: views_conf.py:117 views_conf.py:120
+#: views_conf.py:116
+msgid "Degrees"
+msgstr "Diplômes"
+
+#: views_conf.py:116
 msgid "Configuration of degree parameters"
 msgstr "Définissez la configuration de vos diplômes et ajoutez les ."
-
-#: views_conf.py:120
-msgid "Categories"
-msgstr "Catégories"
 
 #: views_degree.py:63
 msgid "Add degree"

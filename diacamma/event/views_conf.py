@@ -111,13 +111,11 @@ class SubDegreeTypeDel(XferDelete):
 @signal_and_lock.Signal.decorate('conf_wizard')
 def conf_wizard_event(wizard_ident, xfer):
     if isinstance(wizard_ident, list) and (xfer is None):
-        wizard_ident.append(("event_params", 60))
-        wizard_ident.append(("event_degree", 61))
-    elif (xfer is not None) and (wizard_ident == "event_params"):
-        xfer.add_title(_("Diacamma event"), _('Parameters'), _('Configuration of degree parameters'))
-        fill_params(xfer)
+        wizard_ident.append(("event_degree", 60))
     elif (xfer is not None) and (wizard_ident == "event_degree"):
-        xfer.add_title(_("Diacamma event"), _("Categories"), _('Configuration of degree parameters'))
+        xfer.add_title(_("Diacamma event"), _("Degrees"), _('Configuration of degree parameters'))
+        xfer.new_tab(_('Parameters'))
+        fill_params(xfer)
         xfer.new_tab(Params.getvalue("event-degree-text"))
         xfer.fill_grid(1, DegreeType, "degreetype", DegreeType.objects.all())
         if Params.getvalue("event-subdegree-enable") == 1:
