@@ -1096,4 +1096,3 @@ def member_checkparam():
                                args="{'Multi':True}", value=_('Welcome,\n\nYou have a new subscription.Joint, the quotation relative.\n\nRegards,'))
     Parameter.check_and_create(name="member-subscription-mode", typeparam=4, title=_("member-subscription-mode"), args="{'Enum':3}", value='0',
                                param_titles=(_("member-subscription-mode.0"), _("member-subscription-mode.1"), _("member-subscription-mode.2")))
-    
