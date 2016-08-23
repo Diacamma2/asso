@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-07-26 12:17+0000\n"
+"POT-Creation-Date: 2016-08-23 13:55+0000\n"
 "PO-Revision-Date: 2016-01-14 22:13+0000\n"
 "Last-Translator: b'Paul ARULATEDA <paul531@orange.fr>'\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -20,7 +20,7 @@ msgstr ""
 "X-Translated-Using: django-rosetta 0.7.8\n"
 
 #: __init__.py:42 views_conf.py:145 views_conf.py:148 views_conf.py:153
-#: views_conf.py:165
+#: views_conf.py:166
 msgid "Diacamma member"
 msgstr "Adhérent Diacamma "
 
@@ -484,7 +484,7 @@ msgstr "Adhérents"
 msgid "Management of adherents and subscriptions."
 msgstr "Gestion des adhérents et des cotisations"
 
-#: views.py:82 views_conf.py:67 views_conf.py:156
+#: views.py:82 views_conf.py:67 views_conf.py:157
 msgid "Age"
 msgstr "Age"
 
@@ -729,7 +729,7 @@ msgstr "Gestion des catégories d'adhésion"
 msgid "Categories"
 msgstr "Catégories"
 
-#: views_conf.py:62 views_conf.py:165
+#: views_conf.py:62 views_conf.py:154 views_conf.py:166
 msgid "Parameters"
 msgstr "Paramètres"
 
@@ -795,7 +795,7 @@ msgstr ""
 "Commencez par activer ou désactiver les catégories que vous avez besoin. "
 "{[br/]} Ensuite, ajoutez les catégories propres à votre fonctionnement."
 
-#: views_conf.py:165
+#: views_conf.py:166
 msgid "Configuration of main parameters"
 msgstr "Configurez ici d'autres paramètres relatif à vos d'adhésions."
 

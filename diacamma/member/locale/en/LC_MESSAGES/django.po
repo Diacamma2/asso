@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-07-26 12:17+0000\n"
+"POT-Creation-Date: 2016-08-23 13:55+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #: __init__.py:42 views_conf.py:145 views_conf.py:148 views_conf.py:153
-#: views_conf.py:165
+#: views_conf.py:166
 msgid "Diacamma member"
 msgstr "Diacamma member"
 
@@ -482,7 +482,7 @@ msgstr "Adherents"
 msgid "Management of adherents and subscriptions."
 msgstr "Management of adherents and subscriptions."
 
-#: views.py:82 views_conf.py:67 views_conf.py:156
+#: views.py:82 views_conf.py:67 views_conf.py:157
 msgid "Age"
 msgstr "Age"
 
@@ -726,7 +726,7 @@ msgstr "Management of member categories"
 msgid "Categories"
 msgstr "Categories"
 
-#: views_conf.py:62 views_conf.py:165
+#: views_conf.py:62 views_conf.py:154 views_conf.py:166
 msgid "Parameters"
 msgstr "Parameters"
 
@@ -790,7 +790,7 @@ msgstr ""
 "Define your different categories for your association.{[br/]}In first, "
 "enable or disable the category parameters.{[br/]}After, add your categories."
 
-#: views_conf.py:165
+#: views_conf.py:166
 msgid "Configuration of main parameters"
 msgstr "Configuration of other adhesion parameters"
 
