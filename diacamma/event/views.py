@@ -341,9 +341,9 @@ class DegreeStatistic(XferContainerCustom):
                     lab.set_location(2, pos_y)
                     self.add_component(lab)
                     subtotal += val
-                    total += subtotal
+                    total += val
                     pos_y += 1
-                if (len(sublist) > 1) and (activity is not None):
+                if activity is not None:
                     lab = XferCompLabelForm("lblsubtotal_%d" % activity.id)
                     lab.set_value_as_header(_("Total"))
                     lab.set_location(1, pos_y)
@@ -359,7 +359,7 @@ class DegreeStatistic(XferContainerCustom):
             lab.set_location(1, pos_y)
             self.add_component(lab)
             lab = XferCompLabelForm("total")
-            lab.set_value_as_name(six.text_type(subtotal))
+            lab.set_value_as_name(six.text_type(total))
             lab.set_location(2, pos_y)
             self.add_component(lab)
         self.add_action(DegreeStatisticPrint.get_action(TITLE_PRINT, "images/print.png"),
