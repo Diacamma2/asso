@@ -61,6 +61,7 @@ class EventMigrate(MigrateAbstract):
                 self.print_debug(
                     "=> parameter of event %s - %s", (pname, param_value))
                 Parameter.change_value(pname, param_value)
+        Params.clear()
 
     def _config(self):
         degreetype_mdl = apps.get_model("event", "DegreeType")

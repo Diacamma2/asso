@@ -35,6 +35,7 @@ from lucterios.CORE.models import Parameter
 
 from diacamma.accounting.from_v1 import convert_code
 from diacamma.member.models import convert_date
+from lucterios.CORE.parameters import Params
 
 
 class MemberMigrate(MigrateAbstract):
@@ -255,6 +256,7 @@ class MemberMigrate(MigrateAbstract):
                 self.print_debug(
                     "=> parameter of invoice %s - %s", (pname, param_value))
                 Parameter.change_value(pname, param_value)
+        Params.clear()
 
     def run(self):
         try:
