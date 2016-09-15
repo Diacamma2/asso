@@ -871,7 +871,7 @@ class AdherentTest(LucteriosTest):
         self.assert_observer(
             'core.custom', 'diacamma.member', 'adherentStatistic')
 
-        self.assert_count_equal('COMPONENTS/*', 2 * 5 + 3)
+        self.assert_count_equal('COMPONENTS/*', 3 * 5 + 3)
         self.assert_count_equal(
             'COMPONENTS/GRID[@name="town_1"]/RECORD', 2)
         self.assert_xml_equal(
