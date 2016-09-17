@@ -30,6 +30,7 @@ from django.utils import six
 
 from lucterios.install.lucterios_migration import MigrateAbstract
 from lucterios.CORE.models import Parameter
+from lucterios.CORE.parameters import Params
 
 
 class EventMigrate(MigrateAbstract):
