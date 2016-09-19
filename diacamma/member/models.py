@@ -613,7 +613,7 @@ class Adherent(Individual):
 
     @property
     def license(self):
-        sub = self.current_subscription()
+        sub = self.current_subscription
         if sub is not None:
             resvalue = []
             for sub_lic in sub.license_set.all():
@@ -646,6 +646,7 @@ class Adherent(Individual):
         else:
             return None
 
+    @property
     def current_subscription(self):
         sub = self.subscription_set.filter(
             begin_date__lte=self.dateref, end_date__gte=self.dateref)

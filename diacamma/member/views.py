@@ -61,11 +61,60 @@ MenuManage.add_sub("member.actions", "association", "diacamma.member/images/memb
                    _("Adherents"), _("Management of adherents and subscriptions."), 50)
 
 
-class AdherentAbstractList(XferListEditor):
+class AdherentFilter(object):
+
+    def get_filter(self):
+        team = self.getparam("team", ())
+        activity = self.getparam("activity", ())
+        genre = self.getparam("genre", 0)
+        age = self.getparam("age", ())
+        status = self.getparam("status", -1)
+        dateref = convert_date(self.getparam("dateref", ""), Season.current_season().date_ref)
+        if self.getparam('is_renew', False):
+            date_one_year = same_day_months_after(dateref, -12)
+            date_six_month = same_day_months_after(dateref, -6)
+            date_three_month = same_day_months_after(dateref, -3)
+            current_filter = Q(subscription__subscriptiontype__duration=0) & Q(
+                subscription__end_date__gte=date_one_year)
+            current_filter |= Q(subscription__subscriptiontype__duration=1) & Q(
+                subscription__end_date__gte=date_six_month)
+            current_filter |= Q(subscription__subscriptiontype__duration=2) & Q(
+                subscription__end_date__gte=date_three_month)
+            current_filter |= Q(subscription__subscriptiontype__duration=3) & Q(
+                subscription__end_date__gte=date_one_year)
+            exclude_filter = Q(subscription__begin_date__lte=dateref) & Q(
+                subscription__end_date__gte=dateref)
+        else:
+            current_filter = Q(subscription__begin_date__lte=dateref) & Q(
+                subscription__end_date__gte=dateref)
+            exclude_filter = Q()
+        if len(team) > 0:
+            current_filter &= Q(subscription__license__team__in=team)
+        if len(activity) > 0:
+            current_filter &= Q(subscription__license__activity__in=activity)
+        if len(age) > 0:
+            age_filter = Q()
+            for age_item in Age.objects.filter(id__in=age):
+                age_filter |= Q(birthday__gte="%d-01-01" % (dateref.year - age_item.maximum)) & Q(
+                    birthday__lte="%d-12-31" % (dateref.year - age_item.minimum))
+            current_filter &= age_filter
+        if genre != 0:
+            current_filter &= Q(genre=genre)
+        if status == -1:
+            current_filter &= Q(subscription__status__in=(1, 2))
+        else:
+            current_filter &= Q(subscription__status=status)
+        return (current_filter, exclude_filter)
+
+
+class AdherentAbstractList(XferListEditor, AdherentFilter):
     icon = "adherent.png"
     model = Adherent
     field_id = 'adherent'
-    is_renew = False
+
+    def get_items_from_filter(self):
+        current_filter, exclude_filter = self.get_filter()
+        return self.model.objects.filter(current_filter).exclude(exclude_filter)
 
     def fillresponse_header(self):
         row = self.get_max_row() + 1
@@ -155,50 +204,6 @@ class AdherentAbstractList(XferListEditor):
                        modal=FORMTYPE_REFRESH, close=CLOSE_NO)
         self.add_component(btn)
 
-    def get_items_from_filter(self):
-        team = self.getparam("team", ())
-        activity = self.getparam("activity", ())
-        genre = self.getparam("genre", 0)
-        age = self.getparam("age", ())
-        status = self.getparam("status", -1)
-        dateref = convert_date(self.getparam("dateref", ""), Season.current_season().date_ref)
-        if self.is_renew:
-            date_one_year = same_day_months_after(dateref, -12)
-            date_six_month = same_day_months_after(dateref, -6)
-            date_three_month = same_day_months_after(dateref, -3)
-            current_filter = Q(subscription__subscriptiontype__duration=0) & Q(
-                subscription__end_date__gte=date_one_year)
-            current_filter |= Q(subscription__subscriptiontype__duration=1) & Q(
-                subscription__end_date__gte=date_six_month)
-            current_filter |= Q(subscription__subscriptiontype__duration=2) & Q(
-                subscription__end_date__gte=date_three_month)
-            current_filter |= Q(subscription__subscriptiontype__duration=3) & Q(
-                subscription__end_date__gte=date_one_year)
-            exclude_filter = Q(subscription__begin_date__lte=dateref) & Q(
-                subscription__end_date__gte=dateref)
-        else:
-            current_filter = Q(subscription__begin_date__lte=dateref) & Q(
-                subscription__end_date__gte=dateref)
-            exclude_filter = Q()
-        if len(team) > 0:
-            current_filter &= Q(subscription__license__team__in=team)
-        if len(activity) > 0:
-            current_filter &= Q(subscription__license__activity__in=activity)
-        if len(age) > 0:
-            age_filter = Q()
-            for age_item in Age.objects.filter(id__in=age):
-                age_filter |= Q(birthday__gte="%d-01-01" % (dateref.year - age_item.maximum)) & Q(
-                    birthday__lte="%d-12-31" % (dateref.year - age_item.minimum))
-            current_filter &= age_filter
-        if genre != 0:
-            current_filter &= Q(genre=genre)
-        if status == -1:
-            current_filter &= Q(subscription__status__in=(1, 2))
-        else:
-            current_filter &= Q(subscription__status=status)
-        items = self.model.objects.filter(current_filter).exclude(exclude_filter)
-        return items
-
 
 class AdherentSelection(AdherentAbstractList):
     caption = _("Select adherent")
@@ -225,7 +230,6 @@ class AdherentSelection(AdherentAbstractList):
 @MenuManage.describ('member.change_adherent', FORMTYPE_NOMODAL, 'member.actions', _('List of adherents with subscribtion'))
 class AdherentActiveList(AdherentAbstractList):
     caption = _("Subscribe adherents")
-    is_renew = False
 
     def fillresponse(self):
         XferListEditor.fillresponse(self)
@@ -248,15 +252,14 @@ class AdherentSearch(XferSearchEditor):
     model = Adherent
     field_id = 'adherent'
     caption = _("Search adherent")
-    is_renew = False
 
 
 @MenuManage.describ('member.change_adherent', FORMTYPE_NOMODAL, 'member.actions', _('List of adherents with old subscribtion not renew yet'))
 class AdherentRenewList(AdherentAbstractList):
     caption = _("Adherents to renew")
-    is_renew = True
 
     def fillresponse_header(self):
+        self.params['is_renew'] = True
         AdherentAbstractList.fillresponse_header(self)
         self.fieldnames = Adherent.get_renew_fields()
 
@@ -303,7 +306,7 @@ class AdherentLicense(XferContainerCustom):
         img.set_value(self.icon_path())
         img.set_location(0, 0, 1, 3)
         self.add_component(img)
-        self.item = self.item.current_subscription()
+        self.item = self.item.current_subscription
         if self.item is None:
             raise LucteriosException(IMPORTANT, _("no subscription!"))
         self.fill_from_model(
@@ -363,7 +366,7 @@ class AdherentLicenseSave(XferContainerAcknowledge):
                 doc.save()
 
 
-@ActionsManage.affect_grid(_("re-new"), "images/add.png", unique=SELECT_MULTI, condition=lambda xfer, gridname='': xfer.is_renew)
+@ActionsManage.affect_grid(_("re-new"), "images/add.png", unique=SELECT_MULTI, condition=lambda xfer, gridname='': xfer.getparam('is_renew', False))
 @MenuManage.describ('member.add_subscription')
 class AdherentRenew(XferContainerAcknowledge):
     icon = "adherent.png"
@@ -380,7 +383,7 @@ class AdherentRenew(XferContainerAcknowledge):
                 item.renew(dateref)
 
 
-@ActionsManage.affect_grid(_("command"), "images/add.png", unique=SELECT_MULTI, condition=lambda xfer, gridname='': xfer.is_renew)
+@ActionsManage.affect_grid(_("command"), "images/add.png", unique=SELECT_MULTI, condition=lambda xfer, gridname='': xfer.getparam('is_renew', False))
 @MenuManage.describ('member.add_subscription')
 class AdherentCommand(XferContainerAcknowledge):
     icon = "adherent.png"
@@ -551,20 +554,34 @@ class AdherentPrint(XferPrintAction):
 
 @ActionsManage.affect_list(TITLE_LABEL, "images/print.png")
 @MenuManage.describ('contacts.change_abstractcontact')
-class AdherentLabel(XferPrintLabel):
+class AdherentLabel(XferPrintLabel, AdherentFilter):
     icon = "adherent.png"
     model = Adherent
     field_id = 'adherent'
     caption = _("Label adherent")
 
+    def filter_callback(self, items):
+        if self.getparam('CRITERIA') is None:
+            current_filter, exclude_filter = AdherentFilter.get_filter(self)
+            return items.filter(current_filter).exclude(exclude_filter)
+        else:
+            return items
+
 
 @ActionsManage.affect_list(TITLE_LISTING, "images/print.png")
 @MenuManage.describ('contacts.change_abstractcontact')
-class AdherentListing(XferPrintListing):
+class AdherentListing(XferPrintListing, AdherentFilter):
     icon = "adherent.png"
     model = Adherent
     field_id = 'adherent'
     caption = _("Listing adherent")
+
+    def filter_callback(self, items):
+        if self.getparam('CRITERIA') is None:
+            current_filter, exclude_filter = AdherentFilter.get_filter(self)
+            return items.filter(current_filter).exclude(exclude_filter)
+        else:
+            return items
 
 
 @MenuManage.describ('member.change_subscription')

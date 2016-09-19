@@ -142,11 +142,11 @@ class AdherentEditor(IndividualEditor):
         img = xfer.get_components('img')
         img.set_value(get_icon_path("diacamma.member/images/adherent.png"))
 
-        if xfer.item.current_subscription() is not None:
+        if xfer.item.current_subscription is not None:
             xfer.tab = 1
             row_init = xfer.get_max_row() + 1
             row = row_init + 1
-            for doc in xfer.item.current_subscription().docadherent_set.all():
+            for doc in xfer.item.current_subscription.docadherent_set.all():
                 lbl = XferCompLabelForm("lbl_doc_%d" % doc.id)
                 lbl.set_value(six.text_type(doc.document))
                 lbl.set_location(2, row)

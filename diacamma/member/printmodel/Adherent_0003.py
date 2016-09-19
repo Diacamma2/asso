@@ -45,12 +45,12 @@ value = """210
 1//%s//#comment
 1//%s//#birthday
 1//%s//#birthplace
-1//%s//#subscription_set.season
-1//%s//#subscription_set.subscriptiontype
-1//%s//#subscription_set.begin_date
-1//%s//#subscription_set.end_date
-1//%s//#subscription_set.license_set.team
-1//%s//#subscription_set.license_set.activity
-1//%s//#subscription_set.license_set.value
+1//%s//#current_subscription.season
+1//%s//#current_subscription.subscriptiontype
+1//%s//#current_subscription.begin_date
+1//%s//#current_subscription.end_date
+1//%s//#current_subscription.license_set.team
+1//%s//#current_subscription.license_set.activity
+1//%s//#current_subscription.license_set.value
 """ % (_('numeros'), _('lastname'), _('firstname'), _('address'), _('postal code'), _('city'), _('tel1'), _('tel2'), _('email'),
        _('comment'), _("birthday"), _("birthplace"), _('season'), _('subscription type'), _('begin date'), _('end date'), _('team'), _('activity'), _('license #'))
