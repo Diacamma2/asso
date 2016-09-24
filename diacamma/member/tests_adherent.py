@@ -96,7 +96,7 @@ class AdherentTest(LucteriosTest):
         self.assert_count_equal(
             'COMPONENTS/GRID[@name="adherent"]/HEADER', 7)
         self.assert_count_equal(
-            'COMPONENTS/GRID[@name="adherent"]/ACTIONS/ACTION', 4)
+            'COMPONENTS/GRID[@name="adherent"]/ACTIONS/ACTION', 5)
         self.assert_xml_equal(
             'COMPONENTS/GRID[@name="adherent"]/HEADER[@name="num"]', "N°")
         self.assert_xml_equal(
@@ -825,7 +825,7 @@ class AdherentTest(LucteriosTest):
         self.assert_count_equal(
             'COMPONENTS/GRID[@name="adherent"]/HEADER', 5)
         self.assert_count_equal(
-            'COMPONENTS/GRID[@name="adherent"]/ACTIONS/ACTION', 3)
+            'COMPONENTS/GRID[@name="adherent"]/ACTIONS/ACTION', 4)
 
         self.factory.xfer = AdherentShow()
         self.call('/diacamma.member/adherentShow',

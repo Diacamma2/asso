@@ -238,10 +238,11 @@ class AdherentActiveList(AdherentAbstractList):
         self.get_components('title').colspan = 10
         self.get_components(self.field_id).colspan = 10
         self.get_components('nb_adherent').colspan = 10
+        self.get_components(self.field_id).add_action(self.request, AdherentSubscription.get_action(_("Subscription"), ""),
+                                                      unique=SELECT_SINGLE, close=CLOSE_NO)
         if Params.getvalue("member-licence-enabled"):
-            self.get_components(self.field_id).add_action(self.request, AdherentLicense.get_action(
-                _("License"), ""), unique=SELECT_SINGLE, close=CLOSE_NO)
-
+            self.get_components(self.field_id).add_action(self.request, AdherentLicense.get_action(_("License"), ""),
+                                                          unique=SELECT_SINGLE, close=CLOSE_NO)
         if Params.getvalue("member-subscription-mode") == 1:
             self.add_action(SubscriptionModerate.get_action(_("Moderation"), "images/up.png"), pos_act=0, close=CLOSE_NO)
 
@@ -364,6 +365,18 @@ class AdherentLicenseSave(XferContainerAcknowledge):
                 doc = License.objects.get(id=int(param_id[6:]))
                 doc.value = self.getparam(param_id, '')
                 doc.save()
+
+
+@MenuManage.describ('member.add_subscription')
+class AdherentSubscription(XferContainerAcknowledge):
+    icon = "adherent.png"
+    model = Adherent
+    field_id = 'adherent'
+    caption = _("Subscription")
+
+    def fillresponse(self):
+        if self.item.current_subscription is not None:
+            self.redirect_action(SubscriptionShow.get_action(), modal=FORMTYPE_MODAL, close=CLOSE_YES, params={'subscription': self.item.current_subscription.id})
 
 
 @ActionsManage.affect_grid(_("re-new"), "images/add.png", unique=SELECT_MULTI, condition=lambda xfer, gridname='': xfer.getparam('is_renew', False))
@@ -631,11 +644,6 @@ class SubscriptionShow(XferShowEditor):
     field_id = 'subscription'
     caption = _("Show subscription")
 
-    def fillresponse(self):
-        XferShowEditor.fillresponse(self)
-        self.add_action(ActionsManage.get_act_changed(
-            'Subscription', 'bill', _('Bill'), 'images/ok.png'), {'close': CLOSE_NO}, 0)
-
 
 @ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", unique=SELECT_MULTI)
 @MenuManage.describ('member.delete_subscription')
@@ -660,6 +668,7 @@ class SubscriptionTransition(XferTransition):
 
 
 @ActionsManage.affect_grid(_('Bill'), 'images/ok.png', unique=SELECT_SINGLE, close=CLOSE_NO, condition=lambda xfer, gridname='': (xfer.getparam('status_filter') == None) or (xfer.getparam('status_filter', -1) > 1))
+@ActionsManage.affect_show(_('Bill'), 'images/ok.png', close=CLOSE_NO)
 @MenuManage.describ('invoice.change_bill')
 class SubscriptionShowBill(XferContainerAcknowledge):
     icon = "adherent.png"
