@@ -36,7 +36,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.utils import formats, six
 from django.core.exceptions import ObjectDoesNotExist
 
-from lucterios.framework.models import LucteriosModel
+from lucterios.framework.models import LucteriosModel, get_value_converted
 from lucterios.framework.error import LucteriosException, IMPORTANT
 from lucterios.framework.tools import convert_date, same_day_months_after
 from lucterios.framework.signal_and_lock import Signal
@@ -598,7 +598,18 @@ class Adherent(Individual):
     @classmethod
     def get_print_fields(cls):
         return ["image", 'num', "firstname", "lastname", 'address', 'postal_code', 'city', 'country', 'tel1', 'tel2',
-                'email', 'birthday', 'birthplace', 'comment', 'user', 'subscription_set', 'responsability_set', 'OUR_DETAIL']
+                'email', 'birthday', 'birthplace', 'comment', 'user', 'subscription_set', 'responsability_set', 'documents', 'OUR_DETAIL']
+
+    @property
+    def documents(self):
+        value = ""
+        for doc in self.current_subscription.docadherent_set.all():
+            if doc.value:
+                color = "green"
+            else:
+                color = "red"
+            value += "%s: {[font color='%s']}%s{[/font]}{[br/]}" % (six.text_type(doc.document), color, get_value_converted(doc.value, True))
+        return value
 
     @property
     def age_category(self):
