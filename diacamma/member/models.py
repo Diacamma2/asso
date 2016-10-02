@@ -35,6 +35,7 @@ from django.db.models import Q
 from django.utils.translation import ugettext_lazy as _
 from django.utils import formats, six
 from django.core.exceptions import ObjectDoesNotExist
+from django_fsm import FSMIntegerField, transition
 
 from lucterios.framework.models import LucteriosModel, get_value_converted
 from lucterios.framework.error import LucteriosException, IMPORTANT
@@ -49,9 +50,6 @@ from lucterios.contacts.models import Individual
 from diacamma.invoice.models import Article, Bill, Detail, get_or_create_customer
 from diacamma.accounting.tools import format_devise
 from diacamma.accounting.models import CostAccounting
-from django_fsm import FSMIntegerField, transition
-from django.core.validators import MinValueValidator, MaxValueValidator
-from django.db.models.query import QuerySet
 from diacamma.payoff.views import get_html_payment
 
 
