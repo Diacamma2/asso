@@ -494,11 +494,10 @@ class Adherent(Individual):
 
     @classmethod
     def get_search_fields(cls):
-        if Params.getvalue("member-numero"):
-            ident_field = ['num']
-        else:
-            ident_field = []
+        ident_field = []
         ident_field.extend(super(Adherent, cls).get_search_fields())
+        if Params.getvalue("member-numero"):
+            ident_field.append('num')
         if Params.getvalue("member-birth"):
             ident_field.extend(['birthday', 'birthplace'])
         ident_field.extend(['subscription_set.status', 'subscription_set.season', 'subscription_set.subscriptiontype',
