@@ -597,6 +597,28 @@ class AdherentListing(XferPrintListing, AdherentFilter):
             return items
 
 
+def right_adherentconnection(request):
+    if AdherentLicense.get_action().check_permission(request) and (signal_and_lock.Signal.call_signal("send_connection", None, None, None) != 0):
+        return Params.getvalue("member-connection")
+    else:
+        return False
+
+
+@ActionsManage.affect_list(_('Connection'), "images/passwd.png")
+@MenuManage.describ(right_adherentconnection)
+class AdherentConnection(XferContainerAcknowledge):
+    icon = "adherent.png"
+    model = Adherent
+    field_id = 'adherent'
+    caption = _("Check access right")
+
+    def fillresponse(self):
+        if self.confirme(_("Do you want to check the access right for all adherents ?")):
+            if self.traitment("static/lucterios.CORE/images/info.png", _("Please, waiting..."), ""):
+                nb_del, nb_add, nb_update = Season.current_season().check_connection()
+                self.traitment_data[2] = _("{[center]}{[b]}Result{[/b]}{[/center]}{[br/]}%(nb_del)s removed connection(s).{[br/]}%(nb_add)s added connection(s).{[br/]}%(nb_update)s updated connection(s).") % {'nb_del': nb_del, 'nb_add': nb_add, 'nb_update': nb_update}
+
+
 @MenuManage.describ('member.change_subscription')
 class SubscriptionModerate(XferListEditor):
     icon = "adherent.png"

@@ -28,6 +28,7 @@ from datetime import date, datetime, timedelta
 from os.path import isfile, join
 import logging
 from os import unlink
+from unicodedata import normalize, category
 
 from django.db import models
 from django.db.models.aggregates import Min, Max, Count
@@ -43,7 +44,7 @@ from lucterios.framework.tools import convert_date, same_day_months_after
 from lucterios.framework.signal_and_lock import Signal
 from lucterios.framework.filetools import get_tmp_dir
 
-from lucterios.CORE.models import Parameter, PrintModel
+from lucterios.CORE.models import Parameter, PrintModel, LucteriosUser
 from lucterios.CORE.parameters import Params
 from lucterios.contacts.models import Individual
 
@@ -108,8 +109,8 @@ class Season(LucteriosModel):
 
     def stats_by_criteria(self, duration_id, field, name):
         val_by_city = {}
-        query = Q(subscription__begin_date__lte=self.date_ref) & Q(
-            subscription__end_date__gte=self.date_ref)
+        query = Q(subscription__status=2)
+        query &= Q(subscription__begin_date__lte=self.date_ref) & Q(subscription__end_date__gte=self.date_ref)
         query &= Q(subscription__subscriptiontype__duration=duration_id)
         birthday = date(
             self.date_ref.year - 18, self.date_ref.month, self.date_ref.day)
@@ -148,11 +149,46 @@ class Season(LucteriosModel):
         stat_res = []
         for duration_id, duration_title in SubscriptionType().get_field_by_name('duration').choices:
             res1 = self.stats_by_criteria(duration_id, 'city', 'city')
-            res2 = self.stats_by_criteria(
-                duration_id, 'subscription__subscriptiontype', 'type')
+            res2 = self.stats_by_criteria(duration_id, 'subscription__subscriptiontype', 'type')
             if (len(res1) > 0) or (len(res2) > 0):
                 stat_res.append((duration_title, res1, res2))
         return stat_res
+
+    def check_connection(self):
+        nb_del = 0
+        nb_add = 0
+        nb_update = 0
+        for adh in Adherent.objects.filter(Q(user__is_active=True)):
+            if len(adh.subscription_set.filter(Q(season=self) & Q(status=2))) == 0:
+                adh.user.is_active = False
+                adh.user.save()
+                nb_del += 1
+        for adh in Adherent.objects.filter(Q(subscription__status=2) & Q(subscription__season=self)):
+            if adh.user_id is None:
+                if adh.email != '':
+                    username_temp = adh.firstname.lower() + adh.lastname.upper()[0]
+                    username_temp = ''.join(letter for letter in normalize('NFD', username_temp) if category(letter) != 'Mn')
+                    username = ''
+                    inc = ''
+                    while (username == ''):
+                        username = "%s%s" % (username_temp, inc)
+                        users = LucteriosUser.objects.filter(username=username)
+                        if len(users) > 0:
+                            username = ''
+                            if (inc == ''):
+                                inc = 1
+                            else:
+                                inc += 1
+                    user = LucteriosUser.objects.create(username=username, first_name=adh.firstname, last_name=adh.lastname, email=adh.email)
+                    user.generate_password()
+                    adh.user = user
+                    adh.save()
+                    nb_add += 1
+            elif not adh.user.is_active:
+                adh.user.is_active = True
+                adh.user.save()
+                nb_update += 1
+        return nb_del, nb_add, nb_update
 
     @property
     def reference_year(self):
@@ -832,10 +868,22 @@ class Subscription(LucteriosModel):
     def cancel(self):
         pass
 
-    transitionname__remove = _("Disbar")
+    transitionname__disbar = _("Disbar")
 
     @transition(field=status, source=2, target=4)
     def disbar(self):
+        pass
+
+    transitionname__reopen3 = _("Re-open")
+
+    @transition(field=status, source=3, target=1)
+    def reopen3(self):
+        pass
+
+    transitionname__reopen4 = _("Re-open")
+
+    @transition(field=status, source=4, target=1)
+    def reopen4(self):
         pass
 
     def can_delete(self):
