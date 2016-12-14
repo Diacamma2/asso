@@ -872,7 +872,7 @@ class AdherentTest(LucteriosTest):
             'core.custom', 'diacamma.member', 'adherentStatistic')
 
         xml_values = self.response_xml.xpath('COMPONENTS/*')
-        self.assertTrue(len(xml_values) == (3 * 5 + 3) or len(xml_values) == (4 * 5 + 3), "size of COMPONENTS/* = %d" % len(xml_values))
+        self.assertEqual(0, (len(xml_values) - 3) % 5, "size of COMPONENTS/* = %d" % len(xml_values))
         self.assert_count_equal(
             'COMPONENTS/GRID[@name="town_1"]/RECORD', 2)
         self.assert_xml_equal(
