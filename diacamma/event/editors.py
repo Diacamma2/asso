@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 '''
 diacamma.event package
 
@@ -26,11 +25,14 @@ from __future__ import unicode_literals
 from datetime import date
 
 from django.utils.translation import ugettext_lazy as _
+from django.db.models import Q
 
 from lucterios.framework.editors import LucteriosEditor
 from lucterios.framework.error import LucteriosException, IMPORTANT
+from lucterios.framework.tools import FORMTYPE_REFRESH, CLOSE_NO
 
 from diacamma.member.models import Activity
+from diacamma.accounting.models import CostAccounting
 
 
 class DegreeEditor(LucteriosEditor):
@@ -43,6 +45,13 @@ class ParticipantEditor(LucteriosEditor):
 
     def edit(self, xfer):
         xfer.change_to_readonly('contact')
+        xfer.get_components('article').set_action(xfer.request, xfer.get_action('', ''), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
+        if xfer.item.article_id is None:
+            xfer.remove_component('reduce')
+            xfer.remove_component('lbl_reduce')
+        if xfer.item.event.event_type == 0:
+            xfer.remove_component('comment')
+            xfer.remove_component('lbl_comment')
 
 
 class EventEditor(LucteriosEditor):
@@ -66,6 +75,22 @@ var type=current.getValue();
 parent.get('date_end').setVisible(type==1);
 parent.get('lbl_date_end').setVisible(type==1);
 """
+        xfer.get_components('default_article').set_action(xfer.request, xfer.get_action('', ''), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
+        if xfer.item.default_article_id is None:
+            xfer.remove_component('cost_accounting')
+            xfer.remove_component('lbl_cost_accounting')
+        else:
+            comp = xfer.get_components("cost_accounting")
+            comp.set_needed(False)
+            comp.set_select_query(CostAccounting.objects.filter(Q(status=0)))
+            if xfer.item.id is not None:
+                comp.set_value(xfer.item.cost_accounting_id)
+            else:
+                cost_acc = CostAccounting.objects.filter(is_default=True)
+                if len(cost_acc) > 0:
+                    comp.set_value(cost_acc[0].id)
+                else:
+                    comp.set_value(0)
 
     def show(self, xfer):
         participant = xfer.get_components('participant')
@@ -75,7 +100,6 @@ parent.get('lbl_date_end').setVisible(type==1);
             participant.delete_header('subdegree_result')
             if self.item.event_type == 0:
                 participant.delete_header('comment')
-                participant.delete_action("diacamma.event/participantModify")
         else:
             participant.delete_header('current_degree')
         img = xfer.get_components('img')
@@ -90,3 +114,6 @@ parent.get('lbl_date_end').setVisible(type==1);
             xfer.remove_component('date_end')
             xfer.remove_component('lbl_date_end')
             img.set_value("/static/diacamma.event/images/degree.png")
+        if xfer.item.default_article_id is None:
+            xfer.remove_component('cost_accounting')
+            xfer.remove_component('lbl_cost_accounting')

@@ -31,15 +31,13 @@ from lucterios.framework.filetools import get_user_dir
 from lucterios.CORE.models import Parameter
 from lucterios.CORE.parameters import Params
 
-from diacamma.member.test_tools import default_season, default_params,\
-    default_adherents, set_parameters, default_financial, default_subscription
+from diacamma.member.test_tools import default_season, default_params, default_adherents, set_parameters, default_financial, default_subscription
 from diacamma.member.views import AdherentShow, SubscriptionAddModify
 from diacamma.event.test_tools import default_event_params, add_default_degree
-from diacamma.event.views import EventList, EventAddModify, EventDel, EventShow,\
-    OrganizerAddModify, OrganizerSave, OrganizerResponsible, OrganizerDel,\
-    ParticipantAdd, ParticipantSave, ParticipantDel, ParticipantOpen,\
-    EventTransition, ParticipantModify
-from diacamma.invoice.views import BillList
+from diacamma.event.views import EventList, EventAddModify, EventDel, EventShow, OrganizerAddModify, OrganizerSave, OrganizerResponsible, OrganizerDel,\
+    ParticipantAdd, ParticipantSave, ParticipantDel, ParticipantOpen, EventTransition, ParticipantModify
+from diacamma.invoice.views import BillList, BillShow
+from diacamma.accounting.test_tools import default_costaccounting
 
 
 class EventTest(LucteriosTest):
@@ -54,86 +52,59 @@ class EventTest(LucteriosTest):
         default_adherents()
         default_subscription()
         default_event_params()
-        set_parameters(
-            ["team", "activite", "age", "licence", "genre", 'numero', 'birth'])
+        set_parameters(["team", "activite", "age", "licence", "genre", 'numero', 'birth'])
         add_default_degree()
 
     def test_add_remove(self):
         self.factory.xfer = EventList()
         self.call('/diacamma.event/eventList', {}, False)
-        self.assert_observer(
-            'core.custom', 'diacamma.event', 'eventList')
-        self.assert_count_equal(
-            'COMPONENTS/GRID[@name="event"]/HEADER', 5)
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="event"]/HEADER[@name="activity"]', "passion")
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="event"]/HEADER[@name="event_type"]', "type d'évenement")
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="event"]/HEADER[@name="status"]', "status")
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="event"]/HEADER[@name="date_txt"]', "date")
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="event"]/HEADER[@name="comment"]', "commentaire")
-        self.assert_count_equal(
-            'COMPONENTS/GRID[@name="event"]/RECORD', 0)
+        self.assert_observer('core.custom', 'diacamma.event', 'eventList')
+        self.assert_count_equal('COMPONENTS/GRID[@name="event"]/HEADER', 5)
+        self.assert_xml_equal('COMPONENTS/GRID[@name="event"]/HEADER[@name="activity"]', "passion")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="event"]/HEADER[@name="event_type"]', "type d'évenement")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="event"]/HEADER[@name="status"]', "status")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="event"]/HEADER[@name="date_txt"]', "date")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="event"]/HEADER[@name="comment"]', "commentaire")
+        self.assert_count_equal('COMPONENTS/GRID[@name="event"]/RECORD', 0)
 
         self.factory.xfer = EventAddModify()
         self.call('/diacamma.event/eventAddModify', {}, False)
-        self.assert_observer(
-            'core.custom', 'diacamma.event', 'eventAddModify')
+        self.assert_observer('core.custom', 'diacamma.event', 'eventAddModify')
         self.assert_count_equal('COMPONENTS/*', 15)
-        self.assert_xml_equal(
-            'COMPONENTS/LABELFORM[@name="lbl_activity"]', "{[b]}passion{[/b]}")
+        self.assert_xml_equal('COMPONENTS/LABELFORM[@name="lbl_activity"]', "{[b]}passion{[/b]}")
         self.assert_count_equal('COMPONENTS/SELECT[@name="activity"]/CASE', 2)
-        self.assert_xml_equal(
-            'COMPONENTS/LABELFORM[@name="status"]', "en création")
+        self.assert_xml_equal('COMPONENTS/LABELFORM[@name="status"]', "en création")
 
         self.factory.xfer = EventAddModify()
         self.call('/diacamma.event/eventAddModify',
                   {"SAVE": "YES", "date": "2014-10-12", "activity": "1", "event_type": 0, "comment": "new examination", 'default_article': 0}, False)
-        self.assert_observer(
-            'core.acknowledge', 'diacamma.event', 'eventAddModify')
+        self.assert_observer('core.acknowledge', 'diacamma.event', 'eventAddModify')
 
         self.factory.xfer = EventShow()
         self.call('/diacamma.event/eventShow', {"event": 1}, False)
-        self.assert_observer(
-            'core.custom', 'diacamma.event', 'eventShow')
+        self.assert_observer('core.custom', 'diacamma.event', 'eventShow')
         self.assert_count_equal('COMPONENTS/*', 15)
-        self.assert_xml_equal(
-            'COMPONENTS/LABELFORM[@name="lbl_activity"]', "{[b]}passion{[/b]}")
-        self.assert_xml_equal(
-            'COMPONENTS/LABELFORM[@name="activity"]', 'activity1')
+        self.assert_xml_equal('COMPONENTS/LABELFORM[@name="lbl_activity"]', "{[b]}passion{[/b]}")
+        self.assert_xml_equal('COMPONENTS/LABELFORM[@name="activity"]', 'activity1')
 
         self.factory.xfer = EventList()
         self.call('/diacamma.event/eventList', {}, False)
-        self.assert_observer(
-            'core.custom', 'diacamma.event', 'eventList')
-        self.assert_count_equal(
-            'COMPONENTS/GRID[@name="event"]/RECORD', 1)
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="event"]/RECORD[1]/VALUE[@name="activity"]', "activity1")
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="event"]/RECORD[1]/VALUE[@name="status"]', "en création")
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="event"]/RECORD[1]/VALUE[@name="event_type"]', "examen")
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="event"]/RECORD[1]/VALUE[@name="date_txt"]', "12 octobre 2014")
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="event"]/RECORD[1]/VALUE[@name="comment"]', "new examination")
+        self.assert_observer('core.custom', 'diacamma.event', 'eventList')
+        self.assert_count_equal('COMPONENTS/GRID[@name="event"]/RECORD', 1)
+        self.assert_xml_equal('COMPONENTS/GRID[@name="event"]/RECORD[1]/VALUE[@name="activity"]', "activity1")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="event"]/RECORD[1]/VALUE[@name="status"]', "en création")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="event"]/RECORD[1]/VALUE[@name="event_type"]', "examen")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="event"]/RECORD[1]/VALUE[@name="date_txt"]', "12 octobre 2014")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="event"]/RECORD[1]/VALUE[@name="comment"]', "new examination")
 
         self.factory.xfer = EventDel()
-        self.call('/diacamma.event/eventDel',
-                  {"CONFIRME": "YES", "event": 1}, False)
-        self.assert_observer(
-            'core.acknowledge', 'diacamma.event', 'eventDel')
+        self.call('/diacamma.event/eventDel', {"CONFIRME": "YES", "event": 1}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.event', 'eventDel')
 
         self.factory.xfer = EventList()
         self.call('/diacamma.event/eventList', {}, False)
-        self.assert_observer(
-            'core.custom', 'diacamma.event', 'eventList')
-        self.assert_count_equal(
-            'COMPONENTS/GRID[@name="event"]/RECORD', 0)
+        self.assert_observer('core.custom', 'diacamma.event', 'eventList')
+        self.assert_count_equal('COMPONENTS/GRID[@name="event"]/RECORD', 0)
 
     def test_add_organizer(self):
         self.factory.xfer = EventAddModify()
@@ -270,11 +241,11 @@ class EventTest(LucteriosTest):
         self.assert_xml_equal(
             'COMPONENTS/GRID[@name="participant"]/HEADER[@name="current_degree"]', "courrant")
         self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="participant"]/HEADER[@name="article.ref_price"]', "article")
+            'COMPONENTS/GRID[@name="participant"]/HEADER[@name="article_ref_price"]', "article")
         self.assert_count_equal(
             'COMPONENTS/GRID[@name="participant"]/RECORD', 0)
         self.assert_count_equal(
-            'COMPONENTS/GRID[@name="participant"]/ACTIONS/ACTION', 4)
+            'COMPONENTS/GRID[@name="participant"]/ACTIONS/ACTION', 5)
 
         self.factory.xfer = ParticipantAdd()
         self.call('/diacamma.event/participantAdd', {"event": 1}, False)
@@ -301,7 +272,7 @@ class EventTest(LucteriosTest):
         self.assert_xml_equal(
             'COMPONENTS/GRID[@name="participant"]/RECORD[1]/VALUE[@name="current_degree"]', "level #1.2 sublevel #3")
         self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="participant"]/RECORD[1]/VALUE[@name="article.ref_price"]', "---")
+            'COMPONENTS/GRID[@name="participant"]/RECORD[1]/VALUE[@name="article_ref_price"]', "---")
         self.assert_xml_equal(
             'COMPONENTS/GRID[@name="participant"]/RECORD[2]/VALUE[@name="contact"]', "Dalton Jack")
         self.assert_xml_equal(
@@ -309,7 +280,7 @@ class EventTest(LucteriosTest):
         self.assert_xml_equal(
             'COMPONENTS/GRID[@name="participant"]/RECORD[2]/VALUE[@name="current_degree"]', None)
         self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="participant"]/RECORD[2]/VALUE[@name="article.ref_price"]', "---")
+            'COMPONENTS/GRID[@name="participant"]/RECORD[2]/VALUE[@name="article_ref_price"]', "---")
         self.assert_xml_equal(
             'COMPONENTS/GRID[@name="participant"]/RECORD[3]/VALUE[@name="contact"]', "Dalton Joe")
         self.assert_xml_equal(
@@ -317,7 +288,7 @@ class EventTest(LucteriosTest):
         self.assert_xml_equal(
             'COMPONENTS/GRID[@name="participant"]/RECORD[3]/VALUE[@name="current_degree"]', None)
         self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="participant"]/RECORD[3]/VALUE[@name="article.ref_price"]', "---")
+            'COMPONENTS/GRID[@name="participant"]/RECORD[3]/VALUE[@name="article_ref_price"]', "---")
 
         self.factory.xfer = ParticipantDel()
         self.call('/diacamma.event/participantDel',
@@ -437,7 +408,7 @@ class EventTest(LucteriosTest):
         self.assert_xml_equal(
             'COMPONENTS/GRID[@name="participant"]/HEADER[@name="comment"]', "commentaire")
         self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="participant"]/HEADER[@name="article.ref_price"]', "article")
+            'COMPONENTS/GRID[@name="participant"]/HEADER[@name="article_ref_price"]', "article")
         self.assert_count_equal(
             'COMPONENTS/GRID[@name="participant"]/RECORD', 3)
         self.assert_xml_equal(
@@ -451,7 +422,7 @@ class EventTest(LucteriosTest):
         self.assert_xml_equal(
             'COMPONENTS/GRID[@name="participant"]/RECORD[1]/VALUE[@name="comment"]', 'trop nul!')
         self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="participant"]/RECORD[1]/VALUE[@name="article.ref_price"]', '---')
+            'COMPONENTS/GRID[@name="participant"]/RECORD[1]/VALUE[@name="article_ref_price"]', '---')
         self.assert_xml_equal(
             'COMPONENTS/GRID[@name="participant"]/RECORD[2]/VALUE[@name="contact"]', "Dalton Jack")
         self.assert_xml_equal(
@@ -463,7 +434,7 @@ class EventTest(LucteriosTest):
         self.assert_xml_equal(
             'COMPONENTS/GRID[@name="participant"]/RECORD[2]/VALUE[@name="comment"]', 'ça va...')
         self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="participant"]/RECORD[2]/VALUE[@name="article.ref_price"]', '---')
+            'COMPONENTS/GRID[@name="participant"]/RECORD[2]/VALUE[@name="article_ref_price"]', '---')
         self.assert_xml_equal(
             'COMPONENTS/GRID[@name="participant"]/RECORD[3]/VALUE[@name="contact"]', "Dalton Joe")
         self.assert_xml_equal(
@@ -475,7 +446,7 @@ class EventTest(LucteriosTest):
         self.assert_xml_equal(
             'COMPONENTS/GRID[@name="participant"]/RECORD[3]/VALUE[@name="comment"]', 'bien :)')
         self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="participant"]/RECORD[3]/VALUE[@name="article.ref_price"]', '---')
+            'COMPONENTS/GRID[@name="participant"]/RECORD[3]/VALUE[@name="article_ref_price"]', '---')
 
         self.factory.xfer = OrganizerDel()
         self.call('/diacamma.event/organizerDel',
@@ -681,7 +652,7 @@ class EventTest(LucteriosTest):
         self.assert_xml_equal(
             'COMPONENTS/GRID[@name="participant"]/HEADER[@name="comment"]', "commentaire")
         self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="participant"]/HEADER[@name="article.ref_price"]', "article")
+            'COMPONENTS/GRID[@name="participant"]/HEADER[@name="article_ref_price"]', "article")
         self.assert_count_equal(
             'COMPONENTS/GRID[@name="participant"]/RECORD', 3)
         self.assert_xml_equal(
@@ -693,7 +664,7 @@ class EventTest(LucteriosTest):
         self.assert_xml_equal(
             'COMPONENTS/GRID[@name="participant"]/RECORD[1]/VALUE[@name="comment"]', 'trop nul!')
         self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="participant"]/RECORD[1]/VALUE[@name="article.ref_price"]', '---')
+            'COMPONENTS/GRID[@name="participant"]/RECORD[1]/VALUE[@name="article_ref_price"]', '---')
         self.assert_xml_equal(
             'COMPONENTS/GRID[@name="participant"]/RECORD[2]/VALUE[@name="contact"]', "Dalton Jack")
         self.assert_xml_equal(
@@ -703,7 +674,7 @@ class EventTest(LucteriosTest):
         self.assert_xml_equal(
             'COMPONENTS/GRID[@name="participant"]/RECORD[2]/VALUE[@name="comment"]', 'ça va...')
         self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="participant"]/RECORD[2]/VALUE[@name="article.ref_price"]', '---')
+            'COMPONENTS/GRID[@name="participant"]/RECORD[2]/VALUE[@name="article_ref_price"]', '---')
         self.assert_xml_equal(
             'COMPONENTS/GRID[@name="participant"]/RECORD[3]/VALUE[@name="contact"]', "Dalton Joe")
         self.assert_xml_equal(
@@ -713,7 +684,7 @@ class EventTest(LucteriosTest):
         self.assert_xml_equal(
             'COMPONENTS/GRID[@name="participant"]/RECORD[3]/VALUE[@name="comment"]', 'bien :)')
         self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="participant"]/RECORD[3]/VALUE[@name="article.ref_price"]', '---')
+            'COMPONENTS/GRID[@name="participant"]/RECORD[3]/VALUE[@name="article_ref_price"]', '---')
 
     def test_outing(self):
         self.factory.xfer = EventAddModify()
@@ -817,85 +788,61 @@ class EventTest(LucteriosTest):
     def test_bill(self):
         self.factory.xfer = EventAddModify()
         self.call('/diacamma.event/eventAddModify',
-                  {"SAVE": "YES", "date": "2014-10-12", "date_end": "2014-10-13", "activity": "1", "event_type": 1, "comment": "outing", 'default_article': 1}, False)
-        self.assert_observer(
-            'core.acknowledge', 'diacamma.event', 'eventAddModify')
+                  {"SAVE": "YES", "comment": "la fiesta", "date": "2014-10-12", "date_end": "2014-10-13", "activity": "1", "event_type": 1, 'default_article': 1, 'cost_accounting': 2}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.event', 'eventAddModify')
 
         self.factory.xfer = OrganizerSave()
         self.call('/diacamma.event/organizerSave',
                   {"event": 1, 'pkname': 'contact', 'contact': '6'}, False)
-        self.assert_observer(
-            'core.acknowledge', 'diacamma.event', 'organizerSave')
+        self.assert_observer('core.acknowledge', 'diacamma.event', 'organizerSave')
 
         self.factory.xfer = OrganizerResponsible()
         self.call('/diacamma.event/organizerResponsible',
                   {"event": 1, 'organizer': '1'}, False)
-        self.assert_observer(
-            'core.acknowledge', 'diacamma.event', 'organizerResponsible')
+        self.assert_observer('core.acknowledge', 'diacamma.event', 'organizerResponsible')
 
         self.factory.xfer = ParticipantSave()
         self.call('/diacamma.event/participantSave',
                   {"event": 1, 'pkname': 'contact', 'contact': '2;4;5'}, False)
-        self.assert_observer(
-            'core.acknowledge', 'diacamma.event', 'participantSave')
+        self.assert_observer('core.acknowledge', 'diacamma.event', 'participantSave')
 
         self.factory.xfer = EventShow()
         self.call('/diacamma.event/eventShow', {"event": 1}, False)
-        self.assert_observer(
-            'core.custom', 'diacamma.event', 'eventShow')
-        self.assert_count_equal('COMPONENTS/*', 17)
-        self.assert_xml_equal(
-            'COMPONENTS/LABELFORM[@name="default_article.ref_price"]', "ABC1 [12.34€]")
-        self.assert_count_equal(
-            'COMPONENTS/GRID[@name="participant"]/RECORD', 3)
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="participant"]/RECORD[1]/VALUE[@name="contact"]', "Dalton Avrel")
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="participant"]/RECORD[1]/VALUE[@name="article.ref_price"]', 'ABC1 [12.34€]')
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="participant"]/RECORD[2]/VALUE[@name="contact"]', "Dalton Jack")
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="participant"]/RECORD[2]/VALUE[@name="article.ref_price"]', 'ABC1 [12.34€]')
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="participant"]/RECORD[3]/VALUE[@name="contact"]', "Dalton Joe")
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="participant"]/RECORD[3]/VALUE[@name="article.ref_price"]', 'ABC1 [12.34€]')
+        self.assert_observer('core.custom', 'diacamma.event', 'eventShow')
+        self.assert_count_equal('COMPONENTS/*', 19)
+        self.assert_xml_equal('COMPONENTS/LABELFORM[@name="default_article.ref_price"]', "ABC1 [12.34€]")
+        self.assert_xml_equal('COMPONENTS/LABELFORM[@name="cost_accounting"]', "open")
+        self.assert_xml_equal('COMPONENTS/LABELFORM[@name="comment"]', "la fiesta")
+        self.assert_count_equal('COMPONENTS/GRID[@name="participant"]/RECORD', 3)
+        self.assert_xml_equal('COMPONENTS/GRID[@name="participant"]/RECORD[1]/VALUE[@name="contact"]', "Dalton Avrel")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="participant"]/RECORD[1]/VALUE[@name="article_ref_price"]', 'ABC1 [12.34€]')
+        self.assert_xml_equal('COMPONENTS/GRID[@name="participant"]/RECORD[2]/VALUE[@name="contact"]', "Dalton Jack")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="participant"]/RECORD[2]/VALUE[@name="article_ref_price"]', 'ABC1 [12.34€]')
+        self.assert_xml_equal('COMPONENTS/GRID[@name="participant"]/RECORD[3]/VALUE[@name="contact"]', "Dalton Joe")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="participant"]/RECORD[3]/VALUE[@name="article_ref_price"]', 'ABC1 [12.34€]')
 
         self.factory.xfer = ParticipantModify()
         self.call('/diacamma.event/participantModify',
                   {"event": 1, "participant": 1, "SAVE": "YES", 'comment': 'blabla', 'article': 0}, False)
-        self.assert_observer(
-            'core.acknowledge', 'diacamma.event', 'participantModify')
+        self.assert_observer('core.acknowledge', 'diacamma.event', 'participantModify')
         self.factory.xfer = ParticipantModify()
         self.call('/diacamma.event/participantModify',
-                  {"event": 1, "participant": 3, "SAVE": "YES", 'comment': 'bou!!!!', 'article': 5}, False)
-        self.assert_observer(
-            'core.acknowledge', 'diacamma.event', 'participantModify')
+                  {"event": 1, "participant": 3, "SAVE": "YES", 'comment': 'bou!!!!', 'article': 5, 'reduce': 10.0}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.event', 'participantModify')
 
         self.factory.xfer = EventShow()
         self.call('/diacamma.event/eventShow', {"event": 1}, False)
-        self.assert_observer(
-            'core.custom', 'diacamma.event', 'eventShow')
-        self.assert_count_equal(
-            'COMPONENTS/GRID[@name="participant"]/RECORD', 3)
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="participant"]/RECORD[1]/VALUE[@name="contact"]', "Dalton Avrel")
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="participant"]/RECORD[1]/VALUE[@name="article.ref_price"]', '---')
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="participant"]/RECORD[1]/VALUE[@name="comment"]', 'blabla')
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="participant"]/RECORD[2]/VALUE[@name="contact"]', "Dalton Jack")
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="participant"]/RECORD[2]/VALUE[@name="article.ref_price"]', 'ABC1 [12.34€]')
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="participant"]/RECORD[2]/VALUE[@name="comment"]', None)
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="participant"]/RECORD[3]/VALUE[@name="contact"]', "Dalton Joe")
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="participant"]/RECORD[3]/VALUE[@name="article.ref_price"]', 'ABC5 [64.10€]')
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="participant"]/RECORD[3]/VALUE[@name="comment"]', 'bou!!!!')
+        self.assert_observer('core.custom', 'diacamma.event', 'eventShow')
+        self.assert_count_equal('COMPONENTS/GRID[@name="participant"]/RECORD', 3)
+        self.assert_xml_equal('COMPONENTS/GRID[@name="participant"]/RECORD[1]/VALUE[@name="contact"]', "Dalton Avrel")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="participant"]/RECORD[1]/VALUE[@name="article_ref_price"]', '---')
+        self.assert_xml_equal('COMPONENTS/GRID[@name="participant"]/RECORD[1]/VALUE[@name="comment"]', 'blabla')
+        self.assert_xml_equal('COMPONENTS/GRID[@name="participant"]/RECORD[2]/VALUE[@name="contact"]', "Dalton Jack")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="participant"]/RECORD[2]/VALUE[@name="article_ref_price"]', 'ABC1 [12.34€]')
+        self.assert_xml_equal('COMPONENTS/GRID[@name="participant"]/RECORD[2]/VALUE[@name="comment"]', None)
+        self.assert_xml_equal('COMPONENTS/GRID[@name="participant"]/RECORD[3]/VALUE[@name="contact"]', "Dalton Joe")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="participant"]/RECORD[3]/VALUE[@name="article_ref_price"]', 'ABC5 [64.10€] (-10.00€)')
+        self.assert_xml_equal('COMPONENTS/GRID[@name="participant"]/RECORD[3]/VALUE[@name="comment"]', 'bou!!!!')
 
         self.factory.xfer = BillList()
         self.call('/diacamma.invoice/billList', {}, False)
@@ -906,19 +853,30 @@ class EventTest(LucteriosTest):
         self.factory.xfer = EventTransition()
         self.call('/diacamma.event/eventShow',
                   {"event": 1, 'CONFIRME': 'YES', 'TRANSITION': 'validate'}, False)
-        self.assert_observer(
-            'core.acknowledge', 'diacamma.event', 'eventShow')
+        self.assert_observer('core.acknowledge', 'diacamma.event', 'eventShow')
 
         self.factory.xfer = BillList()
         self.call('/diacamma.invoice/billList', {}, False)
         self.assert_observer('core.custom', 'diacamma.invoice', 'billList')
         self.assert_count_equal('COMPONENTS/GRID[@name="bill"]/RECORD', 2)
         self.assert_count_equal('COMPONENTS/GRID[@name="bill"]/HEADER', 7)
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="bill"]/RECORD[1]/VALUE[@name="third"]', "Dalton Jack")
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="bill"]/RECORD[1]/VALUE[@name="total"]', "12.34€")
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="bill"]/RECORD[2]/VALUE[@name="third"]', "Dalton Joe")
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="bill"]/RECORD[2]/VALUE[@name="total"]', "64.10€")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="bill"]/RECORD[1]/VALUE[@name="third"]', "Dalton Jack")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="bill"]/RECORD[1]/VALUE[@name="total"]', "12.34€")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="bill"]/RECORD[1]/VALUE[@name="comment"]', "{[b]}stage/sortie{[/b]}: 12 octobre 2014 -> 13 octobre 2014{[br/]}{[i]}la fiesta{[/i]}")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="bill"]/RECORD[2]/VALUE[@name="third"]', "Dalton Joe")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="bill"]/RECORD[2]/VALUE[@name="total"]', "54.10€")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="bill"]/RECORD[2]/VALUE[@name="comment"]', "{[b]}stage/sortie{[/b]}: 12 octobre 2014 -> 13 octobre 2014{[br/]}{[i]}la fiesta{[/i]}{[br/]}bou!!!!")
+
+        self.factory.xfer = BillShow()
+        self.call('/diacamma.invoice/billShow', {'bill': 2}, False)
+        self.assert_observer('core.custom', 'diacamma.invoice', 'billShow')
+        self.assert_xml_equal('COMPONENTS/LABELFORM[@name="third"]', "Dalton Joe")
+        self.assert_xml_equal('COMPONENTS/LABELFORM[@name="cost_accounting"]', "open")
+        self.assert_count_equal('COMPONENTS/GRID[@name="detail"]/RECORD', 1)
+        self.assert_xml_equal('COMPONENTS/GRID[@name="detail"]/RECORD[1]/VALUE[@name="article"]', 'ABC5')
+        self.assert_xml_equal('COMPONENTS/GRID[@name="detail"]/RECORD[1]/VALUE[@name="designation"]', 'Article 05')
+        self.assert_xml_equal('COMPONENTS/GRID[@name="detail"]/RECORD[1]/VALUE[@name="price_txt"]', '64.10€')
+        self.assert_xml_equal('COMPONENTS/GRID[@name="detail"]/RECORD[1]/VALUE[@name="quantity"]', '1.00')
+        self.assert_xml_equal('COMPONENTS/GRID[@name="detail"]/RECORD[1]/VALUE[@name="reduce_txt"]', '10.00€(15.60%)')
+        self.assert_xml_equal('COMPONENTS/GRID[@name="detail"]/RECORD[1]/VALUE[@name="total"]', '54.10€')
+        self.assert_xml_equal('COMPONENTS/LABELFORM[@name="total_excltax"]', "54.10€")

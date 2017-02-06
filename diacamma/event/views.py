@@ -265,7 +265,7 @@ class ParticipantAddContact(ContactSelection):
     inital_model = Individual
 
 
-@ActionsManage.affect_grid(TITLE_MODIFY, "images/edit.png", unique=SELECT_SINGLE, condition=lambda xfer, gridname='': (xfer.item.status == 0) and (xfer.item.event_type == 1))
+@ActionsManage.affect_grid(TITLE_MODIFY, "images/edit.png", unique=SELECT_SINGLE, condition=lambda xfer, gridname='': (xfer.item.status == 0))
 @MenuManage.describ('event.add_event')
 class ParticipantModify(XferAddEditor):
     icon = "degree.png"
