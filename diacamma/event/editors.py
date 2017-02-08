@@ -31,8 +31,8 @@ from lucterios.framework.editors import LucteriosEditor
 from lucterios.framework.error import LucteriosException, IMPORTANT
 from lucterios.framework.tools import FORMTYPE_REFRESH, CLOSE_NO
 
+from diacamma.accounting.models import CostAccounting, FiscalYear
 from diacamma.member.models import Activity
-from diacamma.accounting.models import CostAccounting
 
 
 class DegreeEditor(LucteriosEditor):
@@ -82,7 +82,7 @@ parent.get('lbl_date_end').setVisible(type==1);
         else:
             comp = xfer.get_components("cost_accounting")
             comp.set_needed(False)
-            comp.set_select_query(CostAccounting.objects.filter(Q(status=0)))
+            comp.set_select_query(CostAccounting.objects.filter(Q(status=0) & (Q(year=None) | Q(year=FiscalYear.get_current()))))
             if xfer.item.id is not None:
                 comp.set_value(xfer.item.cost_accounting_id)
             else:
