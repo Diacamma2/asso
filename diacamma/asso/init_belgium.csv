@@ -1,0 +1,41 @@
+code;name
+140;Bénéfice reporté
+141;Perte reportée
+16;Provisions
+162;Provisions pour grosses réparations et gros entretien
+163;Provisions pour autres risques et charges
+400;Clients
+440;Fournisseurs
+550;Comptes courants
+570;Caisses-espèces
+580;Virements internes
+600;Achats de matières premières
+601;Achats de fournitures
+602;Achats de services, travaux et études
+603;Sous-traitances générales
+604;Achats de marchandises
+608;Remises, ristournes et rabais obtenus
+610;Loyers et charges locatives
+611;Entretien et réparation (fournitures et prestations)
+612;Fournitures faites à l'entreprise
+6120;Eau, gaz, électricité
+6121;Communication et frais postaux
+614;Annonces, publicité, propagande et documentation
+644;Charges d'exploitation diverses
+6500;Intérêts, commissions et frais afférents aux dettes
+6502;Autres charges des dettes
+6503;Intérêts intercalaires portés à l'actif
+657;Charges financières diverses
+690;Résultat négatif de l’exercice antérieur reporté
+691;Transfert aux fonds affectés
+693;Résultat positif à reporter
+700;Ventes et prestations de services
+708;Remises, ristournes et rabais accordés
+730;Cotisations, dons, legs et subsides
+740;Autres produits d'exploitation
+756;Produits financiers divers
+760;Produits exceptionnels
+790;Résultat positif de l’exercice antérieur reporté
+791;Prélèvements sur les fonds affectés
+792;Prélèvements sur les fonds de l’association
+793;Résultat négatif à reporter
