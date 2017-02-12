@@ -39,6 +39,10 @@ from diacamma.invoice.models import Article
 
 
 def default_financial():
+    from diacamma.invoice.views_conf import paramchange_invoice
+    from diacamma.payoff.views_conf import paramchange_payoff
+    paramchange_invoice([])
+    paramchange_payoff([])
     default_compta()
     default_articles()
     default_bankaccount()
