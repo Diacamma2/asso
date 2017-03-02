@@ -33,7 +33,8 @@ from lucterios.framework.editors import LucteriosEditor
 from lucterios.framework.xfercomponents import XferCompLabelForm, XferCompDate, XferCompFloat,\
     XferCompSelect, XferCompCheck, XferCompButton
 from lucterios.framework.error import LucteriosException, IMPORTANT
-from lucterios.framework.tools import CLOSE_NO, FORMTYPE_REFRESH, ActionsManage, get_icon_path
+from lucterios.framework.tools import CLOSE_NO, FORMTYPE_REFRESH, ActionsManage, get_icon_path,\
+    FORMTYPE_MODAL
 
 from lucterios.contacts.editors import IndividualEditor
 
@@ -141,6 +142,34 @@ class AdherentEditor(IndividualEditor):
             xfer.params['individual'] = xfer.getparam('adherent', 0)
         img = xfer.get_components('img')
         img.set_value(get_icon_path("diacamma.member/images/adherent.png"))
+
+        if Params.getobject("member-family-type") is not None:
+            xfer.tab = 1
+            row_init = xfer.get_max_row() + 1
+            lbl = XferCompLabelForm("lbl_family")
+            lbl.set_value_as_name(_('family'))
+            lbl.set_location(1, row_init)
+            xfer.add_component(lbl)
+            lbl = XferCompLabelForm("family")
+            current_family = self.item.family
+            if current_family is None:
+                lbl.set_value('---')
+            else:
+                lbl.set_value(six.text_type(self.item.family))
+            lbl.set_location(2, row_init, 2)
+            xfer.add_component(lbl)
+            btn = XferCompButton('famillybtn')
+            btn.is_mini = True
+            btn.set_location(4, row_init)
+            if current_family is None:
+                act = ActionsManage.get_action_url('member.Adherent', 'FamilyAdd', xfer)
+                act.set_value("", "images/add.png")
+                btn.set_action(xfer.request, act, modal=FORMTYPE_MODAL, close=CLOSE_NO)
+            else:
+                act = ActionsManage.get_action_url('contacts.LegalEntity', 'Show', xfer)
+                act.set_value("", "images/edit.png")
+                btn.set_action(xfer.request, act, modal=FORMTYPE_MODAL, close=CLOSE_NO, params={'legal_entity': six.text_type(current_family.id)})
+            xfer.add_component(btn)
 
         if xfer.item.current_subscription is not None:
             xfer.tab = 1

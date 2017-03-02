@@ -40,7 +40,7 @@ from lucterios.CORE.xferprint import XferPrintLabel
 from lucterios.CORE.xferprint import XferPrintListing
 from lucterios.framework.tools import FORMTYPE_NOMODAL, ActionsManage, MenuManage, \
     FORMTYPE_REFRESH, CLOSE_NO, SELECT_SINGLE, WrapAction, FORMTYPE_MODAL, \
-    SELECT_MULTI, CLOSE_YES
+    SELECT_MULTI, CLOSE_YES, SELECT_NONE
 from lucterios.framework.xfercomponents import XferCompLabelForm, \
     XferCompCheckList, XferCompButton, XferCompSelect, XferCompDate, \
     XferCompImage, XferCompEdit, XferCompGrid, XferCompFloat, XferCompCheck
@@ -52,7 +52,8 @@ from lucterios.framework import signal_and_lock
 from lucterios.CORE.parameters import Params
 
 from diacamma.member.models import Adherent, Subscription, Season, Age, Team, Activity, License, DocAdherent, SubscriptionType, CommandManager
-from lucterios.contacts.models import Individual
+from lucterios.contacts.models import Individual, LegalEntity, Responsability
+from lucterios.contacts.views_contacts import LegalEntityAddModify
 
 
 MenuManage.add_sub("association", None, "diacamma.member/images/association.png", _("Association"), _("Association tools"), 30)
@@ -617,6 +618,73 @@ class AdherentConnection(XferContainerAcknowledge):
             if self.traitment("static/lucterios.CORE/images/info.png", _("Please, waiting..."), ""):
                 nb_del, nb_add, nb_update = Season.current_season().check_connection()
                 self.traitment_data[2] = _("{[center]}{[b]}Result{[/b]}{[/center]}{[br/]}%(nb_del)s removed connection(s).{[br/]}%(nb_add)s added connection(s).{[br/]}%(nb_update)s updated connection(s).") % {'nb_del': nb_del, 'nb_add': nb_add, 'nb_update': nb_update}
+
+
+@ActionsManage.affect_other(_("Family"), "")
+@MenuManage.describ('contacts.add_abstractcontact')
+class AdherentFamilyAdd(XferContainerCustom):
+    icon = "adherent.png"
+    model = Adherent
+    field_id = 'adherent'
+    caption = _("Family")
+
+    def fillresponse(self):
+        family_type = Params.getobject("member-family-type")
+        if family_type is None:
+            raise LucteriosException(IMPORTANT, _('No family type!'))
+        adh_value = {'name': self.item.lastname, 'structure_type': family_type.id}
+        for field_name in ['address', 'postal_code', 'city', 'country', 'tel1', 'tel2', 'email']:
+            adh_value[field_name] = getattr(self.item, field_name)
+        img = XferCompImage('img')
+        img.set_value(self.icon_path())
+        img.set_location(0, 0)
+        self.add_component(img)
+        lbl = XferCompLabelForm('title')
+        lbl.set_value_as_title(_('Add a family for "%s"') % self.item)
+        lbl.set_location(1, 0)
+        self.add_component(lbl)
+
+        name_filter = self.getparam('namefilter', self.item.lastname)
+        lbl = XferCompLabelForm('lbl_namefilter')
+        lbl.set_value_as_name(_('Filtrer by name'))
+        lbl.set_location(0, 1)
+        self.add_component(lbl)
+        comp = XferCompEdit('namefilter')
+        comp.set_value(name_filter)
+        comp.set_action(self.request, self.get_action(), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
+        comp.set_location(1, 1)
+        self.add_component(comp)
+
+        grid = XferCompGrid('legal_entity')
+        grid.set_model(family_type.legalentity_set.filter(name__icontains=name_filter), None, self)
+        grid.set_location(0, 2, 2)
+        grid.set_size(200, 500)
+        grid.add_action(self.request, AdherentFamilySelect.get_action(_("Select"), "images/ok.png"), close=CLOSE_YES, unique=SELECT_SINGLE)
+        grid.add_action(self.request, AdherentFamilyCreate.get_action(TITLE_ADD, "images/add.png"), close=CLOSE_YES, unique=SELECT_NONE, params=adh_value)
+        grid.add_action(self.request, ActionsManage.get_action_url('contacts.LegalEntity', 'Show', self), close=CLOSE_NO, unique=SELECT_SINGLE)
+        self.add_component(grid)
+        self.add_action(WrapAction(TITLE_CLOSE, 'images/close.png'))
+
+
+@ActionsManage.affect_other(_("Family"), "")
+@MenuManage.describ('contacts.add_abstractcontact')
+class AdherentFamilySelect(XferContainerAcknowledge):
+    icon = "adherent.png"
+    model = LegalEntity
+    field_id = 'legal_entity'
+
+    def fillresponse(self, adherent=0):
+        Responsability.objects.create(individual_id=adherent, legal_entity=self.item)
+
+
+@MenuManage.describ('contacts.add_abstractcontact')
+class AdherentFamilyCreate(LegalEntityAddModify):
+    icon = "/static/lucterios.contacts/images/legalEntity.png"
+    redirect_to_show = 'FamilySelect'
+
+    def fillresponse(self):
+        LegalEntityAddModify.fillresponse(self)
+        self.change_to_readonly('structure_type')
 
 
 @MenuManage.describ('member.change_subscription')

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-10-29 16:16+0000\n"
+"POT-Creation-Date: 2017-03-02 21:01+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -60,3 +60,7 @@ msgstr "enterprise"
 #: migrations/0001_initial.py:40
 msgid "association"
 msgstr "association"
+
+#: migrations/0002_addon.py:34
+msgid "family"
+msgstr "family"

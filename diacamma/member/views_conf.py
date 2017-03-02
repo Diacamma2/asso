@@ -39,7 +39,7 @@ from diacamma.member.models import Activity, Age, Team, Season, SubscriptionType
 def fill_params(xfer, param_lists=None, smallbtn=False):
     if param_lists is None:
         param_lists = ["member-team-enable", "member-team-text", "member-activite-enable", "member-activite-text", "member-age-enable",
-                       "member-licence-enabled", "member-filter-genre", "member-numero", "member-birth", "member-connection", "member-subscription-mode", "member-subscription-message"]
+                       "member-licence-enabled", "member-filter-genre", "member-numero", "member-birth", "member-family-type", "member-connection", "member-subscription-mode", "member-subscription-message"]
     if len(param_lists) >= 3:
         nb_col = 2
     else:

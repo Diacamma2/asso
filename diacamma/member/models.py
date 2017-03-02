@@ -46,7 +46,7 @@ from lucterios.framework.filetools import get_tmp_dir
 
 from lucterios.CORE.models import Parameter, PrintModel, LucteriosUser
 from lucterios.CORE.parameters import Params
-from lucterios.contacts.models import Individual
+from lucterios.contacts.models import Individual, LegalEntity
 
 from diacamma.invoice.models import Article, Bill, Detail, get_or_create_customer
 from diacamma.accounting.tools import format_devise
@@ -699,6 +699,16 @@ class Adherent(Individual):
         else:
             return None
 
+    @property
+    def family(self):
+        current_family = None
+        current_type = Params.getobject("member-family-type")
+        if current_type is not None:
+            entities = LegalEntity.objects.filter(responsability__individual=self, structure_type=current_type)
+            if len(entities) > 0:
+                current_family = entities[0]
+        return current_family
+
     def save(self, force_insert=False, force_update=False, using=None,
              update_fields=None, new_num=True):
         if (self.id is None) and new_num:
@@ -1153,3 +1163,4 @@ def member_checkparam():
                                args="{'Multi':True}", value=_('Welcome,\n\nYou have a new subscription.Joint, the quotation relative.\n\nRegards,'))
     Parameter.check_and_create(name="member-subscription-mode", typeparam=4, title=_("member-subscription-mode"), args="{'Enum':3}", value='0',
                                param_titles=(_("member-subscription-mode.0"), _("member-subscription-mode.1"), _("member-subscription-mode.2")))
+    Parameter.check_and_create(name="member-family-type", typeparam=1, title=_("member-family-type"), args="{}", value='0', meta='("contacts","StructureType", Q(), "id", False)')
