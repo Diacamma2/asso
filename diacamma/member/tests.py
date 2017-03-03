@@ -534,7 +534,7 @@ class CategoriesTest(LucteriosTest):
         self.call('/diacamma.member/categoryConf', {}, False)
         self.assert_observer(
             'core.custom', 'diacamma.member', 'categoryConf')
-        self.assert_count_equal('COMPONENTS/*', 37)
+        self.assert_count_equal('COMPONENTS/*', 39)
         self.assert_count_equal(
             'COMPONENTS/GRID[@name="activity"]/HEADER', 2)
         self.assert_xml_equal(
@@ -591,7 +591,7 @@ class CategoriesTest(LucteriosTest):
         self.call('/diacamma.member/categoryConf', {}, False)
         self.assert_observer(
             'core.custom', 'diacamma.member', 'categoryConf')
-        self.assert_count_equal('COMPONENTS/*', 34)
+        self.assert_count_equal('COMPONENTS/*', 36)
         self.assert_xml_equal(
             'COMPONENTS/LABELFORM[@name="member-activite-enable"]', 'Non')
         self.assert_count_equal('COMPONENTS/TAB', 3)
@@ -604,7 +604,7 @@ class CategoriesTest(LucteriosTest):
         self.call('/diacamma.member/categoryConf', {}, False)
         self.assert_observer(
             'core.custom', 'diacamma.member', 'categoryConf')
-        self.assert_count_equal('COMPONENTS/*', 37)
+        self.assert_count_equal('COMPONENTS/*', 39)
         self.assert_count_equal(
             'COMPONENTS/GRID[@name="team"]/HEADER', 3)
         self.assert_xml_equal(
@@ -659,7 +659,7 @@ class CategoriesTest(LucteriosTest):
         self.call('/diacamma.member/categoryConf', {}, False)
         self.assert_observer(
             'core.custom', 'diacamma.member', 'categoryConf')
-        self.assert_count_equal('COMPONENTS/*', 34)
+        self.assert_count_equal('COMPONENTS/*', 36)
         self.assert_xml_equal(
             'COMPONENTS/LABELFORM[@name="member-team-enable"]', 'Non')
         self.assert_count_equal('COMPONENTS/TAB', 3)
@@ -672,7 +672,7 @@ class CategoriesTest(LucteriosTest):
         self.call('/diacamma.member/categoryConf', {}, False)
         self.assert_observer(
             'core.custom', 'diacamma.member', 'categoryConf')
-        self.assert_count_equal('COMPONENTS/*', 37)
+        self.assert_count_equal('COMPONENTS/*', 39)
         self.assert_count_equal(
             'COMPONENTS/GRID[@name="age"]/HEADER', 3)
         self.assert_xml_equal(
@@ -779,7 +779,7 @@ class CategoriesTest(LucteriosTest):
         self.call('/diacamma.member/categoryConf', {}, False)
         self.assert_observer(
             'core.custom', 'diacamma.member', 'categoryConf')
-        self.assert_count_equal('COMPONENTS/*', 34)
+        self.assert_count_equal('COMPONENTS/*', 36)
         self.assert_xml_equal(
             'COMPONENTS/LABELFORM[@name="member-age-enable"]', 'Non')
         self.assert_count_equal('COMPONENTS/TAB', 3)
@@ -792,7 +792,7 @@ class CategoriesTest(LucteriosTest):
         self.call('/diacamma.member/categoryConf', {}, False)
         self.assert_observer(
             'core.custom', 'diacamma.member', 'categoryConf')
-        self.assert_count_equal('COMPONENTS/*', 37)
+        self.assert_count_equal('COMPONENTS/*', 39)
         self.assert_count_equal('COMPONENTS/TAB', 4)
         self.assert_xml_equal('COMPONENTS/TAB[1]', 'Paramètres')
         self.assert_xml_equal('COMPONENTS/TAB[2]', 'Age')
@@ -811,7 +811,7 @@ class CategoriesTest(LucteriosTest):
         self.call('/diacamma.member/categoryConf', {}, False)
         self.assert_observer(
             'core.custom', 'diacamma.member', 'categoryConf')
-        self.assert_count_equal('COMPONENTS/*', 37)
+        self.assert_count_equal('COMPONENTS/*', 39)
         self.assert_count_equal('COMPONENTS/TAB', 4)
         self.assert_xml_equal('COMPONENTS/TAB[1]', 'Paramètres')
         self.assert_xml_equal('COMPONENTS/TAB[2]', 'Age')
