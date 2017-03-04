@@ -43,14 +43,20 @@ from diacamma.member.views import AdherentActiveList, AdherentAddModify, Adheren
     SubscriptionAddModify, SubscriptionShow, LicenseAddModify, LicenseDel,\
     AdherentDoc, AdherentLicense, AdherentLicenseSave, AdherentStatistic,\
     AdherentRenewList, AdherentRenew, SubscriptionTransition, AdherentCommand,\
-    AdherentCommandDelete, AdherentCommandModify
+    AdherentCommandDelete, AdherentCommandModify, AdherentFamilyAdd,\
+    AdherentFamilySelect, AdherentFamilyCreate, FamilyAdherentAdd,\
+    FamilyAdherentCreate, FamilyAdherentAdded
 from diacamma.invoice.views import BillList, BillTransition, BillFromQuotation,\
     BillAddModify
 
 from diacamma.member.models import Season
+from lucterios.CORE.models import Parameter
+from lucterios.CORE.parameters import Params
+from lucterios.contacts.views_contacts import LegalEntityShow
+from lucterios.contacts.models import LegalEntity
 
 
-class AdherentTest(LucteriosTest):
+class BaseAdherentTest(LucteriosTest):
 
     def __init__(self, methodName):
         LucteriosTest.__init__(self, methodName)
@@ -68,8 +74,42 @@ class AdherentTest(LucteriosTest):
         default_financial()
         default_season()
         default_params()
-        set_parameters(
-            ["team", "activite", "age", "licence", "genre", 'numero', 'birth'])
+
+    def add_subscriptions(self, year=2009, season_id=10):
+        default_adherents()
+        default_subscription()
+        self.factory.xfer = SubscriptionAddModify()
+        self.call('/diacamma.member/subscriptionAddModify',
+                  {'SAVE': 'YES', 'adherent': 2, 'dateref': '%s-10-01' % year, 'subscriptiontype': 1, 'season': season_id, 'team': 2, 'activity': 1, 'value': '132'}, False)
+        self.assert_observer(
+            'core.acknowledge', 'diacamma.member', 'subscriptionAddModify')
+        self.factory.xfer = SubscriptionAddModify()
+        self.call('/diacamma.member/subscriptionAddModify', {'SAVE': 'YES', 'adherent': 3, 'dateref': '%s-10-01' % year,
+                                                             'subscriptiontype': 2, 'period': 37 + (year - 2009) * 4, 'season': season_id, 'team': 1, 'activity': 1, 'value': '645'}, False)
+        self.assert_observer(
+            'core.acknowledge', 'diacamma.member', 'subscriptionAddModify')
+        self.factory.xfer = SubscriptionAddModify()
+        self.call('/diacamma.member/subscriptionAddModify', {'SAVE': 'YES', 'adherent': 4, 'dateref': '%s-10-01' % year,
+                                                             'subscriptiontype': 3, 'month': '%s-10' % year, 'season': season_id, 'team': 3, 'activity': 1, 'value': '489'}, False)
+        self.assert_observer(
+            'core.acknowledge', 'diacamma.member', 'subscriptionAddModify')
+        self.factory.xfer = SubscriptionAddModify()
+        self.call('/diacamma.member/subscriptionAddModify', {'SAVE': 'YES', 'adherent': 5, 'dateref': '%s-10-01' % year,
+                                                             'subscriptiontype': 4, 'begin_date': '%s-09-15' % year, 'season': season_id, 'team': 3, 'activity': 2, 'value': '470'}, False)
+        self.assert_observer(
+            'core.acknowledge', 'diacamma.member', 'subscriptionAddModify')
+        self.factory.xfer = SubscriptionAddModify()
+        self.call('/diacamma.member/subscriptionAddModify',
+                  {'SAVE': 'YES', 'adherent': 6, 'dateref': '%s-10-01' % year, 'subscriptiontype': 1, 'season': season_id, 'team': 1, 'activity': 2, 'value': '159'}, False)
+        self.assert_observer(
+            'core.acknowledge', 'diacamma.member', 'subscriptionAddModify')
+
+
+class AdherentTest(BaseAdherentTest):
+
+    def setUp(self):
+        BaseAdherentTest.setUp(self)
+        set_parameters(["team", "activite", "age", "licence", "genre", 'numero', 'birth'])
 
     def test_defaultlist(self):
         self.factory.xfer = AdherentActiveList()
@@ -120,6 +160,7 @@ class AdherentTest(LucteriosTest):
         self.assert_observer(
             'core.custom', 'diacamma.member', 'adherentAddModify')
         self.assert_count_equal('COMPONENTS/*', 1 + 2 * (8 + 3 + 2) + 2)
+        self.assert_count_equal('ACTIONS/ACTION', 2)
 
         self.factory.xfer = AdherentAddModify()
         self.call('/diacamma.member/adherentAddModify', {"address": 'Avenue de la Paix{[newline]}BP 987',
@@ -548,39 +589,9 @@ class AdherentTest(LucteriosTest):
         self.assert_observer('core.custom', 'diacamma.invoice', 'billList')
         self.assert_count_equal('COMPONENTS/GRID[@name="bill"]/RECORD', 1)
         self.assert_count_equal('COMPONENTS/GRID[@name="bill"]/HEADER', 7)
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="bill"]/RECORD[1]/VALUE[@name="bill_type"]', "facture")
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="bill"]/RECORD[1]/VALUE[@name="total"]', "76.44€")
-
-    def add_subscriptions(self, year=2009, season_id=10):
-        default_adherents()
-        default_subscription()
-        self.factory.xfer = SubscriptionAddModify()
-        self.call('/diacamma.member/subscriptionAddModify',
-                  {'SAVE': 'YES', 'adherent': 2, 'dateref': '%s-10-01' % year, 'subscriptiontype': 1, 'season': season_id, 'team': 2, 'activity': 1, 'value': '132'}, False)
-        self.assert_observer(
-            'core.acknowledge', 'diacamma.member', 'subscriptionAddModify')
-        self.factory.xfer = SubscriptionAddModify()
-        self.call('/diacamma.member/subscriptionAddModify', {'SAVE': 'YES', 'adherent': 3, 'dateref': '%s-10-01' % year,
-                                                             'subscriptiontype': 2, 'period': 37 + (year - 2009) * 4, 'season': season_id, 'team': 1, 'activity': 1, 'value': '645'}, False)
-        self.assert_observer(
-            'core.acknowledge', 'diacamma.member', 'subscriptionAddModify')
-        self.factory.xfer = SubscriptionAddModify()
-        self.call('/diacamma.member/subscriptionAddModify', {'SAVE': 'YES', 'adherent': 4, 'dateref': '%s-10-01' % year,
-                                                             'subscriptiontype': 3, 'month': '%s-10' % year, 'season': season_id, 'team': 3, 'activity': 1, 'value': '489'}, False)
-        self.assert_observer(
-            'core.acknowledge', 'diacamma.member', 'subscriptionAddModify')
-        self.factory.xfer = SubscriptionAddModify()
-        self.call('/diacamma.member/subscriptionAddModify', {'SAVE': 'YES', 'adherent': 5, 'dateref': '%s-10-01' % year,
-                                                             'subscriptiontype': 4, 'begin_date': '%s-09-15' % year, 'season': season_id, 'team': 3, 'activity': 2, 'value': '470'}, False)
-        self.assert_observer(
-            'core.acknowledge', 'diacamma.member', 'subscriptionAddModify')
-        self.factory.xfer = SubscriptionAddModify()
-        self.call('/diacamma.member/subscriptionAddModify',
-                  {'SAVE': 'YES', 'adherent': 6, 'dateref': '%s-10-01' % year, 'subscriptiontype': 1, 'season': season_id, 'team': 1, 'activity': 2, 'value': '159'}, False)
-        self.assert_observer(
-            'core.acknowledge', 'diacamma.member', 'subscriptionAddModify')
+        self.assert_xml_equal('COMPONENTS/GRID[@name="bill"]/RECORD[1]/VALUE[@name="third"]', "Dalton Avrel")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="bill"]/RECORD[1]/VALUE[@name="bill_type"]', "facture")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="bill"]/RECORD[1]/VALUE[@name="total"]', "76.44€")
 
     def test_subscription_bydate(self):
         self.add_subscriptions()
@@ -1553,3 +1564,181 @@ class AdherentTest(LucteriosTest):
             self.assertEqual("%PDF".encode('ascii', 'ignore'), b64decode(msg_file.get_payload())[:4])
         finally:
             server.stop()
+
+
+class AdherentFamilyTest(BaseAdherentTest):
+
+    def setUp(self):
+        BaseAdherentTest.setUp(self)
+        Parameter.change_value('member-family-type', 3)
+        set_parameters([])
+
+    def test_show_adherent(self):
+        self.add_subscriptions()
+        self.assertEqual("famille", six.text_type(Params.getobject('member-family-type')))
+
+        self.factory.xfer = AdherentShow()
+        self.call('/diacamma.member/adherentShow',
+                  {'adherent': 2, 'dateref': '2009-10-01'}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentShow')
+        self.assert_count_equal('COMPONENTS/*', 1 + 1 + 2 * (8 + 4 + 2) + 1 + 2 + (2 * 2 + 3) + 2 + 2 + 3)
+        self.assert_count_equal('COMPONENTS/GRID[@name="subscription"]/HEADER', 5)
+        self.assert_xml_equal('COMPONENTS/LABELFORM[@name="family"]', "---")
+        self.assert_attrib_equal('COMPONENTS/BUTTON[@name="famillybtn"]/ACTIONS/ACTION[1]', "icon", "/static/lucterios.CORE/images/add.png")
+
+    def test_new_family(self):
+        default_adherents()
+        default_subscription()
+
+        self.factory.xfer = AdherentFamilyAdd()
+        self.call('/diacamma.member/adherentFamilyAdd', {'adherent': 2}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentFamilyAdd')
+        self.assert_count_equal('COMPONENTS/*', 5)
+        self.assert_count_equal('COMPONENTS/GRID[@name="legal_entity"]/RECORD', 0)
+        self.assert_attrib_equal('COMPONENTS/GRID[@name="legal_entity"]/ACTIONS/ACTION[2]', "icon", "/static/lucterios.CORE/images/add.png")
+        xml_values = self.response_xml.xpath('COMPONENTS/GRID[@name="legal_entity"]/ACTIONS/ACTION[2]/PARAM')
+        self.assertEqual(len(xml_values), 9)
+        params_value = {'adherent': 2}
+        for param_idx in range(9):
+            params_value[xml_values[param_idx].get('name')] = xml_values[param_idx].text
+        six.text_type(params_value)
+
+        self.factory.xfer = AdherentFamilyCreate()
+        self.call('/diacamma.member/adherentFamilyCreate', params_value, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentFamilyCreate')
+        self.assert_xml_equal('COMPONENTS/EDIT[@name="name"]', 'Dalton')
+
+        params_value['SAVE'] = 'YES'
+        self.factory.xfer = AdherentFamilyCreate()
+        self.call('/diacamma.member/adherentFamilyCreate', params_value, False)
+        self.assert_observer('core.acknowledge', 'diacamma.member', 'adherentFamilyCreate')
+        self.assert_attrib_equal('ACTION', 'action', 'adherentFamilySelect')
+        self.assert_xml_equal('ACTION/PARAM[@name="legal_entity"]', '7')
+
+        self.factory.xfer = AdherentFamilySelect()
+        self.call('/diacamma.member/adherentFamilySelect', {'adherent': 2, 'legal_entity': 7}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.member', 'adherentFamilySelect')
+
+        self.factory.xfer = AdherentShow()
+        self.call('/diacamma.member/adherentShow', {'adherent': 2, 'dateref': '2009-10-01'}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentShow')
+        self.assert_xml_equal('COMPONENTS/LABELFORM[@name="family"]', "Dalton")
+        self.assert_attrib_equal('COMPONENTS/BUTTON[@name="famillybtn"]/ACTIONS/ACTION[1]', "icon", "/static/lucterios.CORE/images/edit.png")
+
+        self.factory.xfer = LegalEntityShow()
+        self.call('/lucterios.contacts/legalEntityShow', {'legal_entity': '7'}, False)
+        self.assert_observer('core.custom', 'lucterios.contacts', 'legalEntityShow')
+        self.assert_xml_equal('COMPONENTS/LABELFORM[@name="name"]', "Dalton")
+        self.assert_xml_equal('COMPONENTS/LABELFORM[@name="structure_type"]', 'famille')
+        self.assert_xml_equal('COMPONENTS/LABELFORM[@name="address"]', 'rue de la liberté')
+        self.assert_xml_equal('COMPONENTS/LABELFORM[@name="postal_code"]', '97250')
+        self.assert_xml_equal('COMPONENTS/LABELFORM[@name="city"]', 'LE PRECHEUR')
+        self.assert_xml_equal('COMPONENTS/LABELFORM[@name="country"]', 'MARTINIQUE')
+        self.assert_xml_equal('COMPONENTS/LINK[@name="email"]', 'Avrel.Dalton@worldcompany.com')
+        self.assert_xml_equal('COMPONENTS/LABELFORM[@name="tel2"]', '02-78-45-12-95')
+
+    def add_family(self):
+        myfamily = LegalEntity()
+        myfamily.name = "LES DALTONS"
+        myfamily.structure_type_id = 3
+        myfamily.address = "Place des cocotiers"
+        myfamily.postal_code = "97200"
+        myfamily.city = "FORT DE FRANCE"
+        myfamily.country = "MARTINIQUE"
+        myfamily.tel1 = "01-23-45-67-89"
+        myfamily.email = "dalton@worldcompany.com"
+        myfamily.save()
+
+    def test_select_family(self):
+        default_adherents()
+        default_subscription()
+        self.add_family()
+
+        self.factory.xfer = AdherentFamilyAdd()
+        self.call('/diacamma.member/adherentFamilyAdd', {'adherent': 2}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentFamilyAdd')
+        self.assert_count_equal('COMPONENTS/GRID[@name="legal_entity"]/RECORD', 1)
+        self.assert_count_equal('COMPONENTS/GRID[@name="legal_entity"]/ACTIONS/ACTION', 3)
+        self.assert_xml_equal('COMPONENTS/GRID[@name="legal_entity"]/RECORD[1]/VALUE[@name="name"]', "LES DALTONS")
+
+        self.factory.xfer = AdherentFamilySelect()
+        self.call('/diacamma.member/adherentFamilySelect', {'adherent': 2, 'legal_entity': 7}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.member', 'adherentFamilySelect')
+
+        self.factory.xfer = AdherentShow()
+        self.call('/diacamma.member/adherentShow', {'adherent': 2, 'dateref': '2009-10-01'}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentShow')
+        self.assert_xml_equal('COMPONENTS/LABELFORM[@name="family"]', "LES DALTONS")
+        self.assert_attrib_equal('COMPONENTS/BUTTON[@name="famillybtn"]/ACTIONS/ACTION[1]', "icon", "/static/lucterios.CORE/images/edit.png")
+
+    def test_add_adherent(self):
+        default_adherents()
+        default_subscription()
+        self.add_family()
+        self.factory.xfer = AdherentAddModify()
+        self.call('/diacamma.member/adherentAddModify', {}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentAddModify')
+        self.assert_attrib_equal('COMPONENTS/BUTTON[@name="famillybtn"]/ACTIONS/ACTION[1]', "icon", "/static/lucterios.CORE/images/add.png")
+
+        self.factory.xfer = FamilyAdherentAdd()
+        self.call('/diacamma.member/familyAdherentAdd', {}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'familyAdherentAdd')
+        self.assert_count_equal('COMPONENTS/GRID[@name="legal_entity"]/RECORD', 1)
+        self.assert_count_equal('COMPONENTS/GRID[@name="legal_entity"]/ACTIONS/ACTION', 3)
+        self.assert_xml_equal('COMPONENTS/GRID[@name="legal_entity"]/RECORD[1]/VALUE[@name="name"]', "LES DALTONS")
+
+        self.factory.xfer = FamilyAdherentCreate()
+        self.call('/diacamma.member/familyAdherentCreate', {'legal_entity': 7}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'familyAdherentCreate')
+        self.assert_xml_equal('COMPONENTS/EDIT[@name="lastname"]', "LES DALTONS")
+        self.assert_xml_equal('COMPONENTS/MEMO[@name="address"]', 'Place des cocotiers')
+
+        self.factory.xfer = FamilyAdherentCreate()
+        self.call('/diacamma.member/familyAdherentCreate', {"address": 'Place des cocotiers',
+                                                            "comment": 'no comment', "firstname": "Ma'a", "lastname": 'DALTON',
+                                                            "city": 'ST PIERRE', "country": 'MARTINIQUE', "tel2": '06-54-87-19-34', "SAVE": 'YES',
+                                                            "tel1": '09-96-75-15-00', "postal_code": '97250', "email": 'maa.dalton@worldcompany.com',
+                                                            "birthday": "1998-08-04", "birthplace": "Fort-de-France",
+                                                            "genre": "2", 'legal_entity': 7}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.member', 'familyAdherentCreate')
+        self.assert_xml_equal('ACTION/PARAM[@name="adherent"]', '8')
+
+        self.factory.xfer = FamilyAdherentAdded()
+        self.call('/diacamma.member/familyAdherentAdded', {'adherent': 8, 'legal_entity': 7}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.member', 'familyAdherentAdded')
+
+        self.factory.xfer = AdherentShow()
+        self.call('/diacamma.member/adherentShow', {'adherent': 8}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentShow')
+        self.assert_xml_equal('COMPONENTS/LABELFORM[@name="firstname"]', "Ma'a")
+        self.assert_xml_equal('COMPONENTS/LABELFORM[@name="lastname"]', "DALTON")
+        self.assert_xml_equal('COMPONENTS/LABELFORM[@name="family"]', "LES DALTONS")
+        self.assert_attrib_equal('COMPONENTS/BUTTON[@name="famillybtn"]/ACTIONS/ACTION[1]', "icon", "/static/lucterios.CORE/images/edit.png")
+
+    def test_subscription_bill(self):
+        default_adherents()
+        default_subscription()
+        self.add_family()
+
+        self.factory.xfer = BillList()
+        self.call('/diacamma.invoice/billList', {}, False)
+        self.assert_observer('core.custom', 'diacamma.invoice', 'billList')
+        self.assert_count_equal('COMPONENTS/GRID[@name="bill"]/RECORD', 0)
+        self.assert_count_equal('COMPONENTS/GRID[@name="bill"]/HEADER', 7)
+
+        self.factory.xfer = AdherentFamilySelect()
+        self.call('/diacamma.member/adherentFamilySelect', {'adherent': 2, 'legal_entity': 7}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.member', 'adherentFamilySelect')
+
+        self.factory.xfer = SubscriptionAddModify()
+        self.call('/diacamma.member/subscriptionAddModify', {'SAVE': 'YES', 'status': 2, 'adherent': 2, 'dateref': '2014-10-01', 'subscriptiontype': 1, 'season': 10, 'team': 2, 'activity': 1, 'value': 'abc123'}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.member', 'subscriptionAddModify')
+
+        self.factory.xfer = BillList()
+        self.call('/diacamma.invoice/billList', {}, False)
+        self.assert_observer('core.custom', 'diacamma.invoice', 'billList')
+        self.assert_count_equal('COMPONENTS/GRID[@name="bill"]/RECORD', 1)
+        self.assert_count_equal('COMPONENTS/GRID[@name="bill"]/HEADER', 7)
+        self.assert_xml_equal('COMPONENTS/GRID[@name="bill"]/RECORD[1]/VALUE[@name="third"]', "LES DALTONS")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="bill"]/RECORD[1]/VALUE[@name="bill_type"]', "facture")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="bill"]/RECORD[1]/VALUE[@name="total"]', "76.44€")

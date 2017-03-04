@@ -620,21 +620,20 @@ class AdherentConnection(XferContainerAcknowledge):
                 self.traitment_data[2] = _("{[center]}{[b]}Result{[/b]}{[/center]}{[br/]}%(nb_del)s removed connection(s).{[br/]}%(nb_add)s added connection(s).{[br/]}%(nb_update)s updated connection(s).") % {'nb_del': nb_del, 'nb_add': nb_add, 'nb_update': nb_update}
 
 
-@ActionsManage.affect_other(_("Family"), "")
-@MenuManage.describ('contacts.add_abstractcontact')
-class AdherentFamilyAdd(XferContainerCustom):
+class BaseAdherentFamilyList(XferContainerCustom):
     icon = "adherent.png"
     model = Adherent
     field_id = 'adherent'
     caption = _("Family")
 
+    def __init__(self):
+        XferContainerCustom.__init__(self)
+        self.family_type = None
+
     def fillresponse(self):
-        family_type = Params.getobject("member-family-type")
-        if family_type is None:
+        self.family_type = Params.getobject("member-family-type")
+        if self.family_type is None:
             raise LucteriosException(IMPORTANT, _('No family type!'))
-        adh_value = {'name': self.item.lastname, 'structure_type': family_type.id}
-        for field_name in ['address', 'postal_code', 'city', 'country', 'tel1', 'tel2', 'email']:
-            adh_value[field_name] = getattr(self.item, field_name)
         img = XferCompImage('img')
         img.set_value(self.icon_path())
         img.set_location(0, 0)
@@ -656,14 +655,26 @@ class AdherentFamilyAdd(XferContainerCustom):
         self.add_component(comp)
 
         grid = XferCompGrid('legal_entity')
-        grid.set_model(family_type.legalentity_set.filter(name__icontains=name_filter), None, self)
+        grid.set_model(self.family_type.legalentity_set.filter(name__icontains=name_filter), None, self)
         grid.set_location(0, 2, 2)
         grid.set_size(200, 500)
+        self.add_component(grid)
+        self.add_action(WrapAction(TITLE_CLOSE, 'images/close.png'))
+
+
+@ActionsManage.affect_other(_('Family'), "images/add.png")
+@MenuManage.describ('contacts.add_abstractcontact')
+class AdherentFamilyAdd(BaseAdherentFamilyList):
+
+    def fillresponse(self):
+        BaseAdherentFamilyList.fillresponse(self)
+        adh_value = {'name': self.item.lastname, 'structure_type': self.family_type.id}
+        for field_name in ['address', 'postal_code', 'city', 'country', 'tel1', 'tel2', 'email']:
+            adh_value[field_name] = getattr(self.item, field_name)
+        grid = self.get_components('legal_entity')
         grid.add_action(self.request, AdherentFamilySelect.get_action(_("Select"), "images/ok.png"), close=CLOSE_YES, unique=SELECT_SINGLE)
         grid.add_action(self.request, AdherentFamilyCreate.get_action(TITLE_ADD, "images/add.png"), close=CLOSE_YES, unique=SELECT_NONE, params=adh_value)
         grid.add_action(self.request, ActionsManage.get_action_url('contacts.LegalEntity', 'Show', self), close=CLOSE_NO, unique=SELECT_SINGLE)
-        self.add_component(grid)
-        self.add_action(WrapAction(TITLE_CLOSE, 'images/close.png'))
 
 
 @ActionsManage.affect_other(_("Family"), "")
@@ -685,6 +696,44 @@ class AdherentFamilyCreate(LegalEntityAddModify):
     def fillresponse(self):
         LegalEntityAddModify.fillresponse(self)
         self.change_to_readonly('structure_type')
+
+
+@ActionsManage.affect_other(_("Family"), "images/add.png")
+@MenuManage.describ('contacts.add_abstractcontact')
+class FamilyAdherentAdd(BaseAdherentFamilyList):
+
+    def fillresponse(self):
+        BaseAdherentFamilyList.fillresponse(self)
+        grid = self.get_components('legal_entity')
+        grid.add_action(self.request, FamilyAdherentCreate.get_action(_("Select"), "images/ok.png"), close=CLOSE_YES, unique=SELECT_SINGLE)
+        grid.add_action(self.request, ActionsManage.get_action_url('contacts.LegalEntity', 'AddModify', self), close=CLOSE_YES, unique=SELECT_NONE, params={'name': self.getparam('namefilter', '')})
+        grid.add_action(self.request, ActionsManage.get_action_url('contacts.LegalEntity', 'Show', self), close=CLOSE_NO, unique=SELECT_SINGLE)
+
+
+@MenuManage.describ('contacts.add_abstractcontact')
+class FamilyAdherentCreate(AdherentAddModify):
+    redirect_to_show = 'AdherentAdded'
+
+    def fillresponse(self):
+        if self.getparam('CHANGED') is None:
+            self.params['CHANGED'] = 'YES'
+            current_family = LegalEntity.objects.get(id=self.getparam('legal_entity', 0))
+            self.item.lastname = current_family.name
+            for field_name in ['address', 'postal_code', 'city', 'country', 'tel1', 'tel2', 'email']:
+                setattr(self.item, field_name, getattr(current_family, field_name))
+        AdherentAddModify.fillresponse(self)
+
+
+@ActionsManage.affect_other(_("Family"), "")
+@MenuManage.describ('contacts.add_abstractcontact')
+class FamilyAdherentAdded(XferContainerAcknowledge):
+    icon = "adherent.png"
+    model = Adherent
+    field_id = 'adherent'
+
+    def fillresponse(self, legal_entity=0):
+        Responsability.objects.create(individual=self.item, legal_entity_id=legal_entity)
+        self.redirect_action(AdherentShow.get_action(), params={self.field_id: self.item.id})
 
 
 @MenuManage.describ('member.change_subscription')

@@ -34,7 +34,7 @@ from lucterios.framework.xfercomponents import XferCompLabelForm, XferCompDate, 
     XferCompSelect, XferCompCheck, XferCompButton
 from lucterios.framework.error import LucteriosException, IMPORTANT
 from lucterios.framework.tools import CLOSE_NO, FORMTYPE_REFRESH, ActionsManage, get_icon_path,\
-    FORMTYPE_MODAL
+    FORMTYPE_MODAL, CLOSE_YES
 
 from lucterios.contacts.editors import IndividualEditor
 
@@ -133,6 +133,13 @@ class AdherentEditor(IndividualEditor):
         birthday = xfer.get_components('birthday')
         if birthday is not None:
             birthday.needed = True
+        if (self.item.id is None) and (xfer.getparam('legal_entity', 0) == 0) and (Params.getobject("member-family-type") is not None):
+            genre = xfer.get_components('genre')
+            genre.colspan -= 1
+            btn = XferCompButton('famillybtn')
+            btn.set_location(genre.col + genre.colspan, genre.row)
+            btn.set_action(xfer.request, ActionsManage.get_action_url('member.Adherent', 'familyAdherentAdd', xfer), modal=FORMTYPE_MODAL, close=CLOSE_YES)
+            xfer.add_component(btn)
 
     def show(self, xfer):
         IndividualEditor.show(self, xfer)

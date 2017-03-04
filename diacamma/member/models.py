@@ -709,6 +709,13 @@ class Adherent(Individual):
                 current_family = entities[0]
         return current_family
 
+    def get_or_create_customer(self):
+        current_family = self.family
+        if current_family is None:
+            return get_or_create_customer(self.id)
+        else:
+            return get_or_create_customer(current_family.id)
+
     def save(self, force_insert=False, force_update=False, using=None,
              update_fields=None, new_num=True):
         if (self.id is None) and new_num:
@@ -793,7 +800,7 @@ class Subscription(LucteriosModel):
             else:
                 bill_type = 1
             if create_bill:
-                self.bill = Bill.objects.create(bill_type=bill_type, date=self.season.date_ref, third=get_or_create_customer(self.adherent_id))
+                self.bill = Bill.objects.create(bill_type=bill_type, date=self.season.date_ref, third=self.adherent.get_or_create_customer())
             if (self.bill.status == 0):
                 self.bill.bill_type = bill_type
                 if hasattr(self, 'xfer'):
