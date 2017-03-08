@@ -1742,3 +1742,4 @@ class AdherentFamilyTest(BaseAdherentTest):
         self.assert_xml_equal('COMPONENTS/GRID[@name="bill"]/RECORD[1]/VALUE[@name="third"]', "LES DALTONS")
         self.assert_xml_equal('COMPONENTS/GRID[@name="bill"]/RECORD[1]/VALUE[@name="bill_type"]', "facture")
         self.assert_xml_equal('COMPONENTS/GRID[@name="bill"]/RECORD[1]/VALUE[@name="total"]', "76.44€")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="bill"]/RECORD[1]/VALUE[@name="comment"]', "{[b]}cotisation{[/b]}{[br/]}{[i]}type de cotisation{[/i]}: Annually{[br/]}Cotisation de 'Dalton Avrel'")

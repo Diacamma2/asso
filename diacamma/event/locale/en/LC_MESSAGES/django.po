@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-03-02 21:01+0000\n"
+"POT-Creation-Date: 2017-03-08 17:48+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -105,7 +105,7 @@ msgstr "default article"
 msgid "cost accounting"
 msgstr ""
 
-#: models.py:181 models.py:194 models.py:474
+#: models.py:181 models.py:194 models.py:481
 #, python-format
 msgid "%s validated!"
 msgstr "%s validated!"
@@ -199,35 +199,40 @@ msgstr "current"
 msgid "%s result"
 msgstr "%s result"
 
-#: models.py:493
+#: models.py:474
+#, python-format
+msgid "Participant: %s"
+msgstr "Participant: %s"
+
+#: models.py:500
 msgid "participant"
 msgstr "participant"
 
-#: models.py:494
+#: models.py:501
 msgid "participants"
 msgstr "participants"
 
-#: models.py:500
+#: models.py:507
 msgid "event-subdegree-enable"
 msgstr "sub-degree enable"
 
-#: models.py:503
+#: models.py:510
 msgid "event-degree-text"
 msgstr "degree text"
 
-#: models.py:504 views_degree.py:47
+#: models.py:511 views_degree.py:47
 msgid "Degree"
 msgstr "Degree"
 
-#: models.py:506
+#: models.py:513
 msgid "event-subdegree-text"
 msgstr "sub-degree text"
 
-#: models.py:507
+#: models.py:514
 msgid "Sub-degree"
 msgstr "Sub-degree"
 
-#: models.py:510
+#: models.py:517
 msgid "event-comment-text"
 msgstr "default comment of examination"
 

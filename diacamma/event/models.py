@@ -469,6 +469,9 @@ class Participant(LucteriosModel):
             if (self.event.event_type == 1) and (self.comment is not None) and (self.comment != ''):
                 self.bill.comment += "{[br/]}"
                 self.bill.comment += self.comment
+            if self.bill.third.contact.id != high_contact.id:
+                self.bill.comment += "{[br/]}"
+                self.bill.comment += _("Participant: %s") % six.text_type(high_contact)
             self.bill.save()
             Detail.create_for_bill(self.bill, self.article, reduce=self.reduce)
             self.save()

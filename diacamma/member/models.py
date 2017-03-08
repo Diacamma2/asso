@@ -817,6 +817,9 @@ class Subscription(LucteriosModel):
                 cmt = ["{[b]}%s{[/b]}" % _("subscription"), "{[i]}%s{[/i]}: %s" %
                        (_('subscription type'), six.text_type(self.subscriptiontype))]
                 self.bill.comment = "{[br/]}".join(cmt)
+                if self.bill.third.contact.id != self.adherent.id:
+                    self.bill.comment += "{[br/]}"
+                    self.bill.comment += _("Subscription of '%s'") % six.text_type(self.adherent)
                 self.bill.save()
                 self.bill.detail_set.all().delete()
                 for art in self.subscriptiontype.articles.all():
