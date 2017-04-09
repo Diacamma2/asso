@@ -50,14 +50,11 @@ class SeasonSubscription(XferListEditor):
     def fillresponse_header(self):
         self.new_tab(_('Season'))
         show_filter = self.getparam('show_filter', 0)
-        lbl = XferCompLabelForm('lbl_showing')
-        lbl.set_value_as_name(_('Show season'))
-        lbl.set_location(0, 3)
-        self.add_component(lbl)
         edt = XferCompSelect("show_filter")
         edt.set_select([(0, _('Near active')), (1, _('All'))])
         edt.set_value(show_filter)
-        edt.set_location(1, 3)
+        edt.set_location(0, 3)
+        edt.description = _('Show season')
         edt.set_action(self.request, self.get_action(),
                        modal=FORMTYPE_REFRESH, close=CLOSE_NO)
         self.add_component(edt)

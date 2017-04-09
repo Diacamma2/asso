@@ -69,13 +69,10 @@ class SeasonEditor(LucteriosEditor):
             xfer.item.set_has_actif()
 
     def edit(self, xfer):
-        lbl = XferCompLabelForm('lbl_begin_date')
-        lbl.set_value_as_name(_('begin date'))
-        lbl.set_location(1, 0)
-        xfer.add_component(lbl)
         date = XferCompDate('begin_date')
-        date.set_location(2, 0)
+        date.set_location(1, 0)
         date.set_needed(True)
+        date.description = _('begin date')
         val = Period.objects.all().aggregate(Max('end_date'))
         if ('end_date__max' in val.keys()) and (val['end_date__max'] is not None):
             date.set_value(val['end_date__max'] + timedelta(days=1))
@@ -102,27 +99,20 @@ class SubscriptionTypeEditor(LucteriosEditor):
 class AgeEditor(LucteriosEditor):
 
     def before_save(self, xfer):
-        self.item.set_dates(
-            xfer.getparam('date_min', 0), xfer.getparam('date_max', 0))
+        self.item.set_dates(xfer.getparam('date_min', 0), xfer.getparam('date_max', 0))
 
     def edit(self, xfer):
-        lbl = XferCompLabelForm('lbl_date_min')
-        lbl.set_value_as_name(_("date min."))
-        lbl.set_location(1, 5)
-        xfer.add_component(lbl)
         date = XferCompFloat('date_min', 1900, 2100, 0)
-        date.set_location(2, 5)
+        date.set_location(1, 5)
         date.set_needed(True)
         date.set_value(self.item.date_min)
+        date.description = _("date min.")
         xfer.add_component(date)
-        lbl = XferCompLabelForm('lbl_date_max')
-        lbl.set_value_as_name(_("date max."))
-        lbl.set_location(1, 6)
-        xfer.add_component(lbl)
         date = XferCompFloat('date_max', 1900, 2100, 0)
-        date.set_location(2, 6)
+        date.set_location(1, 6)
         date.set_needed(True)
         date.set_value(self.item.date_max)
+        date.description = _("date max.")
         xfer.add_component(date)
 
 
@@ -153,17 +143,14 @@ class AdherentEditor(IndividualEditor):
         if Params.getobject("member-family-type") is not None:
             xfer.tab = 1
             row_init = xfer.get_max_row() + 1
-            lbl = XferCompLabelForm("lbl_family")
-            lbl.set_value_as_name(_('family'))
-            lbl.set_location(1, row_init)
-            xfer.add_component(lbl)
             lbl = XferCompLabelForm("family")
             current_family = self.item.family
             if current_family is None:
                 lbl.set_value('---')
             else:
                 lbl.set_value(six.text_type(self.item.family))
-            lbl.set_location(2, row_init, 2)
+            lbl.set_location(1, row_init, 2)
+            lbl.description = _('family')
             xfer.add_component(lbl)
             btn = XferCompButton('famillybtn')
             btn.is_mini = True
@@ -183,13 +170,10 @@ class AdherentEditor(IndividualEditor):
             row_init = xfer.get_max_row() + 1
             row = row_init + 1
             for doc in xfer.item.current_subscription.docadherent_set.all():
-                lbl = XferCompLabelForm("lbl_doc_%d" % doc.id)
-                lbl.set_value(six.text_type(doc.document))
-                lbl.set_location(2, row)
-                xfer.add_component(lbl)
                 ckc = XferCompCheck("doc_%d" % doc.id)
                 ckc.set_value(doc.value)
-                ckc.set_location(3, row)
+                ckc.set_location(2, row)
+                ckc.description = six.text_type(doc.document)
                 xfer.add_component(ckc)
                 row += 1
             if row != row_init + 1:
@@ -294,44 +278,32 @@ class SubscriptionEditor(LucteriosEditor):
         row = xfer.get_max_row() + 1
         season = self.item.season
         if self.item.subscriptiontype.duration == 0:  # annually
-            lbl = XferCompLabelForm("lbl_seasondates")
-            lbl.set_location(1, row)
-            lbl.set_value_as_name(_('annually'))
-            xfer.add_component(lbl)
             lbl = XferCompLabelForm("seasondates")
-            lbl.set_location(2, row)
+            lbl.set_location(1, row)
             lbl.set_value("%s => %s" % (formats.date_format(
                 season.begin_date, "SHORT_DATE_FORMAT"), formats.date_format(season.end_date, "SHORT_DATE_FORMAT")))
+            lbl.description = _('annually')
             xfer.add_component(lbl)
         elif self.item.subscriptiontype.duration == 1:  # periodic
-            lbl = XferCompLabelForm("lbl_period")
-            lbl.set_location(1, row)
-            lbl.set_value_as_name(_('period'))
-            xfer.add_component(lbl)
             sel = XferCompSelect('period')
             sel.set_needed(True)
             sel.set_select_query(season.period_set.all())
-            sel.set_location(2, row)
+            sel.set_location(1, row)
+            sel.description = _('period')
             xfer.add_component(sel)
         elif self.item.subscriptiontype.duration == 2:  # monthly
-            lbl = XferCompLabelForm("lbl_month")
-            lbl.set_location(1, row)
-            lbl.set_value_as_name(_('month'))
-            xfer.add_component(lbl)
             sel = XferCompSelect('month')
             sel.set_needed(True)
             sel.set_select(season.get_months())
-            sel.set_location(2, row)
+            sel.set_location(1, row)
+            sel.description = _('month')
             xfer.add_component(sel)
         elif self.item.subscriptiontype.duration == 3:  # calendar
-            lbl = XferCompLabelForm("lbl_begin_date")
-            lbl.set_location(1, row)
-            lbl.set_value_as_name(_('begin date'))
-            xfer.add_component(lbl)
             begindate = XferCompDate('begin_date')
             begindate.set_needed(True)
             begindate.set_value(season.date_ref)
-            begindate.set_location(2, row)
+            begindate.set_location(1, row)
+            begindate.description = _('begin date')
             xfer.add_component(begindate)
         if self.item.id is None:
             xfer.item = License()

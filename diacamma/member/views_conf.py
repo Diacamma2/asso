@@ -55,6 +55,7 @@ def fill_params(xfer, param_lists=None, smallbtn=False):
 
 @MenuManage.describ('CORE.change_parameter', FORMTYPE_NOMODAL, 'member.conf', _('Management of member categories'))
 class CategoryConf(XferListEditor):
+    is_simple_gui = True
     icon = "config.png"
     caption = _("Categories")
 
