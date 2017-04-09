@@ -47,7 +47,7 @@ from diacamma.accounting.tools import format_devise
 
 class DegreeType(LucteriosModel):
     is_simple_gui = True
-    
+
     name = models.CharField(verbose_name=_('name'), max_length=100)
     level = models.IntegerField(verbose_name=_('level'), null=False, default=1, validators=[
                                 MinValueValidator(1), MaxValueValidator(100)])
