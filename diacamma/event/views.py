@@ -38,7 +38,6 @@ from lucterios.framework.xfergraphic import XferContainerAcknowledge, XferContai
 from lucterios.framework.tools import FORMTYPE_NOMODAL, ActionsManage, MenuManage,\
     SELECT_MULTI, CLOSE_NO, FORMTYPE_MODAL, WrapAction, CLOSE_YES, FORMTYPE_REFRESH, SELECT_SINGLE
 from lucterios.framework.xfercomponents import XferCompLabelForm, XferCompImage, XferCompSelect, XferCompMemo
-from lucterios.framework.models import get_value_if_choices
 from lucterios.CORE.xferprint import XferPrintAction
 from lucterios.CORE.parameters import Params
 from lucterios.contacts.tools import ContactSelection
@@ -301,15 +300,12 @@ class DegreeStatistic(XferContainerCustom):
         img.set_value(self.icon_path())
         img.set_location(0, 0)
         self.add_component(img)
-        lab = XferCompLabelForm('lbl_season')
-        lab.set_value_as_name(_('season'))
-        lab.set_location(1, 0)
-        self.add_component(lab)
         sel = XferCompSelect('season')
         sel.set_needed(True)
         sel.set_select_query(Season.objects.all())
         sel.set_value(working_season.id)
-        sel.set_location(2, 0)
+        sel.set_location(1, 0)
+        sel.description = _('season')
         sel.set_action(self.request, self.get_action('', ''), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
         self.add_component(sel)
         stat_result = Degree.get_statistic(working_season)

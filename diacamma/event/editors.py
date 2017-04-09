@@ -48,10 +48,8 @@ class ParticipantEditor(LucteriosEditor):
         xfer.get_components('article').set_action(xfer.request, xfer.get_action('', ''), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
         if xfer.item.article_id is None:
             xfer.remove_component('reduce')
-            xfer.remove_component('lbl_reduce')
         if xfer.item.event.event_type == 0:
             xfer.remove_component('comment')
-            xfer.remove_component('lbl_comment')
 
 
 class EventEditor(LucteriosEditor):
@@ -73,12 +71,10 @@ class EventEditor(LucteriosEditor):
         event_type.java_script = """
 var type=current.getValue();
 parent.get('date_end').setVisible(type==1);
-parent.get('lbl_date_end').setVisible(type==1);
 """
         xfer.get_components('default_article').set_action(xfer.request, xfer.get_action('', ''), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
         if xfer.item.default_article_id is None:
             xfer.remove_component('cost_accounting')
-            xfer.remove_component('lbl_cost_accounting')
         else:
             comp = xfer.get_components("cost_accounting")
             comp.set_needed(False)
@@ -112,8 +108,6 @@ parent.get('lbl_date_end').setVisible(type==1);
         else:
             xfer.caption = _("Show examination")
             xfer.remove_component('date_end')
-            xfer.remove_component('lbl_date_end')
             img.set_value("/static/diacamma.event/images/degree.png")
         if xfer.item.default_article_id is None:
             xfer.remove_component('cost_accounting')
-            xfer.remove_component('lbl_cost_accounting')

@@ -49,148 +49,110 @@ class ConfigurationTest(LucteriosTest):
         rmtree(get_user_dir(), True)
         default_season()
         default_params()
-        set_parameters(
-            ["team", "activite", "age", "licence", "genre", 'numero', 'birth'])
+        set_parameters(["team", "activite", "age", "licence", "genre", 'numero', 'birth'])
 
     def test_degreetype(self):
         self.factory.xfer = EventConf()
         self.call('/diacamma.event/EventConf', {}, False)
-        self.assert_observer(
-            'core.custom', 'diacamma.event', 'EventConf')
-        self.assert_count_equal('COMPONENTS/*', 2 + 3 + 3 + 10)
-        self.assert_count_equal(
-            'COMPONENTS/GRID[@name="degreetype"]/HEADER', 3)
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="degreetype"]/HEADER[@name="activity"]', "passion")
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="degreetype"]/HEADER[@name="name"]', "nom")
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="degreetype"]/HEADER[@name="level"]', "niveau")
-        self.assert_count_equal(
-            'COMPONENTS/GRID[@name="degreetype"]/RECORD', 0)
+        self.assert_observer('core.custom', 'diacamma.event', 'EventConf')
+        self.assert_count_equal('COMPONENTS/*', 2 + 3 + 3 + 6)
+        self.assert_count_equal('COMPONENTS/GRID[@name="degreetype"]/HEADER', 3)
+        self.assert_xml_equal('COMPONENTS/GRID[@name="degreetype"]/HEADER[@name="activity"]', "passion")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="degreetype"]/HEADER[@name="name"]', "nom")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="degreetype"]/HEADER[@name="level"]', "niveau")
+        self.assert_count_equal('COMPONENTS/GRID[@name="degreetype"]/RECORD', 0)
 
         self.factory.xfer = DegreeTypeAddModify()
         self.call('/diacamma.event/degreeTypeAddModify', {}, False)
-        self.assert_observer(
-            'core.custom', 'diacamma.event', 'degreeTypeAddModify')
-        self.assert_count_equal('COMPONENTS/*', 7)
-        self.assert_xml_equal(
-            'COMPONENTS/LABELFORM[@name="lbl_activity"]', "{[b]}passion{[/b]}")
+        self.assert_observer('core.custom', 'diacamma.event', 'degreeTypeAddModify')
+        self.assert_count_equal('COMPONENTS/*', 4)
+        self.assert_attrib_equal('COMPONENTS/SELECT[@name="activity"]', "description", "passion")
         self.assert_count_equal('COMPONENTS/SELECT[@name="activity"]/CASE', 2)
 
         self.factory.xfer = DegreeTypeAddModify()
         self.call('/diacamma.event/degreeTypeAddModify',
                   {"SAVE": "YES", "activity": 1, "name": "abc", "level": "5"}, False)
-        self.assert_observer(
-            'core.acknowledge', 'diacamma.event', 'degreeTypeAddModify')
+        self.assert_observer('core.acknowledge', 'diacamma.event', 'degreeTypeAddModify')
 
         self.factory.xfer = EventConf()
         self.call('/diacamma.event/EventConf', {}, False)
-        self.assert_observer(
-            'core.custom', 'diacamma.event', 'EventConf')
-        self.assert_count_equal(
-            'COMPONENTS/GRID[@name="degreetype"]/RECORD', 1)
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="degreetype"]/RECORD[1]/VALUE[@name="name"]', "abc")
+        self.assert_observer('core.custom', 'diacamma.event', 'EventConf')
+        self.assert_count_equal('COMPONENTS/GRID[@name="degreetype"]/RECORD', 1)
+        self.assert_xml_equal('COMPONENTS/GRID[@name="degreetype"]/RECORD[1]/VALUE[@name="name"]', "abc")
 
         self.factory.xfer = DegreeTypeDel()
         self.call('/diacamma.event/degreeTypeDel',
                   {"CONFIRME": "YES", "degreetype": 1}, False)
-        self.assert_observer(
-            'core.acknowledge', 'diacamma.event', 'degreeTypeDel')
+        self.assert_observer('core.acknowledge', 'diacamma.event', 'degreeTypeDel')
 
         self.factory.xfer = EventConf()
         self.call('/diacamma.event/EventConf', {}, False)
-        self.assert_observer(
-            'core.custom', 'diacamma.event', 'EventConf')
-        self.assert_count_equal(
-            'COMPONENTS/GRID[@name="degreetype"]/RECORD', 0)
+        self.assert_observer('core.custom', 'diacamma.event', 'EventConf')
+        self.assert_count_equal('COMPONENTS/GRID[@name="degreetype"]/RECORD', 0)
 
     def test_subdegreetype(self):
         self.factory.xfer = EventConf()
         self.call('/diacamma.event/EventConf', {}, False)
-        self.assert_observer(
-            'core.custom', 'diacamma.event', 'EventConf')
-        self.assert_count_equal('COMPONENTS/*', 2 + 3 + 3 + 10)
-        self.assert_count_equal(
-            'COMPONENTS/GRID[@name="subdegreetype"]/HEADER', 2)
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="subdegreetype"]/HEADER[@name="name"]', "nom")
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="subdegreetype"]/HEADER[@name="level"]', "niveau")
-        self.assert_count_equal(
-            'COMPONENTS/GRID[@name="subdegreetype"]/RECORD', 0)
+        self.assert_observer('core.custom', 'diacamma.event', 'EventConf')
+        self.assert_count_equal('COMPONENTS/*', 2 + 3 + 3 + 6)
+        self.assert_count_equal('COMPONENTS/GRID[@name="subdegreetype"]/HEADER', 2)
+        self.assert_xml_equal('COMPONENTS/GRID[@name="subdegreetype"]/HEADER[@name="name"]', "nom")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="subdegreetype"]/HEADER[@name="level"]', "niveau")
+        self.assert_count_equal('COMPONENTS/GRID[@name="subdegreetype"]/RECORD', 0)
 
         self.factory.xfer = SubDegreeTypeAddModify()
         self.call('/diacamma.event/subdegreeTypeAddModify', {}, False)
-        self.assert_observer(
-            'core.custom', 'diacamma.event', 'subdegreeTypeAddModify')
-        self.assert_count_equal('COMPONENTS/*', 5)
+        self.assert_observer('core.custom', 'diacamma.event', 'subdegreeTypeAddModify')
+        self.assert_count_equal('COMPONENTS/*', 3)
 
         self.factory.xfer = SubDegreeTypeAddModify()
         self.call('/diacamma.event/subdegreeTypeAddModify',
                   {"SAVE": "YES", "name": "uvw", "level": "10"}, False)
-        self.assert_observer(
-            'core.acknowledge', 'diacamma.event', 'subdegreeTypeAddModify')
+        self.assert_observer('core.acknowledge', 'diacamma.event', 'subdegreeTypeAddModify')
 
         self.factory.xfer = EventConf()
         self.call('/diacamma.event/EventConf', {}, False)
-        self.assert_observer(
-            'core.custom', 'diacamma.event', 'EventConf')
-        self.assert_count_equal(
-            'COMPONENTS/GRID[@name="subdegreetype"]/RECORD', 1)
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="subdegreetype"]/RECORD[1]/VALUE[@name="name"]', "uvw")
+        self.assert_observer('core.custom', 'diacamma.event', 'EventConf')
+        self.assert_count_equal('COMPONENTS/GRID[@name="subdegreetype"]/RECORD', 1)
+        self.assert_xml_equal('COMPONENTS/GRID[@name="subdegreetype"]/RECORD[1]/VALUE[@name="name"]', "uvw")
 
         self.factory.xfer = SubDegreeTypeDel()
         self.call('/diacamma.event/subdegreeTypeDel',
                   {"CONFIRME": "YES", "subdegreetype": 1}, False)
-        self.assert_observer(
-            'core.acknowledge', 'diacamma.event', 'subdegreeTypeDel')
+        self.assert_observer('core.acknowledge', 'diacamma.event', 'subdegreeTypeDel')
 
         self.factory.xfer = EventConf()
         self.call('/diacamma.event/EventConf', {}, False)
-        self.assert_observer(
-            'core.custom', 'diacamma.event', 'EventConf')
-        self.assert_count_equal(
-            'COMPONENTS/GRID[@name="subdegreetype"]/RECORD', 0)
+        self.assert_observer('core.custom', 'diacamma.event', 'EventConf')
+        self.assert_count_equal('COMPONENTS/GRID[@name="subdegreetype"]/RECORD', 0)
 
     def test_no_activity(self):
         set_parameters([])
         self.factory.xfer = EventConf()
         self.call('/diacamma.event/EventConf', {}, False)
-        self.assert_observer(
-            'core.custom', 'diacamma.event', 'EventConf')
-        self.assert_count_equal('COMPONENTS/*', 2 + 3 + 3 + 10)
-        self.assert_count_equal(
-            'COMPONENTS/GRID[@name="degreetype"]/HEADER', 2)
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="degreetype"]/HEADER[@name="name"]', "nom")
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="degreetype"]/HEADER[@name="level"]', "niveau")
-        self.assert_count_equal(
-            'COMPONENTS/GRID[@name="degreetype"]/RECORD', 0)
+        self.assert_observer('core.custom', 'diacamma.event', 'EventConf')
+        self.assert_count_equal('COMPONENTS/*', 2 + 3 + 3 + 6)
+        self.assert_count_equal('COMPONENTS/GRID[@name="degreetype"]/HEADER', 2)
+        self.assert_xml_equal('COMPONENTS/GRID[@name="degreetype"]/HEADER[@name="name"]', "nom")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="degreetype"]/HEADER[@name="level"]', "niveau")
+        self.assert_count_equal('COMPONENTS/GRID[@name="degreetype"]/RECORD', 0)
 
         self.factory.xfer = DegreeTypeAddModify()
         self.call('/diacamma.event/degreeTypeAddModify', {}, False)
-        self.assert_observer(
-            'core.custom', 'diacamma.event', 'degreeTypeAddModify')
-        self.assert_count_equal('COMPONENTS/*', 5)
+        self.assert_observer('core.custom', 'diacamma.event', 'degreeTypeAddModify')
+        self.assert_count_equal('COMPONENTS/*', 3)
 
     def test_params(self):
         self.factory.xfer = EventConf()
         self.call('/diacamma.event/EventConf', {}, False)
-        self.assert_observer(
-            'core.custom', 'diacamma.event', 'EventConf')
-        self.assert_count_equal('COMPONENTS/*', 2 + 3 + 3 + 10)
+        self.assert_observer('core.custom', 'diacamma.event', 'EventConf')
+        self.assert_count_equal('COMPONENTS/*', 2 + 3 + 3 + 6)
         self.assert_count_equal('COMPONENTS/TAB', 3)
         self.assert_xml_equal('COMPONENTS/TAB[1]', 'Paramètres')
         self.assert_xml_equal('COMPONENTS/TAB[2]', 'Diplôme')
         self.assert_xml_equal('COMPONENTS/TAB[3]', 'Sous-diplôme')
-        self.assert_xml_equal(
-            'COMPONENTS/LABELFORM[@name="event-degree-text"]', 'Diplôme')
-        self.assert_xml_equal(
-            'COMPONENTS/LABELFORM[@name="event-subdegree-text"]', 'Sous-diplôme')
+        self.assert_xml_equal('COMPONENTS/LABELFORM[@name="event-degree-text"]', 'Diplôme')
+        self.assert_xml_equal('COMPONENTS/LABELFORM[@name="event-subdegree-text"]', 'Sous-diplôme')
 
         Parameter.change_value("event-degree-text", 'Grade')
         Parameter.change_value("event-subdegree-text", 'Barette')
@@ -198,33 +160,27 @@ class ConfigurationTest(LucteriosTest):
 
         self.factory.xfer = EventConf()
         self.call('/diacamma.event/EventConf', {}, False)
-        self.assert_observer(
-            'core.custom', 'diacamma.event', 'EventConf')
-        self.assert_count_equal('COMPONENTS/*', 2 + 3 + 3 + 10)
+        self.assert_observer('core.custom', 'diacamma.event', 'EventConf')
+        self.assert_count_equal('COMPONENTS/*', 2 + 3 + 3 + 6)
         self.assert_count_equal('COMPONENTS/TAB', 3)
         self.assert_xml_equal('COMPONENTS/TAB[1]', 'Paramètres')
         self.assert_xml_equal('COMPONENTS/TAB[2]', 'Grade')
         self.assert_xml_equal('COMPONENTS/TAB[3]', 'Barette')
-        self.assert_xml_equal(
-            'COMPONENTS/LABELFORM[@name="event-degree-text"]', 'Grade')
-        self.assert_xml_equal(
-            'COMPONENTS/LABELFORM[@name="event-subdegree-text"]', 'Barette')
-        self.assert_xml_equal(
-            'COMPONENTS/LABELFORM[@name="event-subdegree-enable"]', 'Oui')
+        self.assert_xml_equal('COMPONENTS/LABELFORM[@name="event-degree-text"]', 'Grade')
+        self.assert_xml_equal('COMPONENTS/LABELFORM[@name="event-subdegree-text"]', 'Barette')
+        self.assert_xml_equal('COMPONENTS/LABELFORM[@name="event-subdegree-enable"]', 'Oui')
 
         Parameter.change_value("event-subdegree-enable", 0)
         Params.clear()
 
         self.factory.xfer = EventConf()
         self.call('/diacamma.event/EventConf', {}, False)
-        self.assert_observer(
-            'core.custom', 'diacamma.event', 'EventConf')
-        self.assert_count_equal('COMPONENTS/*', 2 + 3 + 10)
+        self.assert_observer('core.custom', 'diacamma.event', 'EventConf')
+        self.assert_count_equal('COMPONENTS/*', 2 + 3 + 6)
         self.assert_count_equal('COMPONENTS/TAB', 2)
         self.assert_xml_equal('COMPONENTS/TAB[1]', 'Paramètres')
         self.assert_xml_equal('COMPONENTS/TAB[2]', 'Grade')
-        self.assert_xml_equal(
-            'COMPONENTS/LABELFORM[@name="event-subdegree-enable"]', 'Non')
+        self.assert_xml_equal('COMPONENTS/LABELFORM[@name="event-subdegree-enable"]', 'Non')
 
 
 class DegreeTest(LucteriosTest):
@@ -243,77 +199,55 @@ class DegreeTest(LucteriosTest):
     def test_degree(self):
         self.factory.xfer = AdherentShow()
         self.call('/diacamma.member/adherentShow', {'adherent': 2}, False)
-        self.assert_observer(
-            'core.custom', 'diacamma.member', 'adherentShow')
-        self.assert_xml_equal(
-            'COMPONENTS/LABELFORM[@name="firstname"]', "Avrel")
-        self.assert_xml_equal(
-            'COMPONENTS/LABELFORM[@name="lastname"]', "Dalton")
-        self.assert_count_equal(
-            'COMPONENTS/GRID[@name="degrees"]/HEADER', 3)
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="degrees"]/HEADER[@name="degree"]', "Grade")
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="degrees"]/HEADER[@name="subdegree"]', "Barette")
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="degrees"]/HEADER[@name="date"]', "date")
-        self.assert_count_equal(
-            'COMPONENTS/GRID[@name="degrees"]/RECORD', 0)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentShow')
+        self.assert_xml_equal('COMPONENTS/LABELFORM[@name="firstname"]', "Avrel")
+        self.assert_xml_equal('COMPONENTS/LABELFORM[@name="lastname"]', "Dalton")
+        self.assert_count_equal('COMPONENTS/GRID[@name="degrees"]/HEADER', 3)
+        self.assert_xml_equal('COMPONENTS/GRID[@name="degrees"]/HEADER[@name="degree"]', "Grade")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="degrees"]/HEADER[@name="subdegree"]', "Barette")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="degrees"]/HEADER[@name="date"]', "date")
+        self.assert_count_equal('COMPONENTS/GRID[@name="degrees"]/RECORD', 0)
 
         self.factory.xfer = DegreeAddModify()
         self.call('/diacamma.event/degreeAddModify', {}, False)
-        self.assert_observer(
-            'core.custom', 'diacamma.event', 'degreeAddModify')
+        self.assert_observer('core.custom', 'diacamma.event', 'degreeAddModify')
         self.assert_count_equal('COMPONENTS/*', 9)
 
         self.factory.xfer = DegreeAddModify()
         self.call('/diacamma.event/degreeAddModify',
                   {"SAVE": "YES", 'adherent': 2, "degree": "3", "subdegree": "2", "date": "2014-10-12"}, False)
-        self.assert_observer(
-            'core.acknowledge', 'diacamma.event', 'degreeAddModify')
+        self.assert_observer('core.acknowledge', 'diacamma.event', 'degreeAddModify')
 
         self.factory.xfer = AdherentShow()
         self.call('/diacamma.member/adherentAddModify', {'adherent': 2}, False)
-        self.assert_count_equal(
-            'COMPONENTS/GRID[@name="degrees"]/RECORD', 1)
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="degrees"]/RECORD[1]/VALUE[@name="degree"]', "[activity1] level #1.3")
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="degrees"]/RECORD[1]/VALUE[@name="subdegree"]', "sublevel #2")
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="degrees"]/RECORD[1]/VALUE[@name="date"]', "12 octobre 2014")
+        self.assert_count_equal('COMPONENTS/GRID[@name="degrees"]/RECORD', 1)
+        self.assert_xml_equal('COMPONENTS/GRID[@name="degrees"]/RECORD[1]/VALUE[@name="degree"]', "[activity1] level #1.3")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="degrees"]/RECORD[1]/VALUE[@name="subdegree"]', "sublevel #2")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="degrees"]/RECORD[1]/VALUE[@name="date"]', "12 octobre 2014")
 
         self.factory.xfer = DegreeDel()
         self.call('/diacamma.event/degreeDel',
                   {"CONFIRME": "YES", "degrees": 1}, False)
-        self.assert_observer(
-            'core.acknowledge', 'diacamma.event', 'degreeDel')
+        self.assert_observer('core.acknowledge', 'diacamma.event', 'degreeDel')
 
         self.factory.xfer = AdherentShow()
         self.call('/diacamma.member/adherentAddModify', {'adherent': 2}, False)
-        self.assert_count_equal(
-            'COMPONENTS/GRID[@name="degrees"]/RECORD', 0)
+        self.assert_count_equal('COMPONENTS/GRID[@name="degrees"]/RECORD', 0)
 
     def test_no_activity(self):
         set_parameters([])
         self.factory.xfer = DegreeAddModify()
         self.call('/diacamma.event/degreeAddModify',
                   {"SAVE": "YES", 'adherent': 2, "degree": "3", "subdegree": "2", "date": "2014-10-12"}, False)
-        self.assert_observer(
-            'core.acknowledge', 'diacamma.event', 'degreeAddModify')
+        self.assert_observer('core.acknowledge', 'diacamma.event', 'degreeAddModify')
 
         self.factory.xfer = AdherentShow()
         self.call('/diacamma.member/adherentAddModify', {'adherent': 2}, False)
-        self.assert_count_equal(
-            'COMPONENTS/GRID[@name="degrees"]/RECORD', 1)
-        self.assert_count_equal(
-            'COMPONENTS/GRID[@name="degrees"]/HEADER', 3)
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="degrees"]/RECORD[1]/VALUE[@name="degree"]', "level #1.3")
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="degrees"]/RECORD[1]/VALUE[@name="subdegree"]', "sublevel #2")
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="degrees"]/RECORD[1]/VALUE[@name="date"]', "12 octobre 2014")
+        self.assert_count_equal('COMPONENTS/GRID[@name="degrees"]/RECORD', 1)
+        self.assert_count_equal('COMPONENTS/GRID[@name="degrees"]/HEADER', 3)
+        self.assert_xml_equal('COMPONENTS/GRID[@name="degrees"]/RECORD[1]/VALUE[@name="degree"]', "level #1.3")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="degrees"]/RECORD[1]/VALUE[@name="subdegree"]', "sublevel #2")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="degrees"]/RECORD[1]/VALUE[@name="date"]', "12 octobre 2014")
 
     def test_no_subdegree(self):
         Parameter.change_value("event-subdegree-enable", 0)
@@ -322,16 +256,11 @@ class DegreeTest(LucteriosTest):
         self.factory.xfer = DegreeAddModify()
         self.call('/diacamma.event/degreeAddModify',
                   {"SAVE": "YES", 'adherent': 2, "degree": "3", "date": "2014-10-12"}, False)
-        self.assert_observer(
-            'core.acknowledge', 'diacamma.event', 'degreeAddModify')
+        self.assert_observer('core.acknowledge', 'diacamma.event', 'degreeAddModify')
 
         self.factory.xfer = AdherentShow()
         self.call('/diacamma.member/adherentAddModify', {'adherent': 2}, False)
-        self.assert_count_equal(
-            'COMPONENTS/GRID[@name="degrees"]/RECORD', 1)
-        self.assert_count_equal(
-            'COMPONENTS/GRID[@name="degrees"]/HEADER', 2)
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="degrees"]/RECORD[1]/VALUE[@name="degree"]', "[activity1] level #1.3")
-        self.assert_xml_equal(
-            'COMPONENTS/GRID[@name="degrees"]/RECORD[1]/VALUE[@name="date"]', "12 octobre 2014")
+        self.assert_count_equal('COMPONENTS/GRID[@name="degrees"]/RECORD', 1)
+        self.assert_count_equal('COMPONENTS/GRID[@name="degrees"]/HEADER', 2)
+        self.assert_xml_equal('COMPONENTS/GRID[@name="degrees"]/RECORD[1]/VALUE[@name="degree"]', "[activity1] level #1.3")
+        self.assert_xml_equal('COMPONENTS/GRID[@name="degrees"]/RECORD[1]/VALUE[@name="date"]', "12 octobre 2014")
