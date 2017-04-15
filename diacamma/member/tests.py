@@ -348,10 +348,7 @@ class SeasonTest(LucteriosTest):
         self.call('/diacamma.member/subscriptionShow', {"subscriptiontype": 1}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'subscriptionShow')
         self.assert_count_equal('COMPONENTS/*', 7)
-        self.assert_count_equal('COMPONENTS/GRID[@name="articles"]/HEADER', 6)
-        self.assert_count_equal('COMPONENTS/GRID[@name="articles"]/RECORD', 2)
-        self.assert_xml_equal('COMPONENTS/GRID[@name="articles"]/RECORD[1]/VALUE[@name="reference"]', "ABC1")
-        self.assert_xml_equal('COMPONENTS/GRID[@name="articles"]/RECORD[2]/VALUE[@name="reference"]', "ABC5")
+        self.assert_xml_equal('COMPONENTS/LABELFORM[@name="articles"]', "ABC1{[br/]}ABC5")
 
         self.factory.xfer = SubscriptionTypeDel()
         self.call('/diacamma.member/subscriptionDel', {"subscriptiontype": 1, 'CONFIRME': 'YES'}, False)
