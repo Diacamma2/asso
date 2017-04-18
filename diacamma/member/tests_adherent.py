@@ -792,7 +792,7 @@ class AdherentTest(BaseAdherentTest):
                                                         'fld_team': 'Equipe', 'fld_activity': 'Activite', 'fld_value': 'NumLicence', }, False)
         self.assert_observer('core.custom', 'lucterios.contacts', 'contactImport')
         self.assert_count_equal('COMPONENTS/*', 2)
-        self.assert_xml_equal('COMPONENTS/LABELFORM[@name="result"]', "{[center]}{[i]}5 contacts ont été importés{[/i]}{[/center]}")
+        self.assert_xml_equal('COMPONENTS/LABELFORM[@name="result"]', "{[center]}{[i]}5 éléments ont été importés{[/i]}{[/center]}")
         self.assert_count_equal('ACTIONS/ACTION', 1)
 
         self.factory.xfer = AdherentShow()
