@@ -8,7 +8,7 @@ Saisons et cotisations
 
 Le menu *administration/Modules (conf.)/Les saisons et les cotisations* vous permet de modifier à la gestion des licences sportives, en l'occurrence, les saisons sportives et les types de cotisations.
 
-	**Les Saisons**
+**Les Saisons**
 
 	.. image:: season_list.jpg
 
@@ -21,9 +21,10 @@ Deux périodes peuvent se chevaucher ou être disjointes (dans ce cas, un messag
 Le premier des douze mois commence le mois de la plus petite date de début de période. Même si votre saison couvre plus qu'une année calendaire, il n'y aura pas de treizième mois dans votre saison.
 
 Vous pouvez associer à chaque saison une liste de documents que chaque adhérent devra vous fournir pour finaliser son inscription.
+
 	.. image:: documents.jpg
 
-	**Les types de cotisations**
+**Les types de cotisations**
 
 	.. image:: cotisations.jpg
 
@@ -50,21 +51,22 @@ Le menu *administration/Modules (conf.)/Catégories* vous permet de modifier ce 
 Vous pouvez ne pas vouloir utiliser certaines catégories. Pour cela, désactivez là depuis l'écran de paramétrages.
 De la même façon, vous pouvez préciser si vous souhaitez pouvoir créer automatiquement une connexion par adhérent actif, afficher un numéro d'adhérent ou gérer des numéros de licence.
 Vous pouvez également personnaliser la désignation 'équipe' et 'activité'.
+
 	.. image:: categories.jpg
 
-	**Les âges**
+**Les âges**
 
 Vous pourrez ici renseigner les catégories d'âges existantes dans votre association en renseignant un nom de catégorie, une année (de naissance) de début et de fin de la catégorie.
 
 Vous n'aurez pas besoin de changer les valeurs des années de naissance ultérieurement : le décalage est effectué automatiquement d'années en années !
 	.. image:: age.jpg
 
-	**Les équipes/cours**
+**Les équipes/cours**
 
 Vous gérez différentes équipes ou différents cours et vous souhaitez pouvoir vos adhérents selon ce critère? Renseignez les ici, vous pourrez alors affecter des adhérents à ces équipes ou cours et ainsi les retrouver plus facilement.
 	.. image:: team.jpg
 
-	**Les activités**
+**Les activités**
 
 Vous gérez différentes activités (par exemple plusieurs arts martiaux) dans votre association? Les renseigner ici vous permettra ensuite de classer vos adhérents en fonction de ces différentes activités, mais aussi de saisir pour eux plusieurs licences par an si nécessaire.
 

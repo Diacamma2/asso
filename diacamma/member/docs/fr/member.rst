@@ -11,6 +11,7 @@ De cette page vous pouvez imprimer des listes, des étiquettes ou des cartes d'a
 Sélectionner et éditer une ligne pour consulter la fiche de l'adhérent.
 
 *Diacamma Asso* sauvegarde plusieurs types d'informations relative à un adhérent. Vous pouvez les consulter dans la fiche de l'adhérent.
+
 .. image:: file.jpg
 
 Cette fiche comporte :
