@@ -54,6 +54,7 @@ from lucterios.CORE.models import Parameter
 from lucterios.CORE.parameters import Params
 from lucterios.contacts.views_contacts import LegalEntityShow
 from lucterios.contacts.models import LegalEntity
+from diacamma.accounting.views import ThirdShow
 
 
 class BaseAdherentTest(LucteriosTest):
@@ -110,6 +111,7 @@ class AdherentTest(BaseAdherentTest):
     def setUp(self):
         BaseAdherentTest.setUp(self)
         set_parameters(["team", "activite", "age", "licence", "genre", 'numero', 'birth'])
+        ThirdShow.url_text
 
     def test_defaultlist(self):
         self.factory.xfer = AdherentActiveList()
