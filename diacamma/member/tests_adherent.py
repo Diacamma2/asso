@@ -560,7 +560,7 @@ class AdherentTest(BaseAdherentTest):
 
         self.factory.xfer = AdherentShow()
         self.call('/diacamma.member/adherentAddModify', {'adherent': 2, 'dateref': '2009-10-01'}, False)
-        self.assert_count_equal('COMPONENTS/*', 2 + (19 + 5) + 2 + 2 + 2)  # header + identity/docs + subscription + financial + grade
+        self.assert_count_equal('COMPONENTS/*', 2 + (19 + 5) + 2 + 5 + 2)  # header + identity/docs + subscription + financial + grade
         self.assert_attrib_equal('COMPONENTS/CHECK[@name="doc_1"]', "description", "Doc 1")
         self.assert_attrib_equal('COMPONENTS/CHECK[@name="doc_2"]', "description", "Doc 2")
         self.assert_xml_equal('COMPONENTS/CHECK[@name="doc_1"]', "0")
@@ -599,7 +599,7 @@ class AdherentTest(BaseAdherentTest):
         self.factory.xfer = AdherentShow()
         self.call('/diacamma.member/adherentShow', {'adherent': 2, 'dateref': '2009-10-01'}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'adherentShow')
-        self.assert_count_equal('COMPONENTS/*', 2 + (14 + 1) + 2 + 7 + 2)  # header + identity + subscription + financial + grade
+        self.assert_count_equal('COMPONENTS/*', 2 + (15 + 5) + 2 + 5 + 2)  # header + identity + subscription + financial + grade
         self.assert_count_equal('COMPONENTS/GRID[@name="subscription"]/HEADER', 5)
 
         self.factory.xfer = AdherentAddModify()
@@ -1175,7 +1175,7 @@ class AdherentFamilyTest(BaseAdherentTest):
         self.call('/diacamma.member/adherentShow',
                   {'adherent': 2, 'dateref': '2009-10-01'}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'adherentShow')
-        self.assert_count_equal('COMPONENTS/*', 2 + (15 + 2 + 5) + 2 + 2 + 2)  # header + identity/family/docs + subscription + financial + grade
+        self.assert_count_equal('COMPONENTS/*', 2 + (15 + 2 + 5) + 2 + 5 + 2)  # header + identity/family/docs + subscription + financial + grade
         self.assert_count_equal('COMPONENTS/GRID[@name="subscription"]/HEADER', 5)
         self.assert_xml_equal('COMPONENTS/LABELFORM[@name="family"]', "---")
         self.assert_attrib_equal('COMPONENTS/BUTTON[@name="famillybtn"]/ACTIONS/ACTION[1]', "icon", "/static/lucterios.CORE/images/add.png")
