@@ -566,7 +566,7 @@ class Adherent(Individual):
 
     @classmethod
     def get_import_fields(cls):
-        fields = super(Individual, cls).get_import_fields()
+        fields = super(Adherent, cls).get_import_fields()
         fields.append(('subscriptiontype', _('subscription type')))
         if Params.getvalue("member-team-enable"):
             fields.append(('team', Params.getvalue("member-team-text")))
@@ -629,7 +629,7 @@ class Adherent(Individual):
     @classmethod
     def import_data(cls, rowdata, dateformat):
         try:
-            new_item = super(Individual, cls).import_data(rowdata, dateformat)
+            new_item = super(Adherent, cls).import_data(rowdata, dateformat)
             if new_item is not None:
                 working_subscription = None
                 if 'subscriptiontype' in rowdata.keys():

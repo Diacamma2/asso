@@ -738,6 +738,7 @@ class AdherentTest(BaseAdherentTest):
         csv_content = """'nom','prenom','sexe','adresse','codePostal','ville','fixe','portable','mail','DateNaissance','LieuNaissance','Type','NumLicence','Equipe','Activite'
 'USIF','Pierre','Homme','37 avenue de la plage','99673','TOUINTOUIN','0502851031','0439423854','pierre572@free.fr','12/09/1961','BIDON SUR MER','Annually','1000029-00099','team1','activity1'
 'NOJAXU','Amandine','Femme','11 avenue du puisatier','99247','BELLEVUE','0022456300','0020055601','amandine723@hotmail.fr','27/02/1976','ZINZIN','Periodic#2','1000030-00099','team2','activity2'
+'','',
 'GOC','Marie','Femme','33 impasse du 11 novembre','99150','BIDON SUR MER','0632763718','0310231012','marie762@free.fr','16/05/1998','KIKIMDILUI','Monthly#5','1000031-00099','team3','activity1'
 'UHADIK','Marie','Femme','1 impasse de l'Oisan','99410','VIENVITEVOIR','0699821944','0873988470','marie439@orange.fr','27/08/1981','TOUINTOUIN','Calendar#01/11/2009','1000032-00099','team1','activity2'
 'FEPIZIBU','Benjamin','Homme','30 cours de la Chartreuse','99247','BELLEVUE','0262009068','0754416670','benjamin475@free.fr','25/03/1979','KIKIMDILUI','Annually','1000033-00099','team2','activity2'
@@ -760,7 +761,7 @@ class AdherentTest(BaseAdherentTest):
         self.assert_count_equal('COMPONENTS/SELECT[@name="fld_city"]/CASE', 15)
         self.assert_count_equal('COMPONENTS/SELECT[@name="fld_country"]/CASE', 16)
         self.assert_count_equal('COMPONENTS/GRID[@name="CSV"]/HEADER', 15)
-        self.assert_count_equal('COMPONENTS/GRID[@name="CSV"]/RECORD', 5)
+        self.assert_count_equal('COMPONENTS/GRID[@name="CSV"]/RECORD', 6)
         self.assert_count_equal('COMPONENTS/GRID[@name="CSV"]/ACTIONS', 0)
         self.assert_count_equal('ACTIONS/ACTION', 3)
         self.assert_action_equal('ACTIONS/ACTION[1]', (six.text_type(
@@ -779,7 +780,7 @@ class AdherentTest(BaseAdherentTest):
         self.assert_observer('core.custom', 'lucterios.contacts', 'contactImport')
         self.assert_count_equal('COMPONENTS/*', 4)
         self.assert_count_equal('COMPONENTS/GRID[@name="CSV"]/HEADER', 12)
-        self.assert_count_equal('COMPONENTS/GRID[@name="CSV"]/RECORD', 5)
+        self.assert_count_equal('COMPONENTS/GRID[@name="CSV"]/RECORD', 6)
         self.assert_count_equal('COMPONENTS/GRID[@name="CSV"]/ACTIONS', 0)
         self.assert_count_equal('ACTIONS/ACTION', 3)
         self.assert_action_equal('ACTIONS/ACTION[2]', (six.text_type(
