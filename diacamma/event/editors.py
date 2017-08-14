@@ -63,17 +63,14 @@ class EventEditor(LucteriosEditor):
 
     def edit(self, xfer):
         xfer.change_to_readonly('status')
+        xfer.change_to_readonly('event_type')
         date_end = xfer.get_components('date_end')
         date_end.set_needed(True)
         if date_end.value is None:
             date_end.value = date.today()
-        event_type = xfer.get_components('event_type')
-        event_type.java_script = """
-var type=current.getValue();
-parent.get('date_end').setVisible(type==1);
-"""
         xfer.get_components('default_article').set_action(xfer.request, xfer.get_action('', ''), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
-        if xfer.item.default_article_id is None:
+        xfer.get_components('default_article_nomember').set_action(xfer.request, xfer.get_action('', ''), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
+        if (xfer.item.default_article_id is None) and (xfer.item.default_article_nomember is None):
             xfer.remove_component('cost_accounting')
         else:
             comp = xfer.get_components("cost_accounting")

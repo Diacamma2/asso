@@ -26,6 +26,7 @@ from __future__ import unicode_literals
 
 from django.utils.translation import ugettext_lazy as _
 from django.utils import six
+from django.db.models import Q
 
 from lucterios.framework.xferadvance import XferListEditor, TITLE_PRINT,\
     TITLE_CLOSE, TITLE_DELETE, TITLE_MODIFY, TITLE_ADD, TITLE_EDIT, TITLE_OK, TITLE_CANCEL,\
@@ -51,12 +52,40 @@ MenuManage.add_sub("event.actions", "association", "diacamma.event/images/event.
                    _("Events"), _("Management of events."), 80)
 
 
-@MenuManage.describ('event.change_event', FORMTYPE_NOMODAL, 'event.actions', _('Event manage'))
-class EventList(XferListEditor):
-    icon = "event.png"
+class GenericEventList(XferListEditor):
     model = Event
     field_id = 'event'
-    caption = _("Event")
+    event_type = None
+
+    def fillresponse_header(self):
+        self.filter = Q(event_type=self.event_type)
+        self.params['event_type'] = self.event_type
+
+    def fillresponse(self):
+        XferListEditor.fillresponse(self)
+        grid = self.get_components(self.field_id)
+        grid.delete_header('event_type')
+
+
+def rigth_examination(request):
+    if EventListOuting.get_action().check_permission(request):
+        return (Params.getvalue("event-degree-enable") == 1)
+    else:
+        return False
+
+
+@MenuManage.describ(rigth_examination, FORMTYPE_NOMODAL, 'event.actions', _('Event manage'))
+class EventListExamination(GenericEventList):
+    icon = "degree.png"
+    caption = _("Examination")
+    event_type = 0
+
+
+@MenuManage.describ('event.change_event', FORMTYPE_NOMODAL, 'event.actions', _('Event manage'))
+class EventListOuting(GenericEventList):
+    icon = "outing.png"
+    caption = _("Training or outing")
+    event_type = 1
 
 
 @MenuManage.describ('event.change_event', FORMTYPE_NOMODAL, 'event.actions', _('To find an event'))
@@ -284,7 +313,7 @@ class ParticipantDel(XferDelete):
     caption = _("Delete participant")
 
 
-@MenuManage.describ('event.change_event', FORMTYPE_MODAL, 'event.actions', _('Statistic of degrees'))
+@MenuManage.describ(rigth_examination, FORMTYPE_MODAL, 'event.actions', _('Statistic of degrees'))
 class DegreeStatistic(XferContainerCustom):
     icon = "degree.png"
     model = Degree
@@ -363,7 +392,7 @@ class DegreeStatistic(XferContainerCustom):
         self.add_action(WrapAction(TITLE_CLOSE, 'images/close.png'))
 
 
-@MenuManage.describ('event.change_event')
+@MenuManage.describ(rigth_examination)
 class DegreeStatisticPrint(XferPrintAction):
     icon = "degree.png"
     model = Degree

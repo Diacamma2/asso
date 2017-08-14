@@ -41,8 +41,9 @@ from lucterios.framework import signal_and_lock
 
 
 def fill_params(xfer):
-    param_lists = ["event-degree-text", "event-subdegree-enable",
-                   "event-subdegree-text", "event-comment-text"]
+    param_lists = ["event-degree-enable", "event-degree-text",
+                   "event-subdegree-enable", "event-subdegree-text",
+                   "event-comment-text"]
     Params.fill(xfer, param_lists, 1, xfer.get_max_row() + 1, nb_col=1)
     btn = XferCompButton('editparam')
     btn.set_location(1, xfer.get_max_row() + 1, 2, 1)
@@ -63,8 +64,9 @@ class EventConf(XferListEditor):
         fill_params(self)
 
     def fillresponse_body(self):
-        self.new_tab(Params.getvalue("event-degree-text"))
-        self.fill_grid(0, DegreeType, "degreetype", DegreeType.objects.all())
+        if Params.getvalue("event-degree-enable") == 1:
+            self.new_tab(Params.getvalue("event-degree-text"))
+            self.fill_grid(0, DegreeType, "degreetype", DegreeType.objects.all())
         if Params.getvalue("event-subdegree-enable") == 1:
             self.new_tab(Params.getvalue("event-subdegree-text"))
             self.fill_grid(0, SubDegreeType, "subdegreetype", SubDegreeType.objects.all())

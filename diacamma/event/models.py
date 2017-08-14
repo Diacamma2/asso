@@ -131,8 +131,8 @@ class Event(LucteriosModel):
     event_type = models.IntegerField(verbose_name=_('event type'), choices=(
         (0, _('examination')), (1, _('trainning/outing'))), null=False, default=0, db_index=True)
     date_end = models.DateField(verbose_name=_('end date'), null=True)
-    default_article = models.ForeignKey(Article, verbose_name=_(
-        'default article'), null=True, default=None, on_delete=models.PROTECT)
+    default_article = models.ForeignKey(Article, verbose_name=_('default article (member)'), related_name="event", null=True, default=None, on_delete=models.PROTECT)
+    default_article_nomember = models.ForeignKey(Article, verbose_name=_('default article (no member)'), related_name="eventnomember", null=True, default=None, on_delete=models.PROTECT)
     cost_accounting = models.ForeignKey(
         CostAccounting, verbose_name=_('cost accounting'), null=True, default=None, db_index=True, on_delete=models.PROTECT)
 
@@ -154,7 +154,7 @@ class Event(LucteriosModel):
         field = []
         if Params.getvalue("member-activite-enable"):
             field.append(((Params.getvalue("member-activite-text"), "activity"),))
-        field.extend(['status', 'event_type', 'date', 'date_end', 'default_article', 'cost_accounting', 'comment'])
+        field.extend(['status', 'event_type', 'date', 'date_end', 'default_article', 'default_article_nomember', 'cost_accounting', 'comment'])
         return field
 
     @classmethod
@@ -164,7 +164,7 @@ class Event(LucteriosModel):
             field.append(('status', (Params.getvalue("member-activite-text"), "activity")))
         else:
             field.append(('status', ))
-        field.extend(['organizer_set', 'participant_set', ('comment',), (('default_article', 'default_article.ref_price'),), 'cost_accounting'])
+        field.extend(['organizer_set', 'participant_set', ('comment',), ((_('default article (member)'), 'default_article.ref_price'), (_('default article (no member)'), 'default_article_nomember.ref_price')), 'cost_accounting'])
         return field
 
     @classmethod
@@ -502,8 +502,10 @@ class Participant(LucteriosModel):
              update_fields=None):
         if (self.id is None) and (self.event.event_type == 0) and ((self.comment is None) or (self.comment == '')):
             self.comment = Params.getvalue("event-comment-text")
-        if (self.id is None) and (self.event.default_article is not None):
+        if (self.id is None) and self.is_subscripter and (self.event.default_article is not None):
             self.article = self.event.default_article
+        if (self.id is None) and not self.is_subscripter and (self.event.default_article_nomember is not None):
+            self.article = self.event.default_article_nomember
         return LucteriosModel.save(self, force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
 
     class Meta(object):
@@ -514,14 +516,13 @@ class Participant(LucteriosModel):
 
 @Signal.decorate('checkparam')
 def event_checkparam():
+    Parameter.check_and_create(name="event-degree-enable", typeparam=3, title=_("event-degree-enable"),
+                               args="{}", value='True')
     Parameter.check_and_create(name="event-subdegree-enable", typeparam=3, title=_("event-subdegree-enable"),
                                args="{}", value='True')
-
     Parameter.check_and_create(name="event-degree-text", typeparam=0, title=_("event-degree-text"),
                                args="{'Multi':False}", value=_('Degree'))
-
     Parameter.check_and_create(name="event-subdegree-text", typeparam=0, title=_("event-subdegree-text"),
                                args="{'Multi':False}", value=_('Sub-degree'))
-
     Parameter.check_and_create(name="event-comment-text", typeparam=0,
                                title=_("event-comment-text"), args="{'Multi':True}", value='')
