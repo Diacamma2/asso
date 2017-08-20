@@ -24,14 +24,18 @@ along with Lucterios.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import unicode_literals
 
 from django.utils.translation import ugettext_lazy as _
+from django.conf import settings
 
-from lucterios.framework.xferadvance import XferAddEditor, XferListEditor, TITLE_MODIFY, TITLE_DELETE, TITLE_ADD
+from lucterios.framework.xferadvance import XferAddEditor, XferListEditor, TITLE_MODIFY, TITLE_DELETE, TITLE_ADD,\
+    TITLE_EDIT, XferShowEditor
 from lucterios.framework.xferadvance import XferDelete
-from lucterios.framework.tools import ActionsManage, MenuManage, FORMTYPE_NOMODAL, CLOSE_NO, SELECT_MULTI, SELECT_SINGLE
-from lucterios.framework.xfercomponents import XferCompButton
+from lucterios.framework.tools import ActionsManage, MenuManage, FORMTYPE_NOMODAL, CLOSE_NO, SELECT_MULTI, SELECT_SINGLE,\
+    WrapAction
+from lucterios.framework.error import LucteriosException, IMPORTANT
+from lucterios.framework.xfercomponents import XferCompButton, XferCompLabelForm
 from lucterios.framework import signal_and_lock
 from lucterios.CORE.parameters import Params
-from lucterios.CORE.views import ParamEdit
+from lucterios.CORE.views import ParamEdit, ObjectMerge
 
 from diacamma.member.models import Activity, Age, Team, Season, SubscriptionType
 
@@ -73,6 +77,17 @@ class CategoryConf(XferListEditor):
         if Params.getvalue("member-activite-enable") == 1:
             self.new_tab(Params.getvalue("member-activite-text"))
             self.fill_grid(0, Activity, "activity", Activity.objects.all())
+            grid = self.get_components("activity")
+            if WrapAction.is_permission(self.request, 'CORE.add_parameter'):
+                grid.add_action(self.request, ObjectMerge.get_action(_("Merge"), "images/clone.png"), close=CLOSE_NO, unique=SELECT_MULTI,
+                                params={'modelname': 'member.Activity', 'field_id': 'activity'})
+            if hasattr(settings, "DIACAMMA_MAXACTIVITY") and (getattr(settings, "DIACAMMA_MAXACTIVITY") <= grid.nb_lines):
+                lbl = XferCompLabelForm("limit_activity")
+                lbl.set_color('red')
+                lbl.set_value_as_headername(_('You have the maximum of activities!'))
+                lbl.set_location(grid.col, self.get_max_row() + 1)
+                self.add_component(lbl)
+                grid.delete_action("diacamma.member/activityAddModify", True)
 
 
 @ActionsManage.affect_grid(TITLE_ADD, "images/add.png")
@@ -121,9 +136,17 @@ class TeamDel(XferDelete):
 class ActivityAddModify(XferAddEditor):
     icon = "config.png"
     model = Activity
+    redirect_to_show = None
     field_id = 'activity'
     caption_add = _("Add activity")
     caption_modify = _("Modify activity")
+
+    def fillresponse(self):
+        if (self.item.id is None) and hasattr(settings, "DIACAMMA_MAXACTIVITY"):
+            nb_act = len(Activity.objects.all())
+            if getattr(settings, "DIACAMMA_MAXACTIVITY") <= nb_act:
+                raise LucteriosException(IMPORTANT, _('You have the maximum of activities!'))
+        XferAddEditor.fillresponse(self)
 
 
 @ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", unique=SELECT_MULTI)
@@ -133,6 +156,15 @@ class ActivityDel(XferDelete):
     model = Activity
     field_id = 'activity'
     caption = _("Delete activity")
+
+
+@ActionsManage.affect_other(TITLE_EDIT, "images/show.png")
+@MenuManage.describ('CORE.change_parameter')
+class ActivityShow(XferShowEditor):
+    icon = "config.png"
+    model = Activity
+    field_id = 'activity'
+    caption = _("Show activity")
 
 
 @signal_and_lock.Signal.decorate('conf_wizard')
@@ -163,6 +195,14 @@ def conf_wizard_member(wizard_ident, xfer):
         if Params.getvalue("member-activite-enable") == 1:
             xfer.new_tab(Params.getvalue("member-activite-text"))
             xfer.fill_grid(1, Activity, "activity", Activity.objects.all())
+            grid = xfer.get_components("activity")
+            if hasattr(settings, "DIACAMMA_MAXACTIVITY") and (getattr(settings, "DIACAMMA_MAXACTIVITY") <= grid.nb_lines):
+                lbl = XferCompLabelForm("limit_activity")
+                lbl.set_color('red')
+                lbl.set_value_as_headername(_('You have the maximum of activities!'))
+                lbl.set_location(grid.col, xfer.get_max_row() + 1)
+                xfer.add_component(lbl)
+                grid.delete_action("diacamma.member/activityAddModify", True)
     elif (xfer is not None) and (wizard_ident == "member_params"):
         xfer.add_title(_("Diacamma member"), _('Parameters'), _('Configuration of main parameters'))
         fill_params(xfer, ["member-licence-enabled", "member-filter-genre", "member-numero", "member-birth", "member-connection"], True)

@@ -27,6 +27,7 @@ from __future__ import unicode_literals
 from django.utils.translation import ugettext_lazy as _
 from django.utils import six
 from django.db.models import Q
+from django.conf import settings
 
 from lucterios.framework.xferadvance import XferListEditor, TITLE_OK, TITLE_ADD,\
     TITLE_MODIFY, TITLE_EDIT, TITLE_CANCEL, TITLE_LABEL, TITLE_LISTING,\
@@ -51,9 +52,10 @@ from lucterios.framework import signal_and_lock
 
 from lucterios.CORE.parameters import Params
 
-from diacamma.member.models import Adherent, Subscription, Season, Age, Team, Activity, License, DocAdherent, SubscriptionType, CommandManager
 from lucterios.contacts.models import Individual, LegalEntity, Responsability
 from lucterios.contacts.views_contacts import LegalEntityAddModify
+
+from diacamma.member.models import Adherent, Subscription, Season, Age, Team, Activity, License, DocAdherent, SubscriptionType, CommandManager
 
 
 MenuManage.add_sub("association", None, "diacamma.member/images/association.png", _("Association"), _("Association tools"), 30)
@@ -145,7 +147,7 @@ class AdherentAbstractList(XferListEditor, AdherentFilter):
 
         if Params.getvalue("member-activite-enable"):
             sel = XferCompCheckList('activity')
-            sel.set_select_query(Activity.objects.all())
+            sel.set_select_query(Activity.get_all())
             sel.set_value(activity)
             sel.set_location(4, row, 1, 2)
             sel.description = Params.getvalue("member-activite-text")
@@ -471,7 +473,7 @@ class AdherentCommandModify(XferContainerAcknowledge):
                     dlg.add_component(sel)
                 elif fname == "activity":
                     sel = XferCompSelect(fname)
-                    sel.set_select_query(Activity.objects.all())
+                    sel.set_select_query(Activity.get_all())
                     sel.set_value(cmd_item[fname][0])
                     sel.set_needed(True)
                     sel.set_location(1, row)
@@ -981,10 +983,16 @@ def summary_member(xfer):
             lbl.set_value_center(six.text_type(lerr))
             lbl.set_location(0, row + 1, 4)
             xfer.add_component(lbl)
+        if hasattr(settings, "DIACAMMA_MAXACTIVITY"):
+            lbl = XferCompLabelForm("limit_activity")
+            lbl.set_value(_('limitation: %d activities allowed') % getattr(settings, "DIACAMMA_MAXACTIVITY"))
+            lbl.set_italic()
+            lbl.set_location(0, row + 5, 4)
+            xfer.add_component(lbl)
     if is_right or (current_adherent is not None):
         lab = XferCompLabelForm('member')
         lab.set_value_as_infocenter("{[hr/]}")
-        lab.set_location(0, row + 5, 4)
+        lab.set_location(0, row + 6, 4)
         xfer.add_component(lab)
         return True
     else:

@@ -37,6 +37,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.utils import formats, six
 from django.core.exceptions import ObjectDoesNotExist
 from django_fsm import FSMIntegerField, transition
+from django.conf import settings
 
 from lucterios.framework.models import LucteriosModel, get_value_converted
 from lucterios.framework.error import LucteriosException, IMPORTANT
@@ -395,6 +396,13 @@ class Activity(LucteriosModel):
 
     def __str__(self):
         return self.name
+
+    @classmethod
+    def get_all(cls):
+        activities = Activity.objects.all()
+        if hasattr(settings, "DIACAMMA_MAXACTIVITY"):
+            activities = activities[0:getattr(settings, "DIACAMMA_MAXACTIVITY")]
+        return activities
 
     @classmethod
     def get_default_fields(cls):

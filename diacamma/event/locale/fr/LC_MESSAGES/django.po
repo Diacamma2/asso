@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-08-14 14:51+0000\n"
+"POT-Creation-Date: 2017-08-20 15:57+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -26,11 +26,11 @@ msgstr "Évenement Diacamma"
 msgid "No activity!"
 msgstr "pas d'activité!"
 
-#: editors.py:107
+#: editors.py:103
 msgid "Show trainning/outing"
 msgstr "Voir un stage/une sortie"
 
-#: editors.py:110 views.py:117
+#: editors.py:106 views.py:117
 msgid "Show examination"
 msgstr "Voir un examen"
 
@@ -98,9 +98,13 @@ msgstr "stage/sortie"
 msgid "end date"
 msgstr "date de fin"
 
-#: models.py:135
-msgid "default article"
-msgstr "article par défaut"
+#: models.py:134 models.py:167
+msgid "default article (member)"
+msgstr "article par défaut (adhérent)"
+
+#: models.py:135 models.py:167
+msgid "default article (no member)"
+msgstr "article par défaut (non adhérent)"
 
 #: models.py:137
 msgid "cost accounting"
@@ -205,39 +209,39 @@ msgstr "%s résultant"
 msgid "Participant: %s"
 msgstr "Participant: %s"
 
-#: models.py:510
+#: models.py:512
 msgid "participant"
 msgstr "participant"
 
-#: models.py:511
+#: models.py:513
 msgid "participants"
 msgstr "participants"
 
-#: models.py:517
+#: models.py:519
 msgid "event-degree-enable"
 msgstr "activé les examen"
 
-#: models.py:519
+#: models.py:521
 msgid "event-subdegree-enable"
 msgstr "activé les sous-diplôme"
 
-#: models.py:521
+#: models.py:523
 msgid "event-degree-text"
 msgstr "intitulé du diplôme"
 
-#: models.py:522 views_degree.py:47
+#: models.py:524 views_degree.py:47
 msgid "Degree"
 msgstr "Diplôme"
 
-#: models.py:523
+#: models.py:525
 msgid "event-subdegree-text"
 msgstr "intitulé du sous-diplôme"
 
-#: models.py:524
+#: models.py:526
 msgid "Sub-degree"
 msgstr "Sous-diplôme"
 
-#: models.py:526
+#: models.py:528
 msgid "event-comment-text"
 msgstr "commentaire d'examen par défaut"
 

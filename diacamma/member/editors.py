@@ -329,6 +329,7 @@ class LicenseEditor(LucteriosEditor):
             team.set_needed(True)
         activity = xfer.get_components('activity')
         if activity is not None:
+            activity.set_select_query(Activity.get_all())
             activity.set_needed(True)
         else:
             default_act = Activity.objects.all()[0]
