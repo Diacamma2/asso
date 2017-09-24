@@ -416,7 +416,7 @@ class CategoriesTest(LucteriosTest):
         self.assert_xml_equal('COMPONENTS/LABELFORM[@name="member-activite-enable"]', 'Non')
         self.assert_count_equal('COMPONENTS/TAB', 3)
         self.assert_xml_equal('COMPONENTS/TAB[1]', 'Paramètres')
-        self.assert_xml_equal('COMPONENTS/TAB[2]', 'Age')
+        self.assert_xml_equal('COMPONENTS/TAB[2]', 'Âge')
         self.assert_xml_equal('COMPONENTS/TAB[3]', 'Équipe')
 
     def test_team(self):
@@ -466,7 +466,7 @@ class CategoriesTest(LucteriosTest):
         self.assert_xml_equal('COMPONENTS/LABELFORM[@name="member-team-enable"]', 'Non')
         self.assert_count_equal('COMPONENTS/TAB', 3)
         self.assert_xml_equal('COMPONENTS/TAB[1]', 'Paramètres')
-        self.assert_xml_equal('COMPONENTS/TAB[2]', 'Age')
+        self.assert_xml_equal('COMPONENTS/TAB[2]', 'Âge')
         self.assert_xml_equal('COMPONENTS/TAB[3]', 'Activité')
 
     def test_age(self):
@@ -558,7 +558,7 @@ class CategoriesTest(LucteriosTest):
         self.assert_count_equal('COMPONENTS/*', 2 + 15 + 3 + 3 + 3)
         self.assert_count_equal('COMPONENTS/TAB', 4)
         self.assert_xml_equal('COMPONENTS/TAB[1]', 'Paramètres')
-        self.assert_xml_equal('COMPONENTS/TAB[2]', 'Age')
+        self.assert_xml_equal('COMPONENTS/TAB[2]', 'Âge')
         self.assert_xml_equal('COMPONENTS/TAB[3]', 'Équipe')
         self.assert_xml_equal('COMPONENTS/TAB[4]', 'Activité')
         self.assert_xml_equal('COMPONENTS/LABELFORM[@name="member-team-text"]', 'Équipe')
@@ -574,7 +574,7 @@ class CategoriesTest(LucteriosTest):
         self.assert_count_equal('COMPONENTS/*', 2 + 15 + 3 + 3 + 3)
         self.assert_count_equal('COMPONENTS/TAB', 4)
         self.assert_xml_equal('COMPONENTS/TAB[1]', 'Paramètres')
-        self.assert_xml_equal('COMPONENTS/TAB[2]', 'Age')
+        self.assert_xml_equal('COMPONENTS/TAB[2]', 'Âge')
         self.assert_xml_equal('COMPONENTS/TAB[3]', 'Cours')
         self.assert_xml_equal('COMPONENTS/TAB[4]', 'Sport')
         self.assert_xml_equal('COMPONENTS/LABELFORM[@name="member-team-text"]', 'Cours')
