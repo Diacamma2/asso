@@ -64,7 +64,7 @@ Ajout des adhérents de l'association
 ------------------------------------
 
 	Menu *Association/Adhérents/Adhérents cotisants*
-	Menu *Administration/Modules (conf.)/Importe de contacts*
+	Menu *Administration/Modules (conf.)/Importation de contacts*
 
 Il vous faut maintenant ajouter les différents adhérents de votre association.
 Deux solutions pour cela: un par un ou via une importation extérieur.
