@@ -183,6 +183,7 @@ class AdherentAbstractList(XferListEditor, AdherentFilter):
         self.add_component(sel)
 
         btn = XferCompButton('btndateref')
+        btn.is_default = True
         btn.set_location(8, row + 1, 1, 2)
         btn.set_action(self.request, self.get_action(_('Refresh'), ''),
                        modal=FORMTYPE_REFRESH, close=CLOSE_NO)
