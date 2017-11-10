@@ -327,7 +327,7 @@ class SeasonTest(LucteriosTest):
         self.factory.xfer = SubscriptionTypeAddModify()
         self.call('/diacamma.member/subscriptionAddModify', {}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'subscriptionAddModify')
-        self.assert_count_equal('COMPONENTS/*', 14)
+        self.assert_count_equal('COMPONENTS/*', 7)
 
         self.factory.xfer = SubscriptionTypeAddModify()
         self.call('/diacamma.member/subscriptionAddModify',
