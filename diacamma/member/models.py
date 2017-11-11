@@ -56,8 +56,6 @@ from diacamma.payoff.views import get_html_payment
 
 
 class Season(LucteriosModel):
-    is_simple_gui = True
-
     designation = models.CharField(_('designation'), max_length=100)
     iscurrent = models.BooleanField(
         verbose_name=_('is current'), default=False)
@@ -259,8 +257,6 @@ class Season(LucteriosModel):
 
 
 class Document(LucteriosModel):
-    is_simple_gui = True
-
     season = models.ForeignKey(Season, verbose_name=_('season'), null=False, default=None, db_index=True, on_delete=models.CASCADE)
     name = models.CharField(_('name'), max_length=100)
 
@@ -296,8 +292,6 @@ class Document(LucteriosModel):
 
 
 class Period(LucteriosModel):
-    is_simple_gui = True
-
     season = models.ForeignKey(
         Season, verbose_name=_('season'), null=False, default=None, db_index=True, on_delete=models.CASCADE)
     num = models.IntegerField(
@@ -347,8 +341,6 @@ class Period(LucteriosModel):
 
 
 class SubscriptionType(LucteriosModel):
-    is_simple_gui = True
-
     name = models.CharField(_('name'), max_length=50)
     description = models.TextField(_('description'), null=True, default="")
     duration = models.IntegerField(verbose_name=_('duration'), choices=((0, _('annually')), (1, _(
@@ -389,8 +381,6 @@ class SubscriptionType(LucteriosModel):
 
 
 class Activity(LucteriosModel):
-    is_simple_gui = True
-
     name = models.CharField(_('name'), max_length=50)
     description = models.TextField(_('description'), null=True, default="")
 
@@ -428,8 +418,6 @@ class Activity(LucteriosModel):
 
 
 class Team(LucteriosModel):
-    is_simple_gui = True
-
     name = models.CharField(_('name'), max_length=50)
     description = models.TextField(_('description'), null=True, default="")
     unactive = models.BooleanField(verbose_name=_('unactive'), default=False)
@@ -456,8 +444,6 @@ class Team(LucteriosModel):
 
 
 class Age(LucteriosModel):
-    is_simple_gui = True
-
     name = models.CharField(_('name'), max_length=50)
     minimum = models.IntegerField(
         verbose_name=_('minimum'), null=False, default=0)
@@ -502,8 +488,6 @@ class Age(LucteriosModel):
 
 
 class Adherent(Individual):
-    is_simple_gui = True
-
     num = models.IntegerField(
         verbose_name=_('numeros'), null=False, default=0,)
     birthday = models.DateField(
@@ -757,8 +741,6 @@ class Adherent(Individual):
 
 
 class Subscription(LucteriosModel):
-    is_simple_gui = True
-
     adherent = models.ForeignKey(
         Adherent, verbose_name=_('adherent'), null=False, default=None, db_index=True, on_delete=models.CASCADE)
     season = models.ForeignKey(
@@ -957,8 +939,6 @@ class Subscription(LucteriosModel):
 
 
 class DocAdherent(LucteriosModel):
-    is_simple_gui = True
-
     subscription = models.ForeignKey(
         Subscription, verbose_name=_('subscription'), null=False, default=None, db_index=True, on_delete=models.CASCADE)
     document = models.ForeignKey(
@@ -988,8 +968,6 @@ class DocAdherent(LucteriosModel):
 
 
 class License(LucteriosModel):
-    is_simple_gui = True
-
     subscription = models.ForeignKey(
         Subscription, verbose_name=_('subscription'), null=False, default=None, db_index=True, on_delete=models.CASCADE)
     value = models.CharField(_('license #'), max_length=50, null=True)

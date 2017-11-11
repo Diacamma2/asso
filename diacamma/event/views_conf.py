@@ -54,8 +54,6 @@ def fill_params(xfer):
 
 @MenuManage.describ('event.change_degreetype', FORMTYPE_NOMODAL, 'member.conf', _('Management of degrees'))
 class EventConf(XferListEditor):
-    is_simple_gui = True
-
     icon = "degree.png"
     caption = _("Configuration of degrees")
 

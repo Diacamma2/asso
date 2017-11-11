@@ -46,8 +46,6 @@ from diacamma.accounting.tools import format_devise
 
 
 class DegreeType(LucteriosModel):
-    is_simple_gui = True
-
     name = models.CharField(verbose_name=_('name'), max_length=100)
     level = models.IntegerField(verbose_name=_('level'), null=False, default=1, validators=[
                                 MinValueValidator(1), MaxValueValidator(100)])
@@ -91,8 +89,6 @@ class DegreeType(LucteriosModel):
 
 
 class SubDegreeType(LucteriosModel):
-    is_simple_gui = True
-
     name = models.CharField(verbose_name=_('name'), max_length=100)
     level = models.IntegerField(verbose_name=_('level'), null=False, default=1, validators=[
                                 MinValueValidator(1), MaxValueValidator(100)])
@@ -120,8 +116,6 @@ class SubDegreeType(LucteriosModel):
 
 
 class Event(LucteriosModel):
-    is_simple_gui = True
-
     activity = models.ForeignKey(Activity, verbose_name=_(
         'activity'), null=False, default=None, db_index=True, on_delete=models.PROTECT)
     date = models.DateField(verbose_name=_('date'), null=False)
@@ -227,8 +221,6 @@ class Event(LucteriosModel):
 
 
 class Organizer(LucteriosModel):
-    is_simple_gui = True
-
     event = models.ForeignKey(
         Event, verbose_name=_('event'), null=False, default=None, db_index=True, on_delete=models.CASCADE)
     contact = models.ForeignKey(
@@ -355,8 +347,6 @@ class Degree(LucteriosModel):
 
 
 class Participant(LucteriosModel):
-    is_simple_gui = True
-
     event = models.ForeignKey(
         Event, verbose_name=_('event'), null=False, default=None, db_index=True, on_delete=models.CASCADE)
     contact = models.ForeignKey(
