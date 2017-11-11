@@ -137,6 +137,8 @@ class EventTransition(XferTransition):
         lbl.set_location(1, 0, 6)
         dlg.add_component(lbl)
         dlg.fill_from_model(1, 1, True, ['activity', 'date'])
+        dlg.get_components('activity').colspan = 3
+        dlg.get_components('date').colspan = 3
         lbl = XferCompLabelForm('sep')
         lbl.set_value("{[hr/]}")
         lbl.set_location(0, 4, 7)

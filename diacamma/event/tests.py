@@ -225,7 +225,7 @@ class DegreeTest(LucteriosTest):
         self.factory.xfer = DegreeAddModify()
         self.call('/diacamma.event/degreeAddModify', {}, False)
         self.assert_observer('core.custom', 'diacamma.event', 'degreeAddModify')
-        self.assert_count_equal('COMPONENTS/*', 9)
+        self.assert_count_equal('COMPONENTS/*', 5)
 
         self.factory.xfer = DegreeAddModify()
         self.call('/diacamma.event/degreeAddModify',
