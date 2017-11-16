@@ -118,7 +118,7 @@ class AdherentTest(BaseAdherentTest):
         self.call('/diacamma.member/adherentList', {}, False)
         self.assert_observer(
             'core.custom', 'diacamma.member', 'adherentList')
-        self.assert_count_equal('COMPONENTS/*', 2 + 7 + 2)
+        self.assert_count_equal('COMPONENTS/*', 2 + 6 + 2)
         self.assert_attrib_equal('COMPONENTS/CHECKLIST[@name="team"]', 'description', 'group')
         self.assert_attrib_equal('COMPONENTS/CHECKLIST[@name="activity"]', 'description', 'passion')
         self.assert_count_equal('COMPONENTS/SELECT[@name="status"]/CASE', 3)
@@ -445,7 +445,7 @@ class AdherentTest(BaseAdherentTest):
         self.factory.xfer = AdherentActiveList()
         self.call('/diacamma.member/adherentList', {'dateref': '2009-10-01'}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'adherentList')
-        self.assert_count_equal('COMPONENTS/*', 2 + 7 + 3)
+        self.assert_count_equal('COMPONENTS/*', 2 + 6 + 3)
         self.assert_count_equal('COMPONENTS/GRID[@name="adherent"]/RECORD', 5)
         self.assert_count_equal('COMPONENTS/GRID[@name="adherent"]/RECORD[@id="2"]', 1)
         self.assert_count_equal('COMPONENTS/GRID[@name="adherent"]/RECORD[@id="3"]', 1)
@@ -593,7 +593,7 @@ class AdherentTest(BaseAdherentTest):
         self.factory.xfer = AdherentActiveList()
         self.call('/diacamma.member/adherentList', {}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'adherentList')
-        self.assert_count_equal('COMPONENTS/*', 3 + 3 + 2)
+        self.assert_count_equal('COMPONENTS/*', 3 + 2 + 2)
 
         self.assert_count_equal('COMPONENTS/GRID[@name="adherent"]/HEADER', 5)
         self.assert_count_equal('COMPONENTS/GRID[@name="adherent"]/ACTIONS/ACTION', 4)

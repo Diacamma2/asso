@@ -129,46 +129,33 @@ class AdherentAbstractList(XferListEditor, AdherentFilter):
         dateref = convert_date(
             self.getparam("dateref", ""), Season.current_season().date_ref)
 
+        col1 = 0
         if Params.getvalue("member-age-enable"):
             sel = XferCompCheckList('age')
             sel.set_select_query(Age.objects.all())
             sel.set_value(age)
-            sel.set_location(0, row, 1, 2)
+            sel.set_location(col1, row)
             sel.description = _("Age")
             self.add_component(sel)
+            col1 += 1
 
         if Params.getvalue("member-team-enable"):
             sel = XferCompCheckList('team')
             sel.set_select_query(Team.objects.all())
             sel.set_value(team)
-            sel.set_location(2, row, 1, 2)
+            sel.set_location(col1, row)
             sel.description = Params.getvalue("member-team-text")
             self.add_component(sel)
+            col1 += 1
 
         if Params.getvalue("member-activite-enable"):
             sel = XferCompCheckList('activity')
             sel.set_select_query(Activity.get_all())
             sel.set_value(activity)
-            sel.set_location(4, row, 1, 2)
+            sel.set_location(col1, row)
             sel.description = Params.getvalue("member-activite-text")
             self.add_component(sel)
-
-        dtref = XferCompDate('dateref')
-        dtref.set_value(dateref)
-        dtref.set_needed(True)
-        dtref.set_location(6, row, 2)
-        dtref.description = _("reference date")
-        self.add_component(dtref)
-
-        if Params.getvalue("member-filter-genre"):
-            sel = XferCompSelect('genre')
-            list_genre = list(self.item.get_field_by_name('genre').choices)
-            list_genre.insert(0, (0, '---'))
-            sel.set_select(list_genre)
-            sel.set_location(6, row + 1)
-            sel.set_value(genre)
-            sel.description = _("genre")
-            self.add_component(sel)
+            col1 += 1
 
         sel = XferCompSelect('status')
         list_status = list(Subscription.get_field_by_name('status').choices)
@@ -177,16 +164,34 @@ class AdherentAbstractList(XferListEditor, AdherentFilter):
         del list_status[-1]
         list_status.insert(0, (-1, '%s & %s' % (_('building'), _('valid'))))
         sel.set_select(list_status)
-        sel.set_location(6, row + 2)
+        sel.set_location(0, row + 1)
         sel.set_value(status)
         sel.description = _("status")
         self.add_component(sel)
+        col2 = 1
+
+        if Params.getvalue("member-filter-genre"):
+            sel = XferCompSelect('genre')
+            list_genre = list(self.item.get_field_by_name('genre').choices)
+            list_genre.insert(0, (0, '---'))
+            sel.set_select(list_genre)
+            sel.set_location(col2, row + 1)
+            sel.set_value(genre)
+            sel.description = _("genre")
+            self.add_component(sel)
+            col2 += 1
+
+        dtref = XferCompDate('dateref')
+        dtref.set_value(dateref)
+        dtref.set_needed(True)
+        dtref.set_location(max(col1, col2), row)
+        dtref.description = _("reference date")
+        self.add_component(dtref)
 
         btn = XferCompButton('btndateref')
         btn.is_default = True
-        btn.set_location(8, row + 1, 1, 2)
-        btn.set_action(self.request, self.get_action(_('Refresh'), ''),
-                       modal=FORMTYPE_REFRESH, close=CLOSE_NO)
+        btn.set_location(max(col1, col2), row + 1)
+        btn.set_action(self.request, self.get_action(_('Refresh'), ''), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
         self.add_component(btn)
 
 
@@ -205,7 +210,6 @@ class AdherentSelection(AdherentAbstractList):
         AdherentAbstractList.fillresponse(self)
         self.get_components('title').colspan = 10
         self.get_components(self.field_id).colspan = 10
-        self.get_components('nb_adherent').colspan = 10
         if self.select_class is not None:
             grid = self.get_components(self.field_id)
             grid.add_action(self.request, self.select_class.get_action(_("Select"), "images/ok.png"),
@@ -222,7 +226,6 @@ class AdherentActiveList(AdherentAbstractList):
             self, 0, self.get_max_row() + 1, 10)
         self.get_components('title').colspan = 10
         self.get_components(self.field_id).colspan = 10
-        self.get_components('nb_adherent').colspan = 10
         self.get_components(self.field_id).add_action(self.request, AdherentSubscription.get_action(_("Subscription"), ""),
                                                       unique=SELECT_SINGLE, close=CLOSE_NO)
         if Params.getvalue("member-licence-enabled"):
@@ -255,7 +258,6 @@ class AdherentRenewList(AdherentAbstractList):
             self, 0, self.get_max_row() + 1, 10)
         self.get_components('title').colspan = 10
         self.get_components(self.field_id).colspan = 10
-        self.get_components('nb_adherent').colspan = 10
         if Params.getvalue("member-subscription-mode") == 1:
             self.add_action(SubscriptionModerate.get_action(_("Moderation"), "images/up.png"), pos_act=0, close=CLOSE_NO)
 
@@ -719,7 +721,7 @@ class SubscriptionModerate(XferListEditor):
         self.params['status_filter'] = 0
 
 
-@ActionsManage.affect_grid(_("Show adherent"), "", intop=True, unique=SELECT_SINGLE, condition=lambda xfer, gridname='': (xfer.getparam('adherent') == None))
+@ActionsManage.affect_grid(_("Show adherent"), "", intop=True, unique=SELECT_SINGLE, condition=lambda xfer, gridname='': (xfer.getparam('adherent') is None))
 @MenuManage.describ('member.add_subscription')
 class SubscriptionOpenAdherent(XferContainerAcknowledge):
     icon = "adherent.png"
@@ -733,7 +735,7 @@ class SubscriptionOpenAdherent(XferContainerAcknowledge):
         self.redirect_action(AdherentShow.get_action(), params={'adherent': self.item.adherent_id})
 
 
-@ActionsManage.affect_grid(TITLE_ADD, "images/add.png", condition=lambda xfer, gridname='': (xfer.getparam('adherent') != None))
+@ActionsManage.affect_grid(TITLE_ADD, "images/add.png", condition=lambda xfer, gridname='': (xfer.getparam('adherent') is not None))
 @ActionsManage.affect_show(TITLE_MODIFY, "images/edit.png", close=CLOSE_YES)
 @MenuManage.describ('member.add_subscription')
 class SubscriptionAddModify(XferAddEditor):
@@ -776,7 +778,7 @@ class SubscriptionTransition(XferTransition):
         XferTransition.fillresponse(self)
 
 
-@ActionsManage.affect_grid(_('Bill'), 'images/ok.png', unique=SELECT_SINGLE, close=CLOSE_NO, condition=lambda xfer, gridname='': (xfer.getparam('status_filter') == None) or (xfer.getparam('status_filter', -1) > 1))
+@ActionsManage.affect_grid(_('Bill'), 'images/ok.png', unique=SELECT_SINGLE, close=CLOSE_NO, condition=lambda xfer, gridname='': (xfer.getparam('status_filter') is None) or (xfer.getparam('status_filter', -1) > 1))
 @ActionsManage.affect_show(_('Bill'), 'images/ok.png', close=CLOSE_NO)
 @MenuManage.describ('invoice.change_bill')
 class SubscriptionShowBill(XferContainerAcknowledge):
@@ -928,7 +930,7 @@ def summary_member(xfer):
     is_right = WrapAction.is_permission(xfer.request, 'member.change_adherent')
     try:
         current_adherent = Adherent.objects.get(user=xfer.request.user)
-    except:
+    except Exception:
         current_adherent = None
 
     if is_right or (current_adherent is not None):
