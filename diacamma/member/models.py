@@ -563,8 +563,7 @@ class Adherent(Individual):
         if Params.getvalue("member-team-enable"):
             fields.append(('team', Params.getvalue("member-team-text")))
         if Params.getvalue("member-activite-enable"):
-            fields.append(
-                ('activity', Params.getvalue("member-activite-text")))
+            fields.append(('activity', Params.getvalue("member-activite-text")))
         if Params.getvalue("member-licence-enabled"):
             fields.append(('value', _('license #')))
         return fields
@@ -614,7 +613,7 @@ class Adherent(Individual):
                     working_subscription.save()
                 if isinstance(working_subscription, tuple):
                     working_subscription = working_subscription[0]
-        except:
+        except Exception:
             logging.getLogger('diacamma.member').exception("import_data")
         return working_subscription
 
@@ -632,7 +631,7 @@ class Adherent(Individual):
                 if working_subscription is not None:
                     working_subscription.import_licence(rowdata)
             return new_item
-        except:
+        except Exception:
             logging.getLogger('diacamma.member').exception("import_data")
             return None
 
@@ -659,7 +658,7 @@ class Adherent(Individual):
             ages = Age.objects.filter(
                 minimum__lte=age_val, maximum__gte=age_val)
             val = ages[0]
-        except:
+        except Exception:
             val = "---"
         return val
 
@@ -717,12 +716,12 @@ class Adherent(Individual):
                 current_family = entities[0]
         return current_family
 
-    def get_or_create_customer(self):
+    def get_ref_contact(self):
         current_family = self.family
         if current_family is None:
-            return get_or_create_customer(self.id)
+            return self
         else:
-            return get_or_create_customer(current_family.id)
+            return current_family
 
     def save(self, force_insert=False, force_update=False, using=None,
              update_fields=None, new_num=True):
@@ -808,7 +807,7 @@ class Subscription(LucteriosModel):
             else:
                 bill_type = 1
             if create_bill:
-                self.bill = Bill.objects.create(bill_type=bill_type, date=self.season.date_ref, third=self.adherent.get_or_create_customer())
+                self.bill = Bill.objects.create(bill_type=bill_type, date=self.season.date_ref, third=get_or_create_customer(self.adherent.get_ref_contact().id))
             if (self.bill.status == 0):
                 self.bill.bill_type = bill_type
                 if hasattr(self, 'xfer'):

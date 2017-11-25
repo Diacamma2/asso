@@ -459,10 +459,7 @@ class Participant(LucteriosModel):
             self.save()
         if self.article is not None:
             high_contact = self.contact.get_final_child()
-            if isinstance(high_contact, Adherent):
-                third = high_contact.get_or_create_customer()
-            else:
-                third = get_or_create_customer(self.contact_id)
+            third = get_or_create_customer(high_contact.get_ref_contact().id)
             self.bill = Bill.objects.create(bill_type=1, date=date.today(), third=third)
             self.bill.cost_accounting = self.event.cost_accounting
             self.bill.comment = "{[b]}%s{[/b]}: %s{[br/]}{[i]}%s{[/i]}" % (self.event.event_type_txt, self.event.date_txt, self.event.comment)
