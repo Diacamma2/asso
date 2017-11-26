@@ -26,13 +26,12 @@ from __future__ import unicode_literals
 
 from django.utils.translation import ugettext_lazy as _
 
-from lucterios.framework.xferadvance import XferAddEditor, TITLE_DELETE,\
-    TITLE_MODIFY, TITLE_ADD
+from lucterios.framework.xferadvance import XferAddEditor, TITLE_DELETE, TITLE_MODIFY, TITLE_ADD
 from lucterios.framework.xferadvance import XferDelete
-from lucterios.framework.tools import ActionsManage, MenuManage, WrapAction,\
-    SELECT_SINGLE, SELECT_MULTI
+from lucterios.framework.tools import ActionsManage, MenuManage, WrapAction, SELECT_SINGLE, SELECT_MULTI
 from lucterios.framework import signal_and_lock
 from lucterios.framework.xfercomponents import XferCompGrid
+from lucterios.CORE.parameters import Params
 
 from diacamma.event.models import Degree
 from diacamma.member.models import Adherent
@@ -40,7 +39,7 @@ from diacamma.member.models import Adherent
 
 @signal_and_lock.Signal.decorate('show_contact')
 def show_contact_degree(contact, xfer):
-    if WrapAction.is_permission(xfer.request, 'event.change_degree'):
+    if WrapAction.is_permission(xfer.request, 'event.change_degree') and (Params.getvalue("event-degree-enable") == 1):
         up_contact = contact.get_final_child()
         if isinstance(up_contact, Adherent):
             degrees = Degree.objects.filter(adherent=up_contact)

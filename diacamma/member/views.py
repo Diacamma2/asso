@@ -721,7 +721,7 @@ class SubscriptionModerate(XferListEditor):
         self.params['status_filter'] = 0
 
 
-@ActionsManage.affect_grid(_("Show adherent"), "", intop=True, unique=SELECT_SINGLE, condition=lambda xfer, gridname='': (xfer.getparam('adherent') is None))
+@ActionsManage.affect_grid(_("Show adherent"), "", intop=True, unique=SELECT_SINGLE, condition=lambda xfer, gridname='': (xfer.getparam('adherent') is None) and (xfer.getparam('individual') is None))
 @MenuManage.describ('member.add_subscription')
 class SubscriptionOpenAdherent(XferContainerAcknowledge):
     icon = "adherent.png"
@@ -735,7 +735,7 @@ class SubscriptionOpenAdherent(XferContainerAcknowledge):
         self.redirect_action(AdherentShow.get_action(), params={'adherent': self.item.adherent_id})
 
 
-@ActionsManage.affect_grid(TITLE_ADD, "images/add.png", condition=lambda xfer, gridname='': (xfer.getparam('adherent') is not None))
+@ActionsManage.affect_grid(TITLE_ADD, "images/add.png", condition=lambda xfer, gridname='': (xfer.getparam('adherent') is not None) or (xfer.getparam('individual') is not None))
 @ActionsManage.affect_show(TITLE_MODIFY, "images/edit.png", close=CLOSE_YES)
 @MenuManage.describ('member.add_subscription')
 class SubscriptionAddModify(XferAddEditor):
