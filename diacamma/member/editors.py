@@ -154,7 +154,7 @@ class AdherentEditor(IndividualEditor):
             xfer.add_component(lbl)
             btn = XferCompButton('famillybtn')
             btn.is_mini = True
-            btn.set_location(4, row_init)
+            btn.set_location(3, row_init)
             if current_family is None:
                 act = ActionsManage.get_action_url('member.Adherent', 'FamilyAdd', xfer)
                 act.set_value("", "images/add.png")

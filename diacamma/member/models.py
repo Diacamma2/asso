@@ -525,7 +525,7 @@ class Adherent(Individual):
 
     @classmethod
     def get_show_fields(cls):
-        fields = Individual.get_show_fields()
+        fields = super(Adherent, cls).get_show_fields()
         keys = list(fields.keys())
         if Params.getvalue("member-numero"):
             fields[keys[0]][0] = ("num", fields[keys[0]][0])
