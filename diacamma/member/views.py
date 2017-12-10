@@ -925,81 +925,96 @@ class SubscriptionAddForCurrent(SubscriptionAddModify):
         SubscriptionAddModify.fillresponse(self)
 
 
-@signal_and_lock.Signal.decorate('summary')
-def summary_member(xfer):
-    is_right = WrapAction.is_permission(xfer.request, 'member.change_adherent')
-    try:
-        current_adherent = Adherent.objects.get(user=xfer.request.user)
-    except Exception:
-        current_adherent = None
-
-    if is_right or (current_adherent is not None):
-        row = xfer.get_max_row() + 1
-        lab = XferCompLabelForm('membertitle')
-        lab.set_value_as_infocenter(_("Adherents"))
-        lab.set_location(0, row, 4)
-        xfer.add_component(lab)
-    if current_adherent is not None:
-        ident = []
-        if Params.getvalue("member-numero"):
-            ident.append("%s %s" % (_('numeros'), current_adherent.num))
-        if Params.getvalue("member-licence-enabled"):
-            current_license = current_adherent.license
-            if current_license is not None:
-                ident.append(current_license)
-        row = xfer.get_max_row() + 1
-        lab = XferCompLabelForm('membercurrent')
-        lab.set_value_as_header("{[br/]}".join(ident))
-        lab.set_location(0, row, 4)
-        xfer.add_component(lab)
-    if is_right:
-        row = xfer.get_max_row() + 1
+@signal_and_lock.Signal.decorate('situation')
+def situation_member(xfer):
+    if not hasattr(xfer, 'add_component'):
         try:
-            current_season = Season.current_season()
-            dateref = current_season.date_ref
-            lab = XferCompLabelForm('memberseason')
-            lab.set_value_as_headername(six.text_type(current_season))
+            Adherent.objects.get(user=xfer.user)
+            return True
+        except Exception:
+            return False
+    else:
+        try:
+            current_adherent = Adherent.objects.get(user=xfer.request.user)
+            row = xfer.get_max_row() + 1
+            lab = XferCompLabelForm('membertitle')
+            lab.set_value_as_infocenter(_("Adherents"))
+            lab.set_location(0, row, 4)
+            xfer.add_component(lab)
+            ident = []
+            if Params.getvalue("member-numero"):
+                ident.append("%s %s" % (_('numeros'), current_adherent.num))
+            if Params.getvalue("member-licence-enabled"):
+                current_license = current_adherent.license
+                if current_license is not None:
+                    ident.append(current_license)
+            lab = XferCompLabelForm('membercurrent')
+            lab.set_value_as_header("{[br/]}".join(ident))
             lab.set_location(0, row + 1, 4)
             xfer.add_component(lab)
-            nb_adh = len(Adherent.objects.filter(Q(subscription__begin_date__lte=dateref) & Q(
-                subscription__end_date__gte=dateref) & Q(subscription__status=2)))
-            lab = XferCompLabelForm('membernb')
-            lab.set_value_as_header(_("Active adherents: %d") % nb_adh)
+            lab = XferCompLabelForm('member')
+            lab.set_value_as_infocenter("{[hr/]}")
             lab.set_location(0, row + 2, 4)
             xfer.add_component(lab)
-            nb_adhcreat = len(Adherent.objects.filter(
-                Q(subscription__begin_date__lte=dateref) & Q(subscription__end_date__gte=dateref) & Q(subscription__status=1)))
-            if nb_adhcreat > 0:
-                lab = XferCompLabelForm('memberadhcreat')
-                lab.set_value_as_header(_("No validated adherents: %d") % nb_adhcreat)
-                lab.set_location(0, row + 3, 4)
-                xfer.add_component(lab)
-            nb_adhwait = len(Adherent.objects.filter(
-                Q(subscription__begin_date__lte=dateref) & Q(subscription__end_date__gte=dateref) & Q(subscription__status=0)))
-            if nb_adhwait > 0:
-                lab = XferCompLabelForm('memberadhwait')
-                lab.set_value_as_header(_("Adherents waiting moderation: %d") % nb_adhwait)
-                lab.set_location(0, row + 4, 4)
-                xfer.add_component(lab)
-        except LucteriosException as lerr:
-            lbl = XferCompLabelForm("member_error")
-            lbl.set_value_center(six.text_type(lerr))
-            lbl.set_location(0, row + 1, 4)
-            xfer.add_component(lbl)
-        if hasattr(settings, "DIACAMMA_MAXACTIVITY"):
-            lbl = XferCompLabelForm("limit_activity")
-            lbl.set_value(_('limitation: %d activities allowed') % getattr(settings, "DIACAMMA_MAXACTIVITY"))
-            lbl.set_italic()
-            lbl.set_location(0, row + 5, 4)
-            xfer.add_component(lbl)
-    if is_right or (current_adherent is not None):
-        lab = XferCompLabelForm('member')
-        lab.set_value_as_infocenter("{[hr/]}")
-        lab.set_location(0, row + 6, 4)
-        xfer.add_component(lab)
-        return True
-    else:
+            return True
+        except Exception:
+            pass
         return False
+
+
+@signal_and_lock.Signal.decorate('summary')
+def summary_member(xfer):
+    if not hasattr(xfer, 'add_component'):
+        return WrapAction.is_permission(xfer, 'member.change_adherent')
+    else:
+        if WrapAction.is_permission(xfer.request, 'member.change_adherent'):
+            row = xfer.get_max_row() + 1
+            lab = XferCompLabelForm('membertitle')
+            lab.set_value_as_infocenter(_("Adherents"))
+            lab.set_location(0, row, 4)
+            xfer.add_component(lab)
+            try:
+                current_season = Season.current_season()
+                dateref = current_season.date_ref
+                lab = XferCompLabelForm('memberseason')
+                lab.set_value_as_headername(six.text_type(current_season))
+                lab.set_location(0, row + 1, 4)
+                xfer.add_component(lab)
+                nb_adh = len(Adherent.objects.filter(Q(subscription__begin_date__lte=dateref) & Q(subscription__end_date__gte=dateref) & Q(subscription__status=2)))
+                lab = XferCompLabelForm('membernb')
+                lab.set_value_as_header(_("Active adherents: %d") % nb_adh)
+                lab.set_location(0, row + 2, 4)
+                xfer.add_component(lab)
+                nb_adhcreat = len(Adherent.objects.filter(Q(subscription__begin_date__lte=dateref) & Q(subscription__end_date__gte=dateref) & Q(subscription__status=1)))
+                if nb_adhcreat > 0:
+                    lab = XferCompLabelForm('memberadhcreat')
+                    lab.set_value_as_header(_("No validated adherents: %d") % nb_adhcreat)
+                    lab.set_location(0, row + 3, 4)
+                    xfer.add_component(lab)
+                nb_adhwait = len(Adherent.objects.filter(Q(subscription__begin_date__lte=dateref) & Q(subscription__end_date__gte=dateref) & Q(subscription__status=0)))
+                if nb_adhwait > 0:
+                    lab = XferCompLabelForm('memberadhwait')
+                    lab.set_value_as_header(_("Adherents waiting moderation: %d") % nb_adhwait)
+                    lab.set_location(0, row + 4, 4)
+                    xfer.add_component(lab)
+            except LucteriosException as lerr:
+                lbl = XferCompLabelForm("member_error")
+                lbl.set_value_center(six.text_type(lerr))
+                lbl.set_location(0, row + 1, 4)
+                xfer.add_component(lbl)
+            if hasattr(settings, "DIACAMMA_MAXACTIVITY"):
+                lbl = XferCompLabelForm("limit_activity")
+                lbl.set_value(_('limitation: %d activities allowed') % getattr(settings, "DIACAMMA_MAXACTIVITY"))
+                lbl.set_italic()
+                lbl.set_location(0, row + 5, 4)
+                xfer.add_component(lbl)
+            lab = XferCompLabelForm('member')
+            lab.set_value_as_infocenter("{[hr/]}")
+            lab.set_location(0, row + 6, 4)
+            xfer.add_component(lab)
+            return True
+        else:
+            return False
 
 
 @signal_and_lock.Signal.decorate('change_bill')
