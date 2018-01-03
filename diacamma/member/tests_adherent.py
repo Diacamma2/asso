@@ -1136,10 +1136,10 @@ class AdherentTest(BaseAdherentTest):
         self.assert_xml_equal('COMPONENTS/GRID[@name="AdhCmd"]/RECORD[2]/VALUE[@name="activity"]', "activity2")
         self.assert_xml_equal('COMPONENTS/GRID[@name="AdhCmd"]/RECORD[2]/VALUE[@name="reduce"]', "0.00€")
 
-        configSMTP('localhost', 1025)
+        configSMTP('localhost', 2025)
         change_ourdetail()
         server = TestReceiver()
-        server.start(1025)
+        server.start(2025)
         try:
             self.assertEqual(0, server.count())
 
