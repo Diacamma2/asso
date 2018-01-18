@@ -621,6 +621,7 @@ class BaseAdherentFamilyList(XferContainerCustom):
         name_filter = self.getparam('namefilter', self.item.lastname)
         comp = XferCompEdit('namefilter')
         comp.set_value(name_filter)
+        comp.is_default = True
         comp.set_action(self.request, self.get_action(), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
         comp.set_location(0, 1)
         comp.description = _('Filtrer by name')
