@@ -636,7 +636,7 @@ class EventTest(LucteriosTest):
         self.factory.xfer = BillShow()
         self.calljson('/diacamma.invoice/billShow', {'bill': 3}, False)
         self.assert_observer('core.custom', 'diacamma.invoice', 'billShow')
-        self.assert_json_equal('LABELFORM', 'third', "Dalton Joe")
+        self.assert_json_equal('LINK', 'third', "Dalton Joe")
         self.assert_json_equal('LABELFORM', 'cost_accounting', "open")
         self.assert_count_equal('detail', 1)
         self.assert_json_equal('', 'detail/@0/article', 'ABC5')
