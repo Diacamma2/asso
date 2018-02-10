@@ -70,20 +70,6 @@ class EventEditor(LucteriosEditor):
             date_end.value = date.today()
         xfer.get_components('default_article').set_action(xfer.request, xfer.get_action('', ''), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
         xfer.get_components('default_article_nomember').set_action(xfer.request, xfer.get_action('', ''), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
-        if (xfer.item.default_article_id is None) and (xfer.item.default_article_nomember is None):
-            xfer.remove_component('cost_accounting')
-        else:
-            comp = xfer.get_components("cost_accounting")
-            comp.set_needed(False)
-            comp.set_select_query(CostAccounting.objects.filter(Q(status=0) & (Q(year=None) | Q(year=FiscalYear.get_current()))))
-            if xfer.item.id is not None:
-                comp.set_value(xfer.item.cost_accounting_id)
-            else:
-                cost_acc = CostAccounting.objects.filter(is_default=True)
-                if len(cost_acc) > 0:
-                    comp.set_value(cost_acc[0].id)
-                else:
-                    comp.set_value(0)
 
     def show(self, xfer):
         participant = xfer.get_components('participant')
@@ -106,5 +92,3 @@ class EventEditor(LucteriosEditor):
             xfer.caption = _("Show examination")
             xfer.remove_component('date_end')
             img.set_value("/static/diacamma.event/images/degree.png")
-        if xfer.item.default_article_id is None:
-            xfer.remove_component('cost_accounting')

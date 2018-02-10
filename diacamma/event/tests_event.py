@@ -550,7 +550,7 @@ class EventTest(LucteriosTest):
 
         self.factory.xfer = EventAddModify()
         self.calljson('/diacamma.event/eventAddModify',
-                      {"SAVE": "YES", "comment": "la fiesta", "date": "2014-10-12", "date_end": "2014-10-13", "activity": "1", "event_type": 1, 'default_article': 1, 'default_article_nomember': 2, 'cost_accounting': 2}, False)
+                      {"SAVE": "YES", "comment": "la fiesta", "date": "2014-10-12", "date_end": "2014-10-13", "activity": "1", "event_type": 1, 'default_article': 1, 'default_article_nomember': 2}, False)
         self.assert_observer('core.acknowledge', 'diacamma.event', 'eventAddModify')
 
         self.factory.xfer = OrganizerSave()
@@ -571,9 +571,8 @@ class EventTest(LucteriosTest):
         self.factory.xfer = EventShow()
         self.calljson('/diacamma.event/eventShow', {"event": 1}, False)
         self.assert_observer('core.custom', 'diacamma.event', 'eventShow')
-        self.assert_count_equal('', 11)
+        self.assert_count_equal('', 10)
         self.assert_json_equal('LABELFORM', "default_article.ref_price", "ABC1 [12.34€]")
-        self.assert_json_equal('LABELFORM', 'cost_accounting', "open")
         self.assert_json_equal('LABELFORM', 'comment', "la fiesta")
         self.assert_count_equal('participant', 3)
         self.assert_json_equal('', 'participant/@0/contact', "Dalton Avrel")
@@ -637,7 +636,6 @@ class EventTest(LucteriosTest):
         self.calljson('/diacamma.invoice/billShow', {'bill': 3}, False)
         self.assert_observer('core.custom', 'diacamma.invoice', 'billShow')
         self.assert_json_equal('LINK', 'third', "Dalton Joe")
-        self.assert_json_equal('LABELFORM', 'cost_accounting', "open")
         self.assert_count_equal('detail', 1)
         self.assert_json_equal('', 'detail/@0/article', 'ABC5')
         self.assert_json_equal('', 'detail/@0/designation', 'Article 05')
@@ -679,7 +677,7 @@ class EventTest(LucteriosTest):
 
         self.factory.xfer = EventAddModify()
         self.calljson('/diacamma.event/eventAddModify', {"SAVE": "YES", "comment": "la fiesta", "date": "2014-10-12", "date_end": "2014-10-13",
-                                                         "activity": "1", "event_type": 1, 'default_article': 1, 'default_article_nomember': 2, 'cost_accounting': 2}, False)
+                                                         "activity": "1", "event_type": 1, 'default_article': 1, 'default_article_nomember': 2}, False)
         self.assert_observer('core.acknowledge', 'diacamma.event', 'eventAddModify')
 
         self.factory.xfer = OrganizerSave()

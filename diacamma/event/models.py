@@ -127,8 +127,7 @@ class Event(LucteriosModel):
     date_end = models.DateField(verbose_name=_('end date'), null=True)
     default_article = models.ForeignKey(Article, verbose_name=_('default article (member)'), related_name="event", null=True, default=None, on_delete=models.PROTECT)
     default_article_nomember = models.ForeignKey(Article, verbose_name=_('default article (no member)'), related_name="eventnomember", null=True, default=None, on_delete=models.PROTECT)
-    cost_accounting = models.ForeignKey(
-        CostAccounting, verbose_name=_('cost accounting'), null=True, default=None, db_index=True, on_delete=models.PROTECT)
+    cost_accounting = models.ForeignKey(CostAccounting, verbose_name=_('cost accounting'), null=True, default=None, db_index=True, on_delete=models.PROTECT)
 
     def __str__(self):
         if Params.getvalue("member-activite-enable"):
@@ -148,7 +147,7 @@ class Event(LucteriosModel):
         field = []
         if Params.getvalue("member-activite-enable"):
             field.append(((Params.getvalue("member-activite-text"), "activity"),))
-        field.extend(['status', 'event_type', 'date', 'date_end', 'default_article', 'default_article_nomember', 'cost_accounting', 'comment'])
+        field.extend(['status', 'event_type', 'date', 'date_end', 'default_article', 'default_article_nomember', 'comment'])
         return field
 
     @classmethod
@@ -158,7 +157,7 @@ class Event(LucteriosModel):
             field.append(('status', (Params.getvalue("member-activite-text"), "activity")))
         else:
             field.append(('status', ))
-        field.extend(['organizer_set', 'participant_set', ('comment',), ((_('default article (member)'), 'default_article.ref_price'), (_('default article (no member)'), 'default_article_nomember.ref_price')), 'cost_accounting'])
+        field.extend(['organizer_set', 'participant_set', ('comment',), ((_('default article (member)'), 'default_article.ref_price'), (_('default article (no member)'), 'default_article_nomember.ref_price'))])
         return field
 
     @classmethod
@@ -461,7 +460,6 @@ class Participant(LucteriosModel):
             high_contact = self.contact.get_final_child()
             third = get_or_create_customer(high_contact.get_ref_contact().id)
             self.bill = Bill.objects.create(bill_type=1, date=date.today(), third=third)
-            self.bill.cost_accounting = self.event.cost_accounting
             self.bill.comment = "{[b]}%s{[/b]}: %s{[br/]}{[i]}%s{[/i]}" % (self.event.event_type_txt, self.event.date_txt, self.event.comment)
             if (self.event.event_type == 1) and (self.comment is not None) and (self.comment != ''):
                 self.bill.comment += "{[br/]}"
