@@ -27,6 +27,7 @@ from __future__ import unicode_literals
 from lucterios.framework.test import add_user
 from lucterios.contacts.models import Individual
 from lucterios.CORE.views import get_wizard_step_list
+from lucterios.documents.views import DocumentShow
 
 from diacamma.member.test_tools import set_parameters
 from diacamma.member.tests_adherent import BaseAdherentTest
@@ -39,6 +40,7 @@ class AssoTest(BaseAdherentTest):
         BaseAdherentTest.setUp(self)
         set_parameters(["team", "activite", "age", "licence", "genre", 'numero', 'birth'])
         ThirdShow.url_text
+        DocumentShow.url_text
         self.add_subscriptions()
         contact = Individual.objects.get(id=5)
         contact.user = add_user('joe')
