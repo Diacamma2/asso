@@ -1,7 +1,7 @@
 Statistiques des adhérents
 ==========================
 
-.. image:: statistiques.jpg
+.. image:: statistiques.png
 
 Vous avez la possibilité d'éditer les statistiques d'adhésion d'une saison donnée.
 

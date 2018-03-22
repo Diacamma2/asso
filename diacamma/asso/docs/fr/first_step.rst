@@ -45,7 +45,10 @@ Réglage de votre facturier
 --------------------------
 
 	Menu *Administration/Modules (conf.)/Configuration du règlement*
-	Menu *Administration/Modules (conf.)/Configuration du facturier*
+   
+	Menu *Administration/Modules (conf.)/Configuration commercial du facturier*
+
+   Menu *Administration/Modules (conf.)/Configuration financière du facturier*
 
 Vérifiez que les paramètres du facturier vous correspondent.
 Vous pouvez aussi ici, configurer le RIB de votre compte bancaire principal ainsi qu'en ajouter des secondaires.
@@ -55,6 +58,7 @@ Création de votre premier exercice comptable
 --------------------------------------------
 
 	Menu *Administration/Modules (conf.)/Configuration comptables*
+
 	Menu *Finance/Comptabilité/plan comptable*
 
 Ouvrer votre premier exercice comptable et rendez le actifs.
@@ -64,6 +68,7 @@ Ajout des adhérents de l'association
 ------------------------------------
 
 	Menu *Association/Adhérents/Adhérents cotisants*
+   
 	Menu *Administration/Modules (conf.)/Importation de contacts*
 
 Il vous faut maintenant ajouter les différents adhérents de votre association.
@@ -80,6 +85,7 @@ Mise à jours comptable
 ----------------------
 
 	Menu *Finance/Comptabilité/écritures comptable*
+   
 	Menu *Finance/Comptabilité/Modèle d'écriture*
 
 Si vous mettez en place *Diacamma Asso* au cours de votre exercice, vous devrez également saisir votre report à nouveau de l'exercice précédent ainsi que ressaisir les écritures du début d'année.
@@ -99,7 +105,9 @@ Les cadres associatifs
 ----------------------
 
 	Menu *Général/Nos coordonnées*
+   
 	Menu *Administration/Modules (conf.)/Configuration des contacts*
+   
 	Menu *Association/Adhérents/Adhérents cotisants*
 
 Dans la fenêtre de vos coordonnées, vous pouvez associé des adhérents comme cadre de votre structure.
@@ -114,6 +122,7 @@ La gestions documentaire
 ------------------------
 
 	Menu *Administration/Modules (conf.)/Dossier*
+   
 	Menu *Bureautique/Documents/Documents*
 
 Définissez vos différents dossier vous permettant d'importer vos documents à classer et à partager.

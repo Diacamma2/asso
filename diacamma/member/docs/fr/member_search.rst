@@ -3,7 +3,7 @@ Rechercher un adhérent
 
 L'outil de recherche des adhérents se situe dans le menu *Association/Adhérents/Recherche d'adhérents*.
 
-.. image:: search.jpg
+.. image:: search.png
 
 Vous pouvez alors faire une recherche suivant des critères variés portant sur l'identité ou les adhésions.
 Vous pouvez également rechercher des adhérents suivant un des critères des 'documents demandés' ou d'un champ personnalisé.

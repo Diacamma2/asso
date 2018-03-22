@@ -5,14 +5,14 @@ L'adhérent est une personne physique qui a déjà pris une inscription dans vot
 
 Pour consulter la liste des adhérents, allez dans le menu *Association/Adhérents/Adhérents cotisants*
 
-.. image:: members.jpg
+.. image:: members.png
 
 De cette page vous pouvez imprimer des listes, des étiquettes ou des cartes d'adhérents correspondant au filtrage de cette sélection.
 Sélectionner et éditer une ligne pour consulter la fiche de l'adhérent.
 
 *Diacamma Asso* sauvegarde plusieurs types d'informations relative à un adhérent. Vous pouvez les consulter dans la fiche de l'adhérent.
 
-.. image:: file.jpg
+.. image:: file.png
 
 Cette fiche comporte :
  - L'identité de l'adhérent : nom, prénom, adresse, téléphone, date et lieu de naissance...
@@ -25,7 +25,7 @@ Enfin, depuis la fiche d'un adhérent, il est possible de lui donner un droit d'
 
 En fonction de vos droits de connexion, il vous sera possible de modifier l'identité d'un adhérent, d'ajouter une adhésion passée ou un diplôme obtenu.
 
-.. image:: modify.jpg
+.. image:: modify.png
 
 **Attention:** La loi Informatique et liberté n'autorise la conservation de données que si elle est relative à l'activité de nos adhérents. Veillez donc à bien adapter vos commentaires à ce cadre législatif et informer toute personne de son inscription dans votre base de données.
 Consultez le texte de loi en cas de doute, et n'hésitez pas à contacter la CNIL en cas de besoin.
