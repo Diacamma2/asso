@@ -29,9 +29,9 @@ from lucterios.framework.xfergraphic import XferContainerAcknowledge
 from lucterios.CORE.models import Parameter
 from lucterios.CORE.parameters import Params
 
-from diacamma.accounting.test_tools import default_compta
+from diacamma.accounting.test_tools import default_compta_fr
 from diacamma.invoice.test_tools import default_articles
-from diacamma.payoff.test_tools import default_bankaccount
+from diacamma.payoff.test_tools import default_bankaccount_fr
 from diacamma.member.editors import SeasonEditor
 from diacamma.member.models import Season, Activity, Team, Age, Document,\
     Adherent, SubscriptionType
@@ -43,9 +43,9 @@ def default_financial():
     from diacamma.payoff.views_conf import paramchange_payoff
     paramchange_invoice([])
     paramchange_payoff([])
-    default_compta()
+    default_compta_fr()
     default_articles()
-    default_bankaccount()
+    default_bankaccount_fr()
 
 
 def default_season():
