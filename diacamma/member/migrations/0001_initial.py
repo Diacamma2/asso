@@ -231,6 +231,7 @@ class Migration(migrations.Migration):
                                            on_delete=models.deletion.PROTECT, verbose_name='team', to='member.Team')),
             ],
             options={'default_permissions': [],
+                     'ordering': ['team__name', 'activity__name'],
                      'verbose_name': 'involvement',
                      'verbose_name_plural': 'involvements'},
         ),

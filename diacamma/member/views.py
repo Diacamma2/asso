@@ -55,7 +55,9 @@ from lucterios.CORE.parameters import Params
 from lucterios.contacts.models import Individual, LegalEntity, Responsability
 from lucterios.contacts.views_contacts import LegalEntityAddModify
 
-from diacamma.member.models import Adherent, Subscription, Season, Age, Team, Activity, License, DocAdherent, SubscriptionType, CommandManager
+from diacamma.member.models import Adherent, Subscription, Season, Age, Team, Activity, License, DocAdherent, SubscriptionType, CommandManager,\
+    Prestation
+from importlib import import_module
 
 
 MenuManage.add_sub("association", None, "diacamma.member/images/association.png", _("Association"), _("Association tools"), 30)
@@ -77,29 +79,22 @@ class AdherentFilter(object):
             date_one_year = same_day_months_after(dateref, -12)
             date_six_month = same_day_months_after(dateref, -6)
             date_three_month = same_day_months_after(dateref, -3)
-            current_filter = Q(subscription__subscriptiontype__duration=0) & Q(
-                subscription__end_date__gte=date_one_year)
-            current_filter |= Q(subscription__subscriptiontype__duration=1) & Q(
-                subscription__end_date__gte=date_six_month)
-            current_filter |= Q(subscription__subscriptiontype__duration=2) & Q(
-                subscription__end_date__gte=date_three_month)
-            current_filter |= Q(subscription__subscriptiontype__duration=3) & Q(
-                subscription__end_date__gte=date_one_year)
-            exclude_filter = Q(subscription__begin_date__lte=dateref) & Q(
-                subscription__end_date__gte=dateref)
+            current_filter = Q(subscription__subscriptiontype__duration=0) & Q(subscription__end_date__gte=date_one_year)
+            current_filter |= Q(subscription__subscriptiontype__duration=1) & Q(subscription__end_date__gte=date_six_month)
+            current_filter |= Q(subscription__subscriptiontype__duration=2) & Q(subscription__end_date__gte=date_three_month)
+            current_filter |= Q(subscription__subscriptiontype__duration=3) & Q(subscription__end_date__gte=date_one_year)
+            exclude_filter = Q(subscription__begin_date__lte=dateref) & Q(subscription__end_date__gte=dateref)
         else:
-            current_filter = Q(subscription__begin_date__lte=dateref) & Q(
-                subscription__end_date__gte=dateref)
+            current_filter = Q(subscription__begin_date__lte=dateref) & Q(subscription__end_date__gte=dateref)
             exclude_filter = Q()
         if len(team) > 0:
-            current_filter &= Q(subscription__license__team__in=team)
+            current_filter &= Q(subscription__license__team__in=team) | Q(subscription__prestations__team__in=team)
         if len(activity) > 0:
-            current_filter &= Q(subscription__license__activity__in=activity)
+            current_filter &= Q(subscription__license__activity__in=activity) | Q(subscription__prestations__activity__in=activity)
         if len(age) > 0:
             age_filter = Q()
             for age_item in Age.objects.filter(id__in=age):
-                age_filter |= Q(birthday__gte="%d-01-01" % (dateref.year - age_item.maximum)) & Q(
-                    birthday__lte="%d-12-31" % (dateref.year - age_item.minimum))
+                age_filter |= Q(birthday__gte="%d-01-01" % (dateref.year - age_item.maximum)) & Q(birthday__lte="%d-12-31" % (dateref.year - age_item.minimum))
             current_filter &= age_filter
         if genre != 0:
             current_filter &= Q(genre=genre)
@@ -383,7 +378,7 @@ class AdherentCommand(XferContainerAcknowledge):
     caption = _("Command subscription")
 
     def fillresponse(self, send_email=True):
-        cmd_manager = CommandManager(self.getparam('CMD_FILE', ''), self.items)
+        cmd_manager = CommandManager(self.request.user, self.getparam('CMD_FILE', ''), self.items)
         if self.getparam('SAVE') is None:
             dlg = self.create_custom(self.model)
             img = XferCompImage('img')
@@ -406,11 +401,15 @@ class AdherentCommand(XferContainerAcknowledge):
             dlg.params['CMD_FILE'] = cmd_manager.file_name
             dlg.add_component(grid)
             if len(grid.records) > 0:
-                chk = XferCompCheck('send_email')
-                chk.set_value(send_email)
-                chk.set_location(1, 3)
-                chk.description = _('Send quotition by email for each adherent.')
-                dlg.add_component(chk)
+                fct_mailing_mod = import_module('lucterios.mailing.functions')
+                if (fct_mailing_mod is not None) and fct_mailing_mod.will_mail_send():
+                    chk = XferCompCheck('send_email')
+                    chk.set_value(send_email)
+                    chk.set_location(1, 3)
+                    chk.description = _('Send quotition by email for each adherent.')
+                    dlg.add_component(chk)
+                else:
+                    dlg.params['send_email'] = False
                 dlg.add_action(AdherentCommand.get_action(TITLE_OK, "images/ok.png"), close=CLOSE_YES, params={'SAVE': 'YES'})
             dlg.add_action(WrapAction(TITLE_CLOSE, 'images/close.png'))
         else:
@@ -433,7 +432,7 @@ class AdherentCommandDelete(XferContainerAcknowledge):
     caption = _("Delete subscription command")
 
     def fillresponse(self, AdhCmd=0):
-        cmd_manager = CommandManager(self.getparam('CMD_FILE', ''), self.items)
+        cmd_manager = CommandManager(self.request.user, self.getparam('CMD_FILE', ''), self.items)
         cmd_manager.delete(AdhCmd)
 
 
@@ -443,7 +442,7 @@ class AdherentCommandModify(XferContainerAcknowledge):
     caption = _("Modify subscription command")
 
     def fillresponse(self, AdhCmd=0):
-        cmd_manager = CommandManager(self.getparam('CMD_FILE', ''), self.items)
+        cmd_manager = CommandManager(self.request.user, self.getparam('CMD_FILE', ''), self.items)
         if self.getparam('SAVE') is None:
             dlg = self.create_custom(self.model)
             img = XferCompImage('img')
@@ -460,7 +459,7 @@ class AdherentCommandModify(XferContainerAcknowledge):
             for fname, ftitle in cmd_manager.get_fields():
                 if fname == "type":
                     sel = XferCompSelect(fname)
-                    sel.set_select_query(SubscriptionType.objects.all())
+                    sel.set_select_query(SubscriptionType.objects.filter(unactive=False))
                     sel.set_value(cmd_item[fname])
                     sel.set_needed(True)
                     sel.set_location(1, row)
@@ -468,7 +467,7 @@ class AdherentCommandModify(XferContainerAcknowledge):
                     dlg.add_component(sel)
                 elif fname == "team":
                     sel = XferCompSelect(fname)
-                    sel.set_select_query(Team.objects.all())
+                    sel.set_select_query(Team.objects.filter(unactive=False))
                     sel.set_value(cmd_item[fname][0])
                     sel.set_needed(True)
                     sel.set_location(1, row)
@@ -488,6 +487,14 @@ class AdherentCommandModify(XferContainerAcknowledge):
                     sel.set_location(1, row)
                     sel.description = ftitle
                     dlg.add_component(sel)
+                elif fname == "prestations":
+                    sel = XferCompCheckList(fname)
+                    sel.simple = 2
+                    sel.set_select_query(Prestation.objects.filter(team__unactive=False))
+                    sel.set_value(cmd_item[fname])
+                    sel.set_location(1, row)
+                    sel.description = ftitle
+                    dlg.add_component(sel)
                 else:
                     lbl = XferCompLabelForm(fname)
                     lbl.set_value(cmd_item_txt[fname])
@@ -503,6 +510,7 @@ class AdherentCommandModify(XferContainerAcknowledge):
             cmd_item['team'] = self.getparam("team", cmd_item['team'])
             cmd_item['activity'] = self.getparam("activity", cmd_item['activity'])
             cmd_item['reduce'] = self.getparam("reduce", cmd_item['reduce'])
+            cmd_item['prestations'] = self.getparam("prestations", cmd_item['prestations'])
             cmd_manager.set(AdhCmd, cmd_item)
 
 

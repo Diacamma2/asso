@@ -666,10 +666,7 @@ class Adherent(Individual):
     def license(self):
         sub = self.current_subscription
         if sub is not None:
-            resvalue = []
-            for sub_lic in sub.license_set.all():
-                resvalue.append(six.text_type(sub_lic))
-            return "{[br/]}".join(resvalue)
+            return sub.involvement
         return None
 
     @property
@@ -758,14 +755,17 @@ class Prestation(LucteriosModel):
     article = models.ForeignKey(Article, verbose_name=_('article'), null=False)
 
     def __str__(self):
-        return self.name
+        if Params.getvalue("member-activite-enable"):
+            return "%s [%s]" % (self.team, self.activity)
+        else:
+            return six.text_type(self.team)
+
+    def get_text(self):
+        return "%s %s" % (self.__str__(), self.article.price_txt)
 
     @property
     def article_query(self):
         return Article.objects.filter(isdisabled=False, stockable=0)
-
-    def get_text_value(self):
-        return "%s [%s]" % (self.name, self.price)
 
     @classmethod
     def get_default_fields(cls):
@@ -803,6 +803,7 @@ class Prestation(LucteriosModel):
     class Meta(object):
         verbose_name = _('prestation')
         verbose_name_plural = _('prestations')
+        ordering = ['team__name', 'activity__name']
         default_permissions = []
 
 
@@ -830,8 +831,8 @@ class Subscription(LucteriosModel):
     @classmethod
     def get_default_fields(cls):
         fields = ["season", "subscriptiontype", "status", "begin_date", "end_date"]
-        if Params.getvalue("member-licence-enabled"):
-            fields.append("license_set")
+        if Params.getvalue("member-licence-enabled") or Params.getvalue("member-team-enable") or Params.getvalue("member-activite-enable"):
+            fields.append((_('involvement'), "involvement"))
         return fields
 
     @classmethod
@@ -844,6 +845,26 @@ class Subscription(LucteriosModel):
         if Params.getvalue("member-licence-enabled") or Params.getvalue("member-team-enable") or Params.getvalue("member-activite-enable"):
             fields.append("license_set")
         return fields
+
+    @property
+    def involvement(self):
+        res = []
+        for lic in self.license_set.all():
+            res.append(six.text_type(lic))
+        for presta in self.prestations.all():
+            res.append(six.text_type(presta))
+        return "{[br/]}".join(res)
+
+    @property
+    def subscriptiontype_query(self):
+        return SubscriptionType.objects.filter(unactive=False)
+
+    @property
+    def prestations_query(self):
+        select_list = []
+        for item in Prestation.objects.filter(team__unactive=False):
+            select_list.append((item.id, six.text_type(item)))
+        return select_list
 
     def set_periode(self, dateref):
         self.dateref = dateref
@@ -1099,12 +1120,14 @@ class License(LucteriosModel):
     class Meta(object):
         verbose_name = _('involvement')
         verbose_name_plural = _('involvements')
+        ordering = ['team__name', 'activity__name']
         default_permissions = []
 
 
 class CommandManager(object):
 
-    def __init__(self, file_name, items):
+    def __init__(self, user, file_name, items):
+        self.username = user.username if (user.username != '') else 'anonymous'
         self.file_name = file_name
         self.commands = []
         self.items = items
@@ -1116,13 +1139,16 @@ class CommandManager(object):
         fields.append(("type", _('subscription type')))
         if Params.getvalue("member-age-enable"):
             fields.append(("age", _("age category")))
-        if Params.getvalue("member-team-enable"):
-            fields.append(("team", Params.getvalue("member-team-text")))
-        if Params.getvalue("member-activite-enable"):
-            fields.append(("activity", Params.getvalue("member-activite-text")))
-        if Params.getvalue("member-licence-enabled"):
-            fields.append(("licence", "Licence"))
-        fields.append(("reduce", _('reduce')))
+        if Params.getvalue("member-team-enable") and (len(Prestation.objects.all()) > 0):
+            fields.append(("prestations", _('prestations')))
+        else:
+            if Params.getvalue("member-team-enable"):
+                fields.append(("team", Params.getvalue("member-team-text")))
+            if Params.getvalue("member-activite-enable"):
+                fields.append(("activity", Params.getvalue("member-activite-text")))
+            if Params.getvalue("member-licence-enabled"):
+                fields.append(("licence", "Licence"))
+            fields.append(("reduce", _('reduce')))
         return fields
 
     def read(self):
@@ -1138,20 +1164,28 @@ class CommandManager(object):
                 team = []
                 activity = []
                 licence = []
+                prestations = []
                 for lic in item.last_subscription.license_set.all():
-                    team.append(lic.team.id)
-                    activity.append(lic.activity.id)
-                    licence.append(lic.value)
+                    if Params.getvalue("member-team-enable") and (len(Prestation.objects.all()) > 0):
+                        pesta = Prestation.objects.filter(team_id=lic.team_id,
+                                                          activity_id=lic.activity_id).order_by('-article__price')
+                        if pesta.count() > 0:
+                            prestations.append(pesta[0].id)
+                    else:
+                        team.append(lic.team.id)
+                        activity.append(lic.activity.id)
+                        licence.append(lic.value if lic.value is not None else '')
                 cmd_value["team"] = team
                 cmd_value["activity"] = activity
                 cmd_value["licence"] = licence
                 cmd_value["reduce"] = 0.0
+                cmd_value["prestations"] = sorted(prestations)
                 self.commands.append(cmd_value)
             self.write()
 
     def write(self):
         import json
-        self.file_name = join(get_tmp_dir(), 'list.cmd')
+        self.file_name = join(get_tmp_dir(), 'list-%s.cmd' % self.username)
         if isfile(self.file_name):
             unlink(self.file_name)
         with open(self.file_name, 'w') as f:
@@ -1179,6 +1213,10 @@ class CommandManager(object):
         cmd_value["activity"] = '{[br/]}'.join(activities)
         cmd_value["licence"] = '{[br/]}'.join(content_item["licence"])
         cmd_value["reduce"] = format_devise(content_item["reduce"], 5)
+        prestations = []
+        for presta in Prestation.objects.filter(id__in=content_item["prestations"]):
+            prestations.append(presta.get_text())
+        cmd_value["prestations"] = '{[br/]}'.join(prestations)
         return cmd_value
 
     def get(self, adherentid):
@@ -1191,7 +1229,7 @@ class CommandManager(object):
     def set(self, adherentid, item):
         cmd_to_change = self.get(adherentid)
         if cmd_to_change is not None:
-            for fname in ["team", "activity", "licence"]:
+            for fname in ["team", "activity", "licence", "prestations"]:
                 if not isinstance(item[fname], list):
                     item[fname] = [item[fname]]
             self.commands[self.commands.index(cmd_to_change)] = item
@@ -1209,26 +1247,31 @@ class CommandManager(object):
         for content_item in self.commands:
             new_subscription = Subscription(adherent_id=content_item["adherent"], subscriptiontype_id=content_item["type"], status=1)
             new_subscription.set_periode(dateref)
-            new_subscription.save()
-            teams = content_item["team"]
-            activities = content_item["activity"]
-            licences = content_item["licence"]
-            for license_id in range(max(len(teams), len(activities), len(licences))):
-                license_item = License()
-                license_item.subscription = new_subscription
-                try:
-                    license_item.value = licences[license_id]
-                except Exception:
-                    license_item.value = ''
-                try:
-                    license_item.team_id = teams[license_id]
-                except Exception:
-                    license_item.team_id = None
-                try:
-                    license_item.activity_id = activities[license_id]
-                except Exception:
-                    license_item.activity_id = 0
-                license_item.save()
+            if Params.getvalue("member-team-enable") and (len(Prestation.objects.all()) > 0):
+                new_subscription.save(with_bill=False)
+                new_subscription.prestations = Prestation.objects.filter(id__in=content_item["prestations"])
+                new_subscription.save(with_bill=True)
+            else:
+                new_subscription.save()
+                teams = content_item["team"]
+                activities = content_item["activity"]
+                licences = content_item["licence"]
+                for license_id in range(max(len(teams), len(activities), len(licences))):
+                    license_item = License()
+                    license_item.subscription = new_subscription
+                    try:
+                        license_item.value = licences[license_id]
+                    except Exception:
+                        license_item.value = ''
+                    try:
+                        license_item.team_id = teams[license_id]
+                    except Exception:
+                        license_item.team_id = None
+                    try:
+                        license_item.activity_id = activities[license_id]
+                    except Exception:
+                        license_item.activity_id = 0
+                    license_item.save()
             nb_sub += 1
             if new_subscription.bill is not None:
                 details = new_subscription.bill.detail_set.all().order_by('-id')

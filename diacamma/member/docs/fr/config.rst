@@ -43,6 +43,17 @@ Avec ces liens entre les cotisations et les articles,vous pourrez générer auto
 
 De même, vous pouvez aussi personnaliser le code comptable du tiers associé à vos adhérants dans le cas d'un création automatique.
 
+**Les prestation**
+
+Cette option est activable si vous utilisez les catégories d'équipes/cours.
+
+Cela permet d'associer une équipe/cours à un article facturable afin de proposer un choix de prestations supplémentaires moments de la saisi de la cotisation.
+
+Vous choisissez vos prestations au moments de votre prise de cotisation. 
+Automatiquement, votre adhérent est alors associé dans la bonne catégorie d'équipes/cours défini par la prestation.
+De plus, dans la facture d'adhésion est ajouté alors l'article relatif à cet prestation.  
+
+
 Catégories
 ----------
 

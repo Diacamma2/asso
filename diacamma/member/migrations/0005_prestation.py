@@ -25,9 +25,10 @@ class Migration(migrations.Migration):
                 ('team', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='member.Team', verbose_name='team')),
             ],
             options={
-                'verbose_name': 'prestation',
-                'verbose_name_plural': 'prestations',
                 'default_permissions': [],
+                'ordering': ['team__name', 'activity__name'],
+                'verbose_name': 'prestation',
+                'verbose_name_plural': 'prestations'
             },
         ),
         migrations.AddField(
