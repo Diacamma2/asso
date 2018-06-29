@@ -39,7 +39,7 @@ from lucterios.framework.tools import CLOSE_NO, FORMTYPE_REFRESH, ActionsManage,
 from lucterios.contacts.editors import IndividualEditor
 
 from diacamma.member.models import Period, Season, SubscriptionType, License, convert_date, same_day_months_after, Activity,\
-    Adherent
+    Adherent, Prestation
 from lucterios.CORE.parameters import Params
 from lucterios.contacts.models import Individual
 
@@ -227,14 +227,13 @@ class SubscriptionEditor(LucteriosEditor):
                 self.item.begin_date, 12) - timedelta(days=1)
 
     def saving(self, xfer):
-        if xfer.is_new:
+        if xfer.is_new and not (Params.getvalue("member-team-enable") and (len(Prestation.objects.all()) > 0)):
             activity_id = xfer.getparam('activity')
             team_id = xfer.getparam('team')
             value = xfer.getparam('value')
             if activity_id is None:
                 activity_id = Activity.objects.all()[0].id
-            License.objects.create(
-                subscription=self.item, value=value, activity_id=activity_id, team_id=team_id)
+            License.objects.create(subscription=self.item, value=value, activity_id=activity_id, team_id=team_id)
 
     def edit(self, xfer):
         autocreate = xfer.getparam('autocreate', 0) == 1
@@ -305,7 +304,9 @@ class SubscriptionEditor(LucteriosEditor):
             begindate.set_location(1, row)
             begindate.description = _('begin date')
             xfer.add_component(begindate)
-        if self.item.id is None:
+        if Params.getvalue("member-team-enable") and (len(Prestation.objects.all()) > 0) and ((self.item.id is None) or (self.item.status in (0, 1))):
+            xfer.filltab_from_model(1, row + 1, False, ['prestations'])
+        elif self.item.id is None:
             xfer.item = License()
             if last_subscription is not None:
                 licenses = last_subscription.license_set.all()
@@ -319,6 +320,11 @@ class SubscriptionEditor(LucteriosEditor):
             activity = xfer.get_components('activity')
             if activity is not None:
                 activity.set_needed(True)
+
+    def show(self, xfer):
+        if Params.getvalue("member-team-enable") and (len(Prestation.objects.all()) > 0) and (self.item.status in (0, 1)):
+            xfer.remove_component('license')
+            xfer.filltab_from_model(1, xfer.get_max_row() + 1, True, ['prestations'])
 
 
 class LicenseEditor(LucteriosEditor):

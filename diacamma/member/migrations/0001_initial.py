@@ -230,11 +230,9 @@ class Migration(migrations.Migration):
                 ('team', models.ForeignKey(default=None, null=True,
                                            on_delete=models.deletion.PROTECT, verbose_name='team', to='member.Team')),
             ],
-            options={
-                'verbose_name': 'license',
-                'default_permissions': [],
-                'verbose_name_plural': 'licenses'
-            },
+            options={'default_permissions': [],
+                     'verbose_name': 'involvement',
+                     'verbose_name_plural': 'involvements'},
         ),
         migrations.AddField(
             model_name='subscription',

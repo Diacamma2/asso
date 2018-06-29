@@ -34,7 +34,7 @@ from diacamma.invoice.test_tools import default_articles
 from diacamma.payoff.test_tools import default_bankaccount_fr
 from diacamma.member.editors import SeasonEditor
 from diacamma.member.models import Season, Activity, Team, Age, Document,\
-    Adherent, SubscriptionType
+    Adherent, SubscriptionType, Prestation
 from diacamma.invoice.models import Article
 
 
@@ -59,10 +59,8 @@ def default_season():
 
 
 def default_params():
-    Parameter.change_value(
-        'member-team-text', 'group')
-    Parameter.change_value(
-        'member-activite-text', 'passion')
+    Parameter.change_value('member-team-text', 'group')
+    Parameter.change_value('member-activite-text', 'passion')
     Params.clear()
     default = Activity.objects.get(id=1)
     default.name = "activity1"
@@ -130,8 +128,7 @@ def default_subscription():
 
 
 def set_parameters(values):
-    param_lists = [
-        "team", "activite", "age", "licence", "genre", 'numero', 'birth']
+    param_lists = ["team", "activite", "age", "licence", "genre", 'numero', 'birth']
     for param_item in param_lists:
         if param_item == "genre":
             param_name = "member-filter-genre"
@@ -145,3 +142,9 @@ def set_parameters(values):
                 param_name += 'd'
         Parameter.change_value(param_name, param_item in values)
     Params.clear()
+
+
+def default_prestation():
+    Prestation.objects.create(name="Presta 1", description="Prestation N°1", team_id=3, activity_id=2, article_id=1)
+    Prestation.objects.create(name="Presta 2", description="Prestation N°2", team_id=2, activity_id=2, article_id=2)
+    Prestation.objects.create(name="Presta 3", description="Prestation N°3", team_id=1, activity_id=1, article_id=3)

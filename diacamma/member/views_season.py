@@ -33,9 +33,9 @@ from lucterios.framework.xferadvance import XferShowEditor
 from lucterios.framework.xferadvance import XferDelete
 from lucterios.framework.tools import FORMTYPE_NOMODAL, ActionsManage, MenuManage, SELECT_SINGLE, FORMTYPE_REFRESH, CLOSE_NO, SELECT_MULTI, CLOSE_YES
 from lucterios.framework.xfergraphic import XferContainerAcknowledge
-from lucterios.framework.xfercomponents import XferCompLabelForm, XferCompSelect
-
-from diacamma.member.models import Season, Period, SubscriptionType, Document
+from lucterios.framework.xfercomponents import XferCompSelect
+from diacamma.member.models import Season, Period, SubscriptionType, Document, Prestation
+from lucterios.CORE.parameters import Params
 
 MenuManage.add_sub("member.conf", "core.extensions", "", _("Member"), "", 5)
 
@@ -66,13 +66,16 @@ class SeasonSubscription(XferListEditor):
                 designation_end = "%d/%d" % (year_ref + 2, year_ref + 3)
                 self.filter = Q(designation__gte=designation_begin) & Q(
                     designation__lte=designation_end)
-            except:
+            except Exception:
                 pass
 
     def fillresponse(self):
         XferListEditor.fillresponse(self)
         self.new_tab(_('Subscriptions'))
         self.fill_grid(self.get_max_row(), SubscriptionType, "subscriptiontype", SubscriptionType.objects.all())
+        if Params.getvalue("member-team-enable"):
+            self.new_tab(_('Prestations'))
+            self.fill_grid(self.get_max_row(), Prestation, "prestation", Prestation.objects.all())
 
 
 @ActionsManage.affect_grid(_("Active"), "images/ok.png", unique=SELECT_SINGLE)
@@ -186,3 +189,23 @@ class SubscriptionTypeDel(XferDelete):
     model = SubscriptionType
     field_id = 'subscriptiontype'
     caption = _("Delete subscription")
+
+
+@ActionsManage.affect_grid(TITLE_ADD, "images/add.png")
+@ActionsManage.affect_grid(TITLE_MODIFY, "images/edit.png", unique=SELECT_SINGLE)
+@MenuManage.describ('member.add_subscription')
+class PrestationAddModify(XferAddEditor):
+    icon = "season.png"
+    model = Prestation
+    field_id = 'prestation'
+    caption_add = _("Add prestation")
+    caption_modify = _("Modify prestation")
+
+
+@ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", unique=SELECT_MULTI)
+@MenuManage.describ('member.delete_subscription')
+class PrestationDel(XferDelete):
+    icon = "season.png"
+    model = Prestation
+    field_id = 'prestation'
+    caption = _("Delete prestation")

@@ -800,8 +800,8 @@ class LicenseAddModify(XferAddEditor):
     icon = "adherent.png"
     model = License
     field_id = 'license'
-    caption_add = _("Add license")
-    caption_modify = _("Modify license")
+    caption_add = _("Add involvement")
+    caption_modify = _("Modify involvement")
 
 
 @ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", unique=SELECT_MULTI)
@@ -810,7 +810,7 @@ class LicenseDel(XferDelete):
     icon = "adherent.png"
     model = License
     field_id = 'license'
-    caption = _("Delete license")
+    caption = _("Delete involvement")
 
 
 @MenuManage.describ('member.change_adherent', FORMTYPE_MODAL, 'member.actions', _('Statistic of adherents and subscriptions'))

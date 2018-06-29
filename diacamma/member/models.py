@@ -513,7 +513,7 @@ class Adherent(Individual):
     def get_default_fields(cls):
         fields = cls.get_renew_fields()
         if Params.getvalue("member-licence-enabled"):
-            fields.append((_('license'), 'license'))
+            fields.append((_('involvement'), 'license'))
         return fields
 
     @classmethod
@@ -683,11 +683,22 @@ class Adherent(Individual):
         if last_subscription is not None:
             new_subscription = Subscription(adherent=self, subscriptiontype=last_subscription.subscriptiontype)
             new_subscription.set_periode(dateref)
-            new_subscription.save()
-            for license_item in last_subscription.license_set.all():
-                license_item.id = None
-                license_item.subscription = new_subscription
-                license_item.save()
+            if Params.getvalue("member-team-enable") and (len(Prestation.objects.all()) > 0):
+                prestation_list = []
+                for license_item in last_subscription.license_set.all():
+                    pesta = Prestation.objects.filter(team_id=license_item.team_id,
+                                                      activity_id=license_item.activity_id).order_by('-article__price')
+                    if pesta.count() > 0:
+                        prestation_list.append(pesta[0])
+                new_subscription.save(with_bill=False)
+                new_subscription.prestations = prestation_list
+                new_subscription.save(with_bill=True)
+            else:
+                new_subscription.save()
+                for license_item in last_subscription.license_set.all():
+                    license_item.id = None
+                    license_item.subscription = new_subscription
+                    license_item.save()
 
     @property
     def last_subscription(self):
@@ -739,6 +750,62 @@ class Adherent(Individual):
         verbose_name_plural = _('adherents')
 
 
+class Prestation(LucteriosModel):
+    name = models.CharField(_('name'), max_length=50)
+    description = models.TextField(_('description'), null=True, default="")
+    team = models.ForeignKey(Team, verbose_name=_('team'), null=False, on_delete=models.PROTECT)
+    activity = models.ForeignKey(Activity, verbose_name=_('activity'), null=False, on_delete=models.PROTECT)
+    article = models.ForeignKey(Article, verbose_name=_('article'), null=False)
+
+    def __str__(self):
+        return self.name
+
+    @property
+    def article_query(self):
+        return Article.objects.filter(isdisabled=False, stockable=0)
+
+    def get_text_value(self):
+        return "%s [%s]" % (self.name, self.price)
+
+    @classmethod
+    def get_default_fields(cls):
+        fields = ["name", "description"]
+        fields.append((Params.getvalue("member-team-text"), "team"))
+        if Params.getvalue("member-activite-enable"):
+            fields.append((Params.getvalue("member-activite-text"), "activity"))
+        fields.append((_('price'), "article.price_txt"))
+        return fields
+
+    @classmethod
+    def get_edit_fields(cls):
+        fields = ["name", "description"]
+        fields.append(((Params.getvalue("member-team-text"), "team"),))
+        if Params.getvalue("member-activite-enable"):
+            fields.append(((Params.getvalue("member-activite-text"), "activity"),))
+        fields.append('article')
+        return fields
+
+    @classmethod
+    def get_show_fields(cls):
+        fields = ["name", "description"]
+        fields.append(((Params.getvalue("member-team-text"), "team"),))
+        if Params.getvalue("member-activite-enable"):
+            fields.append(((Params.getvalue("member-activite-text"), "activity"),))
+        fields.append('article')
+        fields.append(((_('price'), "article.price_txt"),))
+        return fields
+
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        if (self.id is None) and (self.activity_id is None):
+            self.activity = Activity.objects.all().first()
+        return LucteriosModel.save(self, force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
+
+    class Meta(object):
+        verbose_name = _('prestation')
+        verbose_name_plural = _('prestations')
+        default_permissions = []
+
+
 class Subscription(LucteriosModel):
     adherent = models.ForeignKey(
         Adherent, verbose_name=_('adherent'), null=False, default=None, db_index=True, on_delete=models.CASCADE)
@@ -752,6 +819,7 @@ class Subscription(LucteriosModel):
     end_date = models.DateField(verbose_name=_('end date'), null=False)
     status = FSMIntegerField(verbose_name=_('status'),
                              choices=((0, _('waiting')), (1, _('building')), (2, _('valid')), (3, _('cancel')), (4, _('disbarred'))), null=False, default=2, db_index=True)
+    prestations = models.ManyToManyField(Prestation, verbose_name=_('prestations'), blank=True)
 
     def __str__(self):
         if not isinstance(self.begin_date, six.text_type) and not isinstance(self.end_date, six.text_type):
@@ -795,12 +863,13 @@ class Subscription(LucteriosModel):
             self.end_date = same_day_months_after(self.begin_date, 12) - timedelta(days=1)
 
     def change_bill(self):
-        if len(self.subscriptiontype.articles.all()) == 0:
-            return
-        self.status = int(self.status)
+        if (len(self.subscriptiontype.articles.all()) == 0) and (len(self.prestations.all()) == 0):
+            return False
+        modify = False
         if self.status in (1, 2):
             if (self.status == 2) and (self.bill is not None) and (self.bill.bill_type == 0) and (self.bill.status == 1):
                 self.bill = self.bill.convert_to_bill()
+                modify = True
             create_bill = (self.bill is None)
             if self.status == 1:
                 bill_type = 0
@@ -808,6 +877,7 @@ class Subscription(LucteriosModel):
                 bill_type = 1
             if create_bill:
                 self.bill = Bill.objects.create(bill_type=bill_type, date=self.season.date_ref, third=get_or_create_customer(self.adherent.get_ref_contact().id))
+                modify = True
             if (self.bill.status == 0):
                 self.bill.bill_type = bill_type
                 if hasattr(self, 'xfer'):
@@ -831,51 +901,58 @@ class Subscription(LucteriosModel):
                 self.bill.detail_set.all().delete()
                 for art in self.subscriptiontype.articles.all():
                     Detail.create_for_bill(self.bill, art)
+                for presta in self.prestations.all():
+                    Detail.create_for_bill(self.bill, presta.article, designation=presta.name)
                 if hasattr(self, 'send_email_param'):
                     self.sendemail(self.send_email_param)
         if (self.status == 3) and (self.bill is not None):
             if self.bill.status == 0:
                 self.bill.delete()
                 self.bill = None
+                modify = True
             elif self.bill.status == 1:
                 new_assetid = self.bill.cancel()
                 if new_assetid is not None:
                     self.bill = Bill.objects.get(id=new_assetid)
+                    modify = True
+        return modify
 
     def import_licence(self, rowdata):
         try:
             team = Team.objects.get(name=rowdata['team'])
-        except:
+        except Exception:
             team = None
         try:
             activity = Activity.objects.get(
                 name=rowdata['activity'])
-        except:
+        except Exception:
             activity = Activity.objects.all()[0]
         try:
             value = rowdata['value']
-        except:
+        except Exception:
             value = ''
         if ('subscriptiontype' in rowdata.keys()) or (team is not None) or (value != ''):
             return License.objects.create(subscription=self, team=team, activity=activity, value=value)
         else:
             return None
 
-    def save(self, force_insert=False, force_update=False, using=None,
-             update_fields=None):
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None, with_bill=True):
         is_new = self.id is None
-        query_dates = (Q(begin_date__lte=self.end_date) & Q(end_date__gte=self.end_date)) | (
-            Q(begin_date__lte=self.begin_date) & Q(end_date__gte=self.begin_date))
+        query_dates = (Q(begin_date__lte=self.end_date) & Q(end_date__gte=self.end_date)) | (Q(begin_date__lte=self.begin_date) & Q(end_date__gte=self.begin_date))
         if is_new and (len(self.adherent.subscription_set.filter((Q(subscriptiontype__duration=0) & Q(season=self.season)) | (Q(subscriptiontype__duration__gt=0) & query_dates))) > 0):
             raise LucteriosException(IMPORTANT, _("dates always used!"))
-        if not force_insert:
-            self.change_bill()
-        LucteriosModel.save(self, force_insert=force_insert,
-                            force_update=force_update, using=using, update_fields=update_fields)
+        self.status = int(self.status)
+        LucteriosModel.save(self, force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
+        if not force_insert and with_bill and self.change_bill():
+            LucteriosModel.save(self)
         if is_new:
             for doc in self.season.document_set.all():
-                DocAdherent.objects.create(
-                    subscription=self, document=doc, value=False)
+                DocAdherent.objects.create(subscription=self, document=doc, value=False)
+        if (self.status == 2) and (self.prestations.all().count() > 0):
+            self.license_set.all().delete()
+            for presta in self.prestations.all():
+                License.objects.create(subscription=self, activity_id=presta.activity_id, team_id=presta.team_id)
+            self.prestations.through.objects.all().delete()
 
     transitionname__moderate = _("Moderate")
 
@@ -991,8 +1068,7 @@ class License(LucteriosModel):
         if Params.getvalue("member-team-enable"):
             fields.append((Params.getvalue("member-team-text"), "team"))
         if Params.getvalue("member-activite-enable"):
-            fields.append(
-                (Params.getvalue("member-activite-text"), "activity"))
+            fields.append((Params.getvalue("member-activite-text"), "activity"))
         if Params.getvalue("member-licence-enabled"):
             fields.append("value")
         return fields
@@ -1003,8 +1079,7 @@ class License(LucteriosModel):
         if Params.getvalue("member-team-enable"):
             fields.append(((Params.getvalue("member-team-text"), "team"),))
         if Params.getvalue("member-activite-enable"):
-            fields.append(
-                ((Params.getvalue("member-activite-text"), "activity"),))
+            fields.append(((Params.getvalue("member-activite-text"), "activity"),))
         if Params.getvalue("member-licence-enabled"):
             fields.append("value")
         return fields
@@ -1022,8 +1097,8 @@ class License(LucteriosModel):
         return fields
 
     class Meta(object):
-        verbose_name = _('license')
-        verbose_name_plural = _('licenses')
+        verbose_name = _('involvement')
+        verbose_name_plural = _('involvements')
         default_permissions = []
 
 
@@ -1143,15 +1218,15 @@ class CommandManager(object):
                 license_item.subscription = new_subscription
                 try:
                     license_item.value = licences[license_id]
-                except:
+                except Exception:
                     license_item.value = ''
                 try:
                     license_item.team_id = teams[license_id]
-                except:
+                except Exception:
                     license_item.team_id = None
                 try:
                     license_item.activity_id = activities[license_id]
-                except:
+                except Exception:
                     license_item.activity_id = 0
                 license_item.save()
             nb_sub += 1
