@@ -688,7 +688,7 @@ class Adherent(Individual):
                     if pesta.count() > 0:
                         prestation_list.append(pesta[0])
                 new_subscription.save(with_bill=False)
-                new_subscription.prestations = prestation_list
+                new_subscription.prestations.set(prestation_list)
                 new_subscription.save(with_bill=True)
             else:
                 new_subscription.save()
@@ -752,7 +752,7 @@ class Prestation(LucteriosModel):
     description = models.TextField(_('description'), null=True, default="")
     team = models.ForeignKey(Team, verbose_name=_('team'), null=False, on_delete=models.PROTECT)
     activity = models.ForeignKey(Activity, verbose_name=_('activity'), null=False, on_delete=models.PROTECT)
-    article = models.ForeignKey(Article, verbose_name=_('article'), null=False)
+    article = models.ForeignKey(Article, verbose_name=_('article'), null=False, on_delete=models.CASCADE)
 
     def __str__(self):
         if Params.getvalue("member-activite-enable"):
@@ -1249,7 +1249,7 @@ class CommandManager(object):
             new_subscription.set_periode(dateref)
             if Params.getvalue("member-team-enable") and (len(Prestation.objects.all()) > 0):
                 new_subscription.save(with_bill=False)
-                new_subscription.prestations = Prestation.objects.filter(id__in=content_item["prestations"])
+                new_subscription.prestations.set(Prestation.objects.filter(id__in=content_item["prestations"]))
                 new_subscription.save(with_bill=True)
             else:
                 new_subscription.save()
