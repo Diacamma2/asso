@@ -270,9 +270,8 @@ class SubscriptionEditor(LucteriosEditor):
         if self.item.subscriptiontype_id is None:
             if len(cmp_subscriptiontype.select_list) == 0:
                 raise LucteriosException(IMPORTANT, _("No subscription type defined!"))
-            cmp_subscriptiontype.get_reponse_xml()
-            self.item.subscriptiontype = SubscriptionType.objects.get(
-                id=cmp_subscriptiontype.value)
+            cmp_subscriptiontype.get_json()
+            self.item.subscriptiontype = SubscriptionType.objects.get(id=cmp_subscriptiontype.value)
         cmp_subscriptiontype.set_action(xfer.request, xfer.get_action(), close=CLOSE_NO, modal=FORMTYPE_REFRESH)
         row = xfer.get_max_row() + 1
         season = self.item.season
