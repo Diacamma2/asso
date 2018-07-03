@@ -44,7 +44,6 @@ from diacamma.event.test_tools import default_event_params
 class ConfigurationTest(LucteriosTest):
 
     def setUp(self):
-        self.xfer_class = XferContainerAcknowledge
         LucteriosTest.setUp(self)
         rmtree(get_user_dir(), True)
         default_season()
@@ -53,8 +52,8 @@ class ConfigurationTest(LucteriosTest):
 
     def test_degreetype(self):
         self.factory.xfer = EventConf()
-        self.calljson('/diacamma.event/EventConf', {}, False)
-        self.assert_observer('core.custom', 'diacamma.event', 'EventConf')
+        self.calljson('/diacamma.event/eventConf', {}, False)
+        self.assert_observer('core.custom', 'diacamma.event', 'eventConf')
         self.assert_count_equal('', 2 + 2 + 2 + 7)
         self.assert_grid_equal('degreetype', {'activity': "passion", 'name': "nom", 'level': "niveau"}, 0)
 
@@ -71,8 +70,8 @@ class ConfigurationTest(LucteriosTest):
         self.assert_observer('core.acknowledge', 'diacamma.event', 'degreeTypeAddModify')
 
         self.factory.xfer = EventConf()
-        self.calljson('/diacamma.event/EventConf', {}, False)
-        self.assert_observer('core.custom', 'diacamma.event', 'EventConf')
+        self.calljson('/diacamma.event/eventConf', {}, False)
+        self.assert_observer('core.custom', 'diacamma.event', 'eventConf')
         self.assert_count_equal('degreetype', 1)
         self.assert_json_equal('', 'degreetype/@0/name', "abc")
 
@@ -82,48 +81,48 @@ class ConfigurationTest(LucteriosTest):
         self.assert_observer('core.acknowledge', 'diacamma.event', 'degreeTypeDel')
 
         self.factory.xfer = EventConf()
-        self.calljson('/diacamma.event/EventConf', {}, False)
-        self.assert_observer('core.custom', 'diacamma.event', 'EventConf')
+        self.calljson('/diacamma.event/eventConf', {}, False)
+        self.assert_observer('core.custom', 'diacamma.event', 'eventConf')
         self.assert_count_equal('degreetype', 0)
 
     def test_subdegreetype(self):
         self.factory.xfer = EventConf()
-        self.calljson('/diacamma.event/EventConf', {}, False)
-        self.assert_observer('core.custom', 'diacamma.event', 'EventConf')
+        self.calljson('/diacamma.event/eventConf', {}, False)
+        self.assert_observer('core.custom', 'diacamma.event', 'eventConf')
         self.assert_count_equal('', 2 + 2 + 2 + 7)
         self.assert_grid_equal('subdegreetype', {'name': "nom", 'level': "niveau"}, 0)
 
         self.factory.xfer = SubDegreeTypeAddModify()
-        self.calljson('/diacamma.event/subdegreeTypeAddModify', {}, False)
-        self.assert_observer('core.custom', 'diacamma.event', 'subdegreeTypeAddModify')
+        self.calljson('/diacamma.event/subDegreeTypeAddModify', {}, False)
+        self.assert_observer('core.custom', 'diacamma.event', 'subDegreeTypeAddModify')
         self.assert_count_equal('', 3)
 
         self.factory.xfer = SubDegreeTypeAddModify()
-        self.calljson('/diacamma.event/subdegreeTypeAddModify',
+        self.calljson('/diacamma.event/subDegreeTypeAddModify',
                       {"SAVE": "YES", "name": "uvw", "level": "10"}, False)
-        self.assert_observer('core.acknowledge', 'diacamma.event', 'subdegreeTypeAddModify')
+        self.assert_observer('core.acknowledge', 'diacamma.event', 'subDegreeTypeAddModify')
 
         self.factory.xfer = EventConf()
-        self.calljson('/diacamma.event/EventConf', {}, False)
-        self.assert_observer('core.custom', 'diacamma.event', 'EventConf')
+        self.calljson('/diacamma.event/eventConf', {}, False)
+        self.assert_observer('core.custom', 'diacamma.event', 'eventConf')
         self.assert_count_equal('subdegreetype', 1)
         self.assert_json_equal('', 'subdegreetype/@0/name', "uvw")
 
         self.factory.xfer = SubDegreeTypeDel()
-        self.calljson('/diacamma.event/subdegreeTypeDel',
+        self.calljson('/diacamma.event/subDegreeTypeDel',
                       {"CONFIRME": "YES", "subdegreetype": 1}, False)
-        self.assert_observer('core.acknowledge', 'diacamma.event', 'subdegreeTypeDel')
+        self.assert_observer('core.acknowledge', 'diacamma.event', 'subDegreeTypeDel')
 
         self.factory.xfer = EventConf()
-        self.calljson('/diacamma.event/EventConf', {}, False)
-        self.assert_observer('core.custom', 'diacamma.event', 'EventConf')
+        self.calljson('/diacamma.event/eventConf', {}, False)
+        self.assert_observer('core.custom', 'diacamma.event', 'eventConf')
         self.assert_count_equal('subdegreetype', 0)
 
     def test_no_activity(self):
         set_parameters([])
         self.factory.xfer = EventConf()
-        self.calljson('/diacamma.event/EventConf', {}, False)
-        self.assert_observer('core.custom', 'diacamma.event', 'EventConf')
+        self.calljson('/diacamma.event/eventConf', {}, False)
+        self.assert_observer('core.custom', 'diacamma.event', 'eventConf')
         self.assert_count_equal('', 2 + 2 + 2 + 7)
         self.assert_grid_equal('degreetype', {'name': "nom", 'level': "niveau"}, 0)
 
@@ -134,8 +133,8 @@ class ConfigurationTest(LucteriosTest):
 
     def test_params(self):
         self.factory.xfer = EventConf()
-        self.calljson('/diacamma.event/EventConf', {}, False)
-        self.assert_observer('core.custom', 'diacamma.event', 'EventConf')
+        self.calljson('/diacamma.event/eventConf', {}, False)
+        self.assert_observer('core.custom', 'diacamma.event', 'eventConf')
         self.assert_count_equal('', 2 + 2 + 2 + 7)
         self.assert_json_equal('TAB', '__tab_1', 'Paramètres')
         self.assert_json_equal('TAB', '__tab_2', 'Diplôme')
@@ -149,8 +148,8 @@ class ConfigurationTest(LucteriosTest):
         Params.clear()
 
         self.factory.xfer = EventConf()
-        self.calljson('/diacamma.event/EventConf', {}, False)
-        self.assert_observer('core.custom', 'diacamma.event', 'EventConf')
+        self.calljson('/diacamma.event/eventConf', {}, False)
+        self.assert_observer('core.custom', 'diacamma.event', 'eventConf')
         self.assert_count_equal('', 2 + 2 + 2 + 7)
         self.assert_json_equal('TAB', '__tab_1', 'Paramètres')
         self.assert_json_equal('TAB', '__tab_2', 'Grade')
@@ -165,8 +164,8 @@ class ConfigurationTest(LucteriosTest):
         Params.clear()
 
         self.factory.xfer = EventConf()
-        self.calljson('/diacamma.event/EventConf', {}, False)
-        self.assert_observer('core.custom', 'diacamma.event', 'EventConf')
+        self.calljson('/diacamma.event/eventConf', {}, False)
+        self.assert_observer('core.custom', 'diacamma.event', 'eventConf')
         self.assert_count_equal('', 2 + 2 + 7)
         self.assert_json_equal('TAB', '__tab_1', 'Paramètres')
         self.assert_json_equal('TAB', '__tab_2', 'Grade')
@@ -178,8 +177,8 @@ class ConfigurationTest(LucteriosTest):
         Params.clear()
 
         self.factory.xfer = EventConf()
-        self.calljson('/diacamma.event/EventConf', {}, False)
-        self.assert_observer('core.custom', 'diacamma.event', 'EventConf')
+        self.calljson('/diacamma.event/eventConf', {}, False)
+        self.assert_observer('core.custom', 'diacamma.event', 'eventConf')
         self.assert_count_equal('', 2 + 7)
         self.assertFalse('__tab_2' in self.json_data.keys(), self.json_data.keys())
         self.assert_json_equal('TAB', '__tab_1', 'Paramètres')
@@ -190,7 +189,6 @@ class ConfigurationTest(LucteriosTest):
 class DegreeTest(LucteriosTest):
 
     def setUp(self):
-        self.xfer_class = XferContainerAcknowledge
         LucteriosTest.setUp(self)
         rmtree(get_user_dir(), True)
         default_season()
@@ -218,7 +216,7 @@ class DegreeTest(LucteriosTest):
         self.assert_observer('core.acknowledge', 'diacamma.event', 'degreeAddModify')
 
         self.factory.xfer = AdherentShow()
-        self.calljson('/diacamma.member/adherentAddModify', {'adherent': 2}, False)
+        self.calljson('/diacamma.member/adherentShow', {'adherent': 2}, False)
         self.assert_count_equal('degrees', 1)
         self.assert_json_equal('', 'degrees/@0/degree', "[activity1] level #1.3")
         self.assert_json_equal('', 'degrees/@0/subdegree', "sublevel #2")
@@ -229,7 +227,7 @@ class DegreeTest(LucteriosTest):
         self.assert_observer('core.acknowledge', 'diacamma.event', 'degreeDel')
 
         self.factory.xfer = AdherentShow()
-        self.calljson('/diacamma.member/adherentAddModify', {'adherent': 2}, False)
+        self.calljson('/diacamma.member/adherentShow', {'adherent': 2}, False)
         self.assert_count_equal('degrees', 0)
 
     def test_no_activity(self):
@@ -240,7 +238,7 @@ class DegreeTest(LucteriosTest):
         self.assert_observer('core.acknowledge', 'diacamma.event', 'degreeAddModify')
 
         self.factory.xfer = AdherentShow()
-        self.calljson('/diacamma.member/adherentAddModify', {'adherent': 2}, False)
+        self.calljson('/diacamma.member/adherentShow', {'adherent': 2}, False)
         self.assert_grid_equal('degrees', {'degree': 'Grade', 'subdegree': 'Barette', 'date': 'date'}, 1)  # nb=3
         self.assert_json_equal('', 'degrees/@0/degree', "level #1.3")
         self.assert_json_equal('', 'degrees/@0/subdegree', "sublevel #2")
@@ -256,7 +254,7 @@ class DegreeTest(LucteriosTest):
         self.assert_observer('core.acknowledge', 'diacamma.event', 'degreeAddModify')
 
         self.factory.xfer = AdherentShow()
-        self.calljson('/diacamma.member/adherentAddModify', {'adherent': 2}, False)
+        self.calljson('/diacamma.member/adherentShow', {'adherent': 2}, False)
         self.assert_grid_equal('degrees', {'degree': 'Grade', 'date': 'date'}, 1)  # nb=2
         self.assert_json_equal('', 'degrees/@0/degree', "[activity1] level #1.3")
         self.assert_json_equal('', 'degrees/@0/date', "2014-10-12")

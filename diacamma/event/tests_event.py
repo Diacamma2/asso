@@ -44,7 +44,6 @@ from lucterios.contacts.models import LegalEntity
 class EventTest(LucteriosTest):
 
     def setUp(self):
-        self.xfer_class = XferContainerAcknowledge
         LucteriosTest.setUp(self)
         rmtree(get_user_dir(), True)
         default_financial()
@@ -251,8 +250,8 @@ class EventTest(LucteriosTest):
                       {"SAVE": "YES", "date": "2014-10-12", "activity": "1", "event_type": 0, "comment": "new examination", 'default_article': 0}, False)
 
         self.factory.xfer = EventTransition()
-        self.calljson('/diacamma.event/eventShow', {"event": 1, 'TRANSITION': 'validate'}, False)
-        self.assert_observer('core.exception', 'diacamma.event', 'eventShow')
+        self.calljson('/diacamma.event/eventTransition', {"event": 1, 'TRANSITION': 'validate'}, False)
+        self.assert_observer('core.exception', 'diacamma.event', 'eventTransition')
 
         self.factory.xfer = OrganizerSave()
         self.calljson('/diacamma.event/organizerSave',
@@ -260,8 +259,8 @@ class EventTest(LucteriosTest):
         self.assert_observer('core.acknowledge', 'diacamma.event', 'organizerSave')
 
         self.factory.xfer = EventTransition()
-        self.calljson('/diacamma.event/eventShow', {"event": 1, 'TRANSITION': 'validate'}, False)
-        self.assert_observer('core.exception', 'diacamma.event', 'eventShow')
+        self.calljson('/diacamma.event/eventTransition', {"event": 1, 'TRANSITION': 'validate'}, False)
+        self.assert_observer('core.exception', 'diacamma.event', 'eventTransition')
 
         self.factory.xfer = OrganizerResponsible()
         self.calljson('/diacamma.event/organizerResponsible',
@@ -269,8 +268,8 @@ class EventTest(LucteriosTest):
         self.assert_observer('core.acknowledge', 'diacamma.event', 'organizerResponsible')
 
         self.factory.xfer = EventTransition()
-        self.calljson('/diacamma.event/eventShow', {"event": 1, 'TRANSITION': 'validate'}, False)
-        self.assert_observer('core.exception', 'diacamma.event', 'eventShow')
+        self.calljson('/diacamma.event/eventTransition', {"event": 1, 'TRANSITION': 'validate'}, False)
+        self.assert_observer('core.exception', 'diacamma.event', 'eventTransition')
 
         self.factory.xfer = ParticipantSave()
         self.calljson('/diacamma.event/participantSave',
@@ -278,8 +277,8 @@ class EventTest(LucteriosTest):
         self.assert_observer('core.acknowledge', 'diacamma.event', 'participantSave')
 
         self.factory.xfer = EventTransition()
-        self.calljson('/diacamma.event/eventShow', {"event": 1, 'TRANSITION': 'validate'}, False)
-        self.assert_observer('core.custom', 'diacamma.event', 'eventShow')
+        self.calljson('/diacamma.event/eventTransition', {"event": 1, 'TRANSITION': 'validate'}, False)
+        self.assert_observer('core.custom', 'diacamma.event', 'eventTransition')
         self.assert_count_equal('', 5 + 5 * 3)
         self.assert_json_equal('LABELFORM', 'name_1', "{[b]}Dalton Avrel{[/b]}")
         self.assert_select_equal('degree_1', 9)  # nb=9
@@ -295,10 +294,10 @@ class EventTest(LucteriosTest):
         self.assert_json_equal('MEMO', 'comment_3', "Epreuve 1:{[br/]}Epreuve 2:{[br/]}")
 
         self.factory.xfer = EventTransition()
-        self.calljson('/diacamma.event/eventShow',
+        self.calljson('/diacamma.event/eventTransition',
                       {"event": 1, 'CONFIRME': 'YES', 'comment_1': 'trop nul!', 'degree_2': 5, 'comment_2': 'ça va...',
                        'degree_3': 3, 'subdegree_3': 4, 'comment_3': 'bien :)', 'TRANSITION': 'validate'}, False)
-        self.assert_observer('core.acknowledge', 'diacamma.event', 'eventShow')
+        self.assert_observer('core.acknowledge', 'diacamma.event', 'eventTransition')
 
         self.factory.xfer = EventShow()
         self.calljson('/diacamma.event/eventShow', {"event": 1}, False)
@@ -380,8 +379,8 @@ class EventTest(LucteriosTest):
         self.assert_json_equal('', 'degrees/@1/date', "2010-09-21")
 
         self.factory.xfer = EventTransition()
-        self.calljson('/diacamma.event/eventShow', {"event": 1, 'TRANSITION': 'validate'}, False)
-        self.assert_observer('core.exception', 'diacamma.event', 'eventShow')
+        self.calljson('/diacamma.event/eventTransition', {"event": 1, 'TRANSITION': 'validate'}, False)
+        self.assert_observer('core.exception', 'diacamma.event', 'eventTransition')
 
     def test_no_activity(self):
         set_parameters([])
@@ -431,8 +430,8 @@ class EventTest(LucteriosTest):
         self.assert_observer('core.acknowledge', 'diacamma.event', 'participantSave')
 
         self.factory.xfer = EventTransition()
-        self.calljson('/diacamma.event/eventShow', {"event": 1, 'TRANSITION': 'validate'}, False)
-        self.assert_observer('core.custom', 'diacamma.event', 'eventShow')
+        self.calljson('/diacamma.event/eventTransition', {"event": 1, 'TRANSITION': 'validate'}, False)
+        self.assert_observer('core.custom', 'diacamma.event', 'eventTransition')
         self.assert_count_equal('', 5 + 4 * 3)
         self.assert_json_equal('LABELFORM', 'name_1', "{[b]}Dalton Avrel{[/b]}")
         self.assert_select_equal('degree_1', 9)  # nb=9
@@ -445,10 +444,10 @@ class EventTest(LucteriosTest):
         self.assert_json_equal('MEMO', 'comment_3', "Epreuve 1:{[br/]}Epreuve 2:{[br/]}")
 
         self.factory.xfer = EventTransition()
-        self.calljson('/diacamma.event/eventShow',
+        self.calljson('/diacamma.event/eventTransition',
                       {"event": 1, 'CONFIRME': 'YES', 'comment_1': 'trop nul!', 'degree_2': 5, 'comment_2': 'ça va...',
                        'degree_3': 3, 'comment_3': 'bien :)', 'TRANSITION': 'validate'}, False)
-        self.assert_observer('core.acknowledge', 'diacamma.event', 'eventShow')
+        self.assert_observer('core.acknowledge', 'diacamma.event', 'eventTransition')
 
         self.factory.xfer = EventShow()
         self.calljson('/diacamma.event/eventShow', {"event": 1}, False)
@@ -508,13 +507,13 @@ class EventTest(LucteriosTest):
         self.assert_json_equal('LABELFORM', "default_article_nomember.ref_price", "---")
 
         self.factory.xfer = EventTransition()
-        self.calljson('/diacamma.event/eventShow', {"event": 1, 'TRANSITION': 'validate'}, False)
-        self.assert_observer('core.dialogbox', 'diacamma.event', 'eventShow')
+        self.calljson('/diacamma.event/eventTransition', {"event": 1, 'TRANSITION': 'validate'}, False)
+        self.assert_observer('core.dialogbox', 'diacamma.event', 'eventTransition')
 
         self.factory.xfer = EventTransition()
-        self.calljson('/diacamma.event/eventShow',
+        self.calljson('/diacamma.event/eventTransition',
                       {"event": 1, 'CONFIRME': 'YES', 'TRANSITION': 'validate'}, False)
-        self.assert_observer('core.acknowledge', 'diacamma.event', 'eventShow')
+        self.assert_observer('core.acknowledge', 'diacamma.event', 'eventTransition')
 
         self.factory.xfer = EventListExamination()
         self.calljson('/diacamma.event/eventListExamination', {}, False)
@@ -614,9 +613,9 @@ class EventTest(LucteriosTest):
         self.assert_count_equal('bill', 1)
 
         self.factory.xfer = EventTransition()
-        self.calljson('/diacamma.event/eventShow',
+        self.calljson('/diacamma.event/eventTransition',
                       {"event": 1, 'CONFIRME': 'YES', 'TRANSITION': 'validate'}, False)
-        self.assert_observer('core.acknowledge', 'diacamma.event', 'eventShow')
+        self.assert_observer('core.acknowledge', 'diacamma.event', 'eventTransition')
 
         self.factory.xfer = BillList()
         self.calljson('/diacamma.invoice/billList', {}, False)
@@ -701,9 +700,9 @@ class EventTest(LucteriosTest):
         self.assert_observer('core.acknowledge', 'diacamma.event', 'participantModify')
 
         self.factory.xfer = EventTransition()
-        self.calljson('/diacamma.event/eventShow',
+        self.calljson('/diacamma.event/eventTransition',
                       {"event": 1, 'CONFIRME': 'YES', 'TRANSITION': 'validate'}, False)
-        self.assert_observer('core.acknowledge', 'diacamma.event', 'eventShow')
+        self.assert_observer('core.acknowledge', 'diacamma.event', 'eventTransition')
 
         self.factory.xfer = BillList()
         self.calljson('/diacamma.invoice/billList', {}, False)
