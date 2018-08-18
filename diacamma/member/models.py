@@ -1298,7 +1298,7 @@ def member_checkparam():
     Parameter.check_and_create(name="member-numero", typeparam=3, title=_("member-numero"), args="{}", value='True')
     Parameter.check_and_create(name="member-licence-enabled", typeparam=3, title=_("member-licence-enabled"), args="{}", value='True')
     Parameter.check_and_create(name="member-subscription-message", typeparam=0, title=_("member-subscription-message"),
-                               args="{'Multi':True}", value=_('Welcome,\n\nYou have a new subscription.Joint, the quotation relative.\n\nRegards,'))
+                               args="{'Multi':True, 'HyperText': True}", value=_('Welcome,{[br/]}{[br/]}You have a new subscription.Joint, the quotation relative.{[br/]}{[br/]}Regards,'))
     Parameter.check_and_create(name="member-subscription-mode", typeparam=4, title=_("member-subscription-mode"), args="{'Enum':3}", value='0',
                                param_titles=(_("member-subscription-mode.0"), _("member-subscription-mode.1"), _("member-subscription-mode.2")))
     Parameter.check_and_create(name="member-family-type", typeparam=1, title=_("member-family-type"), args="{}", value='0', meta='("contacts","StructureType", Q(), "id", False)')
