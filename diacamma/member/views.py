@@ -136,7 +136,7 @@ class AdherentAbstractList(XferListEditor, AdherentFilter):
 
         if Params.getvalue("member-team-enable"):
             sel = XferCompCheckList('team')
-            sel.set_select_query(Team.objects.all())
+            sel.set_select_query(Team.objects.filter(unactive=False))
             sel.set_value(team)
             sel.set_location(col1, row)
             sel.description = Params.getvalue("member-team-text")

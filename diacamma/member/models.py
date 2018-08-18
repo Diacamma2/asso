@@ -415,6 +415,7 @@ class Activity(LucteriosModel):
         verbose_name = _('activity')
         verbose_name_plural = _('activities')
         default_permissions = []
+        ordering = ['name']
 
 
 class Team(LucteriosModel):
@@ -441,6 +442,7 @@ class Team(LucteriosModel):
         verbose_name = _('team')
         verbose_name_plural = _('teams')
         default_permissions = []
+        ordering = ['name']
 
 
 class Age(LucteriosModel):
@@ -1033,6 +1035,7 @@ class Subscription(LucteriosModel):
     class Meta(object):
         verbose_name = _('subscription')
         verbose_name_plural = _('subscription')
+        ordering = ['-begin_date']
 
 
 class DocAdherent(LucteriosModel):

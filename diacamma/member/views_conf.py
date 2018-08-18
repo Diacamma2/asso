@@ -30,9 +30,10 @@ from lucterios.framework.xferadvance import XferAddEditor, XferListEditor, TITLE
     TITLE_EDIT, XferShowEditor
 from lucterios.framework.xferadvance import XferDelete
 from lucterios.framework.tools import ActionsManage, MenuManage, FORMTYPE_NOMODAL, CLOSE_NO, SELECT_MULTI, SELECT_SINGLE,\
-    WrapAction
+    WrapAction, FORMTYPE_REFRESH
 from lucterios.framework.error import LucteriosException, IMPORTANT
-from lucterios.framework.xfercomponents import XferCompButton, XferCompLabelForm
+from lucterios.framework.xfercomponents import XferCompButton, XferCompLabelForm,\
+    XferCompCheck
 from lucterios.framework import signal_and_lock
 from lucterios.CORE.parameters import Params
 from lucterios.CORE.views import ParamEdit, ObjectMerge
@@ -71,8 +72,22 @@ class CategoryConf(XferListEditor):
             self.new_tab(_('Age'))
             self.fill_grid(0, Age, "age", Age.objects.all())
         if Params.getvalue("member-team-enable") == 1:
+            show_only_enabled_team = self.getparam('show_only_enabled_team', True)
             self.new_tab(Params.getvalue("member-team-text"))
-            self.fill_grid(0, Team, "team", Team.objects.all())
+            if show_only_enabled_team:
+                team_list = Team.objects.filter(unactive=False)
+            else:
+                team_list = Team.objects.all()
+            self.fill_grid(0, Team, "team", team_list)
+            if show_only_enabled_team:
+                grid = self.get_components('team')
+                grid.delete_header('unactive')
+            check = XferCompCheck('show_only_enabled_team')
+            check.set_location(0, 2)
+            check.set_value(show_only_enabled_team)
+            check.description = _('show only enabled team')
+            check.set_action(self.request, self.get_action(), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
+            self.add_component(check)
         if Params.getvalue("member-activite-enable") == 1:
             self.new_tab(Params.getvalue("member-activite-text"))
             self.fill_grid(0, Activity, "activity", Activity.objects.all())

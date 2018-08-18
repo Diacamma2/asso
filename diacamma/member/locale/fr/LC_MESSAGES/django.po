@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-06-29 08:20+0000\n"
+"POT-Creation-Date: 2018-08-18 14:05+0000\n"
 "PO-Revision-Date: 2016-01-14 22:13+0000\n"
 "Last-Translator: b'Paul ARULATEDA <paul531@orange.fr>'\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -19,12 +19,12 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 "X-Translated-Using: django-rosetta 0.7.8\n"
 
-#: __init__.py:43 views_conf.py:177 views_conf.py:180 views_conf.py:185
-#: views_conf.py:206
+#: __init__.py:43 views_conf.py:192 views_conf.py:195 views_conf.py:200
+#: views_conf.py:221
 msgid "Diacamma member"
 msgstr "Adhérent Diacamma"
 
-#: editors.py:52 models.py:330 models.py:470
+#: editors.py:52 models.py:330 models.py:472
 msgid "date invalid!"
 msgstr "date invalide !"
 
@@ -32,7 +32,7 @@ msgstr "date invalide !"
 msgid "Season exists yet!"
 msgstr "La saison existe déjà !"
 
-#: editors.py:75 editors.py:305 models.py:76 models.py:299 models.py:818
+#: editors.py:75 editors.py:304 models.py:76 models.py:299 models.py:821
 #: printmodel/Adherent_0003.py:56
 msgid "begin date"
 msgstr "date de début"
@@ -41,11 +41,11 @@ msgstr "date de début"
 msgid "Articles"
 msgstr "Articles"
 
-#: editors.py:109 models.py:458 models.py:466
+#: editors.py:109 models.py:460 models.py:468
 msgid "date min."
 msgstr "date min."
 
-#: editors.py:115 models.py:458 models.py:466
+#: editors.py:115 models.py:460 models.py:468
 msgid "date max."
 msgstr "date max."
 
@@ -61,15 +61,15 @@ msgstr "documents demandés"
 msgid "No subscription type defined!"
 msgstr "Aucun type de cotisation défini !"
 
-#: editors.py:284 models.py:346
+#: editors.py:283 models.py:346
 msgid "annually"
 msgstr "annuelle"
 
-#: editors.py:291 models.py:337
+#: editors.py:290 models.py:337
 msgid "period"
 msgstr "période"
 
-#: editors.py:298
+#: editors.py:297
 msgid "month"
 msgstr "mois"
 
@@ -85,7 +85,7 @@ msgstr "désignation"
 msgid "is current"
 msgstr "courant"
 
-#: models.py:76 models.py:300 models.py:819 printmodel/Adherent_0003.py:56
+#: models.py:76 models.py:300 models.py:822 printmodel/Adherent_0003.py:56
 msgid "end date"
 msgstr "date de fin"
 
@@ -105,8 +105,8 @@ msgstr "Aucune période trouvée !"
 msgid "total"
 msgstr "total"
 
-#: models.py:253 models.py:260 models.py:296 models.py:813
-#: printmodel/Adherent_0003.py:56 views.py:837
+#: models.py:253 models.py:260 models.py:296 models.py:816
+#: printmodel/Adherent_0003.py:56 views.py:845
 msgid "season"
 msgstr "saison"
 
@@ -114,8 +114,8 @@ msgstr "saison"
 msgid "seasons"
 msgstr "saisons"
 
-#: models.py:261 models.py:344 models.py:384 models.py:421 models.py:447
-#: models.py:754
+#: models.py:261 models.py:344 models.py:384 models.py:422 models.py:449
+#: models.py:753
 msgid "name"
 msgstr "nom"
 
@@ -123,8 +123,8 @@ msgstr "nom"
 msgid "document needs"
 msgstr "document nécessaire"
 
-#: models.py:298 models.py:492 printmodel/Adherent_0001.py:45
-#: printmodel/Adherent_0003.py:55 views.py:947
+#: models.py:298 models.py:494 printmodel/Adherent_0001.py:45
+#: printmodel/Adherent_0003.py:55 views.py:955
 msgid "numeros"
 msgstr "N°"
 
@@ -136,7 +136,7 @@ msgstr "Chaque saison doit avoir 2 périodes minimum !"
 msgid "periods"
 msgstr "périodes"
 
-#: models.py:345 models.py:385 models.py:422 models.py:755
+#: models.py:345 models.py:385 models.py:423 models.py:754
 msgid "description"
 msgstr "description"
 
@@ -156,7 +156,7 @@ msgstr "mensuelle"
 msgid "calendar"
 msgstr "calendaire"
 
-#: models.py:348 models.py:423
+#: models.py:348 models.py:424
 msgid "unactive"
 msgstr "désactivé"
 
@@ -164,11 +164,11 @@ msgstr "désactivé"
 msgid "articles"
 msgstr "articles"
 
-#: models.py:360 models.py:368 models.py:776 models.py:795
+#: models.py:360 models.py:368 models.py:778 models.py:797
 msgid "price"
 msgstr "prix"
 
-#: models.py:378 models.py:562 models.py:815 models.py:895 models.py:1116
+#: models.py:378 models.py:564 models.py:818 models.py:918 models.py:1142
 #: printmodel/Adherent_0003.py:56
 msgid "subscription type"
 msgstr "type de cotisation"
@@ -181,7 +181,7 @@ msgstr "types de cotisation"
 msgid "1 activity is needs!"
 msgstr "1 activité est nécessaire !"
 
-#: models.py:415 models.py:757 models.py:1053 printmodel/Adherent_0003.py:56
+#: models.py:415 models.py:756 models.py:1077 printmodel/Adherent_0003.py:56
 msgid "activity"
 msgstr "activité"
 
@@ -189,220 +189,220 @@ msgstr "activité"
 msgid "activities"
 msgstr "activités"
 
-#: models.py:441 models.py:756 models.py:1051 printmodel/Adherent_0003.py:56
+#: models.py:442 models.py:755 models.py:1075 printmodel/Adherent_0003.py:56
 msgid "team"
 msgstr "équipe"
 
-#: models.py:442
+#: models.py:443
 msgid "teams"
 msgstr "équipes"
 
-#: models.py:449
+#: models.py:451
 msgid "minimum"
 msgstr "minimum"
 
-#: models.py:451
+#: models.py:453
 msgid "maximum"
 msgstr "maximum"
 
-#: models.py:484
+#: models.py:486
 msgid "age"
 msgstr "âge"
 
-#: models.py:485
+#: models.py:487
 msgid "ages"
 msgstr "âges"
 
-#: models.py:494 printmodel/Adherent_0003.py:56
+#: models.py:496 printmodel/Adherent_0003.py:56
 msgid "birthday"
 msgstr "date de naissance"
 
-#: models.py:495 printmodel/Adherent_0003.py:56
+#: models.py:497 printmodel/Adherent_0003.py:56
 msgid "birthplace"
 msgstr "lieu de naissance"
 
-#: models.py:516 models.py:1100
+#: models.py:518 models.py:837 models.py:1124
 msgid "involvement"
 msgstr "participation"
 
-#: models.py:534 models.py:1118
+#: models.py:536 models.py:1144
 msgid "age category"
 msgstr "catégorie d'âge"
 
-#: models.py:535 views.py:1036
+#: models.py:537 views.py:1044
 msgid "002@Subscription"
 msgstr "Cotisation"
 
-#: models.py:536 views.py:188
+#: models.py:538 views.py:183
 msgid "reference date"
 msgstr "date de référence"
 
-#: models.py:568 models.py:1049 printmodel/Adherent_0003.py:56
+#: models.py:570 models.py:1073 printmodel/Adherent_0003.py:56
 msgid "license #"
 msgstr "N° licence"
 
-#: models.py:749 models.py:811 models.py:1115
+#: models.py:748 models.py:814 models.py:1141
 msgid "adherent"
 msgstr "adhérent"
 
-#: models.py:750
+#: models.py:749
 msgid "adherents"
 msgstr "adhérents"
 
-#: models.py:758
+#: models.py:757
 msgid "article"
 msgstr "article"
 
-#: models.py:804
+#: models.py:806
 msgid "prestation"
 msgstr "prestation"
 
-#: models.py:805 models.py:822
+#: models.py:807 models.py:825 models.py:1146
 msgid "prestations"
 msgstr "prestations"
 
-#: models.py:817
+#: models.py:820
 msgid "bill"
 msgstr "facture"
 
-#: models.py:820 views.py:169
+#: models.py:823 views.py:164
 msgid "status"
 msgstr "status"
 
-#: models.py:821
+#: models.py:824
 msgid "waiting"
 msgstr "en attente"
 
-#: models.py:821 views.py:165
+#: models.py:824 views.py:160
 msgid "building"
 msgstr "en création"
 
-#: models.py:821 views.py:165
+#: models.py:824 views.py:160
 msgid "valid"
 msgstr "validé"
 
-#: models.py:821
+#: models.py:824
 msgid "cancel"
 msgstr "annuler"
 
-#: models.py:821
+#: models.py:824
 msgid "disbarred"
 msgstr "radié"
 
-#: models.py:894 models.py:1013 models.py:1014 models.py:1019 models.py:1048
+#: models.py:917 models.py:1036 models.py:1037 models.py:1043 models.py:1072
 msgid "subscription"
 msgstr "cotisation"
 
-#: models.py:899
+#: models.py:922
 #, python-format
 msgid "Subscription of '%s'"
 msgstr "Cotisation de '%s'"
 
-#: models.py:943
+#: models.py:966
 msgid "dates always used!"
 msgstr "dates déjà utilisées !"
 
-#: models.py:957
+#: models.py:980
 msgid "Moderate"
 msgstr "Modérer"
 
-#: models.py:963
+#: models.py:986
 msgid "Validate"
 msgstr "Valider"
 
-#: models.py:969
+#: models.py:992
 msgid "Cancel"
 msgstr "Annuler"
 
-#: models.py:975
+#: models.py:998
 msgid "Disbar"
 msgstr "Radier"
 
-#: models.py:981 models.py:987
+#: models.py:1004 models.py:1010
 msgid "Re-open"
 msgstr "Ré-éditer"
 
-#: models.py:995
+#: models.py:1018
 msgid "You cannot delete this subscription!"
 msgstr "Vous ne pouvez pas supprimer cette cotisation !"
 
-#: models.py:1008
+#: models.py:1031
 msgid "New subscription"
 msgstr "Nouvelle cotisation"
 
-#: models.py:1021 models.py:1041
+#: models.py:1045 models.py:1065
 msgid "document"
 msgstr "document"
 
-#: models.py:1023 views.py:326
+#: models.py:1047 views.py:321
 msgid "value"
 msgstr "valeur"
 
-#: models.py:1042
+#: models.py:1066
 msgid "documents"
 msgstr "documents"
 
-#: models.py:1101
+#: models.py:1125
 msgid "involvements"
 msgstr "participations"
 
-#: models.py:1125
+#: models.py:1154
 msgid "reduce"
 msgstr "réduction"
 
-#: models.py:1244
+#: models.py:1290
 msgid "member-age-enable"
 msgstr "Activer les cat. d'âges"
 
-#: models.py:1245
+#: models.py:1291
 msgid "member-team-enable"
 msgstr "Activer les équipes"
 
-#: models.py:1246
+#: models.py:1292
 msgid "member-team-text"
 msgstr "Intitulé équipe"
 
-#: models.py:1246
+#: models.py:1292
 msgid "Team"
 msgstr "Équipe"
 
-#: models.py:1247
+#: models.py:1293
 msgid "member-activite-enable"
 msgstr "Activer les activités"
 
-#: models.py:1248
+#: models.py:1294
 msgid "member-activite-text"
 msgstr "Intitulé activité"
 
-#: models.py:1248
+#: models.py:1294
 msgid "Activity"
 msgstr "Activité"
 
-#: models.py:1249
+#: models.py:1295
 msgid "member-connection"
 msgstr "Activer la création de connexion"
 
-#: models.py:1250
+#: models.py:1296
 msgid "member-birth"
 msgstr "Utiliser date et lieu de naissance"
 
-#: models.py:1251
+#: models.py:1297
 msgid "member-filter-genre"
 msgstr "Fitrage par genre"
 
-#: models.py:1252
+#: models.py:1298
 msgid "member-numero"
 msgstr "Afficher le numéro d'adhérent"
 
-#: models.py:1253
+#: models.py:1299
 msgid "member-licence-enabled"
 msgstr "Gérer un numéro de licence"
 
-#: models.py:1254
+#: models.py:1300
 msgid "member-subscription-message"
 msgstr "message de nouvelle de cotisation"
 
-#: models.py:1255
+#: models.py:1301
 msgid ""
 "Welcome,\n"
 "\n"
@@ -416,23 +416,23 @@ msgstr ""
 "\n"
 "Salutations,"
 
-#: models.py:1256
+#: models.py:1302
 msgid "member-subscription-mode"
 msgstr "mode de cotisation"
 
-#: models.py:1257
+#: models.py:1303
 msgid "member-subscription-mode.0"
 msgstr "Pas d'auto-cotisation"
 
-#: models.py:1257
+#: models.py:1303
 msgid "member-subscription-mode.1"
 msgstr "Auto-cotisation avec moderation"
 
-#: models.py:1257
+#: models.py:1303
 msgid "member-subscription-mode.2"
 msgstr "Auto-cotisation automatique"
 
-#: models.py:1258
+#: models.py:1304
 msgid "member-family-type"
 msgstr "Type de structure 'famille'"
 
@@ -458,7 +458,7 @@ msgstr "adresse"
 msgid "postal code"
 msgstr "code postal"
 
-#: printmodel/Adherent_0001.py:45 printmodel/Adherent_0003.py:55 views.py:859
+#: printmodel/Adherent_0001.py:45 printmodel/Adherent_0003.py:55 views.py:867
 msgid "city"
 msgstr "ville"
 
@@ -498,99 +498,99 @@ msgstr "étiquette"
 msgid "card"
 msgstr "carte"
 
-#: views.py:61
+#: views.py:63
 msgid "Association"
 msgstr "Association"
 
-#: views.py:61
+#: views.py:63
 msgid "Association tools"
 msgstr "Outils associatifs"
 
-#: views.py:64 views.py:942 views.py:974
+#: views.py:66 views.py:950 views.py:982
 msgid "Adherents"
 msgstr "Adhérents"
 
-#: views.py:64
+#: views.py:66
 msgid "Management of adherents and subscriptions."
 msgstr "Gestion des adhérents et des cotisations"
 
-#: views.py:138 views_conf.py:71 views_conf.py:189
+#: views.py:133 views_conf.py:72 views_conf.py:204
 msgid "Age"
 msgstr "Âge"
 
-#: views.py:180
+#: views.py:175
 msgid "genre"
 msgstr "genre"
 
-#: views.py:194
+#: views.py:189
 msgid "Refresh"
 msgstr "Rafraichir"
 
-#: views.py:199
+#: views.py:194
 msgid "Select adherent"
 msgstr "Sélection d'un adhérent"
 
-#: views.py:215 views.py:648 views.py:681
+#: views.py:210 views.py:656 views.py:689
 msgid "Select"
 msgstr "Sélection"
 
-#: views.py:219
+#: views.py:214
 msgid "List of adherents with subscribtion"
 msgstr "Liste des adhérents à jour de leur cotisation"
 
-#: views.py:221
+#: views.py:216
 msgid "Subscribe adherents"
 msgstr "Adhérents cotisants"
 
-#: views.py:229 views.py:353 views.py:1041
+#: views.py:224 views.py:348 views.py:1049
 msgid "Subscription"
 msgstr "Cotisation"
 
-#: views.py:232 views.py:290 views.py:338
+#: views.py:227 views.py:285 views.py:333
 msgid "License"
 msgstr "Licence"
 
-#: views.py:235 views.py:262
+#: views.py:230 views.py:257
 msgid "Moderation"
 msgstr "Modération"
 
-#: views.py:238
+#: views.py:233
 msgid "To find an adherent following a set of criteria."
 msgstr "Trouver un adhérent suivant un ensemble de critères"
 
-#: views.py:243
+#: views.py:238
 msgid "Search adherent"
 msgstr "Recherche d'adhérent"
 
-#: views.py:246
+#: views.py:241
 msgid "List of adherents with old subscribtion not renew yet"
 msgstr "Liste d'anciens adhérents pas encore renouvelés"
 
-#: views.py:248
+#: views.py:243
 msgid "Adherents to renew"
 msgstr "Adhérents à renouveler"
 
-#: views.py:272
+#: views.py:267
 msgid "Add adherent"
 msgstr "Ajout d'un adhérent"
 
-#: views.py:273
+#: views.py:268
 msgid "Modify adherent"
 msgstr "Modification d'un adhérent"
 
-#: views.py:282 views.py:725 views.py:731
+#: views.py:277 views.py:733 views.py:739
 msgid "Show adherent"
 msgstr "Voir un adhérent"
 
-#: views.py:299 views.py:844
+#: views.py:294 views.py:852
 msgid "no subscription!"
 msgstr "Pas de cotisation !"
 
-#: views.py:360 views.py:366
+#: views.py:355 views.py:361
 msgid "re-new"
 msgstr "Renouveler"
 
-#: views.py:370
+#: views.py:365
 #, python-format
 msgid ""
 "{[b]}Do you want that those %d old selected adherent(s) has been renew?{[/b]}"
@@ -601,78 +601,78 @@ msgstr ""
 "renouvelé(s)?{[/b]}{[br/]}La même cotisation sera appliquée.{[br/]}Une "
 "facture non-validée sera créée pour chaque cotisation."
 
-#: views.py:377
+#: views.py:372
 msgid "command"
 msgstr "commande"
 
-#: views.py:383
+#: views.py:378
 msgid "Command subscription"
 msgstr "Commande de cotisation"
 
-#: views.py:412
+#: views.py:409
 msgid "Send quotition by email for each adherent."
 msgstr "Envoyer un devis par courriel à chaque adhérent"
 
-#: views.py:424
+#: views.py:423
 #, python-format
 msgid "%(nbsub)d new subscription and %(nbbill)d quotation have been sent."
 msgstr ""
 "%(nbsub)d nouvelle(s) cotisation(s) et %(nbbill)d dévis ont été envoyé(s)."
 
-#: views.py:426
+#: views.py:425
 #, python-format
 msgid "%d new subscription have been prepared."
 msgstr "%d nouvelle(s) cotisation(s) préparée(s)."
 
-#: views.py:433
+#: views.py:432
 msgid "Delete subscription command"
 msgstr "Suppression d'une commande de cotisation"
 
-#: views.py:443
+#: views.py:442
 msgid "Modify subscription command"
 msgstr "Modification d'une commande de cotisation"
 
-#: views.py:515
+#: views.py:523
 msgid "Delete adherent"
 msgstr "Suppression d'un adhérent"
 
-#: views.py:518
+#: views.py:526
 msgid "Modify"
 msgstr "Modifier"
 
-#: views.py:524 views_season.py:120
+#: views.py:532 views_season.py:120
 msgid "Modify document"
 msgstr "Modification d'un document"
 
-#: views.py:540
+#: views.py:548
 msgid "Print adherent"
 msgstr "Imprimer un adhérent"
 
-#: views.py:550
+#: views.py:558
 msgid "Label adherent"
 msgstr "Étiquette d'adhérent"
 
-#: views.py:566
+#: views.py:574
 msgid "Listing adherent"
 msgstr "Listing adhérents"
 
-#: views.py:583
+#: views.py:591
 msgid "Connection"
 msgstr "Connexion"
 
-#: views.py:589
+#: views.py:597
 msgid "Check access right"
 msgstr "Vérifier les droits d'accès"
 
-#: views.py:592
+#: views.py:600
 msgid "Do you want to check the access right for all adherents ?"
 msgstr "Voulez-vous vérifier les droits d'accès pour les adhérents ?"
 
-#: views.py:593
+#: views.py:601
 msgid "Please, waiting..."
 msgstr "Merci de patienter ..."
 
-#: views.py:595
+#: views.py:603
 #, python-format
 msgid ""
 "{[center]}{[b]}Result{[/b]}{[/center]}{[br/]}%(nb_del)s removed "
@@ -683,210 +683,214 @@ msgstr ""
 "supprimée(s).{[br/]}%(nb_add)s connexion(s) ajoutée(s).{[br/]}%(nb_update)s "
 "connexion(s) réactivée(s)."
 
-#: views.py:602 views.py:638 views.py:653 views.py:674 views.py:700
+#: views.py:610 views.py:646 views.py:661 views.py:682 views.py:708
 msgid "Family"
 msgstr "Famille"
 
-#: views.py:611
+#: views.py:619
 msgid "No family type!"
 msgstr "Pas de type de structure 'famille' !"
 
-#: views.py:617
+#: views.py:625
 #, python-format
 msgid "Add a family for \"%s\""
 msgstr "Ajouter une famille pour \"%s\""
 
-#: views.py:627
+#: views.py:635
 msgid "Filtrer by name"
 msgstr "Filtrer par nom"
 
-#: views.py:717
+#: views.py:725
 msgid "Subscriptions to moderate"
 msgstr "Cotisations à moderer"
 
-#: views.py:746 views_season.py:172
+#: views.py:754 views_season.py:172
 msgid "Add subscription"
 msgstr "Ajout d'une cotisation"
 
-#: views.py:747 views_season.py:173
+#: views.py:755 views_season.py:173
 msgid "Modify subscription"
 msgstr "Modification d'une cotisation"
 
-#: views.py:757 views_season.py:182
+#: views.py:765 views_season.py:182
 msgid "Show subscription"
 msgstr "Visualisation d'une cotisation"
 
-#: views.py:766 views_season.py:191
+#: views.py:774 views_season.py:191
 msgid "Delete subscription"
 msgstr "Suppression d'une cotisation"
 
-#: views.py:782 views.py:783
+#: views.py:790 views.py:791
 msgid "Bill"
 msgstr "Facture"
 
-#: views.py:789
+#: views.py:797
 msgid "Show bill of subscription"
 msgstr "Visualisation d'une facture de cotisation"
 
-#: views.py:803
+#: views.py:811
 msgid "Add involvement"
 msgstr "Ajout d'une participation"
 
-#: views.py:804
+#: views.py:812
 msgid "Modify involvement"
 msgstr "Modification d'une participation"
 
-#: views.py:813
+#: views.py:821
 msgid "Delete involvement"
 msgstr "Suppression d'une participation"
 
-#: views.py:816
+#: views.py:824
 msgid "Statistic of adherents and subscriptions"
 msgstr "Statistiques des adhérents et des cotisations"
 
-#: views.py:821 views.py:907
+#: views.py:829 views.py:915
 msgid "Statistic"
 msgstr "Statistiques"
 
-#: views.py:855
+#: views.py:863
 msgid "Result by city"
 msgstr "Résultat par ville"
 
-#: views.py:860 views.py:880
+#: views.py:868 views.py:888
 msgid "women major"
 msgstr "femme majeure"
 
-#: views.py:861 views.py:881
+#: views.py:869 views.py:889
 msgid "men major"
 msgstr "homme majeur"
 
-#: views.py:862 views.py:882
+#: views.py:870 views.py:890
 msgid "women minor"
 msgstr "femme mineure"
 
-#: views.py:863 views.py:883
+#: views.py:871 views.py:891
 msgid "men minor"
 msgstr "homme mineur"
 
-#: views.py:864 views.py:884
+#: views.py:872 views.py:892
 msgid "total (%)"
 msgstr "total (%)"
 
-#: views.py:875
+#: views.py:883
 msgid "Result by type"
 msgstr "Résultat par type"
 
-#: views.py:879
+#: views.py:887
 msgid "type"
 msgstr "type"
 
-#: views.py:986
+#: views.py:994
 #, python-format
 msgid "Active adherents: %d"
 msgstr "Adhérents actifs : %d"
 
-#: views.py:992
+#: views.py:1000
 #, python-format
 msgid "No validated adherents: %d"
 msgstr "Adhérents non-validés : %d"
 
-#: views.py:998
+#: views.py:1006
 #, python-format
 msgid "Adherents waiting moderation: %d"
 msgstr "Adhérents en attente de modération : %d"
 
-#: views.py:1008
+#: views.py:1016
 #, python-format
 msgid "limitation: %d activities allowed"
 msgstr "limitation : %d activités autorisées"
 
-#: views_conf.py:60
+#: views_conf.py:61
 msgid "Management of member categories"
 msgstr "Gestion des catégories d'adhésion"
 
-#: views_conf.py:63 views_conf.py:185
+#: views_conf.py:64 views_conf.py:200
 msgid "Categories"
 msgstr "Catégories"
 
-#: views_conf.py:66 views_conf.py:186 views_conf.py:206
+#: views_conf.py:67 views_conf.py:201 views_conf.py:221
 msgid "Parameters"
 msgstr "Paramètres"
 
-#: views_conf.py:81
+#: views_conf.py:88
+msgid "show only enabled team"
+msgstr "afficher seulement les éléments actifs"
+
+#: views_conf.py:96
 msgid "Merge"
 msgstr "Fusion"
 
-#: views_conf.py:86 views_conf.py:147 views_conf.py:201
+#: views_conf.py:101 views_conf.py:162 views_conf.py:216
 msgid "You have the maximum of activities!"
 msgstr "Vous avez le maximum d'activités !"
 
-#: views_conf.py:99
+#: views_conf.py:114
 msgid "Add age"
 msgstr "Ajouter un âge"
 
-#: views_conf.py:100
+#: views_conf.py:115
 msgid "Modify age"
 msgstr "Modification d'un âge"
 
-#: views_conf.py:109
+#: views_conf.py:124
 msgid "Delete age"
 msgstr "Suppression d'un âge"
 
-#: views_conf.py:119
+#: views_conf.py:134
 msgid "Add team"
 msgstr "Ajout d'une équipe"
 
-#: views_conf.py:120
+#: views_conf.py:135
 msgid "Modify team"
 msgstr "Modification d'une équipe"
 
-#: views_conf.py:129
+#: views_conf.py:144
 msgid "Delete team"
 msgstr "Suppression d'une équipe"
 
-#: views_conf.py:140
+#: views_conf.py:155
 msgid "Add activity"
 msgstr "Ajouter une activité"
 
-#: views_conf.py:141
+#: views_conf.py:156
 msgid "Modify activity"
 msgstr "Modification d'une activité"
 
-#: views_conf.py:157
+#: views_conf.py:172
 msgid "Delete activity"
 msgstr "Suppression d'une activité"
 
-#: views_conf.py:166
+#: views_conf.py:181
 msgid "Show activity"
 msgstr "Voir une activité"
 
-#: views_conf.py:177 views_season.py:51
+#: views_conf.py:192 views_season.py:51
 msgid "Season"
 msgstr "Saison"
 
-#: views_conf.py:177
+#: views_conf.py:192
 msgid "Configuration of season"
 msgstr "Ajoutez vos différentes saisons et activez la courante."
 
-#: views_conf.py:180 views_season.py:74
+#: views_conf.py:195 views_season.py:74
 msgid "Subscriptions"
 msgstr "Les cotisations"
 
-#: views_conf.py:180
+#: views_conf.py:195
 msgid "Configuration of subscription"
 msgstr ""
 "Dans cet écran, vous pouvez ajouter vos différents types d'adhésion pour "
 "votre association.{[br/]}Le paramètre \"mode de cotisation\" vous permet de "
 "donner la possibilité à un adhérent de créer une demande d'adhésion."
 
-#: views_conf.py:185
+#: views_conf.py:200
 msgid "Configuration of categories"
 msgstr ""
 "Définissez vos différentes catégories pour votre association. {[br/]} "
 "Commencez par activer ou désactiver les catégories dont vous avez besoin. "
 "{[br/]} Ensuite, ajoutez les catégories propres à votre fonctionnement."
 
-#: views_conf.py:206
+#: views_conf.py:221
 msgid "Configuration of main parameters"
 msgstr "Configurez ici d'autres paramètres relatifs à vos adhésions."
 
