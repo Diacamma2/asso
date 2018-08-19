@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-08-18 16:18+0000\n"
+"POT-Creation-Date: 2018-08-19 15:58+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -433,12 +433,12 @@ msgid "adherents listing"
 msgstr "adherents listing"
 
 #: printmodel/Adherent_0001.py:45 printmodel/Adherent_0002.py:43
-#: printmodel/Adherent_0003.py:55
+#: printmodel/Adherent_0003.py:55 printmodel/Adherent_0006.py:42
 msgid "lastname"
 msgstr "lastname"
 
 #: printmodel/Adherent_0001.py:45 printmodel/Adherent_0002.py:43
-#: printmodel/Adherent_0003.py:55
+#: printmodel/Adherent_0003.py:55 printmodel/Adherent_0006.py:42
 msgid "firstname"
 msgstr "firstname"
 
@@ -454,11 +454,12 @@ msgstr "postal code"
 msgid "city"
 msgstr "city"
 
-#: printmodel/Adherent_0001.py:45
+#: printmodel/Adherent_0001.py:45 printmodel/Adherent_0006.py:42
 msgid "phone"
 msgstr "phone"
 
 #: printmodel/Adherent_0001.py:45 printmodel/Adherent_0003.py:55
+#: printmodel/Adherent_0006.py:42
 msgid "email"
 msgstr "email"
 
@@ -489,6 +490,18 @@ msgstr "label"
 #: printmodel/Adherent_0005.py:31
 msgid "card"
 msgstr "card"
+
+#: printmodel/Adherent_0006.py:31
+msgid "adherents with image"
+msgstr "adherents listing with image"
+
+#: printmodel/Adherent_0006.py:42
+msgid "image"
+msgstr "image"
+
+#: printmodel/Adherent_0007.py:31
+msgid "card with image"
+msgstr "card with image"
 
 #: views.py:63
 msgid "Association"

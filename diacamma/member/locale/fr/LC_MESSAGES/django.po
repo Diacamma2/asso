@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2018-08-18 16:18+0000\n"
+"POT-Creation-Date: 2018-08-19 15:58+0000\n"
 "PO-Revision-Date: 2016-01-14 22:13+0000\n"
 "Last-Translator: b'Paul ARULATEDA <paul531@orange.fr>'\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -435,12 +435,12 @@ msgid "adherents listing"
 msgstr "Liste d'adhérents"
 
 #: printmodel/Adherent_0001.py:45 printmodel/Adherent_0002.py:43
-#: printmodel/Adherent_0003.py:55
+#: printmodel/Adherent_0003.py:55 printmodel/Adherent_0006.py:42
 msgid "lastname"
 msgstr "nom"
 
 #: printmodel/Adherent_0001.py:45 printmodel/Adherent_0002.py:43
-#: printmodel/Adherent_0003.py:55
+#: printmodel/Adherent_0003.py:55 printmodel/Adherent_0006.py:42
 msgid "firstname"
 msgstr "prénom"
 
@@ -456,11 +456,12 @@ msgstr "code postal"
 msgid "city"
 msgstr "ville"
 
-#: printmodel/Adherent_0001.py:45
+#: printmodel/Adherent_0001.py:45 printmodel/Adherent_0006.py:42
 msgid "phone"
 msgstr "téléphone"
 
 #: printmodel/Adherent_0001.py:45 printmodel/Adherent_0003.py:55
+#: printmodel/Adherent_0006.py:42
 msgid "email"
 msgstr "courriel"
 
@@ -491,6 +492,18 @@ msgstr "étiquette"
 #: printmodel/Adherent_0005.py:31
 msgid "card"
 msgstr "carte"
+
+#: printmodel/Adherent_0006.py:31
+msgid "adherents with image"
+msgstr "Trombinoscope "
+
+#: printmodel/Adherent_0006.py:42
+msgid "image"
+msgstr "image"
+
+#: printmodel/Adherent_0007.py:31
+msgid "card with image"
+msgstr "carte avec image"
 
 #: views.py:63
 msgid "Association"
