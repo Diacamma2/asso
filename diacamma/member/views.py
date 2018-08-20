@@ -828,6 +828,29 @@ class AdherentStatistic(XferContainerCustom):
     field_id = 'adherent'
     caption = _("Statistic")
 
+    def add_static_grid(self, grid_title, grid_name, stat_city, main_id, main_name):
+        row = self.get_max_row()
+        lab = XferCompLabelForm("lbl%s" % grid_name)
+        lab.set_underlined()
+        lab.set_value(grid_title)
+        lab.set_location(0, row + 1)
+        self.add_component(lab)
+        grid = XferCompGrid(grid_name)
+        grid.add_header(main_id, main_name)
+        grid.add_header("MajW", _("women major"))
+        grid.add_header("MajM", _("men major"))
+        grid.add_header("MinW", _("women minor"))
+        grid.add_header("MinM", _("men minor"))
+        grid.add_header("ratio", _("total (%)"))
+        cmp = 0
+        for stat_val in stat_city:
+            for stat_key in stat_val.keys():
+                grid.set_value(cmp, stat_key, stat_val[stat_key])
+
+            cmp += 1
+        grid.set_location(0, row + 2)
+        self.add_component(grid)
+
     def fillresponse(self, season):
         if season is None:
             working_season = Season.current_season()
@@ -854,54 +877,24 @@ class AdherentStatistic(XferContainerCustom):
             self.add_component(lab)
         else:
             tab_iden = 0
-            for stat_title, stat_city, stat_type in stat_result:
+            for stat_title, stat_city, stat_type, stat_older, stat_team, stat_activity in stat_result:
                 tab_iden += 1
                 if (len(stat_city) > 0) and (len(stat_type) > 0):
                     self.new_tab(stat_title)
-                    lab = XferCompLabelForm("lbltown_%d" % tab_iden)
-                    lab.set_underlined()
-                    lab.set_value(_("Result by city"))
-                    lab.set_location(0, 1)
-                    self.add_component(lab)
-                    grid = XferCompGrid("town_%d" % tab_iden)
-                    grid.add_header("city", _("city"))
-                    grid.add_header("MajW", _("women major"))
-                    grid.add_header("MajM", _("men major"))
-                    grid.add_header("MinW", _("women minor"))
-                    grid.add_header("MinM", _("men minor"))
-                    grid.add_header("ratio", _("total (%)"))
-                    cmp = 0
-                    for stat_val in stat_city:
-                        for stat_key in stat_val.keys():
-                            grid.set_value(cmp, stat_key, stat_val[stat_key])
-                        cmp += 1
-                    grid.set_location(0, 2)
-                    self.add_component(grid)
+                    self.add_static_grid(_("Result by city"), 'town_%d' % tab_iden, stat_city, "city", _("city"))
+                    self.add_static_grid(_("Result by type"), 'type_%d' % tab_iden, stat_type, "type", _("type"))
 
-                    lab = XferCompLabelForm("lbltype_%d" % tab_iden)
-                    lab.set_underlined()
-                    lab.set_value(_("Result by type"))
-                    lab.set_location(0, 3)
-                    self.add_component(lab)
-                    grid = XferCompGrid("type_%d" % tab_iden)
-                    grid.add_header("type", _("type"))
-                    grid.add_header("MajW", _("women major"))
-                    grid.add_header("MajM", _("men major"))
-                    grid.add_header("MinW", _("women minor"))
-                    grid.add_header("MinM", _("men minor"))
-                    grid.add_header("ratio", _("total (%)"))
-                    cmp = 0
-                    for stat_val in stat_type:
-                        for stat_key in stat_val.keys():
-                            if (stat_key == 'type') and not isinstance(stat_val['type'], six.text_type):
-                                grid.set_value(cmp, stat_key, six.text_type(
-                                    SubscriptionType.objects.get(id=stat_val['type'])))
-                            else:
-                                grid.set_value(
-                                    cmp, stat_key, stat_val[stat_key])
-                        cmp += 1
-                    grid.set_location(0, 4)
-                    self.add_component(grid)
+                    if stat_older is not None:
+                        self.add_static_grid(_("Result by seniority"), 'seniority_%d' % tab_iden, stat_older, "seniority", _("count of subscription"))
+
+                    if stat_team is not None:
+                        self.add_static_grid(_("Result by %s") % Params.getvalue("member-team-text").lower(), 'team_%d' % tab_iden,
+                                             stat_team, "team", Params.getvalue("member-team-text"))
+
+                    if stat_activity is not None:
+                        self.add_static_grid(_("Result by %s") % Params.getvalue("member-activite-text").lower(), 'activity_%d' % tab_iden,
+                                             stat_activity, "activity", Params.getvalue("member-activite-text"))
+
         self.add_action(AdherentStatisticPrint.get_action(TITLE_PRINT, "images/print.png"),
                         close=CLOSE_NO, params={'classname': self.__class__.__name__})
         self.add_action(WrapAction(TITLE_CLOSE, 'images/close.png'))
