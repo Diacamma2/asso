@@ -108,9 +108,9 @@ class Season(LucteriosModel):
         else:
             raise LucteriosException(IMPORTANT, _('No period find!'))
 
-    def stats_by_criteria(self, duration_id, field, name, with_total):
+    def stats_by_criteria(self, duration_id, only_valid, field, name, with_total):
         val_by_criteria = {}
-        query = Q(subscription__status=2)
+        query = Q(subscription__status=2) if only_valid else Q(subscription__status__in=(1, 2))
         query &= Q(subscription__begin_date__lte=self.date_ref) & Q(subscription__end_date__gte=self.date_ref)
         query &= Q(subscription__subscriptiontype__duration=duration_id)
         birthday = date(self.date_ref.year - 18, self.date_ref.month, self.date_ref.day)
@@ -158,9 +158,9 @@ class Season(LucteriosModel):
                                        "ratio": "{[b]}%d{[/b]}" % total})
         return values_by_criteria
 
-    def stats_by_seniority(self):
+    def stats_by_seniority(self, only_valid):
         val_by_seniority = {}
-        query = Q(subscription__status=2)
+        query = Q(subscription__status=2) if only_valid else Q(subscription__status__in=(1, 2))
         query &= Q(subscription__begin_date__lte=self.date_ref) & Q(subscription__end_date__gte=self.date_ref)
         query &= Q(subscription__subscriptiontype__duration=0)
         birthday = date(self.date_ref.year - 18, self.date_ref.month, self.date_ref.day)
@@ -188,19 +188,19 @@ class Season(LucteriosModel):
                                         "ratio": "%d" % seniority_sum})
         return values_by_seniority
 
-    def get_statistic(self):
+    def get_statistic(self, only_valid):
         stat_res = []
         for duration_id, duration_title in SubscriptionType().get_field_by_name('duration').choices:
-            res_city = self.stats_by_criteria(duration_id, 'city', 'city', True)
-            res_type = self.stats_by_criteria(duration_id, 'subscription__subscriptiontype', 'type', True)
+            res_city = self.stats_by_criteria(duration_id, only_valid, 'city', 'city', True)
+            res_type = self.stats_by_criteria(duration_id, only_valid, 'subscription__subscriptiontype', 'type', True)
             if duration_id == 0:
-                res_older = self.stats_by_seniority()
+                res_older = self.stats_by_seniority(only_valid)
                 if Params.getvalue("member-team-enable"):
-                    res_team = self.stats_by_criteria(duration_id, 'subscription__license__team', 'team', False)
+                    res_team = self.stats_by_criteria(duration_id, only_valid, 'subscription__license__team', 'team', False)
                 else:
                     res_team = None
                 if Params.getvalue("member-activite-enable"):
-                    res_activity = self.stats_by_criteria(duration_id, 'subscription__license__activity', 'activity', False)
+                    res_activity = self.stats_by_criteria(duration_id, only_valid, 'subscription__license__activity', 'activity', False)
                 else:
                     res_activity = None
             else:

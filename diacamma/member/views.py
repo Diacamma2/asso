@@ -851,7 +851,7 @@ class AdherentStatistic(XferContainerCustom):
         grid.set_location(0, row + 2)
         self.add_component(grid)
 
-    def fillresponse(self, season):
+    def fillresponse(self, season, only_valid=True):
         if season is None:
             working_season = Season.current_season()
         else:
@@ -868,7 +868,15 @@ class AdherentStatistic(XferContainerCustom):
         sel.description = _('season')
         sel.set_action(self.request, self.get_action('', ''), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
         self.add_component(sel)
-        stat_result = working_season.get_statistic()
+
+        check = XferCompCheck('only_valid')
+        check.set_value(only_valid)
+        check.set_location(1, 1)
+        check.description = _('only validated subscription')
+        check.set_action(self.request, self.get_action('', ''), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
+        self.add_component(check)
+
+        stat_result = working_season.get_statistic(only_valid)
         if len(stat_result) == 0:
             lab = XferCompLabelForm('lbl_season')
             lab.set_color('red')

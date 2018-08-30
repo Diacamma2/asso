@@ -598,7 +598,20 @@ class AdherentTest(BaseAdherentTest):
         self.calljson('/diacamma.member/adherentStatistic', {'dateref': '2009-10-01'}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'adherentStatistic')
 
-        self.assertEqual(0, (len(self.json_data) - 2 - 6) % 5, "size of COMPONENTS/* = %d" % len(self.json_data))
+        self.assertEqual(0, (len(self.json_data) - 3 - 6) % 5, "size of COMPONENTS/* = %d" % len(self.json_data))
+        self.assert_count_equal('town_1', 2)
+        self.assert_json_equal('', 'town_1/@1/ratio', '{[b]}2{[/b]}')
+        self.assert_count_equal('town_2', 2)
+        self.assert_json_equal('', 'town_2/@1/ratio', '{[b]}1{[/b]}')
+        self.assert_count_equal('seniority_1', 1)
+        self.assert_count_equal('team_1', 2)
+        self.assert_count_equal('activity_1', 2)
+
+        self.factory.xfer = AdherentStatistic()
+        self.calljson('/diacamma.member/adherentStatistic', {'dateref': '2009-10-01', 'only_valid': False}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentStatistic')
+
+        self.assertEqual(0, (len(self.json_data) - 3 - 6) % 5, "size of COMPONENTS/* = %d" % len(self.json_data))
         self.assert_count_equal('town_1', 2)
         self.assert_json_equal('', 'town_1/@1/ratio', '{[b]}2{[/b]}')
         self.assert_count_equal('town_2', 2)
