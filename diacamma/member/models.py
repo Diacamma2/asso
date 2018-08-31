@@ -35,7 +35,6 @@ from django.db.models.aggregates import Min, Max, Count
 from django.db.models import Q
 from django.utils.translation import ugettext_lazy as _
 from django.utils import formats, six
-from django.core.exceptions import ObjectDoesNotExist
 from django_fsm import FSMIntegerField, transition
 from django.conf import settings
 
@@ -133,12 +132,15 @@ class Season(LucteriosModel):
         for criteria in val_by_criteria.keys():
             criteria_sum = val_by_criteria[criteria][0] + val_by_criteria[criteria][1] + val_by_criteria[criteria][2] + val_by_criteria[criteria][3]
             criteria_name = criteria
-            if (name == 'type'):
-                criteria_name = six.text_type(SubscriptionType.objects.get(id=criteria))
-            elif (name == 'team'):
-                criteria_name = six.text_type(Team.objects.get(id=criteria))
-            elif (name == 'activity'):
-                criteria_name = six.text_type(Activity.objects.get(id=criteria))
+            try:
+                if (name == 'type'):
+                    criteria_name = six.text_type(SubscriptionType.objects.get(id=criteria))
+                elif (name == 'team'):
+                    criteria_name = six.text_type(Team.objects.get(id=criteria))
+                elif (name == 'activity'):
+                    criteria_name = six.text_type(Activity.objects.get(id=criteria))
+            except Exception:
+                criteria_name = '---'
             values_by_criteria.append({name: criteria_name,
                                        "MajM": val_by_criteria[criteria][0],
                                        "MajW": val_by_criteria[criteria][1],
