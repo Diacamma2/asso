@@ -37,6 +37,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.utils import formats, six
 from django_fsm import FSMIntegerField, transition
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
 
 from lucterios.framework.models import LucteriosModel, get_value_converted
 from lucterios.framework.error import LucteriosException, IMPORTANT
