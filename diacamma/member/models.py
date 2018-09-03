@@ -167,18 +167,17 @@ class Season(LucteriosModel):
         query &= Q(subscription__begin_date__lte=self.date_ref) & Q(subscription__end_date__gte=self.date_ref)
         query &= Q(subscription__subscriptiontype__duration=0)
         birthday = date(self.date_ref.year - 18, self.date_ref.month, self.date_ref.day)
-        for age in range(2):
-            if age == 0:
-                new_query = query & Q(birthday__gte=birthday)
+        total = 0
+        for adh in Adherent.objects.filter(query):
+            nb_sub = adh.subscription_set.filter(Q(subscriptiontype__duration=0) & Q(begin_date__lte=self.date_ref)).count()
+            if adh.birthday >= birthday:
                 offset = +1
             else:
-                new_query = query & Q(birthday__lt=birthday)
                 offset = -1
-            values = Adherent.objects.filter(new_query).annotate(subscription_sum=Count('subscription')).filter(subscription__gt=0).values('subscription_sum', 'genre').annotate(genre_sum=Count('genre'))
-            for value in values:
-                if value['subscription_sum'] not in val_by_seniority.keys():
-                    val_by_seniority[value['subscription_sum']] = [0, 0, 0, 0]
-                val_by_seniority[value['subscription_sum']][value['genre'] + offset] += value['genre_sum']
+            if nb_sub not in val_by_seniority.keys():
+                val_by_seniority[nb_sub] = [0, 0, 0, 0]
+            val_by_seniority[nb_sub][adh.genre + offset] += 1
+            total += 1
         values_by_seniority = []
         for seniority in val_by_seniority.keys():
             seniority_sum = val_by_seniority[seniority][0] + val_by_seniority[seniority][1] + val_by_seniority[seniority][2] + val_by_seniority[seniority][3]
@@ -188,7 +187,7 @@ class Season(LucteriosModel):
                                         "MinM": val_by_seniority[seniority][2],
                                         "MinW": val_by_seniority[seniority][3],
                                         "sum": seniority_sum,
-                                        "ratio": "%d" % seniority_sum})
+                                        "ratio": "%d (%.1f%%)" % (seniority_sum, 100 * seniority_sum / total)})
         return values_by_seniority
 
     def get_statistic(self, only_valid):
@@ -910,10 +909,12 @@ class Subscription(LucteriosModel):
     @property
     def involvement(self):
         res = []
-        for lic in self.license_set.all():
-            res.append(six.text_type(lic))
-        for presta in self.prestations.all():
-            res.append(six.text_type(presta))
+        if self.prestations.all().count() == 0:
+            for lic in self.license_set.all():
+                res.append(six.text_type(lic))
+        else:
+            for presta in self.prestations.all():
+                res.append(six.text_type(presta))
         return "{[br/]}".join(res)
 
     @property
@@ -1018,6 +1019,15 @@ class Subscription(LucteriosModel):
         else:
             return None
 
+    def convert_prestations(self):
+        if self.prestations.all().count() > 0:
+            if self.status <= 2:
+                self.license_set.all().delete()
+                for presta in self.prestations.all():
+                    License.objects.create(subscription=self, activity_id=presta.activity_id, team_id=presta.team_id)
+            if self.status >= 2:
+                self.prestations.through.objects.all().delete()
+
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None, with_bill=True):
         is_new = self.id is None
         query_dates = (Q(begin_date__lte=self.end_date) & Q(end_date__gte=self.end_date)) | (Q(begin_date__lte=self.begin_date) & Q(end_date__gte=self.begin_date))
@@ -1030,11 +1040,7 @@ class Subscription(LucteriosModel):
         if is_new:
             for doc in self.season.document_set.all():
                 DocAdherent.objects.create(subscription=self, document=doc, value=False)
-        if (self.status == 2) and (self.prestations.all().count() > 0):
-            self.license_set.all().delete()
-            for presta in self.prestations.all():
-                License.objects.create(subscription=self, activity_id=presta.activity_id, team_id=presta.team_id)
-            self.prestations.through.objects.all().delete()
+        self.convert_prestations()
 
     transitionname__moderate = _("Moderate")
 
