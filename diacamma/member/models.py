@@ -1058,7 +1058,12 @@ class Subscription(LucteriosModel):
 
     @transition(field=status, source=1, target=3)
     def cancel(self):
-        pass
+        if self.bill is not None:
+            if self.bill.status == 0:
+                self.bill.delete()
+            elif (self.bill.status == 1) and (self.bill.bill_type == 0):
+                self.bill.status = 2
+                self.bill.save()
 
     transitionname__disbar = _("Disbar")
 
@@ -1079,9 +1084,19 @@ class Subscription(LucteriosModel):
         pass
 
     def can_delete(self):
-        if self.status != 0:
+        if self.status not in (0, 1):
             return _('You cannot delete this subscription!')
         return ""
+
+    def delete(self, using=None):
+        old_bill = self.bill
+        LucteriosModel.delete(self, using=using)
+        if (old_bill is not None) and (old_bill.bill_type == 0):
+            if old_bill.status == 0:
+                old_bill.delete()
+            elif old_bill.status == 1:
+                old_bill.status = 2
+                old_bill.save()
 
     def sendemail(self, sendemail):
         if sendemail is not None:
