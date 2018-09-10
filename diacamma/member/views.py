@@ -112,7 +112,7 @@ class AdherentAbstractList(XferListEditor, AdherentFilter):
 
     def get_items_from_filter(self):
         current_filter, exclude_filter = self.get_filter()
-        return self.model.objects.filter(current_filter).exclude(exclude_filter)
+        return self.model.objects.filter(current_filter).exclude(exclude_filter).distinct()
 
     def fillresponse_header(self):
         row = self.get_max_row() + 1
@@ -560,7 +560,7 @@ class AdherentLabel(XferPrintLabel, AdherentFilter):
     def filter_callback(self, items):
         if self.getparam('CRITERIA') is None:
             current_filter, exclude_filter = AdherentFilter.get_filter(self)
-            return items.filter(current_filter).exclude(exclude_filter)
+            return items.filter(current_filter).exclude(exclude_filter).distinct()
         else:
             return items
 
@@ -576,7 +576,7 @@ class AdherentListing(XferPrintListing, AdherentFilter):
     def filter_callback(self, items):
         if self.getparam('CRITERIA') is None:
             current_filter, exclude_filter = AdherentFilter.get_filter(self)
-            return items.filter(current_filter).exclude(exclude_filter)
+            return items.filter(current_filter).exclude(exclude_filter).distinct()
         else:
             return items
 
