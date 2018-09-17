@@ -557,7 +557,7 @@ class AdherentTest(BaseAdherentTest):
         set_parameters([])
 
         self.factory.xfer = AdherentActiveList()
-        self.calljson('/diacamma.member/adherentActiveList', {}, False)
+        self.calljson('/diacamma.member/adherentActiveList', {'dateref': '2009-09-01'}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'adherentActiveList')
         self.assert_count_equal('', 3 + 2 + 2)
 
