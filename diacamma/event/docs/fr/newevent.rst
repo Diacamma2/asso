@@ -5,11 +5,11 @@ Un évenement, pour *Diacamma*, correspond à la gestion d'une activité particu
 
 Elle peut être de deux types:
  - Un passage d'examen  
- Pour vous aider à gérer un examen au sein de votre association afin de valider pour vos pratiquants un grade, un diplôme ou un niveau.   
- Il est nécessaire pour cela de configurer la liste des grades/niveaux relatifs à votre structure.
+   Pour vous aider à gérer un examen au sein de votre association afin de valider pour vos pratiquants un grade, un diplôme ou un niveau.   
+   Il est nécessaire pour cela de configurer la liste des grades/niveaux relatifs à votre structure.
 
  - Un stage ou une sortie   
- Ce type d'évenement va correspond à un grand nombre de cas d'activité dans lequel vous souhaitez gérer une inscription.
+   Ce type d'évenement va correspond à un grand nombre de cas d'activité dans lequel vous souhaitez gérer une inscription.
 
 La création d'un évenement est assez simple.
 Commencez simplement à préciser le type, la description et les dates de celui-ci.

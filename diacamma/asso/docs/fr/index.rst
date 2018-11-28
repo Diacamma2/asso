@@ -1,14 +1,11 @@
 Diacamma Asso
 =============
 
-Description du logiciel Diacamma Asso.
-
-Sommaire:
-=========
+Présentation du logiciel Diacamma Asso.
 
 .. toctree::
    :maxdepth: 2
 
    presentation.rst
-   first_step.rst
+   first_step.rst	
 
