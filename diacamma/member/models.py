@@ -168,7 +168,7 @@ class Season(LucteriosModel):
         query &= Q(subscription__subscriptiontype__duration=0)
         birthday = date(self.date_ref.year - 18, self.date_ref.month, self.date_ref.day)
         total = 0
-        for adh in Adherent.objects.filter(query):
+        for adh in Adherent.objects.filter(query).distinct():
             nb_sub = adh.subscription_set.filter(Q(subscriptiontype__duration=0) & Q(begin_date__lte=self.date_ref)).count()
             if adh.birthday >= birthday:
                 offset = +1
@@ -222,7 +222,7 @@ class Season(LucteriosModel):
                 adh.user.is_active = False
                 adh.user.save()
                 nb_del += 1
-        for adh in Adherent.objects.filter(Q(subscription__status=2) & Q(subscription__season=self)):
+        for adh in Adherent.objects.filter(Q(subscription__status=2) & Q(subscription__season=self)).distinct():
             if adh.user_id is None:
                 if adh.email != '':
                     username_temp = adh.firstname.lower() + adh.lastname.upper()[0]

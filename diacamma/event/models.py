@@ -320,10 +320,9 @@ class Degree(LucteriosModel):
         static_res = []
         for activity in Activity.objects.all():
             degree_activity = {}
-            for degree in Degree.objects.filter(date__gte=season.begin_date, date__lte=season.end_date, degree__activity=activity):
+            for degree in Degree.objects.filter(date__gte=season.begin_date, date__lte=season.end_date, degree__activity=activity).distinct():
                 if degree.get_text() not in degree_activity.keys():
-                    degree_activity[
-                        degree.get_text()] = [degree.degree, degree.subdegree, 0]
+                    degree_activity[degree.get_text()] = [degree.degree, degree.subdegree, 0]
                 degree_activity[degree.get_text()][2] += 1
             result_activity = []
             for item in sorted(degree_activity.items(), key=lambda item: sort_fct(item), reverse=True):
@@ -394,8 +393,7 @@ class Participant(LucteriosModel):
             return self.article.ref_price
 
     def get_current_degree(self):
-        degree_list = Degree.objects.filter(
-            Q(adherent_id=self.contact_id) & Q(degree__activity=self.event.activity)).order_by('-degree__level', '-subdegree__level')
+        degree_list = Degree.objects.filter(Q(adherent_id=self.contact_id) & Q(degree__activity=self.event.activity)).distinct().order_by('-degree__level', '-subdegree__level')
         if len(degree_list) > 0:
             return degree_list[0]
         else:
@@ -423,9 +421,9 @@ class Participant(LucteriosModel):
     def allow_degree(self):
         degree = self.get_current_degree()
         if degree is not None:
-            return DegreeType.objects.filter(level__gte=degree.degree.level, activity=self.event.activity).order_by('level')
+            return DegreeType.objects.filter(level__gte=degree.degree.level, activity=self.event.activity).distinct().order_by('level')
         else:
-            return DegreeType.objects.filter(activity=self.event.activity).order_by('level')
+            return DegreeType.objects.filter(activity=self.event.activity).distinct().order_by('level')
 
     def allow_subdegree(self):
         return SubDegreeType.objects.all().order_by('level')
