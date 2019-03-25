@@ -25,37 +25,59 @@ from __future__ import unicode_literals
 
 from django.utils.translation import ugettext_lazy as _
 from django.conf import settings
+from django.utils import six
 
-from lucterios.framework.xferadvance import XferAddEditor, XferListEditor, TITLE_MODIFY, TITLE_DELETE, TITLE_ADD,\
-    TITLE_EDIT, XferShowEditor
+from lucterios.framework.xferadvance import XferAddEditor, XferListEditor, TITLE_MODIFY, TITLE_DELETE, TITLE_ADD, TITLE_EDIT, XferShowEditor
 from lucterios.framework.xferadvance import XferDelete
-from lucterios.framework.tools import ActionsManage, MenuManage, FORMTYPE_NOMODAL, CLOSE_NO, SELECT_MULTI, SELECT_SINGLE,\
-    WrapAction, FORMTYPE_REFRESH
+from lucterios.framework.tools import ActionsManage, MenuManage, FORMTYPE_NOMODAL, CLOSE_NO, SELECT_MULTI, SELECT_SINGLE, WrapAction, FORMTYPE_REFRESH
 from lucterios.framework.error import LucteriosException, IMPORTANT
-from lucterios.framework.xfercomponents import XferCompButton, XferCompLabelForm,\
-    XferCompCheck
+from lucterios.framework.xfercomponents import XferCompButton, XferCompLabelForm, XferCompCheck, XferCompCheckList
 from lucterios.framework import signal_and_lock
 from lucterios.CORE.parameters import Params
 from lucterios.CORE.views import ParamEdit, ObjectMerge
 
-from diacamma.member.models import Activity, Age, Team, Season, SubscriptionType
+from diacamma.member.models import Activity, Age, Team, Season, SubscriptionType,\
+    Adherent
 
 
 def fill_params(xfer, param_lists=None, smallbtn=False):
     if param_lists is None:
         param_lists = ["member-team-enable", "member-team-text", "member-activite-enable", "member-activite-text", "member-age-enable",
-                       "member-licence-enabled", "member-filter-genre", "member-numero", "member-birth", "member-family-type", "member-connection", "member-subscription-mode", "member-subscription-message"]
+                       "member-licence-enabled", "member-filter-genre", "member-numero", "member-birth", "member-family-type", "member-connection",
+                       "member-subscription-mode", "member-size-page", "member-fields", "member-subscription-message"]
     if len(param_lists) >= 3:
         nb_col = 2
     else:
         nb_col = 1
     Params.fill(xfer, param_lists, 1, xfer.get_max_row() + 1, nb_col=nb_col)
+
+    comp_fields = xfer.get_components("member-fields")
+    if comp_fields is not None:
+        comp_fields.value = "{[br/]}".join([six.text_type(fields_title[1]) for fields_title in Adherent.get_default_fields_title()])
+
     btn = XferCompButton('editparam')
     btn.set_is_mini(smallbtn)
     btn.set_location(3, xfer.get_max_row() + 1)
-    btn.set_action(xfer.request, ParamEdit.get_action(TITLE_MODIFY, 'images/edit.png'),
+    btn.set_action(xfer.request, CategoryParamEdit.get_action(TITLE_MODIFY, 'images/edit.png'),
                    close=CLOSE_NO, params={'params': param_lists, 'nb_col': nb_col})
     xfer.add_component(btn)
+
+
+@MenuManage.describ('CORE.add_parameter')
+class CategoryParamEdit(ParamEdit):
+
+    def fillresponse(self, params=(), nb_col=1):
+        ParamEdit.fillresponse(self, params=params, nb_col=nb_col)
+        comp_fields = self.get_components("member-fields")
+        if comp_fields is not None:
+            self.remove_component("member-fields")
+            new_comp_fields = XferCompCheckList("member-fields")
+            new_comp_fields.description = comp_fields.description
+            new_comp_fields.simple = 2
+            new_comp_fields.set_location(comp_fields.col, comp_fields.row, comp_fields.colspan, comp_fields.rowspan)
+            new_comp_fields.set_select(Adherent.get_allowed_fields_title())
+            new_comp_fields.set_value([field[1] if isinstance(field, tuple) else field for field in Adherent.get_default_fields()])
+            self.add_component(new_comp_fields)
 
 
 @MenuManage.describ('CORE.change_parameter', FORMTYPE_NOMODAL, 'member.conf', _('Management of member categories'))

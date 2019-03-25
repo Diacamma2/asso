@@ -37,7 +37,7 @@ from diacamma.member.views_season import SeasonAddModify, SeasonShow, SeasonSubs
 from diacamma.member.test_tools import default_season, default_financial,\
     set_parameters, default_params
 from diacamma.member.views_conf import CategoryConf, ActivityAddModify,\
-    ActivityDel, TeamAddModify, TeamDel, AgeAddModify, AgeDel
+    ActivityDel, TeamAddModify, TeamDel, AgeAddModify, AgeDel, CategoryParamEdit
 from lucterios.CORE.models import Parameter
 from lucterios.CORE.parameters import Params
 
@@ -409,7 +409,7 @@ class CategoriesTest(LucteriosTest):
         self.factory.xfer = CategoryConf()
         self.calljson('/diacamma.member/categoryConf', {}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'categoryConf')
-        self.assert_count_equal('', 2 + 15 + 2 + 3 + 2)
+        self.assert_count_equal('', 2 + 17 + 2 + 3 + 2)
         self.assert_grid_equal('activity', {'name': "nom", 'description': "description"}, 1)
 
         self.factory.xfer = ActivityAddModify()
@@ -447,7 +447,7 @@ class CategoriesTest(LucteriosTest):
         self.factory.xfer = CategoryConf()
         self.calljson('/diacamma.member/categoryConf', {}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'categoryConf')
-        self.assert_count_equal('', 2 + 15 + 2 + 3 + 0)
+        self.assert_count_equal('', 2 + 17 + 2 + 3 + 0)
         self.assert_json_equal('LABELFORM', 'member-activite-enable', 'Non')
         self.assert_json_equal('TAB', '__tab_1', 'Paramètres')
         self.assert_json_equal('TAB', '__tab_2', 'Âge')
@@ -458,13 +458,13 @@ class CategoriesTest(LucteriosTest):
         self.factory.xfer = CategoryConf()
         self.calljson('/diacamma.member/categoryConf', {}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'categoryConf')
-        self.assert_count_equal('', 2 + 15 + 2 + 3 + 2)
+        self.assert_count_equal('', 2 + 17 + 2 + 3 + 2)
         self.assert_grid_equal('team', {'name': "nom", 'description': "description"}, 0)
 
         self.factory.xfer = CategoryConf()
         self.calljson('/diacamma.member/categoryConf', {'show_only_enabled_team': False}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'categoryConf')
-        self.assert_count_equal('', 2 + 15 + 2 + 3 + 2)
+        self.assert_count_equal('', 2 + 17 + 2 + 3 + 2)
         self.assert_grid_equal('team', {'name': "nom", 'description': "description", 'unactive': "désactivé"}, 0)
 
         self.factory.xfer = TeamAddModify()
@@ -512,7 +512,7 @@ class CategoriesTest(LucteriosTest):
         self.factory.xfer = CategoryConf()
         self.calljson('/diacamma.member/categoryConf', {}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'categoryConf')
-        self.assert_count_equal('', 2 + 15 + 2 + 0 + 2)
+        self.assert_count_equal('', 2 + 17 + 2 + 0 + 2)
         self.assert_json_equal('LABELFORM', 'member-team-enable', 'Non')
         self.assertFalse('__tab_4' in self.json_data.keys(), self.json_data.keys())
         self.assert_json_equal('TAB', '__tab_1', 'Paramètres')
@@ -523,7 +523,7 @@ class CategoriesTest(LucteriosTest):
         self.factory.xfer = CategoryConf()
         self.calljson('/diacamma.member/categoryConf', {}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'categoryConf')
-        self.assert_count_equal('', 2 + 15 + 2 + 3 + 2)
+        self.assert_count_equal('', 2 + 17 + 2 + 3 + 2)
         self.assert_grid_equal('age', {'name': "nom", 'date_min': "date min.", 'date_max': "date max."}, 0)
 
         self.factory.xfer = AgeAddModify()
@@ -590,7 +590,7 @@ class CategoriesTest(LucteriosTest):
         self.factory.xfer = CategoryConf()
         self.calljson('/diacamma.member/categoryConf', {}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'categoryConf')
-        self.assert_count_equal('', 2 + 15 + 0 + 3 + 2)
+        self.assert_count_equal('', 2 + 17 + 0 + 3 + 2)
         self.assert_json_equal('LABELFORM', 'member-age-enable', 'Non')
         self.assertFalse('__tab_4' in self.json_data.keys(), self.json_data.keys())
         self.assert_json_equal('TAB', '__tab_1', 'Paramètres')
@@ -601,7 +601,7 @@ class CategoriesTest(LucteriosTest):
         self.factory.xfer = CategoryConf()
         self.calljson('/diacamma.member/categoryConf', {}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'categoryConf')
-        self.assert_count_equal('', 2 + 15 + 2 + 3 + 2)
+        self.assert_count_equal('', 2 + 17 + 2 + 3 + 2)
         self.assertFalse('__tab_5' in self.json_data.keys(), self.json_data.keys())
         self.assert_json_equal('TAB', '__tab_1', 'Paramètres')
         self.assert_json_equal('TAB', '__tab_2', 'Âge')
@@ -609,15 +609,28 @@ class CategoriesTest(LucteriosTest):
         self.assert_json_equal('TAB', '__tab_4', 'Activité')
         self.assert_json_equal('LABELFORM', 'member-team-text', 'Équipe')
         self.assert_json_equal('LABELFORM', 'member-activite-text', 'Activité')
+        self.assert_json_equal('LABELFORM', 'member-fields', "N°{[br/]}prénom{[br/]}nom{[br/]}tel1{[br/]}tel2{[br/]}courriel{[br/]}participation")
+        self.assert_json_equal('', '#editparam/action/action', 'categoryParamEdit')
+
+        self.factory.xfer = CategoryParamEdit()
+        self.calljson('/diacamma.member/categoryParamEdit', {'params': ";".join(["member-team-enable", "member-team-text", "member-activite-enable", "member-activite-text", "member-age-enable",
+                                                                                 "member-licence-enabled", "member-filter-genre", "member-numero", "member-birth", "member-family-type", "member-connection",
+                                                                                 "member-subscription-mode", "member-size-page", "member-fields", "member-subscription-message"])}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'categoryParamEdit')
+        self.assert_json_equal('SELECT', 'member-size-page', '25')
+        self.assert_select_equal('member-size-page', 4)
+        self.assert_json_equal('CHECKLIST', 'member-fields', ['num', 'firstname', 'lastname', 'tel1', 'tel2', 'email', 'license'])
+        self.assert_select_equal('member-fields', 17, checked=True)
 
         Parameter.change_value("member-team-text", 'Cours')
         Parameter.change_value("member-activite-text", 'Sport')
+        Parameter.change_value("member-fields", "firstname;lastname;email;documents")
         Params.clear()
 
         self.factory.xfer = CategoryConf()
         self.calljson('/diacamma.member/categoryConf', {}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'categoryConf')
-        self.assert_count_equal('', 2 + 15 + 2 + 3 + 2)
+        self.assert_count_equal('', 2 + 17 + 2 + 3 + 2)
         self.assertFalse('__tab_5' in self.json_data.keys(), self.json_data.keys())
         self.assert_json_equal('TAB', '__tab_1', 'Paramètres')
         self.assert_json_equal('TAB', '__tab_2', 'Âge')
@@ -625,3 +638,4 @@ class CategoriesTest(LucteriosTest):
         self.assert_json_equal('TAB', '__tab_4', 'Sport')
         self.assert_json_equal('LABELFORM', 'member-team-text', 'Cours')
         self.assert_json_equal('LABELFORM', 'member-activite-text', 'Sport')
+        self.assert_json_equal('LABELFORM', 'member-fields', "prénom{[br/]}nom{[br/]}courriel{[br/]}documents demandés")

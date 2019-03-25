@@ -570,10 +570,60 @@ class Adherent(Individual):
         return fields
 
     @classmethod
-    def get_default_fields(cls):
-        fields = cls.get_renew_fields()
+    def get_allowed_fields(cls):
+        allowed_fields = []
+        if Params.getvalue("member-numero"):
+            allowed_fields.append("num")
+        allowed_fields.extend(["firstname", "lastname", 'address', 'postal_code', 'city', 'country', 'tel1', 'tel2', 'email'])
+        for fields in cls.get_fields_to_show():
+            allowed_fields.extend(fields)
+        if Params.getvalue("member-birth"):
+            allowed_fields.extend(["birthday", "birthplace", (_("age category"), "age_category")])
         if Params.getvalue("member-licence-enabled"):
-            fields.append((_('involvement'), 'license'))
+            allowed_fields.append((_('involvement'), 'license'))
+        allowed_fields.extend(['comment', 'user', (_('documents needs'), 'documents')])
+        return allowed_fields
+
+    @classmethod
+    def get_default_fields(cls):
+        def fill_default():
+            fields = cls.get_renew_fields()
+            if Params.getvalue("member-licence-enabled"):
+                fields.append((_('involvement'), 'license'))
+            return fields
+        wanted_fields_text = Params.getvalue("member-fields")
+        fields = []
+        if wanted_fields_text != '':
+            wanted_fields = wanted_fields_text.split(";")
+            allowed_fields = cls.get_allowed_fields()
+            for allowed_field in allowed_fields:
+                if isinstance(allowed_field, six.text_type) and (allowed_field in wanted_fields):
+                    fields.append(allowed_field)
+                elif isinstance(allowed_field, tuple) and (len(allowed_field) == 2) and (allowed_field[1] in wanted_fields):
+                    fields.append(allowed_field)
+        if len(fields) == 0:
+            fields = fill_default()
+        return fields
+
+    @classmethod
+    def get_fields_title(cls, adh_fields):
+        fields = []
+        for adh_field in adh_fields:
+            if isinstance(adh_field, six.text_type):
+                dep_field = cls.get_field_by_name(adh_field)
+                fields.append((adh_field, dep_field.verbose_name))
+            elif isinstance(adh_field, tuple) and (len(adh_field) == 2):
+                fields.append((adh_field[1], adh_field[0]))
+        return fields
+
+    @classmethod
+    def get_default_fields_title(cls):
+        fields = cls.get_fields_title(cls.get_default_fields())
+        return fields
+
+    @classmethod
+    def get_allowed_fields_title(cls):
+        fields = cls.get_fields_title(cls.get_allowed_fields())
         return fields
 
     @classmethod
@@ -1382,3 +1432,5 @@ def member_checkparam():
     Parameter.check_and_create(name="member-subscription-mode", typeparam=4, title=_("member-subscription-mode"), args="{'Enum':3}", value='0',
                                param_titles=(_("member-subscription-mode.0"), _("member-subscription-mode.1"), _("member-subscription-mode.2")))
     Parameter.check_and_create(name="member-family-type", typeparam=1, title=_("member-family-type"), args="{}", value='0', meta='("contacts","StructureType", Q(), "id", False)')
+    Parameter.check_and_create(name="member-size-page", typeparam=1, title=_("member-size-page"), args="{}", value='25', meta='("","", "[(25,\'25\'),(50,\'50\'),(100,\'100\'),(250,\'250\'),]", "", True)')
+    Parameter.check_and_create(name="member-fields", typeparam=0, title=_("member-fields"), args="{'Multi':False}", value='')

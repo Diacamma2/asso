@@ -121,6 +121,17 @@ class AdherentTest(BaseAdherentTest):
         self.assert_select_equal('genre', 3)  # nb=3
         self.assert_count_equal('#adherent/actions', 5)
         self.assert_grid_equal('adherent', {'num': "N°", 'firstname': "prénom", 'lastname': "nom", 'tel1': "tel1", 'tel2': "tel2", 'email': "courriel", 'license': "participation"}, 0)
+        self.assert_json_equal('', '#adherent/size_by_page', 25)
+
+        Parameter.change_value("member-size-page", 100)
+        Parameter.change_value("member-fields", "firstname;lastname;email;documents")
+        Params.clear()
+
+        self.factory.xfer = AdherentActiveList()
+        self.calljson('/diacamma.member/adherentActiveList', {}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentActiveList')
+        self.assert_grid_equal('adherent', {'firstname': "prénom", 'lastname': "nom", 'email': "courriel", 'documents': "documents demandés"}, 0)
+        self.assert_json_equal('', '#adherent/size_by_page', 100)
 
     def test_add_adherent(self):
         self.factory.xfer = AdherentAddModify()

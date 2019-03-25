@@ -23,6 +23,7 @@ along with Lucterios.  If not, see <http://www.gnu.org/licenses/>.
 '''
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+from importlib import import_module
 
 from django.utils.translation import ugettext_lazy as _
 from django.utils import six
@@ -55,9 +56,7 @@ from lucterios.CORE.parameters import Params
 from lucterios.contacts.models import Individual, LegalEntity, Responsability
 from lucterios.contacts.views_contacts import LegalEntityAddModify
 
-from diacamma.member.models import Adherent, Subscription, Season, Age, Team, Activity, License, DocAdherent, SubscriptionType, CommandManager,\
-    Prestation
-from importlib import import_module
+from diacamma.member.models import Adherent, Subscription, Season, Age, Team, Activity, License, DocAdherent, SubscriptionType, CommandManager, Prestation
 
 
 MenuManage.add_sub("association", None, "diacamma.member/images/association.png", _("Association"), _("Association tools"), 30)
@@ -109,6 +108,10 @@ class AdherentAbstractList(XferListEditor, AdherentFilter):
     icon = "adherent.png"
     model = Adherent
     field_id = 'adherent'
+
+    def __init__(self, **kwargs):
+        XferListEditor.__init__(self, **kwargs)
+        self.size_by_page = Params.getvalue("member-size-page")
 
     def get_items_from_filter(self):
         current_filter, exclude_filter = self.get_filter()
@@ -236,6 +239,10 @@ class AdherentSearch(XferSearchEditor):
     model = Adherent
     field_id = 'adherent'
     caption = _("Search adherent")
+
+    def __init__(self, **kwargs):
+        XferSearchEditor.__init__(self, **kwargs)
+        self.size_by_page = Params.getvalue("member-size-page")
 
 
 @MenuManage.describ('member.change_adherent', FORMTYPE_NOMODAL, 'member.actions', _('List of adherents with old subscribtion not renew yet'))
