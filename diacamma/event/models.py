@@ -43,6 +43,7 @@ from diacamma.invoice.models import Article, Bill, Detail, get_or_create_custome
 from diacamma.accounting.models import CostAccounting
 from diacamma.member.models import Activity, Adherent, Subscription, Season
 from diacamma.accounting.tools import format_devise
+from django.db.models.aggregates import Count
 
 
 class DegreeType(LucteriosModel):
@@ -446,27 +447,39 @@ class Participant(LucteriosModel):
                 adh = Adherent.objects.get(id=self.contact_id)
                 Degree.objects.create(adherent=adh, degree=self.degree_result,
                                       subdegree=self.subdegree_result, date=self.event.date, event=self.event)
-            except:
+            except Exception:
                 pass
 
+    def _search_or_create_bill(self):
+        high_contact = self.contact.get_final_child()
+        new_third = get_or_create_customer(high_contact.get_ref_contact().id)
+        bill_list = Bill.objects.filter(third=new_third, bill_type=1, status=0).annotate(participant_count=Count('participant')).filter(participant_count__gte=1).order_by('-date')
+        if len(bill_list) > 0:
+            self.bill = bill_list[0]
+        if self.bill is None:
+            self.bill = Bill.objects.create(bill_type=1, date=date.today(), third=new_third)
+        return high_contact
+
     def create_bill(self):
-        if self.bill is not None:
-            self.bill.delete()
-            self.bill = None
-            self.save()
         if self.article is not None:
-            high_contact = self.contact.get_final_child()
-            third = get_or_create_customer(high_contact.get_ref_contact().id)
-            self.bill = Bill.objects.create(bill_type=1, date=date.today(), third=third)
-            self.bill.comment = "{[b]}%s{[/b]}: %s{[br/]}{[i]}%s{[/i]}" % (self.event.event_type_txt, self.event.date_txt, self.event.comment)
-            if (self.event.event_type == 1) and (self.comment is not None) and (self.comment != ''):
-                self.bill.comment += "{[br/]}"
-                self.bill.comment += self.comment
-            if self.bill.third.contact.id != high_contact.id:
-                self.bill.comment += "{[br/]}"
-                self.bill.comment += _("Participant: %s") % six.text_type(high_contact)
+            high_contact = self._search_or_create_bill()
+            bill_comment = ["{[b]}%s{[/b]}: %s" % (self.event.event_type_txt, self.event.date_txt)]
+            bill_comment.append("{[i]}%s{[/i]}" % self.event.comment)
+            if (self.bill.third.contact.id == high_contact.id) and (self.event.event_type == 1) and (self.comment is not None) and (self.comment != ''):
+                bill_comment.append(self.comment)
+            self.bill.comment = "{[br/]}".join(bill_comment)
             self.bill.save()
-            Detail.create_for_bill(self.bill, self.article, reduce=self.reduce)
+            self.bill.detail_set.all().delete()
+            participant_list = list(self.bill.participant_set.all())
+            if self not in participant_list:
+                participant_list.append(self)
+            for participant in participant_list:
+                detail_comment = [participant.article.designation]
+                if participant.bill.third.contact.id != participant.contact.id:
+                    detail_comment.append(_("Participant: %s") % six.text_type(participant.contact))
+                    if (participant.event.event_type == 1) and (participant.comment is not None) and (participant.comment != ''):
+                        detail_comment.append(participant.comment)
+                Detail.create_for_bill(participant.bill, participant.article, reduce=participant.reduce, designation="{[br/]}".join(detail_comment))
             self.save()
 
     def can_delete(self):
