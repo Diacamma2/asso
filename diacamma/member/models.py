@@ -41,7 +41,8 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from lucterios.framework.models import LucteriosModel, get_value_converted
 from lucterios.framework.error import LucteriosException, IMPORTANT
-from lucterios.framework.tools import convert_date, same_day_months_after
+from lucterios.framework.tools import convert_date, same_day_months_after,\
+    toHtml
 from lucterios.framework.signal_and_lock import Signal
 from lucterios.framework.filetools import get_tmp_dir
 
@@ -53,6 +54,7 @@ from diacamma.invoice.models import Article, Bill, Detail, get_or_create_custome
 from diacamma.accounting.tools import format_devise
 from diacamma.accounting.models import CostAccounting
 from diacamma.payoff.views import get_html_payment
+from diacamma.payoff.models import PaymentMethod
 
 
 class Season(LucteriosModel):
@@ -564,9 +566,10 @@ class Adherent(Individual):
 
     @classmethod
     def get_renew_fields(cls):
-        fields = Individual.get_default_fields()
-        if Params.getvalue("member-numero"):
-            fields.insert(0, "num")
+        fields = cls.get_default_fields()
+        for item in [(_('involvement'), 'license'), (_('documents needs'), 'documents')]:
+            if item in fields:
+                fields.remove(item)
         return fields
 
     @classmethod
@@ -577,6 +580,8 @@ class Adherent(Individual):
         allowed_fields.extend(["firstname", "lastname", 'address', 'postal_code', 'city', 'country', 'tel1', 'tel2', 'email'])
         for fields in cls.get_fields_to_show():
             allowed_fields.extend(fields)
+        if Params.getobject("member-family-type") is not None:
+            allowed_fields.append((_('family'), 'family'))
         if Params.getvalue("member-birth"):
             allowed_fields.extend(["birthday", "birthplace", (_("age category"), "age_category")])
         if Params.getvalue("member-licence-enabled"):
@@ -995,6 +1000,28 @@ class Subscription(LucteriosModel):
             self.begin_date = dateref
             self.end_date = same_day_months_after(self.begin_date, 12) - timedelta(days=1)
 
+    def _add_detail_bill(self):
+        cmt = []
+        if self.bill.third.contact.id != self.adherent.id:
+            cmt.append(_("Subscription of '%s'") % six.text_type(self.adherent))
+        for art in self.subscriptiontype.articles.all():
+            new_cmt = [art.designation]
+            new_cmt.extend(cmt)
+            Detail.create_for_bill(self.bill, art, designation="{[br/]}".join(new_cmt))
+        for presta in self.prestations.all():
+            new_cmt = [presta.name]
+            new_cmt.extend(cmt)
+            Detail.create_for_bill(self.bill, presta.article, designation="{[br/]}".join(new_cmt))
+
+    def _search_or_create_bill(self, bill_type):
+        new_third = get_or_create_customer(self.adherent.get_ref_contact().id)
+        bill_list = Bill.objects.filter(third=new_third, bill_type=bill_type, status=0).annotate(subscription_count=Count('subscription')).filter(subscription_count__gte=1).order_by('-date')
+        if len(bill_list) > 0:
+            self.bill = bill_list[0]
+            self.bill.date = self.season.date_ref
+        if self.bill is None:
+            self.bill = Bill.objects.create(bill_type=bill_type, date=self.season.date_ref, third=new_third)
+
     def change_bill(self):
         if (len(self.subscriptiontype.articles.all()) == 0) and (len(self.prestations.all()) == 0):
             return False
@@ -1009,7 +1036,7 @@ class Subscription(LucteriosModel):
             else:
                 bill_type = 1
             if create_bill:
-                self.bill = Bill.objects.create(bill_type=bill_type, date=self.season.date_ref, third=get_or_create_customer(self.adherent.get_ref_contact().id))
+                self._search_or_create_bill(bill_type)
                 modify = True
             if (self.bill.status == 0):
                 self.bill.bill_type = bill_type
@@ -1024,18 +1051,17 @@ class Subscription(LucteriosModel):
                 cost_acc = CostAccounting.objects.filter(is_default=True)
                 if len(cost_acc) > 0:
                     self.bill.cost_accounting = cost_acc[0]
-                cmt = ["{[b]}%s{[/b]}" % _("subscription"), "{[i]}%s{[/i]}: %s" %
-                       (_('subscription type'), six.text_type(self.subscriptiontype))]
+                cmt = ["{[b]}%s{[/b]}" % _("subscription")]
+                if self.bill.third.contact.id == self.adherent.id:
+                    cmt.append(_("Subscription of '%s'") % six.text_type(self.adherent))
                 self.bill.comment = "{[br/]}".join(cmt)
-                if self.bill.third.contact.id != self.adherent.id:
-                    self.bill.comment += "{[br/]}"
-                    self.bill.comment += _("Subscription of '%s'") % six.text_type(self.adherent)
                 self.bill.save()
                 self.bill.detail_set.all().delete()
-                for art in self.subscriptiontype.articles.all():
-                    Detail.create_for_bill(self.bill, art)
-                for presta in self.prestations.all():
-                    Detail.create_for_bill(self.bill, presta.article, designation=presta.name)
+                subscription_list = list(self.bill.subscription_set.all())
+                if self not in subscription_list:
+                    subscription_list.append(self)
+                for subscription in subscription_list:
+                    subscription._add_detail_bill()
                 if hasattr(self, 'send_email_param'):
                     self.sendemail(self.send_email_param)
         if (self.status == 3) and (self.bill is not None):
@@ -1152,10 +1178,7 @@ class Subscription(LucteriosModel):
         if sendemail is not None:
             self.bill.valid()
             if self.adherent.email != '':
-                subscription_message = Params.getvalue("member-subscription-message")
-                subscription_message = subscription_message.replace('\n', '<br/>')
-                subscription_message = subscription_message.replace('{[', '<')
-                subscription_message = subscription_message.replace(']}', '>')
+                subscription_message = toHtml(Params.getvalue("member-subscription-message").replace('\n', '<br/>'))
                 if self.bill.payoff_have_payment():
                     subscription_message += get_html_payment(sendemail[0], sendemail[1], self.bill)
                 self.bill.send_email(_('New subscription'), "<html>%s</html>" % subscription_message, PrintModel.get_print_default(2, Bill))
@@ -1377,6 +1400,7 @@ class CommandManager(object):
     def create_subscription(self, dateref, sendemail=None):
         nb_sub = 0
         nb_bill = 0
+        bill_list = []
         for content_item in self.commands:
             new_subscription = Subscription(adherent_id=content_item["adherent"], subscriptiontype_id=content_item["type"], status=1)
             new_subscription.set_periode(dateref)
@@ -1408,10 +1432,19 @@ class CommandManager(object):
             nb_sub += 1
             if new_subscription.bill is not None:
                 details = new_subscription.bill.detail_set.all().order_by('-id')
-                details[0].reduce = content_item["reduce"]
-                details[0].save()
-                if new_subscription.sendemail(sendemail):
-                    nb_bill += 1
+                if len(details) > 0:
+                    details[0].reduce = content_item["reduce"]
+                    details[0].save()
+                    bill_list.append(new_subscription.bill)
+        if sendemail is not None:
+            for subscription_bill in set(bill_list):
+                subscription_bill.valid()
+                if subscription_bill.third.contact.email != '':
+                    subscription_message = toHtml(Params.getvalue("member-subscription-message").replace('\n', '<br/>'))
+                    if subscription_bill.payoff_have_payment() and (len(PaymentMethod.objects.all()) > 0):
+                        subscription_message += get_html_payment(sendemail[0], sendemail[1], subscription_bill)
+                    subscription_bill.send_email(_('New subscription'), "<html>%s</html>" % subscription_message, PrintModel.get_print_default(2, subscription_bill))
+                nb_bill += 1
         return (nb_sub, nb_bill)
 
 

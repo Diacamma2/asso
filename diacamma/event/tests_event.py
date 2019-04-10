@@ -628,7 +628,7 @@ class EventTest(LucteriosTest):
         self.assert_json_equal('', 'bill/@1/comment', "{[b]}stage/sortie{[/b]}: 12 octobre 2014 -> 13 octobre 2014{[br/]}{[i]}la fiesta{[/i]}{[br/]}bou!!!!")
         self.assert_json_equal('', 'bill/@2/third', "Dalton Avrel")
         self.assert_json_equal('', 'bill/@2/total', "76.44€")
-        self.assert_json_equal('', 'bill/@2/comment', "{[b]}cotisation{[/b]}{[br/]}{[i]}type de cotisation{[/i]}: Annually")
+        self.assert_json_equal('', 'bill/@2/comment', "{[b]}cotisation{[/b]}{[br/]}Cotisation de 'Dalton Avrel'")
 
         self.factory.xfer = BillShow()
         self.calljson('/diacamma.invoice/billShow', {'bill': 3}, False)

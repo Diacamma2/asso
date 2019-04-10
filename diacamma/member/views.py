@@ -117,6 +117,17 @@ class AdherentAbstractList(XferListEditor, AdherentFilter):
         current_filter, exclude_filter = self.get_filter()
         return self.model.objects.filter(current_filter).exclude(exclude_filter).distinct()
 
+    def fillresponse_body(self):
+        lineorder = self.getparam('GRID_ORDER%adherent', ())
+        self.params['GRID_ORDER%adherent'] = ','.join([item.replace('family', 'responsability__legal_entity__name') for item in lineorder])
+        XferListEditor.fillresponse_body(self)
+        grid = self.get_components('adherent')
+        family_header = grid.get_header('family')
+        if family_header is not None:
+            family_header.orderable = 1
+        grid.order_list = lineorder
+        self.params['GRID_ORDER%adherent'] = ','.join(lineorder)
+
     def fillresponse_header(self):
         row = self.get_max_row() + 1
         team = self.getparam("team", ())
@@ -255,9 +266,8 @@ class AdherentRenewList(AdherentAbstractList):
         self.fieldnames = Adherent.get_renew_fields()
 
     def fillresponse(self):
-        XferListEditor.fillresponse(self)
-        self.item.editor.add_email_selector(
-            self, 0, self.get_max_row() + 1, 10)
+        AdherentAbstractList.fillresponse(self)
+        self.item.editor.add_email_selector(self, 0, self.get_max_row() + 1, 10)
         self.get_components('title').colspan = 10
         self.get_components(self.field_id).colspan = 10
         if Params.getvalue("member-subscription-mode") == 1:
