@@ -592,7 +592,9 @@ class Adherent(Individual):
     @classmethod
     def get_default_fields(cls):
         def fill_default():
-            fields = cls.get_renew_fields()
+            fields = Individual.get_default_fields()
+            if Params.getvalue("member-numero"):
+                fields.insert(0, "num")
             if Params.getvalue("member-licence-enabled"):
                 fields.append((_('involvement'), 'license'))
             return fields
