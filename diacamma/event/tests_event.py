@@ -737,7 +737,6 @@ class EventTest(LucteriosTest):
         self.assert_observer('core.custom', 'diacamma.invoice', 'billShow')
         self.assert_json_equal('LINK', 'third', "LES DALTONS")
         self.assert_count_equal('detail', 2)
-        self.print_json()
         self.assert_json_equal('', 'detail/@0/article', 'ABC1')
         self.assert_json_equal('', 'detail/@0/designation', "Article 01{[br/]}Participant : Dalton Avrel")
         self.assert_json_equal('', 'detail/@0/price_txt', '12.34€')
