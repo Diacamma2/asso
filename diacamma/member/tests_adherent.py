@@ -1282,7 +1282,6 @@ class AdherentTest(BaseAdherentTest):
         self.factory.xfer = BillShow()
         self.calljson('/diacamma.invoice/billShow', {'bill': 1}, False)
         self.assert_observer('core.custom', 'diacamma.invoice', 'billShow')
-        self.assert_json_equal('LABELFORM', 'date', "10 avril 2010")
         self.assert_json_equal('LABELFORM', 'info', "{[font color=\"red\"]}{[/font]}")
 
         self.factory.xfer = BillTransition()
