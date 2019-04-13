@@ -643,7 +643,7 @@ class EventTest(LucteriosTest):
         self.assert_json_equal('', 'detail/@0/total', '54.10€')
         self.assert_json_equal('LABELFORM', 'total_excltax', "54.10€")
 
-    def test_bill_with_family(self):
+    def _test_bill_with_family(self):
         self.factory.xfer = SubscriptionAddModify()
         self.calljson('/diacamma.member/subscriptionAddModify',
                       {'SAVE': 'YES', 'adherent': 2, 'dateref': '2014-10-01', 'subscriptiontype': 1, 'season': 15, 'team': 2, 'activity': 1, 'value': '132'}, False)
