@@ -50,7 +50,7 @@ from diacamma.member.views import AdherentActiveList, AdherentAddModify, Adheren
     AdherentRenewList, AdherentRenew, SubscriptionTransition, AdherentCommand,\
     AdherentCommandDelete, AdherentCommandModify, AdherentFamilyAdd,\
     AdherentFamilySelect, AdherentFamilyCreate, FamilyAdherentAdd,\
-    FamilyAdherentCreate, FamilyAdherentAdded
+    FamilyAdherentCreate, FamilyAdherentAdded, AdherentListing
 from diacamma.member.test_tools import default_season, default_financial, default_params,\
     default_adherents, default_subscription, set_parameters, default_prestation
 from diacamma.accounting.models import FiscalYear
@@ -432,6 +432,7 @@ class AdherentTest(BaseAdherentTest):
         self.assert_json_equal('', 'adherent/@2/id', "5")
         self.assert_json_equal('', 'adherent/@3/id', "3")
         self.assert_json_equal('', 'adherent/@4/id', "6")
+        self.assertEqual(self.json_context['TITLE'], "Adhérents cotisants - date de référence : 1 octobre 2009")
 
         self.factory.xfer = AdherentActiveList()
         self.calljson('/diacamma.member/adherentActiveList', {'dateref': '2009-11-15'}, False)
@@ -441,6 +442,7 @@ class AdherentTest(BaseAdherentTest):
         self.assert_json_equal('', 'adherent/@1/id', "5")
         self.assert_json_equal('', 'adherent/@2/id', "3")
         self.assert_json_equal('', 'adherent/@3/id', "6")
+        self.assertEqual(self.json_context['TITLE'], "Adhérents cotisants - date de référence : 15 novembre 2009")
 
         self.factory.xfer = AdherentActiveList()
         self.calljson('/diacamma.member/adherentActiveList', {'dateref': '2010-01-20'}, False)
@@ -449,6 +451,7 @@ class AdherentTest(BaseAdherentTest):
         self.assert_json_equal('', 'adherent/@0/id', "2")
         self.assert_json_equal('', 'adherent/@1/id', "5")
         self.assert_json_equal('', 'adherent/@2/id', "6")
+        self.assertEqual(self.json_context['TITLE'], "Adhérents cotisants - date de référence : 20 janvier 2010")
 
         self.factory.xfer = AdherentActiveList()
         self.calljson('/diacamma.member/adherentActiveList', {'dateref': '2009-09-01'}, False)
@@ -457,12 +460,14 @@ class AdherentTest(BaseAdherentTest):
         self.assert_json_equal('', 'adherent/@0/id', "2")
         self.assert_json_equal('', 'adherent/@1/id', "3")
         self.assert_json_equal('', 'adherent/@2/id', "6")
+        self.assertEqual(self.json_context['TITLE'], "Adhérents cotisants - date de référence : 1 septembre 2009")
 
         self.factory.xfer = AdherentActiveList()
         self.calljson('/diacamma.member/adherentActiveList', {'dateref': '2010-09-10'}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'adherentActiveList')
         self.assert_count_equal('adherent', 1)
         self.assert_json_equal('', 'adherent/@0/id', "5")
+        self.assertEqual(self.json_context['TITLE'], "Adhérents cotisants - date de référence : 10 septembre 2010")
 
     def test_subscription_byage(self):
         self.add_subscriptions()
@@ -487,6 +492,9 @@ class AdherentTest(BaseAdherentTest):
         self.calljson('/diacamma.member/adherentActiveList', {'dateref': '2009-10-01', 'age': '1;2;3'}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'adherentActiveList')
         self.assert_count_equal('adherent', 2)
+        info = self.json_context['INFO'].split("{[br]}")
+        self.assertEqual(len(info), 4)
+        self.assertEqual(info[2], "{[b]}{[u]}Âge{[/u]}{[/b]} : Minimes, Benjamins, Poussins")
 
         self.factory.xfer = AdherentActiveList()
         self.calljson('/diacamma.member/adherentActiveList', {'dateref': '2009-10-01', 'age': '4;5;6'}, False)
@@ -497,6 +505,9 @@ class AdherentTest(BaseAdherentTest):
         self.calljson('/diacamma.member/adherentActiveList', {'dateref': '2009-10-01', 'age': '7;8'}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'adherentActiveList')
         self.assert_count_equal('adherent', 1)
+        info = self.json_context['INFO'].split("{[br]}")
+        self.assertEqual(len(info), 4)
+        self.assertEqual(info[2], "{[b]}{[u]}Âge{[/u]}{[/b]} : Vétérans, Seniors")
 
         self.factory.xfer = AdherentActiveList()
         self.calljson('/diacamma.member/adherentActiveList', {'dateref': '2009-10-01', 'age': '1;3;5;7'}, False)
@@ -510,11 +521,21 @@ class AdherentTest(BaseAdherentTest):
         self.calljson('/diacamma.member/adherentActiveList', {'dateref': '2009-10-01', 'team': '1'}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'adherentActiveList')
         self.assert_count_equal('adherent', 2)
+        self.assertEqual(self.json_context['TITLE'], "Adhérents cotisants - team1 - date de référence : 1 octobre 2009")
+        info = self.json_context['INFO'].split("{[br]}")
+        self.assertEqual(len(info), 6)
+        self.assertEqual(info[2], "{[b]}{[u]}group{[/u]}{[/b]}")
+        self.assertEqual(info[3], "team N°1")
+        self.assertEqual(info[4], "The bests")
 
         self.factory.xfer = AdherentActiveList()
         self.calljson('/diacamma.member/adherentActiveList', {'dateref': '2009-10-01', 'team': '2;3'}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'adherentActiveList')
         self.assert_count_equal('adherent', 3)
+        self.assertEqual(self.json_context['TITLE'], "Adhérents cotisants - date de référence : 1 octobre 2009")
+        info = self.json_context['INFO'].split("{[br]}")
+        self.assertEqual(len(info), 4)
+        self.assertEqual(info[2], "{[b]}{[u]}group{[/u]}{[/b]} : team2, team3")
 
     def test_subscription_byactivity(self):
         self.add_subscriptions()
@@ -523,11 +544,17 @@ class AdherentTest(BaseAdherentTest):
         self.calljson('/diacamma.member/adherentActiveList', {'dateref': '2009-10-01', 'activity': '1'}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'adherentActiveList')
         self.assert_count_equal('adherent', 3)
+        info = self.json_context['INFO'].split("{[br]}")
+        self.assertEqual(len(info), 4)
+        self.assertEqual(info[2], "{[b]}{[u]}passion{[/u]}{[/b]} : activity1")
 
         self.factory.xfer = AdherentActiveList()
         self.calljson('/diacamma.member/adherentActiveList', {'dateref': '2009-10-01', 'activity': '2'}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'adherentActiveList')
         self.assert_count_equal('adherent', 2)
+        info = self.json_context['INFO'].split("{[br]}")
+        self.assertEqual(len(info), 4)
+        self.assertEqual(info[2], "{[b]}{[u]}passion{[/u]}{[/b]} : activity2")
 
     def test_subscription_bygenre(self):
         self.add_subscriptions()
@@ -536,6 +563,9 @@ class AdherentTest(BaseAdherentTest):
         self.calljson('/diacamma.member/adherentActiveList', {'dateref': '2009-10-01', 'genre': '2'}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'adherentActiveList')
         self.assert_count_equal('adherent', 0)
+        info = self.json_context['INFO'].split("{[br]}")
+        self.assertEqual(len(info), 4)
+        self.assertEqual(info[2], "{[b]}{[u]}genre{[/u]}{[/b]} : Femme")
 
     def test_subscription_doc(self):
         self.add_subscriptions()
@@ -598,6 +628,26 @@ class AdherentTest(BaseAdherentTest):
         self.calljson('/diacamma.member/subscriptionShow', {'adherent': 2, 'dateref': '2014-10-01', 'subscription': 1}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'subscriptionShow')
         self.assert_count_equal('', 7)
+
+    def test_subscription_printlisting(self):
+        self.add_subscriptions()
+
+        self.factory.xfer = AdherentActiveList()
+        self.calljson('/diacamma.member/adherentActiveList', {'dateref': '2009-10-01', 'age': '1;2;3', 'team': '2;3', 'activity': '2', 'genre': '2'}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentActiveList')
+
+        new_context = dict(self.json_context)
+        new_context['PRINT_MODE'] = '4'
+        new_context['MODEL'] = 1
+        self.factory.xfer = AdherentListing()
+        self.calljson('/diacamma.member/adherentListing', new_context, False)
+        self.assert_observer('core.print', 'diacamma.member', 'adherentListing')
+        csv_value = b64decode(six.text_type(self.response_json['print']['content'])).decode("utf-8")
+        content_csv = csv_value.split('\n')
+        self.assertEqual(len(content_csv), 8, str(content_csv))
+        self.assertEqual(content_csv[1].strip(), '"Adhérents cotisants - date de référence : 1 octobre 2009"')
+        self.assertEqual(content_csv[3].strip(), '"status : en création & validé,,passion : activity2,,group : team2, team3,,Âge : Minimes, Benjamins, Poussins,,genre : Femme"')
+        self.assertEqual(content_csv[4].strip(), '"nom";"adresse";"ville";"tel";"courriel";')
 
     def test_statistic(self):
         self.add_subscriptions()

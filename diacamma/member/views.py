@@ -26,7 +26,7 @@ from __future__ import unicode_literals
 from importlib import import_module
 
 from django.utils.translation import ugettext_lazy as _
-from django.utils import six
+from django.utils import six, formats
 from django.db.models import Q
 from django.conf import settings
 
@@ -135,8 +135,7 @@ class AdherentAbstractList(XferListEditor, AdherentFilter):
         genre = self.getparam("genre", 0)
         age = self.getparam("age", ())
         status = self.getparam("status", -1)
-        dateref = convert_date(
-            self.getparam("dateref", ""), Season.current_season().date_ref)
+        dateref = convert_date(self.getparam("dateref", ""), Season.current_season().date_ref)
 
         col1 = 0
         if Params.getvalue("member-age-enable"):
@@ -202,6 +201,36 @@ class AdherentAbstractList(XferListEditor, AdherentFilter):
         btn.set_location(max(col1, col2), row + 1)
         btn.set_action(self.request, self.get_action(_('Refresh'), ''), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
         self.add_component(btn)
+
+        info_list = []
+        self.params['TITLE'] = "%s - %s : %s" % (self.caption, _("reference date"), formats.date_format(dateref, "DATE_FORMAT"))
+        info_list.append("{[b]}{[u]}%s{[/u]}{[/b]} : %s" % (_("status"), dict(list_status)[status]))
+        info_list.append("")
+        if Params.getvalue("member-activite-enable") and (len(activity) > 0):
+            info_list.append("{[b]}{[u]}%s{[/u]}{[/b]} : %s" % (Params.getvalue("member-activite-text"),
+                                                                ", ".join([six.text_type(activity_item) for activity_item in Activity.objects.filter(id__in=activity)])))
+            info_list.append("")
+        if Params.getvalue("member-team-enable"):
+            if len(team) == 1:
+                first_team = Team.objects.get(id=team[0])
+                self.params['TITLE'] = "%s - %s - %s : %s" % (self.caption, first_team, _("reference date"), formats.date_format(dateref, "DATE_FORMAT"))
+                info_list.append("{[b]}{[u]}%s{[/u]}{[/b]}" % Params.getvalue("member-team-text"))
+                info_list.append(first_team.description.replace("{[br/]}", "{[br]}"))
+                info_list.append("")
+            elif len(team) > 1:
+                info_list.append("{[b]}{[u]}%s{[/u]}{[/b]} : %s" % (Params.getvalue("member-team-text"),
+                                                                    ", ".join([six.text_type(team_item) for team_item in Team.objects.filter(id__in=team)])))
+                info_list.append("")
+
+        if Params.getvalue("member-age-enable") and (len(age) > 0):
+            info_list.append("{[b]}{[u]}%s{[/u]}{[/b]} : %s" % (_("Age"),
+                                                                ", ".join([six.text_type(age_item) for age_item in Age.objects.filter(id__in=age)])))
+            info_list.append("")
+
+        if Params.getvalue("member-filter-genre") and (genre != 0):
+            info_list.append("{[b]}{[u]}%s{[/u]}{[/b]} : %s" % (_("genre"), dict(list_genre)[genre]))
+            info_list.append("")
+        self.params['INFO'] = '{[br]}'.join(info_list)
 
 
 class AdherentSelection(AdherentAbstractList):

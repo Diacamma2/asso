@@ -67,9 +67,9 @@ def default_params():
     default.description = "activity N°1"
     default.save()
     Activity.objects.create(name="activity2", description="activity N°2")
-    Team.objects.create(name="team1", description="team N°1")
-    Team.objects.create(name="team2", description="team N°2")
-    Team.objects.create(name="team3", description="team N°3")
+    Team.objects.create(name="team1", description="team N°1{[br/]}The bests")
+    Team.objects.create(name="team2", description="team N°2{[br/]}The chalengers")
+    Team.objects.create(name="team3", description="team N°3{[br/]}The newbies")
     Age.objects.create(name="Poussins", minimum=9, maximum=10)
     Age.objects.create(name="Benjamins", minimum=11, maximum=12)
     Age.objects.create(name="Minimes", minimum=13, maximum=14)
