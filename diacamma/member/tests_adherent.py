@@ -1183,7 +1183,7 @@ class AdherentTest(BaseAdherentTest):
             message = decode_b64(msg.get_payload())
             self.assertTrue('Bienvenu' in message, message)
             self.assertTrue('devis_A-1_Dalton Joe.pdf' in msg_file.get('Content-Type', ''), msg_file.get('Content-Type', ''))
-            self.assertEqual("%PDF".encode('ascii', 'ignore'), b64decode(msg_file.get_payload())[:4])
+            self.save_pdf(base64_content=msg_file.get_payload())
         finally:
             server.stop()
 
@@ -1780,7 +1780,7 @@ class AdherentFamilyTest(BaseAdherentTest):
             message = decode_b64(msg.get_payload())
             self.assertTrue('Bienvenu' in message, message)
             self.assertTrue('devis_A-1_LES DALTONS.pdf' in msg_file.get('Content-Type', ''), msg_file.get('Content-Type', ''))
-            self.assertEqual("%PDF".encode('ascii', 'ignore'), b64decode(msg_file.get_payload())[:4])
+            self.save_pdf(base64_content=msg_file.get_payload())
         finally:
             server.stop()
 
