@@ -679,6 +679,8 @@ class Adherent(Individual):
         fields.append(('subscriptiontype', _('subscription type')))
         if Params.getvalue("member-team-enable"):
             fields.append(('team', Params.getvalue("member-team-text")))
+            if len(Prestation.objects.all()) > 0:
+                fields.append(('prestations', _('prestations')))
         if Params.getvalue("member-activite-enable"):
             fields.append(('activity', Params.getvalue("member-activite-text")))
         if Params.getvalue("member-licence-enabled"):
@@ -718,10 +720,12 @@ class Adherent(Individual):
                     begin_date = current_season.begin_date
                     end_date = current_season.end_date
                 try:
-                    working_subscription = Subscription.objects.get(
-                        adherent=self, season=current_season, subscriptiontype=type_obj, begin_date=begin_date, end_date=end_date)
+                    working_subscription = Subscription.objects.get(adherent=self,
+                                                                    season=current_season, subscriptiontype=type_obj,
+                                                                    begin_date=begin_date, end_date=end_date)
                 except ObjectDoesNotExist:
                     working_subscription = Subscription()
+                    working_subscription.status = 1
                     working_subscription.adherent = self
                     working_subscription.season = current_season
                     working_subscription.subscriptiontype = type_obj
@@ -740,13 +744,16 @@ class Adherent(Individual):
             new_item = super(Adherent, cls).import_data(rowdata, dateformat)
             if new_item is not None:
                 working_subscription = None
+                check_change_status = False
                 if 'subscriptiontype' in rowdata.keys():
-                    working_subscription = new_item._import_subscription(
-                        rowdata['subscriptiontype'], dateformat)
+                    working_subscription = new_item._import_subscription(rowdata['subscriptiontype'], dateformat)
+                    check_change_status = (working_subscription.status == 1)
                 if working_subscription is None:
                     working_subscription = new_item.last_subscription
                 if working_subscription is not None:
                     working_subscription.import_licence(rowdata)
+                    if check_change_status and (working_subscription.status == 1) and (working_subscription.prestations.all().count() == 0):
+                        working_subscription.validate()
             return new_item
         except Exception:
             logging.getLogger('diacamma.member').exception("import_data")
@@ -1079,23 +1086,30 @@ class Subscription(LucteriosModel):
         return modify
 
     def import_licence(self, rowdata):
-        try:
-            team = Team.objects.get(name=rowdata['team'])
-        except Exception:
-            team = None
-        try:
-            activity = Activity.objects.get(
-                name=rowdata['activity'])
-        except Exception:
-            activity = Activity.objects.all()[0]
-        try:
-            value = rowdata['value']
-        except Exception:
-            value = ''
-        if ('subscriptiontype' in rowdata.keys()) or (team is not None) or (value != ''):
-            return License.objects.create(subscription=self, team=team, activity=activity, value=value)
-        else:
-            return None
+        if ('prestations' in rowdata) and (rowdata['prestations'].strip() != ''):
+            self.prestations.through.objects.all().delete()
+            for prestation_name in rowdata['prestations'].replace(',', ';').split(';'):
+                try:
+                    new_prestation = Prestation.objects.get(name=prestation_name.strip())
+                    self.prestations.append(new_prestation)
+                except Exception:
+                    pass
+        if self.prestations.all().count() == 0:
+            try:
+                team = Team.objects.get(name=rowdata['team'])
+            except Exception:
+                team = None
+            try:
+                activity = Activity.objects.get(name=rowdata['activity'])
+            except Exception:
+                activity = Activity.objects.all()[0]
+            try:
+                value = rowdata['value']
+            except Exception:
+                value = ''
+            if ('subscriptiontype' in rowdata.keys()) or (team is not None) or (value != ''):
+                return License.objects.create(subscription=self, team=team, activity=activity, value=value)
+        return None
 
     def convert_prestations(self):
         if self.prestations.all().count() > 0:

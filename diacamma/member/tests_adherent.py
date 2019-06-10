@@ -1474,11 +1474,83 @@ class AdherentTest(BaseAdherentTest):
         self.assert_json_equal('', 'bill/@1/bill_type', "facture")
         self.assert_json_equal('', 'bill/@1/total', "76.44€")
 
+    def test_import_with_prestation(self):
+        csv_content = """'nom','prenom','sexe','adresse','codePostal','ville','fixe','portable','mail','DateNaissance','LieuNaissance','Type','Cours'
+'Dalton','Avrel','Homme','rue de la liberté','99673','TOUINTOUIN','0502851031','0439423854','avrel.dalton@worldcompany.com','10/02/2000','BIDON SUR MER','Annually','Presta 1'
+'Dalton','Joe','Homme','rue de la liberté','99673','TOUINTOUIN','0502851031','0439423854','joe.dalton@worldcompany.com','18/05/1989','BIDON SUR MER','Annually','Presta 2,Presta 3'
+'Luke','Lucky','Homme','rue de la liberté','99673','TOUINTOUIN','0502851031','0439423854','lucky.luke@worldcompany.com','04/06/1979','BIDON SUR MER','Annually','Presta 1;Presta 3'
+'GOC','Marie','Femme','33 impasse du 11 novembre','99150','BIDON SUR MER','0632763718','0310231012','marie762@free.fr','16/05/1998','KIKIMDILUI','Annually','Presta 1,Presta 2;Presta 3'
+"""
+        default_adherents()
+        default_subscription()
+        default_prestation()
+        self.factory.xfer = SubscriptionAddModify()
+        self.calljson('/diacamma.member/subscriptionAddModify',
+                      {'SAVE': 'YES', 'adherent': 2, 'status': 1, 'dateref': '2009-10-01', 'subscriptiontype': 1, 'season': 10, 'prestations': '1;3'}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.member', 'subscriptionAddModify')
+
+        self.factory.xfer = AdherentActiveList()
+        self.calljson('/diacamma.member/adherentActiveList', {'dateref': '2010-01-15'}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentActiveList')
+        self.assert_count_equal('adherent', 1)
+        self.assert_json_equal('', 'adherent/@0/id', "2")
+        self.assert_json_equal('', 'adherent/@0/firstname', "Avrel")
+        self.assert_json_equal('', 'adherent/@0/license', "team1 [activity1]{[br/]}team3 [activity2]")
+        self.factory.xfer = BillList()
+        self.calljson('/diacamma.invoice/billList', {'bill_type': 0}, False)
+        self.assert_observer('core.custom', 'diacamma.invoice', 'billList')
+        self.assert_count_equal('bill', 1)
+        self.assert_json_equal('', 'bill/@0/total', "413.75€")
+
+        self.factory.xfer = ContactImport()
+        self.calljson('/lucterios.contacts/contactImport', {'step': 1, 'modelname': 'member.Adherent', 'quotechar': "'",
+                                                            'delimiter': ',', 'encoding': 'utf-8', 'dateformat': '%d/%m/%Y', 'csvcontent': StringIO(csv_content)}, False)
+        self.assert_observer('core.custom', 'lucterios.contacts', 'contactImport')
+        self.assert_count_equal('', 6 + 18)
+        self.assert_select_equal('fld_prestations', 14)  # nb=14
+        self.assert_count_equal('CSV', 4)
+
+        self.factory.xfer = ContactImport()
+        self.calljson('/lucterios.contacts/contactImport', {'step': 3, 'modelname': 'member.Adherent', 'quotechar': "'", 'delimiter': ',',
+                                                            'encoding': 'utf-8', 'dateformat': '%d/%m/%Y', 'csvcontent0': csv_content,
+                                                            "fld_lastname": "nom", "fld_firstname": "prenom", "fld_address": "adresse",
+                                                            "fld_postal_code": "codePostal", "fld_city": "ville", "fld_email": "mail",
+                                                            "fld_birthday": "DateNaissance", "fld_birthplace": "LieuNaissance", 'fld_subscriptiontype': 'Type',
+                                                            'fld_prestations': 'Cours', }, False)
+        self.assert_observer('core.custom', 'lucterios.contacts', 'contactImport')
+        self.assert_count_equal('', 2)
+        self.assert_json_equal('LABELFORM', 'result', "{[center]}{[i]}4 éléments ont été importés{[/i]}{[/center]}")
+        self.assertEqual(len(self.json_actions), 1)
+
+        self.factory.xfer = AdherentActiveList()
+        self.calljson('/diacamma.member/adherentActiveList', {'dateref': '2010-01-15'}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentActiveList')
+        self.print_json('adherent')
+        self.assert_count_equal('adherent', 4)
+        self.assert_json_equal('', 'adherent/@0/id', "2")
+        self.assert_json_equal('', 'adherent/@0/firstname', "Avrel")
+#        self.assert_json_equal('', 'adherent/@0/license', "")
+        self.assert_json_equal('', 'adherent/@1/id', "5")
+        self.assert_json_equal('', 'adherent/@1/firstname', "Joe")
+#        self.assert_json_equal('', 'adherent/@1/license', "")
+        self.assert_json_equal('', 'adherent/@2/id', "7")
+        self.assert_json_equal('', 'adherent/@2/firstname', "Marie")
+#        self.assert_json_equal('', 'adherent/@2/license', "")
+        self.assert_json_equal('', 'adherent/@3/id', "6")
+        self.assert_json_equal('', 'adherent/@3/firstname', "Lucky")
+#        self.assert_json_equal('', 'adherent/@3/license', "")
+
+        self.factory.xfer = BillList()
+        self.calljson('/diacamma.invoice/billList', {'bill_type': 0}, False)
+        self.assert_observer('core.custom', 'diacamma.invoice', 'billList')
+        self.print_json('bill')
+        self.assert_count_equal('bill', 4)
+
 
 class AdherentFamilyTest(BaseAdherentTest):
 
     def setUp(self):
-        BaseAdherentTest.setUp(self)
+        BaseAdherentTest.setUp(self)#
         Parameter.change_value('member-family-type', 3)
         set_parameters([])
 
