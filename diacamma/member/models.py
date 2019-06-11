@@ -752,7 +752,7 @@ class Adherent(Individual):
                     working_subscription = new_item.last_subscription
                 if working_subscription is not None:
                     working_subscription.import_licence(rowdata)
-                    if check_change_status and (working_subscription.status == 1) and (working_subscription.prestations.all().count() == 0):
+                    if check_change_status and (working_subscription.status == 1) and (working_subscription.prestations.count() == 0) and (working_subscription.license_set.count() != 0):
                         working_subscription.validate()
             return new_item
         except Exception:
@@ -1091,10 +1091,11 @@ class Subscription(LucteriosModel):
             for prestation_name in rowdata['prestations'].replace(',', ';').split(';'):
                 try:
                     new_prestation = Prestation.objects.get(name=prestation_name.strip())
-                    self.prestations.append(new_prestation)
-                except Exception:
+                    self.prestations.add(new_prestation)
+                except Prestation.DoesNotExist:
                     pass
-        if self.prestations.all().count() == 0:
+            self.save()
+        elif self.prestations.count() == 0:
             try:
                 team = Team.objects.get(name=rowdata['team'])
             except Exception:
