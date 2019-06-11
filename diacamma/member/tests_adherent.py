@@ -1567,6 +1567,7 @@ class AdherentFamilyTest(BaseAdherentTest):
     def setUp(self):
         BaseAdherentTest.setUp(self)
         Parameter.change_value('member-family-type', 3)
+        Parameter.change_value("member-fields", "firstname;lastname;tel1;tel2;email;family")
         set_parameters([])
 
     def test_show_adherent(self):
@@ -1886,3 +1887,89 @@ class AdherentFamilyTest(BaseAdherentTest):
         self.assert_json_equal('', 'bill/@3/bill_type', "facture")
         self.assert_json_equal('', 'bill/@4/bill_type', "facture")
         self.assert_json_equal('', 'bill/@5/bill_type', "facture")
+
+    def test_import(self):
+        csv_content = """"nom","prenom","sexe","famille","adresse","codePostal","ville","fixe","portable","mail","Type"
+"Dalton","Avrel","Homme","LES DALTONS","rue de la liberté","99673","TOUINTOUIN","0502851031","0439423854","avrel.dalton@worldcompany.com","Annually"
+"Dalton","Joe","Homme","Dalton","rue de la liberté","99673","TOUINTOUIN","0502851031","0439423854","joe.dalton@worldcompany.com","Annually"
+"Dalton","Ma'a","Femme","LES DALTONS","rue de la liberté","99673","TOUINTOUIN","0502851031","0439423854","maa.dalton@worldcompany.com","Annually"
+"Luke","Lucky","Homme","Luke","rue de la liberté","99673","TOUINTOUIN","0502851031","0439423854","lucky.luke@worldcompany.com","Annually"
+"GOC","Marie","Femme","","33 impasse du 11 novembre","99150","BIDON SUR MER","0632763718","0310231012","marie762@free.fr","Annually"
+"UHADIK","Jeanne","Femme","UHADIK-FEPIZIBU","1 impasse de l"Oisan","99410","VIENVITEVOIR","0699821944","0873988470","marie439@orange.fr","Annually"
+"FEPIZIBU","Benjamin","Homme","UHADIK-FEPIZIBU","30 cours de la Chartreuse","99247","BELLEVUE","0262009068","0754416670","benjamin475@free.fr","Annually"
+"""
+        default_adherents()
+        default_subscription()
+        self.add_family()
+        self.factory.xfer = AdherentFamilySelect()
+        self.calljson('/diacamma.member/adherentFamilySelect', {'adherent': 2, 'legal_entity': 7}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.member', 'adherentFamilySelect')
+        self.factory.xfer = AdherentFamilySelect()
+        self.calljson('/diacamma.member/adherentFamilySelect', {'adherent': 5, 'legal_entity': 7}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.member', 'adherentFamilySelect')
+
+        self.factory.xfer = AdherentActiveList()
+        self.calljson('/diacamma.member/adherentActiveList', {'dateref': '2010-01-15'}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentActiveList')
+        self.assert_count_equal('adherent', 0)
+        self.assertEqual(1, LegalEntity.objects.filter(structure_type_id=3).count())
+
+        self.factory.xfer = BillList()
+        self.calljson('/diacamma.invoice/billList', {'bill_type': 1}, False)
+        self.assert_observer('core.custom', 'diacamma.invoice', 'billList')
+        self.assert_count_equal('bill', 0)
+
+        self.factory.xfer = ContactImport()
+        self.calljson('/lucterios.contacts/contactImport', {'step': 1, 'modelname': 'member.Adherent', 'quotechar': '"',
+                                                            'delimiter': ',', 'encoding': 'utf-8', 'dateformat': '%d/%m/%Y', 'csvcontent': StringIO(csv_content)}, False)
+        self.assert_observer('core.custom', 'lucterios.contacts', 'contactImport')
+        self.assert_count_equal('', 6 + 13)
+        self.assert_select_equal('fld_family', 12)
+        self.assert_count_equal('CSV', 7)
+
+        self.factory.xfer = ContactImport()
+        self.calljson('/lucterios.contacts/contactImport', {'step': 3, 'modelname': 'member.Adherent', 'quotechar': '"', 'delimiter': ',',
+                                                            'encoding': 'utf-8', 'dateformat': '%d/%m/%Y', 'csvcontent0': csv_content,
+                                                            "fld_lastname": "nom", "fld_firstname": "prenom", "fld_address": "adresse",
+                                                            "fld_postal_code": "codePostal", "fld_city": "ville", "fld_email": "mail",
+                                                            'fld_subscriptiontype': 'Type', 'fld_family': 'famille', }, False)
+        self.assert_observer('core.custom', 'lucterios.contacts', 'contactImport')
+        self.assert_count_equal('', 2)
+        self.assert_json_equal('LABELFORM', 'result', "{[center]}{[i]}7 éléments ont été importés{[/i]}{[/center]}")
+        self.assertEqual(len(self.json_actions), 1)
+
+        self.factory.xfer = AdherentActiveList()
+        self.calljson('/diacamma.member/adherentActiveList', {'dateref': '2010-01-15'}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentActiveList')
+        self.assert_count_equal('adherent', 7)
+        self.assert_json_equal('', 'adherent/@0/firstname', "Avrel")
+        self.assert_json_equal('', 'adherent/@0/family', "LES DALTONS")
+        self.assert_json_equal('', 'adherent/@1/firstname', "Joe")
+        self.assert_json_equal('', 'adherent/@1/family', "Dalton")
+        self.assert_json_equal('', 'adherent/@2/firstname', "Ma'a")
+        self.assert_json_equal('', 'adherent/@2/family', "LES DALTONS")
+        self.assert_json_equal('', 'adherent/@3/firstname', "Benjamin")
+        self.assert_json_equal('', 'adherent/@3/family', "UHADIK-FEPIZIBU")
+        self.assert_json_equal('', 'adherent/@4/firstname', "Marie")
+        self.assert_json_equal('', 'adherent/@4/family', "---")
+        self.assert_json_equal('', 'adherent/@5/firstname', "Lucky")
+        self.assert_json_equal('', 'adherent/@5/family', "Luke")
+        self.assert_json_equal('', 'adherent/@6/firstname', "Jeanne")
+        self.assert_json_equal('', 'adherent/@6/family', "UHADIK-FEPIZIBU")
+
+        self.assertEqual(4, LegalEntity.objects.filter(structure_type_id=3).count())
+
+        self.factory.xfer = BillList()
+        self.calljson('/diacamma.invoice/billList', {'bill_type': 1}, False)
+        self.assert_observer('core.custom', 'diacamma.invoice', 'billList')
+        self.assert_count_equal('bill', 5)
+        self.assert_json_equal('', 'bill/@0/third', "LES DALTONS")
+        self.assert_json_equal('', 'bill/@0/total', "152.88€")  # Subscription: art1:12.34 + art5:64.10 x 2
+        self.assert_json_equal('', 'bill/@1/third', "Dalton")
+        self.assert_json_equal('', 'bill/@1/total', "76.44€")  # Subscription: art1:12.34 + art5:64.10
+        self.assert_json_equal('', 'bill/@2/third', "Luke")
+        self.assert_json_equal('', 'bill/@2/total', "76.44€")  # Subscription: art1:12.34 + art5:64.10
+        self.assert_json_equal('', 'bill/@3/third', "GOC Marie")
+        self.assert_json_equal('', 'bill/@3/total', "76.44€")  # Subscription: art1:12.34 + art5:64.10
+        self.assert_json_equal('', 'bill/@4/third', "UHADIK-FEPIZIBU")
+        self.assert_json_equal('', 'bill/@4/total', "152.88€")  # Subscription: art1:12.34 + art5:64.10 x 2

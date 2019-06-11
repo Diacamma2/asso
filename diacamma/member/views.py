@@ -695,12 +695,9 @@ class AdherentFamilyAdd(BaseAdherentFamilyList):
 
     def fillresponse(self):
         BaseAdherentFamilyList.fillresponse(self)
-        adh_value = {'name': self.item.lastname, 'structure_type': self.family_type.id}
-        for field_name in ['address', 'postal_code', 'city', 'country', 'tel1', 'tel2', 'email']:
-            adh_value[field_name] = getattr(self.item, field_name)
         grid = self.get_components('legal_entity')
         grid.add_action(self.request, AdherentFamilySelect.get_action(_("Select"), "images/ok.png"), close=CLOSE_YES, unique=SELECT_SINGLE)
-        grid.add_action(self.request, AdherentFamilyCreate.get_action(TITLE_ADD, "images/add.png"), close=CLOSE_YES, unique=SELECT_NONE, params=adh_value)
+        grid.add_action(self.request, AdherentFamilyCreate.get_action(TITLE_ADD, "images/add.png"), close=CLOSE_YES, unique=SELECT_NONE, params=self.item.get_default_family_value())
         grid.add_action(self.request, ActionsManage.get_action_url('contacts.LegalEntity', 'Show', self), close=CLOSE_NO, unique=SELECT_SINGLE)
 
 

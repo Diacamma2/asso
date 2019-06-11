@@ -48,7 +48,7 @@ from lucterios.framework.filetools import get_tmp_dir
 
 from lucterios.CORE.models import Parameter, PrintModel, LucteriosUser
 from lucterios.CORE.parameters import Params
-from lucterios.contacts.models import Individual, LegalEntity
+from lucterios.contacts.models import Individual, LegalEntity, Responsability
 
 from diacamma.invoice.models import Article, Bill, Detail, get_or_create_customer
 from diacamma.accounting.tools import format_devise
@@ -664,10 +664,8 @@ class Adherent(Individual):
         ident_field.extend(['subscription_set.status', 'subscription_set.season', 'subscription_set.subscriptiontype',
                             'subscription_set.begin_date', 'subscription_set.end_date'])
         if Params.getvalue("member-team-enable"):
-            # Params.getvalue("member-team-text")
             ident_field.append('subscription_set.license_set.team')
         if Params.getvalue("member-activite-enable"):
-            # Params.getvalue("member-activite-text")
             ident_field.append('subscription_set.license_set.activity')
         if Params.getvalue("member-licence-enabled"):
             ident_field.append('subscription_set.license_set.value')
@@ -676,6 +674,8 @@ class Adherent(Individual):
     @classmethod
     def get_import_fields(cls):
         fields = super(Adherent, cls).get_import_fields()
+        if Params.getobject("member-family-type") is not None:
+            fields.append(('family', _('family')))
         fields.append(('subscriptiontype', _('subscription type')))
         if Params.getvalue("member-team-enable"):
             fields.append(('team', Params.getvalue("member-team-text")))
@@ -687,14 +687,14 @@ class Adherent(Individual):
             fields.append(('value', _('license #')))
         return fields
 
-    def _import_subscription(self, type_name, dateformat):
+    def _import_subscription(self, type_name, dateformat, is_building):
         working_subscription = None
         current_season = Season.current_season()
         type_option = 0
         if '#' in type_name:
             type_name, type_option = type_name.split('#')
         try:
-            type_obj = SubscriptionType.objects.filter(name=type_name)
+            type_obj = SubscriptionType.objects.filter(name__iexact=type_name)
             if len(type_obj) > 0:
                 type_obj = type_obj[0]
                 if type_obj.duration == 1:
@@ -725,7 +725,8 @@ class Adherent(Individual):
                                                                     begin_date=begin_date, end_date=end_date)
                 except ObjectDoesNotExist:
                     working_subscription = Subscription()
-                    working_subscription.status = 1
+                    if is_building:
+                        working_subscription.status = 1
                     working_subscription.adherent = self
                     working_subscription.season = current_season
                     working_subscription.subscriptiontype = type_obj
@@ -738,22 +739,36 @@ class Adherent(Individual):
             logging.getLogger('diacamma.member').exception("import_data")
         return working_subscription
 
+    def _import_family(self, new_family):
+        family_type = Params.getobject("member-family-type")
+        if family_type is None:
+            raise LucteriosException(IMPORTANT, _('No family type!'))
+        try:
+            family = LegalEntity.objects.get(name__iexact=new_family, structure_type=family_type)
+        except LegalEntity.DoesNotExist:
+            family = LegalEntity()
+            for fieldname, fieldvalue in self.get_default_family_value(False).items():
+                setattr(family, fieldname, fieldvalue)
+            family.name = new_family
+            family.structure_type = family_type
+            family.save()
+        if self.family != family:
+            Responsability.objects.create(individual=self, legal_entity=family)
+
     @classmethod
     def import_data(cls, rowdata, dateformat):
         try:
             new_item = super(Adherent, cls).import_data(rowdata, dateformat)
             if new_item is not None:
+                if ('family' in rowdata.keys()) and (rowdata['family'].strip() != ''):
+                    new_item._import_family(rowdata['family'].strip())
                 working_subscription = None
-                check_change_status = False
                 if 'subscriptiontype' in rowdata.keys():
-                    working_subscription = new_item._import_subscription(rowdata['subscriptiontype'], dateformat)
-                    check_change_status = (working_subscription.status == 1)
+                    working_subscription = new_item._import_subscription(rowdata['subscriptiontype'], dateformat, is_building='prestations' in rowdata)
                 if working_subscription is None:
                     working_subscription = new_item.last_subscription
                 if working_subscription is not None:
                     working_subscription.import_licence(rowdata)
-                    if check_change_status and (working_subscription.status == 1) and (working_subscription.prestations.count() == 0) and (working_subscription.license_set.count() != 0):
-                        working_subscription.validate()
             return new_item
         except Exception:
             logging.getLogger('diacamma.member').exception("import_data")
@@ -838,14 +853,25 @@ class Adherent(Individual):
         else:
             return None
 
+    def get_default_family_value(self, with_type=True):
+        family_value = {'name': self.lastname}
+        if with_type:
+            family_type = Params.getobject("member-family-type")
+            if family_type is None:
+                raise LucteriosException(IMPORTANT, _('No family type!'))
+            family_value['structure_type'] = family_type.id
+        for field_name in ['address', 'postal_code', 'city', 'country', 'tel1', 'tel2', 'email']:
+            family_value[field_name] = getattr(self, field_name)
+        return family_value
+
     @property
     def family(self):
         current_family = None
         current_type = Params.getobject("member-family-type")
         if current_type is not None:
-            entities = LegalEntity.objects.filter(responsability__individual=self, structure_type=current_type)
-            if len(entities) > 0:
-                current_family = entities[0]
+            responsabilities = self.responsability_set.filter(legal_entity__structure_type=current_type).order_by('-id')
+            if len(responsabilities) > 0:
+                current_family = responsabilities[0].legal_entity
         return current_family
 
     def get_ref_contact(self):
@@ -1090,18 +1116,18 @@ class Subscription(LucteriosModel):
             self.prestations.through.objects.all().delete()
             for prestation_name in rowdata['prestations'].replace(',', ';').split(';'):
                 try:
-                    new_prestation = Prestation.objects.get(name=prestation_name.strip())
+                    new_prestation = Prestation.objects.get(name__iexact=prestation_name.strip())
                     self.prestations.add(new_prestation)
                 except Prestation.DoesNotExist:
                     pass
             self.save()
         elif self.prestations.count() == 0:
             try:
-                team = Team.objects.get(name=rowdata['team'])
+                team = Team.objects.get(name__iexact=rowdata['team'])
             except Exception:
                 team = None
             try:
-                activity = Activity.objects.get(name=rowdata['activity'])
+                activity = Activity.objects.get(name__iexact=rowdata['activity'])
             except Exception:
                 activity = Activity.objects.all()[0]
             try:
