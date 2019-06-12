@@ -27,7 +27,7 @@ from __future__ import unicode_literals
 from lucterios.CORE.models import Parameter
 from lucterios.CORE.parameters import Params
 
-from diacamma.member.models import Activity
+from diacamma.member.models import Activity, Adherent
 
 from diacamma.event.models import DegreeType, SubDegreeType, Degree
 
@@ -35,11 +35,9 @@ from diacamma.event.models import DegreeType, SubDegreeType, Degree
 def default_event_params():
     for activity in Activity.objects.all():
         for level in range(1, 10):
-            DegreeType.objects.create(
-                name="level #%d.%d" % (activity.id, level), level=level, activity=activity)
+            DegreeType.objects.create(name="level #%d.%d" % (activity.id, level), level=level, activity=activity)
     for level in range(1, 6):
-        SubDegreeType.objects.create(
-            name="sublevel #%d" % level, level=level)
+        SubDegreeType.objects.create(id=level, name="sublevel #%d" % level, level=level)
     Parameter.change_value("event-degree-text", 'Grade')
     Parameter.change_value("event-subdegree-text", 'Barette')
     Parameter.change_value("event-comment-text", 'Epreuve 1:{[br/]}Epreuve 2:{[br/]}')
@@ -48,17 +46,22 @@ def default_event_params():
 
 def add_default_degree():
     # Avrel Dalton level 1.2 sublevel 3
-    Degree.objects.create(
-        adherent_id=2, degree_id=2, subdegree_id=3, date='2011-11-04')
+    Degree.objects.create(adherent=Adherent.objects.get(id=2),
+                          degree=DegreeType.objects.get(id=2),
+                          subdegree=SubDegreeType.objects.get(id=3), date='2011-11-04')
     # William Dalton level 1.7
-    Degree.objects.create(
-        adherent_id=3, degree_id=7, subdegree_id=None, date='2011-10-11')
+    Degree.objects.create(adherent=Adherent.objects.get(id=3),
+                          degree=DegreeType.objects.get(id=7),
+                          subdegree=None, date='2011-10-11')
     # Jack Dalton level 2.2 sublevel 1
-    Degree.objects.create(
-        adherent_id=4, degree_id=11, subdegree_id=1, date='2012-04-09')
+    Degree.objects.create(adherent=Adherent.objects.get(id=4),
+                          degree=DegreeType.objects.get(id=11),
+                          subdegree=SubDegreeType.objects.get(id=1), date='2012-04-09')
     # Joe Dalton level 2.6
-    Degree.objects.create(
-        adherent_id=5, degree_id=15, subdegree_id=None, date='2010-09-21')
+    Degree.objects.create(adherent=Adherent.objects.get(id=5),
+                          degree=DegreeType.objects.get(id=15),
+                          subdegree=None, date='2010-09-21')
     # Lucky Luke level 1.3 sublevel 6
-    Degree.objects.create(
-        adherent_id=6, degree_id=3, subdegree_id=6, date='2011-07-14')
+    Degree.objects.create(adherent=Adherent.objects.get(id=6),
+                          degree=DegreeType.objects.get(id=3),
+                          subdegree=SubDegreeType.objects.get(id=5), date='2011-07-14')

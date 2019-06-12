@@ -29,15 +29,15 @@ from lucterios.framework.test import LucteriosTest
 from lucterios.framework.filetools import get_user_dir
 from lucterios.CORE.models import Parameter
 from lucterios.CORE.parameters import Params
+from lucterios.contacts.models import LegalEntity
 
 from diacamma.member.test_tools import default_season, default_params, default_adherents, set_parameters, default_financial, default_subscription
-from diacamma.member.views import AdherentShow, SubscriptionAddModify,\
-    AdherentFamilySelect
+from diacamma.member.views import AdherentShow, SubscriptionAddModify, AdherentFamilySelect
+from diacamma.invoice.views import BillList, BillShow
+
 from diacamma.event.test_tools import default_event_params, add_default_degree
 from diacamma.event.views import EventListExamination, EventListOuting, EventAddModify, EventDel, EventShow, OrganizerAddModify, OrganizerSave, OrganizerResponsible, OrganizerDel,\
     ParticipantAdd, ParticipantSave, ParticipantDel, ParticipantOpen, EventTransition, ParticipantModify
-from diacamma.invoice.views import BillList, BillShow
-from lucterios.contacts.models import LegalEntity
 
 
 class EventTest(LucteriosTest):
