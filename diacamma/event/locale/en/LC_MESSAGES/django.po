@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-03-25 10:53+0000\n"
+"POT-Creation-Date: 2019-06-19 09:45+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -33,214 +33,214 @@ msgstr "Show trainning/outing"
 msgid "Show examination"
 msgstr "Show examination"
 
-#: models.py:49 models.py:92
+#: models.py:50 models.py:93
 msgid "name"
 msgstr "name"
 
-#: models.py:50 models.py:93
+#: models.py:51 models.py:94
 msgid "level"
 msgstr "level"
 
-#: models.py:53 models.py:120
+#: models.py:54 models.py:121
 msgid "activity"
 msgstr "activity"
 
-#: models.py:86
+#: models.py:87
 msgid "degree type"
 msgstr "degree type"
 
-#: models.py:87
+#: models.py:88
 msgid "degree types"
 msgstr "degree types"
 
-#: models.py:112
+#: models.py:113
 msgid "sub degree type"
 msgstr "sub degree type"
 
-#: models.py:113
+#: models.py:114
 msgid "sub degree types"
 msgstr "sub degree types"
 
-#: models.py:121 models.py:271
+#: models.py:122 models.py:272
 msgid "date"
 msgstr "date"
 
-#: models.py:122 models.py:356
+#: models.py:123 models.py:357
 msgid "comment"
 msgstr "comment"
 
-#: models.py:123
+#: models.py:124
 msgid "status"
 msgstr "status"
 
-#: models.py:124
+#: models.py:125
 msgid "building"
 msgstr "building"
 
-#: models.py:124
+#: models.py:125
 msgid "valid"
 msgstr "valid"
 
-#: models.py:125
+#: models.py:126
 msgid "event type"
 msgstr "event type"
 
-#: models.py:126
+#: models.py:127
 msgid "examination"
 msgstr "examination"
 
-#: models.py:126
+#: models.py:127
 msgid "trainning/outing"
 msgstr "trainning/outing"
 
-#: models.py:127
+#: models.py:128
 msgid "end date"
 msgstr "end date"
 
-#: models.py:128 models.py:160
+#: models.py:129 models.py:161
 msgid "default article (member)"
 msgstr "default article (member)"
 
-#: models.py:129 models.py:160
+#: models.py:130 models.py:161
 msgid "default article (no member)"
 msgstr "default article (no member)"
 
-#: models.py:130
+#: models.py:131
 msgid "cost accounting"
 msgstr "cost accounting"
 
-#: models.py:180 models.py:193 models.py:474
+#: models.py:181 models.py:194 models.py:487
 #, python-format
 msgid "%s validated!"
 msgstr "%s validated!"
 
-#: models.py:196
+#: models.py:197
 msgid "no responsible!"
 msgstr "no responsible!"
 
-#: models.py:198
+#: models.py:199
 msgid "no participant!"
 msgstr "no participant!"
 
-#: models.py:206
+#: models.py:207
 msgid "Validation"
 msgstr "Validation"
 
-#: models.py:217 models.py:224 models.py:273 models.py:349
+#: models.py:218 models.py:225 models.py:274 models.py:350
 msgid "event"
 msgstr "event"
 
-#: models.py:218
+#: models.py:219
 msgid "events"
 msgstr "events"
 
-#: models.py:226 models.py:351
+#: models.py:227 models.py:352
 msgid "contact"
 msgstr "contact"
 
-#: models.py:228
+#: models.py:229
 msgid "responsible"
 msgstr "responsible"
 
-#: models.py:255 models.py:338
+#: models.py:256 models.py:339
 msgid "examination validated!"
 msgstr "examination validated!"
 
-#: models.py:259
+#: models.py:260
 msgid "organizer"
 msgstr "organizer"
 
-#: models.py:260
+#: models.py:261
 msgid "organizers"
 msgstr "organizers"
 
-#: models.py:266
+#: models.py:267
 msgid "adherent"
 msgstr "adherent"
 
-#: models.py:268 models.py:342
+#: models.py:269 models.py:343
 msgid "degree"
 msgstr "degree"
 
-#: models.py:270
+#: models.py:271
 msgid "sub degree"
 msgstr "sub degree"
 
-#: models.py:343
+#: models.py:344
 msgid "degrees"
 msgstr "degrees"
 
-#: models.py:353
+#: models.py:354
 msgid "degree result"
 msgstr "degree result"
 
-#: models.py:355
+#: models.py:356
 msgid "sub-degree result"
 msgstr "sub-degree result"
 
-#: models.py:358 models.py:374
+#: models.py:359 models.py:375
 msgid "article"
 msgstr "article"
 
-#: models.py:359
+#: models.py:360
 msgid "reduce"
 msgstr "reduce"
 
-#: models.py:362
+#: models.py:363
 msgid "bill"
 msgstr "bill"
 
-#: models.py:369
+#: models.py:370
 msgid "subscript?"
 msgstr "subscript?"
 
-#: models.py:369
+#: models.py:370
 msgid "current"
 msgstr "current"
 
-#: models.py:370 models.py:373
+#: models.py:371 models.py:374
 #, python-format
 msgid "%s result"
 msgstr "%s result"
 
-#: models.py:467
+#: models.py:479
 #, python-format
 msgid "Participant: %s"
 msgstr "Participant: %s"
 
-#: models.py:495
+#: models.py:508
 msgid "participant"
 msgstr "participant"
 
-#: models.py:496
+#: models.py:509
 msgid "participants"
 msgstr "participants"
 
-#: models.py:502
+#: models.py:515
 msgid "event-degree-enable"
 msgstr "Activate examination"
 
-#: models.py:504
+#: models.py:517
 msgid "event-subdegree-enable"
 msgstr "sub-degree enable"
 
-#: models.py:506
+#: models.py:519
 msgid "event-degree-text"
 msgstr "degree text"
 
-#: models.py:507 views_degree.py:46
+#: models.py:520 views_degree.py:46
 msgid "Degree"
 msgstr "Degree"
 
-#: models.py:508
+#: models.py:521
 msgid "event-subdegree-text"
 msgstr "sub-degree text"
 
-#: models.py:509
+#: models.py:522
 msgid "Sub-degree"
 msgstr "Sub-degree"
 
-#: models.py:511
+#: models.py:524
 msgid "event-comment-text"
 msgstr "default comment of examination"
 

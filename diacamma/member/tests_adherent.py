@@ -50,7 +50,8 @@ from diacamma.member.views import AdherentActiveList, AdherentAddModify, Adheren
     AdherentRenewList, AdherentRenew, SubscriptionTransition, AdherentCommand,\
     AdherentCommandDelete, AdherentCommandModify, AdherentFamilyAdd,\
     AdherentFamilySelect, AdherentFamilyCreate, FamilyAdherentAdd,\
-    FamilyAdherentCreate, FamilyAdherentAdded, AdherentListing
+    FamilyAdherentCreate, FamilyAdherentAdded, AdherentListing,\
+    AdherentThirdList
 from diacamma.member.test_tools import default_season, default_financial, default_params,\
     default_adherents, default_subscription, set_parameters, default_prestation
 from diacamma.accounting.models import FiscalYear
@@ -105,6 +106,7 @@ class AdherentTest(BaseAdherentTest):
 
     def setUp(self):
         BaseAdherentTest.setUp(self)
+        Parameter.change_value('member-family-type', 0)
         set_parameters(["team", "activite", "age", "licence", "genre", 'numero', 'birth'])
         ThirdShow.url_text
 
@@ -124,6 +126,7 @@ class AdherentTest(BaseAdherentTest):
         self.assert_count_equal('#adherent/actions', 5)
         self.assert_grid_equal('adherent', {'num': "N°", 'firstname': "prénom", 'lastname': "nom", 'tel1': "tel1", 'tel2': "tel2", 'email': "courriel", 'license': "participation"}, 0)
         self.assert_json_equal('', '#adherent/size_by_page', 25)
+        self.assertEqual(len(self.json_actions), 3, self.json_actions)
 
         Parameter.change_value("member-size-page", 100)
         Parameter.change_value("member-fields", "firstname;lastname;email;documents")
@@ -1912,6 +1915,8 @@ class AdherentFamilyTest(BaseAdherentTest):
         self.calljson('/diacamma.member/adherentActiveList', {'dateref': '2010-01-15'}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'adherentActiveList')
         self.assert_count_equal('adherent', 0)
+        self.assertEqual(len(self.json_actions), 4)
+
         self.assertEqual(1, LegalEntity.objects.filter(structure_type_id=3).count())
 
         self.factory.xfer = BillList()
@@ -1973,3 +1978,18 @@ class AdherentFamilyTest(BaseAdherentTest):
         self.assert_json_equal('', 'bill/@3/total', "76.44€")  # Subscription: art1:12.34 + art5:64.10
         self.assert_json_equal('', 'bill/@4/third', "UHADIK-FEPIZIBU")
         self.assert_json_equal('', 'bill/@4/total', "152.88€")  # Subscription: art1:12.34 + art5:64.10 x 2
+
+        self.factory.xfer = AdherentThirdList()
+        self.calljson('/diacamma.member/adherentThirdList', {'dateref': '2010-01-15'}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentThirdList')
+        self.assert_count_equal('third', 5)
+        self.assert_json_equal('', 'third/@0/contact', "Dalton")
+        self.assert_json_equal('', 'third/@0/adherents', "Dalton Joe")
+        self.assert_json_equal('', 'third/@1/contact', "GOC Marie")
+        self.assert_json_equal('', 'third/@1/adherents', "GOC Marie")
+        self.assert_json_equal('', 'third/@2/contact', "LES DALTONS")
+        self.assert_json_equal('', 'third/@2/adherents', "Dalton Avrel{[br/]}Dalton Ma'a")
+        self.assert_json_equal('', 'third/@3/contact', "Luke")
+        self.assert_json_equal('', 'third/@3/adherents', "Luke Lucky")
+        self.assert_json_equal('', 'third/@4/contact', "UHADIK-FEPIZIBU")
+        self.assert_json_equal('', 'third/@4/adherents', "FEPIZIBU Benjamin{[br/]}UHADIK Jeanne")

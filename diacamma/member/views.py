@@ -56,7 +56,9 @@ from lucterios.CORE.parameters import Params
 from lucterios.contacts.models import Individual, LegalEntity, Responsability
 from lucterios.contacts.views_contacts import LegalEntityAddModify
 
+from diacamma.accounting.models import Third
 from diacamma.member.models import Adherent, Subscription, Season, Age, Team, Activity, License, DocAdherent, SubscriptionType, CommandManager, Prestation
+from diacamma.accounting.views import ThirdList
 
 
 MenuManage.add_sub("association", None, "diacamma.member/images/association.png", _("Association"), _("Association tools"), 30)
@@ -269,6 +271,7 @@ class AdherentActiveList(AdherentAbstractList):
         if Params.getvalue("member-licence-enabled"):
             self.get_components(self.field_id).add_action(self.request, AdherentLicense.get_action(_("License"), ""),
                                                           unique=SELECT_SINGLE, close=CLOSE_NO)
+        self.add_action(ActionsManage.get_action_url(ThirdAdherent.get_long_name(), "ThirdList", self), pos_act=0, close=CLOSE_YES, modal=FORMTYPE_NOMODAL)
         if Params.getvalue("member-subscription-mode") == 1:
             self.add_action(SubscriptionModerate.get_action(_("Moderation"), "images/up.png"), pos_act=0, close=CLOSE_NO)
 
@@ -312,6 +315,98 @@ class AdherentAddModify(XferAddEditor):
     field_id = 'adherent'
     caption_add = _("Add adherent")
     caption_modify = _("Modify adherent")
+
+
+class ThirdAdherent(Third):
+
+    def set_context(self, xfer):
+        self.season_id = xfer.getparam("season_id", 0)
+        if (self.season_id == 0):
+            dateref = convert_date(xfer.getparam("dateref", ""), Season.current_season().date_ref)
+            self.season_id = Season.get_from_date(dateref).id
+
+    @property
+    def adherents(self):
+        contact = self.contact.get_final_child()
+        if isinstance(contact, Adherent):
+            return contact
+        elif isinstance(contact, LegalEntity):
+            family_type = Params.getobject("member-family-type")
+            if family_type is None:
+                raise LucteriosException(IMPORTANT, _('No family type!'))
+            adhs = []
+            for resp in contact.responsability_set.filter(individual__adherent__subscription__season_id=self.season_id).distinct():
+                adh = resp.individual.get_final_child()
+                if adh.family == contact:
+                    adhs.append(six.text_type(adh))
+            return "{[br/]}".join(set(adhs))
+        return
+
+    class Meta(object):
+        default_permissions = []
+        proxy = True
+
+
+@ActionsManage.affect_other(_('Address'), "images/show.png", condition=lambda xfer: Params.getobject("member-family-type") is not None)
+@MenuManage.describ('contacts.change_abstractcontact')
+class AdherentThirdList(ThirdList):
+    icon = "adherent.png"
+    model = ThirdAdherent
+    field_id = 'third'
+    caption = _("Address of season adherents")
+
+    def fillresponse_header(self):
+        family_type = Params.getobject("member-family-type")
+        if family_type is None:
+            raise LucteriosException(IMPORTANT, _('No family type!'))
+
+        contact_filter = self.getparam('filter', '')
+        dateref = convert_date(self.getparam("dateref", ""), Season.current_season().date_ref)
+        season = Season.get_from_date(dateref)
+        self.params['season_id'] = season.id
+        self.fieldnames = ["contact", "contact.address", "contact.city", "contact.tel1", "contact.tel2", "contact.email", (_("adherents"), "adherents")]
+        legal_filter = Q(contact__legalentity__responsability__individual__adherent__subscription__season=season)
+        indiv_filter = Q(contact__individual__adherent__subscription__season=season)
+        dates_filter = Q(supporting__bill__date__gte=season.begin_date) & Q(supporting__bill__date__lte=season.end_date)
+        self.filter = Q()
+        if contact_filter != "":
+            q_legalentity = Q(contact__legalentity__name__icontains=contact_filter)
+            q_individual = Q(completename__icontains=contact_filter)
+            self.filter &= (q_legalentity | q_individual)
+        self.filter &= dates_filter & (legal_filter | indiv_filter)
+
+        comp = XferCompEdit('filter')
+        comp.set_value(contact_filter)
+        comp.set_action(self.request, self.get_action(), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
+        comp.set_location(0, 1, 2)
+        comp.description = _('Filtrer by contact')
+        comp.is_default = True
+        self.add_component(comp)
+
+        dtref = XferCompDate('dateref')
+        dtref.set_value(dateref)
+        dtref.set_needed(True)
+        dtref.set_location(2, 1)
+        dtref.description = _("reference date")
+        dtref.set_action(self.request, self.get_action(), modal=FORMTYPE_REFRESH)
+        self.add_component(dtref)
+
+    def fillresponse(self):
+        ThirdList.fillresponse(self)
+        grid = self.get_components(self.field_id)
+        grid.colspan = 3
+        grid.add_action(self.request, ActionsManage.get_action_url(Third.get_long_name(), "Show", self), modal=FORMTYPE_MODAL, unique=SELECT_SINGLE, close=CLOSE_NO)
+
+
+@ActionsManage.affect_list(TITLE_PRINT, "images/print.png", condition=lambda xfer: Params.getobject("member-family-type") is not None)
+@MenuManage.describ('contacts.change_abstractcontact')
+class AdherentThirdPrint(XferPrintAction):
+    icon = "adherent.png"
+    model = ThirdAdherent
+    field_id = 'third'
+    caption = _("Print adherent")
+    action_class = AdherentThirdList
+    with_text_export = True
 
 
 @ActionsManage.affect_grid(TITLE_EDIT, "images/show.png", unique=SELECT_SINGLE)
