@@ -339,7 +339,7 @@ class ThirdAdherent(Third):
                 adh = resp.individual.get_final_child()
                 if adh.family == contact:
                     adhs.append(six.text_type(adh))
-            return "{[br/]}".join(set(adhs))
+            return "{[br/]}".join(sorted(set(adhs)))
         return
 
     class Meta(object):
