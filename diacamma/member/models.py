@@ -687,6 +687,22 @@ class Adherent(Individual):
             fields.append(('value', _('license #')))
         return fields
 
+    def _import_family(self, new_family):
+        family_type = Params.getobject("member-family-type")
+        if family_type is None:
+            raise LucteriosException(IMPORTANT, _('No family type!'))
+        try:
+            family = LegalEntity.objects.get(name__iexact=new_family, structure_type=family_type)
+        except LegalEntity.DoesNotExist:
+            family = LegalEntity()
+            for fieldname, fieldvalue in self.get_default_family_value(False).items():
+                setattr(family, fieldname, fieldvalue)
+            family.name = new_family
+            family.structure_type = family_type
+            family.save()
+        if self.family != family:
+            Responsability.objects.create(individual=self, legal_entity=family)
+
     def _import_subscription(self, type_name, dateformat, is_building):
         working_subscription = None
         current_season = Season.current_season()
@@ -732,28 +748,12 @@ class Adherent(Individual):
                     working_subscription.subscriptiontype = type_obj
                     working_subscription.begin_date = begin_date
                     working_subscription.end_date = end_date
-                    working_subscription.save()
+                    working_subscription.save(with_bill=False)
                 if isinstance(working_subscription, tuple):
                     working_subscription = working_subscription[0]
         except Exception:
             logging.getLogger('diacamma.member').exception("import_data")
         return working_subscription
-
-    def _import_family(self, new_family):
-        family_type = Params.getobject("member-family-type")
-        if family_type is None:
-            raise LucteriosException(IMPORTANT, _('No family type!'))
-        try:
-            family = LegalEntity.objects.get(name__iexact=new_family, structure_type=family_type)
-        except LegalEntity.DoesNotExist:
-            family = LegalEntity()
-            for fieldname, fieldvalue in self.get_default_family_value(False).items():
-                setattr(family, fieldname, fieldvalue)
-            family.name = new_family
-            family.structure_type = family_type
-            family.save()
-        if self.family != family:
-            Responsability.objects.create(individual=self, legal_entity=family)
 
     @classmethod
     def import_data(cls, rowdata, dateformat):
@@ -769,6 +769,7 @@ class Adherent(Individual):
                     working_subscription = new_item.last_subscription
                 if working_subscription is not None:
                     working_subscription.import_licence(rowdata)
+                    working_subscription.save(with_bill=True)
             return new_item
         except Exception:
             logging.getLogger('diacamma.member').exception("import_data")
@@ -1113,14 +1114,14 @@ class Subscription(LucteriosModel):
 
     def import_licence(self, rowdata):
         if ('prestations' in rowdata) and (rowdata['prestations'].strip() != ''):
-            self.prestations.through.objects.all().delete()
+            prestation_list = []
             for prestation_name in rowdata['prestations'].replace(',', ';').split(';'):
                 try:
                     new_prestation = Prestation.objects.get(name__iexact=prestation_name.strip())
-                    self.prestations.add(new_prestation)
+                    prestation_list.append(new_prestation)
                 except Prestation.DoesNotExist:
                     pass
-            self.save()
+            self.prestations.set(prestation_list)
         elif self.prestations.count() == 0:
             try:
                 team = Team.objects.get(name__iexact=rowdata['team'])
