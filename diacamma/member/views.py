@@ -32,7 +32,7 @@ from django.conf import settings
 
 from lucterios.framework.xferadvance import XferListEditor, TITLE_OK, TITLE_ADD,\
     TITLE_MODIFY, TITLE_EDIT, TITLE_CANCEL, TITLE_LABEL, TITLE_LISTING,\
-    TITLE_DELETE, TITLE_CLOSE, TITLE_PRINT, XferTransition
+    TITLE_DELETE, TITLE_CLOSE, TITLE_PRINT, XferTransition, TITLE_CREATE
 from lucterios.framework.xferadvance import XferAddEditor
 from lucterios.framework.xferadvance import XferShowEditor
 from lucterios.framework.xferadvance import XferDelete
@@ -306,7 +306,7 @@ class AdherentRenewList(AdherentAbstractList):
             self.add_action(SubscriptionModerate.get_action(_("Moderation"), "images/up.png"), pos_act=0, close=CLOSE_NO)
 
 
-@ActionsManage.affect_grid(TITLE_ADD, "images/add.png")
+@ActionsManage.affect_grid(TITLE_CREATE, "images/new.png")
 @ActionsManage.affect_show(TITLE_MODIFY, "images/edit.png", close=CLOSE_YES)
 @MenuManage.describ('contacts.add_abstractcontact')
 class AdherentAddModify(XferAddEditor):
@@ -792,7 +792,7 @@ class AdherentFamilyAdd(BaseAdherentFamilyList):
         BaseAdherentFamilyList.fillresponse(self)
         grid = self.get_components('legal_entity')
         grid.add_action(self.request, AdherentFamilySelect.get_action(_("Select"), "images/ok.png"), close=CLOSE_YES, unique=SELECT_SINGLE)
-        grid.add_action(self.request, AdherentFamilyCreate.get_action(TITLE_ADD, "images/add.png"), close=CLOSE_YES, unique=SELECT_NONE, params=self.item.get_default_family_value())
+        grid.add_action(self.request, AdherentFamilyCreate.get_action(TITLE_CREATE, "images/new.png"), close=CLOSE_YES, unique=SELECT_NONE, params=self.item.get_default_family_value())
         grid.add_action(self.request, ActionsManage.get_action_url('contacts.LegalEntity', 'Show', self), close=CLOSE_NO, unique=SELECT_SINGLE)
 
 

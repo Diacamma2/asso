@@ -1594,7 +1594,7 @@ class AdherentFamilyTest(BaseAdherentTest):
         self.assert_observer('core.custom', 'diacamma.member', 'adherentFamilyAdd')
         self.assert_count_equal('', 4)
         self.assert_count_equal('legal_entity', 0)
-        self.assert_json_equal('', '#legal_entity/actions/@1/icon', "/static/lucterios.CORE/images/add.png")
+        self.assert_json_equal('', '#legal_entity/actions/@1/icon', "/static/lucterios.CORE/images/new.png")
         json_values = self.get_json_path('#legal_entity/actions/@1/params').items()
         self.assertEqual(len(json_values), 9)
         params_value = {'adherent': 2}

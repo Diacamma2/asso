@@ -27,7 +27,8 @@ from __future__ import unicode_literals
 from django.utils.translation import ugettext_lazy as _
 from django.db.models import Q
 
-from lucterios.framework.xferadvance import XferListEditor, TITLE_DELETE, TITLE_MODIFY, TITLE_ADD, TITLE_EDIT
+from lucterios.framework.xferadvance import XferListEditor, TITLE_DELETE, TITLE_MODIFY, TITLE_ADD, TITLE_EDIT,\
+    TITLE_CREATE
 from lucterios.framework.xferadvance import XferAddEditor
 from lucterios.framework.xferadvance import XferShowEditor
 from lucterios.framework.xferadvance import XferDelete
@@ -90,7 +91,7 @@ class SeasonActive(XferContainerAcknowledge):
         self.item.set_has_actif()
 
 
-@ActionsManage.affect_grid(TITLE_ADD, "images/add.png")
+@ActionsManage.affect_grid(TITLE_CREATE, "images/new.png")
 @MenuManage.describ('member.add_season')
 class SeasonAddModify(XferAddEditor):
     icon = "season.png"

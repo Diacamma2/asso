@@ -30,7 +30,7 @@ from django.db.models import Q
 
 from lucterios.framework.xferadvance import XferListEditor, TITLE_PRINT,\
     TITLE_CLOSE, TITLE_DELETE, TITLE_MODIFY, TITLE_ADD, TITLE_EDIT, TITLE_OK, TITLE_CANCEL,\
-    XferTransition
+    XferTransition, TITLE_CREATE
 from lucterios.framework.xferadvance import XferAddEditor
 from lucterios.framework.xferadvance import XferShowEditor
 from lucterios.framework.xferadvance import XferDelete
@@ -96,7 +96,7 @@ class EventSearch(XferSearchEditor):
     caption = _("Search event")
 
 
-@ActionsManage.affect_grid(TITLE_ADD, "images/add.png")
+@ActionsManage.affect_grid(TITLE_CREATE, "images/new.png")
 @ActionsManage.affect_grid(TITLE_MODIFY, "images/edit.png", unique=SELECT_SINGLE)
 @ActionsManage.affect_show(TITLE_MODIFY, "images/edit.png", close=CLOSE_YES, condition=lambda xfer: xfer.item.status == 0)
 @MenuManage.describ('event.add_event')
