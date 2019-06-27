@@ -58,5 +58,5 @@ setup(
     # Packages
     packages=["diacamma", "diacamma.asso",
               "diacamma.member", "diacamma.event"],
-    install_requires=["lucterios ==2.3.*", "lucterios-contacts ==2.3.*", "diacamma-financial ==2.3.*"],
+    install_requires=["lucterios ==2.4.*", "lucterios-contacts ==2.4.*", "diacamma-financial ==2.4.*"],
 )
