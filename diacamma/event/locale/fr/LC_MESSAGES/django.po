@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-06-19 09:45+0000\n"
+"POT-Creation-Date: 2019-07-01 14:32+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -251,7 +251,12 @@ msgstr "Évènements"
 
 #: views.py:52
 msgid "Management of events."
-msgstr "Gestion d'évènements"
+msgstr ""
+"Ensemble d'actions permettant la gestion d'évenement d'un "
+"association: {[br/]}{[ul]}{[li]}Gérer des sorties, des stages et autres "
+"événements propres à votre association.{[/li]}{[li]}Organiser des passages "
+"de diplômes ou d'examens liés à votre activités.{[/li]}{[li]}Générer "
+"automatiquement devis ou factures liés à ces évenements.{[/li]}{[/ul]}"
 
 #: views.py:77 views.py:84
 msgid "Event manage"
