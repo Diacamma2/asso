@@ -32,7 +32,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.utils import six
 from django_fsm import transition, FSMIntegerField
 
-from lucterios.framework.models import LucteriosModel, get_value_converted, get_value_if_choices
+from lucterios.framework.models import LucteriosModel, get_value_if_choices, get_date_formating
 from lucterios.framework.error import LucteriosException, IMPORTANT
 from lucterios.framework.signal_and_lock import Signal
 from lucterios.CORE.models import Parameter
@@ -172,9 +172,9 @@ class Event(LucteriosModel):
     @property
     def date_txt(self):
         if self.event_type == 0:
-            return get_value_converted(self.date)
+            return get_date_formating(self.date)
         else:
-            return "%s -> %s" % (get_value_converted(self.date), get_value_converted(self.date_end))
+            return "%s -> %s" % (get_date_formating(self.date), get_date_formating(self.date_end))
 
     def can_delete(self):
         if self.status > 0:

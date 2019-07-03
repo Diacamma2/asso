@@ -329,7 +329,7 @@ class ThirdAdherent(Third):
     def adherents(self):
         contact = self.contact.get_final_child()
         if isinstance(contact, Adherent):
-            return contact
+            return [six.text_type(contact)]
         elif isinstance(contact, LegalEntity):
             family_type = Params.getobject("member-family-type")
             if family_type is None:
@@ -339,7 +339,7 @@ class ThirdAdherent(Third):
                 adh = resp.individual.get_final_child()
                 if adh.family == contact:
                     adhs.append(six.text_type(adh))
-            return "{[br/]}".join(sorted(set(adhs)))
+            return sorted(set(adhs))
         return
 
     class Meta(object):
@@ -1095,7 +1095,7 @@ def situation_member(xfer):
             if Params.getvalue("member-licence-enabled"):
                 current_license = current_adherent.license
                 if current_license is not None:
-                    ident.append(current_license)
+                    ident.extend(current_license)
             lab = XferCompLabelForm('membercurrent')
             lab.set_value_as_header("{[br/]}".join(ident))
             lab.set_location(0, row + 1, 4)

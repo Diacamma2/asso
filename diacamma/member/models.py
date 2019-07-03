@@ -39,7 +39,7 @@ from django_fsm import FSMIntegerField, transition
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 
-from lucterios.framework.models import LucteriosModel, get_value_converted
+from lucterios.framework.models import LucteriosModel, get_bool_textual
 from lucterios.framework.error import LucteriosException, IMPORTANT
 from lucterios.framework.tools import convert_date, same_day_months_after,\
     toHtml
@@ -788,7 +788,7 @@ class Adherent(Individual):
                 color = "green"
             else:
                 color = "red"
-            value += "%s: {[font color='%s']}%s{[/font]}{[br/]}" % (six.text_type(doc.document), color, get_value_converted(doc.value, True))
+            value += "%s: {[font color='%s']}%s{[/font]}{[br/]}" % (six.text_type(doc.document), color, get_bool_textual(doc.value))
         return value
 
     @property
@@ -1006,7 +1006,7 @@ class Subscription(LucteriosModel):
         else:
             for presta in self.prestations.all():
                 res.append(six.text_type(presta))
-        return "{[br/]}".join(res)
+        return res
 
     @property
     def subscriptiontype_query(self):

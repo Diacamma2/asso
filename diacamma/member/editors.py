@@ -146,7 +146,7 @@ class AdherentEditor(IndividualEditor):
             lbl = XferCompLabelForm("family")
             current_family = self.item.family
             if current_family is None:
-                lbl.set_value('---')
+                lbl.set_value(None)
             else:
                 lbl.set_value(six.text_type(self.item.family))
             lbl.set_location(1, row_init, 2)
