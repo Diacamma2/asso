@@ -73,7 +73,7 @@ class EventEditor(LucteriosEditor):
 
     def show(self, xfer):
         participant = xfer.get_components('participant')
-        participant.change_type_header('is_subscripter', 'bool')
+        participant.change_type_header('is_subscripter', 'B')
         if self.item.status == 0:
             participant.delete_header('degree_result_simple')
             participant.delete_header('subdegree_result')
