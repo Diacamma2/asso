@@ -26,14 +26,14 @@ from __future__ import unicode_literals
 from datetime import date
 
 from django.db import migrations, models
-from django.utils import translation
 from django.conf import settings
 
 from lucterios.CORE.models import PrintModel
+from lucterios.framework.tools import set_locale_lang
 
 
 def initial_values(*args):
-    translation.activate(settings.LANGUAGE_CODE)
+    set_locale_lang(settings.LANGUAGE_CODE)
     PrintModel().load_model("diacamma.member", "Adherent_0006", is_default=False)
     PrintModel().load_model("diacamma.member", "Adherent_0007", is_default=False)
 
