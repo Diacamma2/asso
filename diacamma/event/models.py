@@ -32,7 +32,8 @@ from django.utils.translation import ugettext_lazy as _
 from django.utils import six
 from django_fsm import transition, FSMIntegerField
 
-from lucterios.framework.models import LucteriosModel, get_value_if_choices
+from lucterios.framework.models import LucteriosModel, get_value_if_choices,\
+    LucteriosVirtualField
 from lucterios.framework.tools import get_date_formating
 from lucterios.framework.error import LucteriosException, IMPORTANT
 from lucterios.framework.signal_and_lock import Signal
@@ -43,7 +44,8 @@ from lucterios.contacts.models import Individual
 from diacamma.invoice.models import Article, Bill, Detail, get_or_create_customer
 from diacamma.accounting.models import CostAccounting
 from diacamma.member.models import Activity, Adherent, Subscription, Season
-from diacamma.accounting.tools import format_devise
+from diacamma.accounting.tools import get_amount_from_format_devise,\
+    format_with_devise
 from django.db.models.aggregates import Count
 
 
@@ -131,6 +133,8 @@ class Event(LucteriosModel):
     default_article_nomember = models.ForeignKey(Article, verbose_name=_('default article (no member)'), related_name="eventnomember", null=True, default=None, on_delete=models.PROTECT)
     cost_accounting = models.ForeignKey(CostAccounting, verbose_name=_('cost accounting'), null=True, default=None, db_index=True, on_delete=models.PROTECT)
 
+    date_txt = LucteriosVirtualField(verbose_name=_('date'), compute_from='get_date_txt')
+
     def __str__(self):
         if Params.getvalue("member-activite-enable"):
             return "%s %s" % (self.activity, self.date)
@@ -140,7 +144,7 @@ class Event(LucteriosModel):
     @classmethod
     def get_default_fields(cls):
         if Params.getvalue("member-activite-enable"):
-            return [(Params.getvalue("member-activite-text"), "activity"), 'status', 'event_type', ('date', 'date_txt'), 'comment']
+            return [(Params.getvalue("member-activite-text"), "activity"), 'status', 'event_type', 'date_txt', 'comment']
         else:
             return ['status', 'event_type', ('date', 'date_txt'), 'comment']
 
@@ -170,8 +174,7 @@ class Event(LucteriosModel):
     def event_type_txt(self):
         return get_value_if_choices(self.event_type, self._meta.get_field('event_type'))
 
-    @property
-    def date_txt(self):
+    def get_date_txt(self):
         if self.event_type == 0:
             return get_date_formating(self.date)
         else:
@@ -222,12 +225,9 @@ class Event(LucteriosModel):
 
 
 class Organizer(LucteriosModel):
-    event = models.ForeignKey(
-        Event, verbose_name=_('event'), null=False, default=None, db_index=True, on_delete=models.CASCADE)
-    contact = models.ForeignKey(
-        Individual, verbose_name=_('contact'), null=False, default=None, db_index=True, on_delete=models.CASCADE)
-    isresponsible = models.BooleanField(
-        verbose_name=_('responsible'), default=False)
+    event = models.ForeignKey(Event, verbose_name=_('event'), null=False, default=None, db_index=True, on_delete=models.CASCADE)
+    contact = models.ForeignKey(Individual, verbose_name=_('contact'), null=False, default=None, db_index=True, on_delete=models.CASCADE)
+    isresponsible = models.BooleanField(verbose_name=_('responsible'), default=False)
 
     def __str__(self):
         return self.contact
@@ -264,15 +264,11 @@ class Organizer(LucteriosModel):
 
 
 class Degree(LucteriosModel):
-    adherent = models.ForeignKey(
-        Adherent, verbose_name=_('adherent'), null=False, default=None, db_index=True, on_delete=models.CASCADE)
-    degree = models.ForeignKey(
-        DegreeType, verbose_name=_('degree'), null=False, default=None, db_index=True, on_delete=models.PROTECT)
-    subdegree = models.ForeignKey(
-        SubDegreeType, verbose_name=_('sub degree'), null=True, default=None, db_index=True, on_delete=models.PROTECT)
+    adherent = models.ForeignKey(Adherent, verbose_name=_('adherent'), null=False, default=None, db_index=True, on_delete=models.CASCADE)
+    degree = models.ForeignKey(DegreeType, verbose_name=_('degree'), null=False, default=None, db_index=True, on_delete=models.PROTECT)
+    subdegree = models.ForeignKey(SubDegreeType, verbose_name=_('sub degree'), null=True, default=None, db_index=True, on_delete=models.PROTECT)
     date = models.DateField(verbose_name=_('date'), null=False)
-    event = models.ForeignKey(Event, verbose_name=_(
-        'event'), null=True, default=None, db_index=True, on_delete=models.SET_NULL)
+    event = models.ForeignKey(Event, verbose_name=_('event'), null=True, default=None, db_index=True, on_delete=models.SET_NULL)
 
     def __str__(self):
         if (self.subdegree is None) or (Params.getvalue("event-subdegree-enable") == 0):
@@ -296,8 +292,7 @@ class Degree(LucteriosModel):
 
     @classmethod
     def get_edit_fields(cls):
-        fields = [
-            "adherent", "date", ((Params.getvalue("event-degree-text"), 'degree'),)]
+        fields = ["adherent", "date", ((Params.getvalue("event-degree-text"), 'degree'),)]
         if Params.getvalue("event-subdegree-enable") == 1:
             fields.append(
                 ((Params.getvalue("event-subdegree-text"), 'subdegree'),))
@@ -305,8 +300,7 @@ class Degree(LucteriosModel):
 
     @classmethod
     def get_show_fields(cls):
-        fields = [
-            "adherent", "date", ((Params.getvalue("event-degree-text"), 'degree'),)]
+        fields = ["adherent", "date", ((Params.getvalue("event-degree-text"), 'degree'),)]
         if Params.getvalue("event-subdegree-enable") == 1:
             fields.append(
                 ((Params.getvalue("event-subdegree-text"), 'subdegree'),))
@@ -347,33 +341,29 @@ class Degree(LucteriosModel):
 
 
 class Participant(LucteriosModel):
-    event = models.ForeignKey(
-        Event, verbose_name=_('event'), null=False, default=None, db_index=True, on_delete=models.CASCADE)
-    contact = models.ForeignKey(
-        Individual, verbose_name=_('contact'), null=False, default=None, db_index=True, on_delete=models.CASCADE)
-    degree_result = models.ForeignKey(
-        DegreeType, verbose_name=_('degree result'), null=True, default=None, db_index=True, on_delete=models.CASCADE)
-    subdegree_result = models.ForeignKey(
-        SubDegreeType, verbose_name=_('sub-degree result'), null=True, default=None, db_index=True, on_delete=models.CASCADE)
+    event = models.ForeignKey(Event, verbose_name=_('event'), null=False, default=None, db_index=True, on_delete=models.CASCADE)
+    contact = models.ForeignKey(Individual, verbose_name=_('contact'), null=False, default=None, db_index=True, on_delete=models.CASCADE)
+    degree_result = models.ForeignKey(DegreeType, verbose_name=_('degree result'), null=True, default=None, db_index=True, on_delete=models.CASCADE)
+    subdegree_result = models.ForeignKey(SubDegreeType, verbose_name=_('sub-degree result'), null=True, default=None, db_index=True, on_delete=models.CASCADE)
     comment = models.TextField(_('comment'), blank=True)
-    article = models.ForeignKey(Article, verbose_name=_(
-        'article'), null=True, default=None, on_delete=models.PROTECT)
-    reduce = models.DecimalField(verbose_name=_('reduce'), max_digits=10, decimal_places=3, default=0.0, validators=[
-        MinValueValidator(0.0), MaxValueValidator(9999999.999)])
-    bill = models.ForeignKey(Bill, verbose_name=_(
-        'bill'), null=True, default=None, on_delete=models.SET_NULL)
+    article = models.ForeignKey(Article, verbose_name=_('article'), null=True, default=None, on_delete=models.PROTECT)
+    reduce = models.DecimalField(verbose_name=_('reduce'), max_digits=10, decimal_places=3,
+                                 default=0.0, validators=[MinValueValidator(0.0), MaxValueValidator(9999999.999)])
+    bill = models.ForeignKey(Bill, verbose_name=_('bill'), null=True, default=None, on_delete=models.SET_NULL)
+
+    is_subscripter = LucteriosVirtualField(verbose_name=_('subscript?'), compute_from='get_is_subscripter', format_string='B')
+    current_degree = LucteriosVirtualField(verbose_name=_('current'), compute_from='get_current_degree')
+    article_ref_price = LucteriosVirtualField(verbose_name=_('article'), compute_from='get_article_ref_price')
 
     def __str__(self):
         return six.text_type(self.contact)
 
     @classmethod
     def get_default_fields(cls):
-        fields = ["contact", (_('subscript?'), 'is_subscripter'), (_('current'), 'current_degree'), (_(
-            '%s result') % Params.getvalue("event-degree-text"), 'degree_result_simple')]
+        fields = ["contact", 'is_subscripter', 'current_degree', (_('%s result') % Params.getvalue("event-degree-text"), 'degree_result_simple')]
         if Params.getvalue("event-subdegree-enable") == 1:
-            fields.append(
-                (_('%s result') % Params.getvalue("event-subdegree-text"), 'subdegree_result'))
-        fields.append((_('article'), 'article_ref_price'))
+            fields.append((_('%s result') % Params.getvalue("event-subdegree-text"), 'subdegree_result'))
+        fields.append('article_ref_price')
         fields.append('comment')
         return fields
 
@@ -385,25 +375,23 @@ class Participant(LucteriosModel):
     def get_show_fields(cls):
         return ["contact", 'degree_result', 'subdegree_result', 'comment', 'article', 'reduce']
 
-    @property
-    def article_ref_price(self):
+    def get_article_ref_price(self):
         if self.article_id is None:
             return None
         elif abs(self.reduce) > 0.0001:
-            return "%s (-%s)" % (self.article.ref_price, format_devise(self.reduce, 5))
+            return "%s (-%s)" % (self.article.ref_price, get_amount_from_format_devise(self.reduce, 5))
         else:
             return self.article.ref_price
 
-    def get_current_degree(self):
+    def get_current_degree_ex(self):
         degree_list = Degree.objects.filter(Q(adherent_id=self.contact_id) & Q(degree__activity=self.event.activity)).distinct().order_by('-degree__level', '-subdegree__level')
         if len(degree_list) > 0:
             return degree_list[0]
         else:
             return None
 
-    @property
-    def current_degree(self):
-        degree = self.get_current_degree()
+    def get_current_degree(self):
+        degree = self.get_current_degree_ex()
         if degree is not None:
             return degree.get_text()
         else:
@@ -416,12 +404,11 @@ class Participant(LucteriosModel):
         else:
             return None
 
-    @property
-    def is_subscripter(self):
+    def get_is_subscripter(self):
         return len(Subscription.objects.filter(adherent_id=self.contact_id, season=Season.get_from_date(self.event.date))) > 0
 
     def allow_degree(self):
-        degree = self.get_current_degree()
+        degree = self.get_current_degree_ex()
         if degree is not None:
             return DegreeType.objects.filter(level__gte=degree.degree.level, activity=self.event.activity).distinct().order_by('level')
         else:

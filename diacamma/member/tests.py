@@ -61,8 +61,7 @@ class SeasonTest(LucteriosTest):
         self.assert_json_equal('DATE', 'begin_date', '')
 
         self.factory.xfer = SeasonAddModify()
-        self.calljson('/diacamma.member/seasonAddModify',
-                      {'SAVE': 'YES', "begin_date": '2014-09-01'}, False)
+        self.calljson('/diacamma.member/seasonAddModify', {'SAVE': 'YES', "begin_date": '2014-09-01'}, False)
         self.assert_observer('core.acknowledge', 'diacamma.member', 'seasonAddModify')
 
         self.factory.xfer = SeasonShow()
@@ -336,7 +335,7 @@ class SeasonTest(LucteriosTest):
         self.assert_json_equal('', 'subscriptiontype/@0/description', "blablabla")
         self.assert_json_equal('', 'subscriptiontype/@0/duration', 1)
         self.assert_json_equal('', 'subscriptiontype/@0/unactive', False)
-        self.assert_json_equal('', 'subscriptiontype/@0/price', "76.44€")
+        self.assert_json_equal('', 'subscriptiontype/@0/price', 76.44)
 
         self.factory.xfer = SubscriptionTypeShow()
         self.calljson('/diacamma.member/subscriptionTypeShow', {"subscriptiontype": 1}, False)
@@ -386,7 +385,7 @@ class SeasonTest(LucteriosTest):
         self.assert_json_equal('', 'prestation/@0/description', "blablabla")
         self.assert_json_equal('', 'prestation/@0/team', "team3")
         self.assert_json_equal('', 'prestation/@0/activity', "activity2")
-        self.assert_json_equal('', 'prestation/@0/article.price_txt', "12.34€")
+        self.assert_json_equal('', 'prestation/@0/article.price_txt', "12,34 €")
 
         self.factory.xfer = PrestationDel()
         self.calljson('/diacamma.member/prestationDel', {"prestation": 1, 'CONFIRME': 'YES'}, False)

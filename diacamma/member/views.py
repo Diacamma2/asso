@@ -59,6 +59,7 @@ from lucterios.contacts.views_contacts import LegalEntityAddModify
 from diacamma.accounting.models import Third
 from diacamma.member.models import Adherent, Subscription, Season, Age, Team, Activity, License, DocAdherent, SubscriptionType, CommandManager, Prestation
 from diacamma.accounting.views import ThirdList
+from diacamma.accounting.tools import format_with_devise
 
 
 MenuManage.add_sub("association", None, "diacamma.member/images/association.png", _("Association"), _("Association tools"), 30)
@@ -532,7 +533,7 @@ class AdherentCommand(XferContainerAcknowledge):
             dlg.add_component(lab)
             grid = XferCompGrid('AdhCmd')
             for fname, ftitle in cmd_manager.get_fields():
-                grid.add_header(fname, ftitle)
+                grid.add_header(fname, ftitle, htype=format_with_devise(7) if fname == "reduce" else None)
             for cmd_id, cmd_item in cmd_manager.get_content_txt():
                 for head_name, value in cmd_item.items():
                     grid.set_value(cmd_id, head_name, value)

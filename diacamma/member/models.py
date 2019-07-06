@@ -39,7 +39,7 @@ from django_fsm import FSMIntegerField, transition
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 
-from lucterios.framework.models import LucteriosModel
+from lucterios.framework.models import LucteriosModel, LucteriosVirtualField
 from lucterios.framework.error import LucteriosException, IMPORTANT
 from lucterios.framework.tools import convert_date, same_day_months_after, toHtml, get_bool_textual
 from lucterios.framework.signal_and_lock import Signal
@@ -50,7 +50,8 @@ from lucterios.CORE.parameters import Params
 from lucterios.contacts.models import Individual, LegalEntity, Responsability
 
 from diacamma.invoice.models import Article, Bill, Detail, get_or_create_customer
-from diacamma.accounting.tools import format_devise
+from diacamma.accounting.tools import get_amount_from_format_devise,\
+    format_with_devise
 from diacamma.accounting.models import CostAccounting
 from diacamma.payoff.views import get_html_payment
 from diacamma.payoff.models import PaymentMethod
@@ -58,8 +59,10 @@ from diacamma.payoff.models import PaymentMethod
 
 class Season(LucteriosModel):
     designation = models.CharField(_('designation'), max_length=100)
-    iscurrent = models.BooleanField(
-        verbose_name=_('is current'), default=False)
+    iscurrent = models.BooleanField(verbose_name=_('is current'), default=False)
+
+    begin_date = LucteriosVirtualField(verbose_name=_('begin date'), compute_from="get_begin_date", format_string='D')
+    end_date = LucteriosVirtualField(verbose_name=_('end date'), compute_from='get_end_date', format_string='D')
 
     def __str__(self):
         return self.designation
@@ -74,7 +77,7 @@ class Season(LucteriosModel):
 
     @classmethod
     def get_show_fields(cls):
-        return ["designation", ((_('begin date'), "begin_date"), (_('end date'), 'end_date')), 'period_set', 'document_set']
+        return ["designation", ("begin_date", 'end_date'), 'period_set', 'document_set']
 
     def set_has_actif(self):
         all_season = Season.objects.all()
@@ -263,13 +266,12 @@ class Season(LucteriosModel):
                 value = date(self.end_date.year, value.month, value.day)
         return value
 
-    @property
-    def begin_date(self):
+    def get_begin_date(self):
         val = self.period_set.all().aggregate(Min('begin_date'))
         if 'begin_date__min' in val.keys():
             return val['begin_date__min']
         else:
-            return "---"
+            return None
 
     def get_months(self):
         months = []
@@ -284,13 +286,12 @@ class Season(LucteriosModel):
                 ('%4d-%02d' % (year, month), date(year, month, 1).strftime("%B %Y")))
         return months
 
-    @property
-    def end_date(self):
+    def get_end_date(self):
         val = self.period_set.all().aggregate(Max('end_date'))
         if 'end_date__max' in val.keys():
             return val['end_date__max']
         else:
-            return "---"
+            return None
 
     def refresh_periodnum(self):
         nb = 1
@@ -402,21 +403,21 @@ class Period(LucteriosModel):
 class SubscriptionType(LucteriosModel):
     name = models.CharField(_('name'), max_length=50)
     description = models.TextField(_('description'), null=True, default="")
-    duration = models.IntegerField(verbose_name=_('duration'), choices=((0, _('annually')), (1, _(
-        'periodic')), (2, _('monthly')), (3, _('calendar'))), null=False, default=0, db_index=True)
+    duration = models.IntegerField(verbose_name=_('duration'), choices=((0, _('annually')), (1, _('periodic')), (2, _('monthly')), (3, _('calendar'))), null=False, default=0, db_index=True)
     unactive = models.BooleanField(verbose_name=_('unactive'), default=False)
-    articles = models.ManyToManyField(
-        Article, verbose_name=_('articles'), blank=True)
+    articles = models.ManyToManyField(Article, verbose_name=_('articles'), blank=True)
+
+    price = LucteriosVirtualField(verbose_name=_('price'), compute_from='get_price', format_string=lambda: format_with_devise(5))
 
     def __str__(self):
         return self.name
 
     def get_text_value(self):
-        return "%s [%s]" % (self.name, self.price)
+        return "%s [%s]" % (self.name, get_amount_from_format_devise(self.price, 5))
 
     @classmethod
     def get_default_fields(cls):
-        return ["name", "description", 'duration', "unactive", (_('price'), 'price')]
+        return ["name", "description", 'duration', "unactive", 'price']
 
     @classmethod
     def get_edit_fields(cls):
@@ -424,14 +425,14 @@ class SubscriptionType(LucteriosModel):
 
     @classmethod
     def get_show_fields(cls):
-        return ["name", "description", 'duration', 'unactive', ((_('price'), 'price'),), 'articles']
+        return ["name", "description", 'duration', 'unactive', 'price', 'articles']
 
-    @property
-    def price(self):
+    def get_price(self):
         total_price = 0
-        for art in self.articles.all():
-            total_price += art.price
-        return format_devise(total_price, 5)
+        if self.id is not None:
+            for art in self.articles.all():
+                total_price += art.price
+        return total_price
 
     class Meta(object):
         verbose_name = _('subscription type')
@@ -506,17 +507,18 @@ class Team(LucteriosModel):
 
 class Age(LucteriosModel):
     name = models.CharField(_('name'), max_length=50)
-    minimum = models.IntegerField(
-        verbose_name=_('minimum'), null=False, default=0)
-    maximum = models.IntegerField(
-        verbose_name=_('maximum'), null=False, default=0)
+    minimum = models.IntegerField(verbose_name=_('minimum'), null=False, default=0)
+    maximum = models.IntegerField(verbose_name=_('maximum'), null=False, default=0)
+
+    date_min = LucteriosVirtualField(verbose_name=_("date min."), compute_from="get_date_min")
+    date_max = LucteriosVirtualField(verbose_name=_("date max."), compute_from="get_date_max")
 
     def __str__(self):
         return self.name
 
     @classmethod
     def get_default_fields(cls):
-        return ["name", (_("date min."), "date_min"), (_("date max."), "date_max")]
+        return ["name", "date_min", "date_max"]
 
     @classmethod
     def get_edit_fields(cls):
@@ -524,7 +526,7 @@ class Age(LucteriosModel):
 
     @classmethod
     def get_show_fields(cls):
-        return ["name", ((_("date min."), "date_min"),), ((_("date max."), "date_max"),)]
+        return ["name", "date_min", "date_max"]
 
     def set_dates(self, datemin, datemax):
         if datemin > datemax:
@@ -533,12 +535,14 @@ class Age(LucteriosModel):
         self.maximum = ref_year - datemin
         self.minimum = ref_year - datemax
 
-    @property
-    def date_min(self):
+    def get_date_min(self):
+        if self.id is None:
+            return None
         return Season.current_season().reference_year - self.maximum
 
-    @property
-    def date_max(self):
+    def get_date_max(self):
+        if self.id is None:
+            return None
         return Season.current_season().reference_year - self.minimum
 
     class Meta(object):
@@ -549,11 +553,16 @@ class Age(LucteriosModel):
 
 
 class Adherent(Individual):
-    num = models.IntegerField(
-        verbose_name=_('numeros'), null=False, default=0,)
-    birthday = models.DateField(
-        verbose_name=_('birthday'), default=date.today, null=True)
+    num = models.IntegerField(verbose_name=_('numeros'), null=False, default=0,)
+    birthday = models.DateField(verbose_name=_('birthday'), default=date.today, null=True)
     birthplace = models.CharField(_('birthplace'), max_length=50, blank=True)
+
+    family = LucteriosVirtualField(verbose_name=_('family'), compute_from='get_family')
+    age_category = LucteriosVirtualField(verbose_name=_("age category"), compute_from="get_age_category")
+    license = LucteriosVirtualField(verbose_name=_('involvement'), compute_from='get_license')
+    documents = LucteriosVirtualField(verbose_name=_('documents needs'), compute_from='get_documents')
+
+    dateref = LucteriosVirtualField(verbose_name=_("reference date"), compute_from='get_dateref', format_string='D')
 
     def __init__(self, *args, **kwargs):
         Individual.__init__(self, *args, **kwargs)
@@ -566,7 +575,7 @@ class Adherent(Individual):
     @classmethod
     def get_renew_fields(cls):
         fields = cls.get_default_fields()
-        for item in [(_('involvement'), 'license'), (_('documents needs'), 'documents')]:
+        for item in ['license', 'documents']:
             if item in fields:
                 fields.remove(item)
         return fields
@@ -580,12 +589,12 @@ class Adherent(Individual):
         for fields in cls.get_fields_to_show():
             allowed_fields.extend(fields)
         if Params.getobject("member-family-type") is not None:
-            allowed_fields.append((_('family'), 'family'))
+            allowed_fields.append('family')
         if Params.getvalue("member-birth"):
-            allowed_fields.extend(["birthday", "birthplace", (_("age category"), "age_category")])
+            allowed_fields.extend(["birthday", "birthplace", "age_category"])
         if Params.getvalue("member-licence-enabled"):
-            allowed_fields.append((_('involvement'), 'license'))
-        allowed_fields.extend(['comment', 'user', (_('documents needs'), 'documents')])
+            allowed_fields.append('license')
+        allowed_fields.extend(['comment', 'user', 'documents'])
         return allowed_fields
 
     @classmethod
@@ -595,7 +604,7 @@ class Adherent(Individual):
             if Params.getvalue("member-numero"):
                 fields.insert(0, "num")
             if Params.getvalue("member-licence-enabled"):
-                fields.append((_('involvement'), 'license'))
+                fields.append('license')
             return fields
         wanted_fields_text = Params.getvalue("member-fields")
         fields = []
@@ -647,9 +656,9 @@ class Adherent(Individual):
             fields[keys[0]][0] = ("num", fields[keys[0]][0])
         if Params.getvalue("member-birth"):
             fields[keys[0]].insert(-1, ("birthday", "birthplace"))
-            fields[keys[0]].insert(-1, ((_("age category"), "age_category"),))
+            fields[keys[0]].insert(-1, ("age_category",))
         fields[_('002@Subscription')] = ['subscription_set']
-        fields[''] = [((_("reference date"), "dateref"),)]
+        fields[''] = [("dateref",)]
         return fields
 
     @classmethod
@@ -779,10 +788,14 @@ class Adherent(Individual):
         return ["image", 'num', "firstname", "lastname", 'address', 'postal_code', 'city', 'country', 'tel1', 'tel2',
                 'email', 'birthday', 'birthplace', 'comment', 'user', 'subscription_set', 'responsability_set', 'documents', 'OUR_DETAIL']
 
-    @property
-    def documents(self):
+    def get_documents(self):
+        if self.id is None:
+            return None
+        current_subscription = self.current_subscription
+        if current_subscription is None:
+            return None
         value = ""
-        for doc in self.current_subscription.docadherent_set.all():
+        for doc in current_subscription.docadherent_set.all():
             if doc.value:
                 color = "green"
             else:
@@ -790,26 +803,26 @@ class Adherent(Individual):
             value += "%s: {[font color='%s']}%s{[/font]}{[br/]}" % (six.text_type(doc.document), color, get_bool_textual(doc.value))
         return value
 
-    @property
-    def age_category(self):
+    def get_age_category(self):
+        if self.id is None:
+            return None
         try:
             age_val = int(self.dateref.year - self.birthday.year)
-            ages = Age.objects.filter(
-                minimum__lte=age_val, maximum__gte=age_val)
+            ages = Age.objects.filter(minimum__lte=age_val, maximum__gte=age_val)
             val = ages[0]
         except Exception:
-            val = "---"
+            val = None
         return val
 
-    @property
-    def license(self):
+    def get_license(self):
+        if self.id is None:
+            return None
         sub = self.current_subscription
         if sub is not None:
             return sub.involvement
         return None
 
-    @property
-    def dateref(self):
+    def get_dateref(self):
         if self.date_ref is None:
             self.date_ref = Season.current_season().date_ref
         return self.date_ref
@@ -864,8 +877,9 @@ class Adherent(Individual):
             family_value[field_name] = getattr(self, field_name)
         return family_value
 
-    @property
-    def family(self):
+    def get_family(self):
+        if self.id is None:
+            return None
         current_family = None
         current_type = Params.getobject("member-family-type")
         if current_type is not None:
@@ -972,6 +986,8 @@ class Subscription(LucteriosModel):
                              choices=((0, _('waiting')), (1, _('building')), (2, _('valid')), (3, _('cancel')), (4, _('disbarred'))), null=False, default=2, db_index=True)
     prestations = models.ManyToManyField(Prestation, verbose_name=_('prestations'), blank=True)
 
+    involvement = LucteriosVirtualField(verbose_name=_('involvement'), compute_from='get_involvement')
+
     def __str__(self):
         if not isinstance(self.begin_date, six.text_type) and not isinstance(self.end_date, six.text_type):
             return "%s:%s->%s" % (self.subscriptiontype, formats.date_format(self.begin_date, "SHORT_DATE_FORMAT"), formats.date_format(self.end_date, "SHORT_DATE_FORMAT"))
@@ -982,7 +998,7 @@ class Subscription(LucteriosModel):
     def get_default_fields(cls):
         fields = ["season", "subscriptiontype", "status", "begin_date", "end_date"]
         if Params.getvalue("member-licence-enabled") or Params.getvalue("member-team-enable") or Params.getvalue("member-activite-enable"):
-            fields.append((_('involvement'), "involvement"))
+            fields.append("involvement")
         return fields
 
     @classmethod
@@ -996,8 +1012,9 @@ class Subscription(LucteriosModel):
             fields.append("license_set")
         return fields
 
-    @property
-    def involvement(self):
+    def get_involvement(self):
+        if self.id is None:
+            return None
         res = []
         if self.prestations.all().count() == 0:
             for lic in self.license_set.all():
@@ -1235,12 +1252,9 @@ class Subscription(LucteriosModel):
 
 
 class DocAdherent(LucteriosModel):
-    subscription = models.ForeignKey(
-        Subscription, verbose_name=_('subscription'), null=False, default=None, db_index=True, on_delete=models.CASCADE)
-    document = models.ForeignKey(
-        Document, verbose_name=_('document'), null=False, default=None, db_index=True, on_delete=models.PROTECT)
-    value = models.BooleanField(
-        verbose_name=_('value'), default=False)
+    subscription = models.ForeignKey(Subscription, verbose_name=_('subscription'), null=False, default=None, db_index=True, on_delete=models.CASCADE)
+    document = models.ForeignKey(Document, verbose_name=_('document'), null=False, default=None, db_index=True, on_delete=models.PROTECT)
+    value = models.BooleanField(verbose_name=_('value'), default=False)
 
     def __str__(self):
         return "%s %s" % (self.document, self.value)
@@ -1264,13 +1278,10 @@ class DocAdherent(LucteriosModel):
 
 
 class License(LucteriosModel):
-    subscription = models.ForeignKey(
-        Subscription, verbose_name=_('subscription'), null=False, default=None, db_index=True, on_delete=models.CASCADE)
+    subscription = models.ForeignKey(Subscription, verbose_name=_('subscription'), null=False, default=None, db_index=True, on_delete=models.CASCADE)
     value = models.CharField(_('license #'), max_length=50, null=True)
-    team = models.ForeignKey(
-        Team, verbose_name=_('team'), null=True, default=None, db_index=True, on_delete=models.PROTECT)
-    activity = models.ForeignKey(
-        Activity, verbose_name=_('activity'), null=False, default=None, db_index=True, on_delete=models.PROTECT)
+    team = models.ForeignKey(Team, verbose_name=_('team'), null=True, default=None, db_index=True, on_delete=models.PROTECT)
+    activity = models.ForeignKey(Activity, verbose_name=_('activity'), null=False, default=None, db_index=True, on_delete=models.PROTECT)
 
     def __str__(self):
         val = []
@@ -1411,7 +1422,7 @@ class CommandManager(object):
             activities.append(six.text_type(team))
         cmd_value["activity"] = '{[br/]}'.join(activities)
         cmd_value["licence"] = '{[br/]}'.join(content_item["licence"])
-        cmd_value["reduce"] = format_devise(content_item["reduce"], 5)
+        cmd_value["reduce"] = content_item["reduce"]
         prestations = []
         for presta in Prestation.objects.filter(id__in=content_item["prestations"]):
             prestations.append(presta.get_text())

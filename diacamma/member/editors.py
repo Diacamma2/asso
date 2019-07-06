@@ -52,7 +52,7 @@ class SeasonEditor(LucteriosEditor):
             raise LucteriosException(IMPORTANT, _("date invalid!"))
         date = convert_date(date)
         new_season = "%d/%d" % (date.year, date.year + 1)
-        if len(Season.objects.filter(designation=new_season)) > 0:
+        if len(Season.objects.filter(designation=new_season).exclude(id=self.item.id)) > 0:
             raise LucteriosException(IMPORTANT, _("Season exists yet!"))
         self.item.designation = new_season
         self.item.iscurrent = False
@@ -102,6 +102,7 @@ class AgeEditor(LucteriosEditor):
         self.item.set_dates(xfer.getparam('date_min', 0), xfer.getparam('date_max', 0))
 
     def edit(self, xfer):
+        Season.current_season()
         date = XferCompFloat('date_min', 1900, 2100, 0)
         date.set_location(1, 5)
         date.set_needed(True)

@@ -218,7 +218,7 @@ class AdherentTest(BaseAdherentTest):
         self.assert_observer('core.custom', 'diacamma.member', 'subscriptionAddModify')
         self.assert_count_equal('', 9)
         self.assert_select_equal('season', 20)  # nb=20
-        self.assert_select_equal('subscriptiontype', {1: "Annually [76.44€]", 2: "Periodic [76.44€]", 3: "Monthly [76.44€]", 4: "Calendar [76.44€]"})
+        self.assert_select_equal('subscriptiontype', {1: "Annually [76,44 €]", 2: "Periodic [76,44 €]", 3: "Monthly [76,44 €]", 4: "Calendar [76,44 €]"})
         self.assert_attrib_equal('team', 'description', 'group')
         self.assert_attrib_equal('activity', 'description', 'passion')
         self.assert_select_equal('team', 3)  # nb=3
@@ -419,7 +419,7 @@ class AdherentTest(BaseAdherentTest):
         self.assert_count_equal('bill', 1)
         self.assert_json_equal('', 'bill/@0/third', "Dalton Avrel")
         self.assert_json_equal('', 'bill/@0/bill_type', 1)
-        self.assert_json_equal('', 'bill/@0/total', "76.44€")
+        self.assert_json_equal('', 'bill/@0/total', 76.44)
 
     def test_subscription_bydate(self):
         self.add_subscriptions()
@@ -955,7 +955,7 @@ class AdherentTest(BaseAdherentTest):
         self.assert_observer('core.custom', 'diacamma.invoice', 'billList')
         self.assert_count_equal('bill', 1)
         self.assert_json_equal('', 'bill/@0/bill_type', 0)
-        self.assert_json_equal('', 'bill/@0/total', "76.44€")
+        self.assert_json_equal('', 'bill/@0/total', 76.44)
 
         self.factory.xfer = SubscriptionTransition()
         self.calljson('/diacamma.member/subscriptionTransition', {'CONFIRME': 'YES', 'subscription': 1, 'TRANSITION': 'validate'}, False)
@@ -988,7 +988,7 @@ class AdherentTest(BaseAdherentTest):
         self.assert_observer('core.custom', 'diacamma.invoice', 'billList')
         self.assert_count_equal('bill', 1)
         self.assert_json_equal('', 'bill/@0/bill_type', 1)
-        self.assert_json_equal('', 'bill/@0/total', "76.44€")
+        self.assert_json_equal('', 'bill/@0/total', 76.44)
 
     def test_valid_bill_of_subscription(self):
         default_adherents()
@@ -1042,7 +1042,7 @@ class AdherentTest(BaseAdherentTest):
         self.assert_count_equal('bill', 1)
         self.assert_json_equal('', 'bill/@0/status', 0)
         self.assert_json_equal('', 'bill/@0/bill_type', 0)
-        self.assert_json_equal('', 'bill/@0/total', "76.44€")
+        self.assert_json_equal('', 'bill/@0/total', 76.44)
 
         self.factory.xfer = BillTransition()
         self.calljson('/diacamma.invoice/billTransition',
@@ -1084,7 +1084,7 @@ class AdherentTest(BaseAdherentTest):
         self.assert_observer('core.custom', 'diacamma.invoice', 'billList')
         self.assert_count_equal('bill', 1)
         self.assert_json_equal('', 'bill/@0/bill_type', 1)
-        self.assert_json_equal('', 'bill/@0/total', "76.44€")
+        self.assert_json_equal('', 'bill/@0/total', 76.44)
 
     def test_command(self):
         from lucterios.mailing.test_tools import configSMTP, TestReceiver, decode_b64
@@ -1109,20 +1109,20 @@ class AdherentTest(BaseAdherentTest):
         self.assert_observer('core.custom', 'diacamma.member', 'adherentCommand')
         self.assert_count_equal('AdhCmd', 3)
         self.assert_json_equal('', 'AdhCmd/@0/adherent', "Dalton Avrel")
-        self.assert_json_equal('', 'AdhCmd/@0/type', "Annually [76.44€]")
+        self.assert_json_equal('', 'AdhCmd/@0/type', "Annually [76,44 €]")
         self.assert_json_equal('', 'AdhCmd/@0/team', "team2")
         self.assert_json_equal('', 'AdhCmd/@0/activity', "activity1")
-        self.assert_json_equal('', 'AdhCmd/@0/reduce', "0.00€")
+        self.assert_json_equal('', 'AdhCmd/@0/reduce', 0.00)
         self.assert_json_equal('', 'AdhCmd/@1/adherent', "Dalton Joe")
-        self.assert_json_equal('', 'AdhCmd/@1/type', "Calendar [76.44€]")
+        self.assert_json_equal('', 'AdhCmd/@1/type', "Calendar [76,44 €]")
         self.assert_json_equal('', 'AdhCmd/@1/team', "team3")
         self.assert_json_equal('', 'AdhCmd/@1/activity', "activity2")
-        self.assert_json_equal('', 'AdhCmd/@1/reduce', "0.00€")
+        self.assert_json_equal('', 'AdhCmd/@1/reduce', 0.00)
         self.assert_json_equal('', 'AdhCmd/@2/adherent', "Luke Lucky")
-        self.assert_json_equal('', 'AdhCmd/@2/type', "Annually [76.44€]")
+        self.assert_json_equal('', 'AdhCmd/@2/type', "Annually [76,44 €]")
         self.assert_json_equal('', 'AdhCmd/@2/team', "team1")
         self.assert_json_equal('', 'AdhCmd/@2/activity', "activity2")
-        self.assert_json_equal('', 'AdhCmd/@2/reduce', "0.00€")
+        self.assert_json_equal('', 'AdhCmd/@2/reduce', 0.00)
         cmd_file = self.json_context["CMD_FILE"]
         self.assertEqual(cmd_file[-23:], '/tmp/list-anonymous.cmd')
         self.assertTrue(isfile(cmd_file))
@@ -1157,15 +1157,15 @@ class AdherentTest(BaseAdherentTest):
         self.assert_observer('core.custom', 'diacamma.member', 'adherentCommand')
         self.assert_count_equal('AdhCmd', 2)
         self.assert_json_equal('', 'AdhCmd/@0/adherent', "Dalton Joe")
-        self.assert_json_equal('', 'AdhCmd/@0/type', "Monthly [76.44€]")
+        self.assert_json_equal('', 'AdhCmd/@0/type', "Monthly [76,44 €]")
         self.assert_json_equal('', 'AdhCmd/@0/team', "team2")
         self.assert_json_equal('', 'AdhCmd/@0/activity', "activity1")
-        self.assert_json_equal('', 'AdhCmd/@0/reduce', "7.50€")
+        self.assert_json_equal('', 'AdhCmd/@0/reduce', 7.50)
         self.assert_json_equal('', 'AdhCmd/@1/adherent', "Luke Lucky")
-        self.assert_json_equal('', 'AdhCmd/@1/type', "Annually [76.44€]")
+        self.assert_json_equal('', 'AdhCmd/@1/type', "Annually [76,44 €]")
         self.assert_json_equal('', 'AdhCmd/@1/team', "team1")
         self.assert_json_equal('', 'AdhCmd/@1/activity', "activity2")
-        self.assert_json_equal('', 'AdhCmd/@1/reduce', "0.00€")
+        self.assert_json_equal('', 'AdhCmd/@1/reduce', 0.00)
 
         configSMTP('localhost', 2025)
         change_ourdetail()
@@ -1217,7 +1217,7 @@ class AdherentTest(BaseAdherentTest):
         self.assert_observer('core.custom', 'diacamma.member', 'subscriptionAddModify')
         self.assert_count_equal('', 7)
         self.assert_select_equal('season', 20)  # nb=20
-        self.assert_select_equal('subscriptiontype', {1: "Annually [76.44€]", 2: "Periodic [76.44€]", 3: "Monthly [76.44€]", 4: "Calendar [76.44€]"})
+        self.assert_select_equal('subscriptiontype', {1: "Annually [76,44 €]", 2: "Periodic [76,44 €]", 3: "Monthly [76,44 €]", 4: "Calendar [76,44 €]"})
         self.assert_json_equal('CHECKLIST', 'prestations', [])
         self.assert_count_equal('#prestations/case', 3)
 
@@ -1251,7 +1251,7 @@ class AdherentTest(BaseAdherentTest):
         self.assert_count_equal('bill', 1)
         self.assert_json_equal('', 'bill/@0/status', 0)
         self.assert_json_equal('', 'bill/@0/bill_type', 0)
-        self.assert_json_equal('', 'bill/@0/total', "413.75€")
+        self.assert_json_equal('', 'bill/@0/total', 413.75)
 
         self.factory.xfer = SubscriptionTransition()
         self.calljson('/diacamma.member/subscriptionTransition', {'CONFIRME': 'YES', 'subscription': 1, 'TRANSITION': 'validate'}, False)
@@ -1263,7 +1263,7 @@ class AdherentTest(BaseAdherentTest):
         self.assert_count_equal('bill', 1)
         self.assert_json_equal('', 'bill/@0/status', 0)
         self.assert_json_equal('', 'bill/@0/bill_type', 1)
-        self.assert_json_equal('', 'bill/@0/total', "413.75€")
+        self.assert_json_equal('', 'bill/@0/total', 413.75)
 
         self.factory.xfer = SubscriptionShow()
         self.calljson('/diacamma.member/subscriptionShow',
@@ -1300,7 +1300,7 @@ class AdherentTest(BaseAdherentTest):
         self.assert_count_equal('bill', 1)
         self.assert_json_equal('', 'bill/@0/status', 0)
         self.assert_json_equal('', 'bill/@0/bill_type', 1)
-        self.assert_json_equal('', 'bill/@0/total', "133.22€")
+        self.assert_json_equal('', 'bill/@0/total', 133.22)
 
         self.factory.xfer = SubscriptionShow()
         self.calljson('/diacamma.member/subscriptionShow',
@@ -1352,7 +1352,7 @@ class AdherentTest(BaseAdherentTest):
         self.assert_count_equal('bill', 1)
         self.assert_json_equal('', 'bill/@0/status', 1)
         self.assert_json_equal('', 'bill/@0/bill_type', 1)
-        self.assert_json_equal('', 'bill/@0/total', "76.44€")
+        self.assert_json_equal('', 'bill/@0/total', 76.44)
 
         self.factory.xfer = AdherentShow()
         self.calljson('/diacamma.member/adherentShow',
@@ -1406,10 +1406,10 @@ class AdherentTest(BaseAdherentTest):
         self.assert_count_equal('bill', 2)
         self.assert_json_equal('', 'bill/@0/status', 0)
         self.assert_json_equal('', 'bill/@0/bill_type', 1)
-        self.assert_json_equal('', 'bill/@0/total', "458.19€")
+        self.assert_json_equal('', 'bill/@0/total', 458.19)
         self.assert_json_equal('', 'bill/@1/status', 1)
         self.assert_json_equal('', 'bill/@1/bill_type', 1)
-        self.assert_json_equal('', 'bill/@1/total', "76.44€")
+        self.assert_json_equal('', 'bill/@1/total', 76.44)
 
     def test_command_with_prestation(self):
         default_adherents()
@@ -1439,8 +1439,8 @@ class AdherentTest(BaseAdherentTest):
         self.assert_observer('core.custom', 'diacamma.member', 'adherentCommand')
         self.assert_count_equal('AdhCmd', 1)
         self.assert_json_equal('', 'AdhCmd/@0/adherent', "Dalton Avrel")
-        self.assert_json_equal('', 'AdhCmd/@0/type', "Annually [76.44€]")
-        self.assert_json_equal('', 'AdhCmd/@0/prestations', "team1 [activity1] 324.97€{[br/]}team2 [activity2] 56.78€")
+        self.assert_json_equal('', 'AdhCmd/@0/type', "Annually [76,44 €]")
+        self.assert_json_equal('', 'AdhCmd/@0/prestations', "team1 [activity1] 324,97 €{[br/]}team2 [activity2] 56,78 €")
         cmd_file = self.json_context["CMD_FILE"]
         self.assertEqual(cmd_file[-23:], '/tmp/list-anonymous.cmd')
         self.assertTrue(isfile(cmd_file))
@@ -1463,8 +1463,8 @@ class AdherentTest(BaseAdherentTest):
         self.assert_observer('core.custom', 'diacamma.member', 'adherentCommand')
         self.assert_count_equal('AdhCmd', 1)
         self.assert_json_equal('', 'AdhCmd/@0/adherent', "Dalton Avrel")
-        self.assert_json_equal('', 'AdhCmd/@0/type', "Annually [76.44€]")
-        self.assert_json_equal('', 'AdhCmd/@0/prestations', "team3 [activity2] 12.34€")
+        self.assert_json_equal('', 'AdhCmd/@0/type', "Annually [76,44 €]")
+        self.assert_json_equal('', 'AdhCmd/@0/prestations', "team3 [activity2] 12,34 €")
 
         self.factory.xfer = AdherentCommand()
         self.calljson('/diacamma.member/adherentCommand', {'dateref': '2015-10-01', 'SAVE': 'YES', 'CMD_FILE': cmd_file, 'send_email': False}, False)
@@ -1476,10 +1476,10 @@ class AdherentTest(BaseAdherentTest):
         self.assert_count_equal('bill', 2)
         self.assert_json_equal('', 'bill/@0/status', 0)
         self.assert_json_equal('', 'bill/@0/bill_type', 0)
-        self.assert_json_equal('', 'bill/@0/total', "88.78€")
+        self.assert_json_equal('', 'bill/@0/total', 88.78)
         self.assert_json_equal('', 'bill/@1/status', 0)
         self.assert_json_equal('', 'bill/@1/bill_type', 1)
-        self.assert_json_equal('', 'bill/@1/total', "76.44€")
+        self.assert_json_equal('', 'bill/@1/total', 76.44)
 
     def test_import_with_prestation(self):
         csv_content = """'nom','prenom','sexe','adresse','codePostal','ville','fixe','portable','mail','DateNaissance','LieuNaissance','Type','Cours'
@@ -1512,7 +1512,7 @@ class AdherentTest(BaseAdherentTest):
         self.calljson('/diacamma.invoice/billList', {'bill_type': 0}, False)
         self.assert_observer('core.custom', 'diacamma.invoice', 'billList')
         self.assert_count_equal('bill', 1)
-        self.assert_json_equal('', 'bill/@0/total', "413.75€")
+        self.assert_json_equal('', 'bill/@0/total', 413.75)
 
         self.factory.xfer = ContactImport()
         self.calljson('/lucterios.contacts/contactImport', {'step': 1, 'modelname': 'member.Adherent', 'quotechar': "'",
@@ -1556,13 +1556,13 @@ class AdherentTest(BaseAdherentTest):
         self.assert_observer('core.custom', 'diacamma.invoice', 'billList')
         self.assert_count_equal('bill', 4)
         self.assert_json_equal('', 'bill/@0/third', "Dalton Avrel")
-        self.assert_json_equal('', 'bill/@0/total', "88.78€")  # Subscription: art1:12.34 + art5:64.10 / Prestations: art1:12.34
+        self.assert_json_equal('', 'bill/@0/total', 88.78)  # Subscription: art1:12.34 + art5:64.10 / Prestations: art1:12.34
         self.assert_json_equal('', 'bill/@1/third', "Dalton Joe")
-        self.assert_json_equal('', 'bill/@1/total', "458.19€")  # Subscription: art1:12.34 + art5:64.10 / Prestations: art2:56.78 + art3:324.97
+        self.assert_json_equal('', 'bill/@1/total', 458.19)  # Subscription: art1:12.34 + art5:64.10 / Prestations: art2:56.78 + art3:324.97
         self.assert_json_equal('', 'bill/@2/third', "Luke Lucky")
-        self.assert_json_equal('', 'bill/@2/total', "413.75€")  # Subscription: art1:12.34 + art5:64.10 / Prestations: art1:12.34 + art3:324.97
+        self.assert_json_equal('', 'bill/@2/total', 413.75)  # Subscription: art1:12.34 + art5:64.10 / Prestations: art1:12.34 + art3:324.97
         self.assert_json_equal('', 'bill/@3/third', "GOC Marie")
-        self.assert_json_equal('', 'bill/@3/total', "470.53€")  # Subscription: art1:12.34 + art5:64.10 / Prestations: art1:12.34 + art2:56.78 + art3:324.97
+        self.assert_json_equal('', 'bill/@3/total', 470.53)  # Subscription: art1:12.34 + art5:64.10 / Prestations: art1:12.34 + art2:56.78 + art3:324.97
 
 
 class AdherentFamilyTest(BaseAdherentTest):
@@ -1740,7 +1740,7 @@ class AdherentFamilyTest(BaseAdherentTest):
         self.assert_count_equal('bill', 1)
         self.assert_json_equal('', 'bill/@0/status', 0)
         self.assert_json_equal('', 'bill/@0/third', "LES DALTONS")
-        self.assert_json_equal('', 'bill/@0/total', "100.00€")
+        self.assert_json_equal('', 'bill/@0/total', 100.00)
 
         self.factory.xfer = SubscriptionAddModify()
         self.calljson('/diacamma.member/subscriptionAddModify', {'SAVE': 'YES', 'status': 2, 'adherent': 2, 'dateref': '2014-10-01', 'subscriptiontype': 1, 'season': 10, 'team': 2, 'activity': 1, 'value': 'abc123'}, False)
@@ -1753,11 +1753,11 @@ class AdherentFamilyTest(BaseAdherentTest):
         self.assert_json_equal('', 'bill/@0/status', 0)
         self.assert_json_equal('', 'bill/@0/third', "LES DALTONS")
         self.assert_json_equal('', 'bill/@0/bill_type', 1)
-        self.assert_json_equal('', 'bill/@0/total', "100.00€")
+        self.assert_json_equal('', 'bill/@0/total', 100.00)
         self.assert_json_equal('', 'bill/@1/status', 0)
         self.assert_json_equal('', 'bill/@1/third', "LES DALTONS")
         self.assert_json_equal('', 'bill/@1/bill_type', 1)
-        self.assert_json_equal('', 'bill/@1/total', "76.44€")
+        self.assert_json_equal('', 'bill/@1/total', 76.44)
         self.assert_json_equal('', 'bill/@1/comment', "{[b]}cotisation{[/b]}")
 
         self.factory.xfer = BillShow()
@@ -1767,14 +1767,14 @@ class AdherentFamilyTest(BaseAdherentTest):
         self.assert_count_equal('detail', 2)
         self.assert_json_equal('', 'detail/@0/article', 'ABC1')
         self.assert_json_equal('', 'detail/@0/designation', "Article 01{[br/]}Cotisation de 'Dalton Avrel'")
-        self.assert_json_equal('', 'detail/@0/price_txt', '12.34€')
+        self.assert_json_equal('', 'detail/@0/price', 12.34)
         self.assert_json_equal('', 'detail/@0/quantity', '1.000')
-        self.assert_json_equal('', 'detail/@0/total', '12.34€')
+        self.assert_json_equal('', 'detail/@0/total', 12.34)
         self.assert_json_equal('', 'detail/@1/article', 'ABC5')
         self.assert_json_equal('', 'detail/@1/designation', "Article 05{[br/]}Cotisation de 'Dalton Avrel'")
-        self.assert_json_equal('', 'detail/@1/price_txt', '64.10€')
+        self.assert_json_equal('', 'detail/@1/price', 64.10)
         self.assert_json_equal('', 'detail/@1/quantity', '1.00')
-        self.assert_json_equal('', 'detail/@1/total', '64.10€')
+        self.assert_json_equal('', 'detail/@1/total', 64.10)
 
         self.factory.xfer = SubscriptionAddModify()
         self.calljson('/diacamma.member/subscriptionAddModify', {'SAVE': 'YES', 'status': 2, 'adherent': 5, 'dateref': '2014-10-01', 'subscriptiontype': 1, 'season': 10, 'team': 1, 'activity': 1, 'value': 'uvw98'}, False)
@@ -1787,11 +1787,11 @@ class AdherentFamilyTest(BaseAdherentTest):
         self.assert_json_equal('', 'bill/@0/status', 0)
         self.assert_json_equal('', 'bill/@0/third', "LES DALTONS")
         self.assert_json_equal('', 'bill/@0/bill_type', 1)
-        self.assert_json_equal('', 'bill/@0/total', "100.00€")
+        self.assert_json_equal('', 'bill/@0/total', 100.00)
         self.assert_json_equal('', 'bill/@1/status', 0)
         self.assert_json_equal('', 'bill/@1/third', "LES DALTONS")
         self.assert_json_equal('', 'bill/@1/bill_type', 1)
-        self.assert_json_equal('', 'bill/@1/total', "152.88€")
+        self.assert_json_equal('', 'bill/@1/total', 152.88)
         self.assert_json_equal('', 'bill/@1/comment', "{[b]}cotisation{[/b]}")
 
     def test_command(self):
@@ -1836,11 +1836,11 @@ class AdherentFamilyTest(BaseAdherentTest):
         self.assert_observer('core.custom', 'diacamma.member', 'adherentCommand')
         self.assert_count_equal('AdhCmd', 2)
         self.assert_json_equal('', 'AdhCmd/@0/adherent', "Dalton Avrel")
-        self.assert_json_equal('', 'AdhCmd/@0/type', "Annually [76.44€]")
-        self.assert_json_equal('', 'AdhCmd/@0/reduce', "0.00€")
+        self.assert_json_equal('', 'AdhCmd/@0/type', "Annually [76,44 €]")
+        self.assert_json_equal('', 'AdhCmd/@0/reduce', 0.00)
         self.assert_json_equal('', 'AdhCmd/@1/adherent', "Dalton Joe")
-        self.assert_json_equal('', 'AdhCmd/@1/type', "Calendar [76.44€]")
-        self.assert_json_equal('', 'AdhCmd/@1/reduce', "0.00€")
+        self.assert_json_equal('', 'AdhCmd/@1/type', "Calendar [76,44 €]")
+        self.assert_json_equal('', 'AdhCmd/@1/reduce', 0.00)
         cmd_file = self.json_context["CMD_FILE"]
         self.assertEqual(cmd_file[-23:], '/tmp/list-anonymous.cmd')
         self.assertTrue(isfile(cmd_file))
@@ -1883,7 +1883,7 @@ class AdherentFamilyTest(BaseAdherentTest):
         self.assert_json_equal('', 'bill/@0/num_txt', "A-1")
         self.assert_json_equal('', 'bill/@0/third', "LES DALTONS")
         self.assert_json_equal('', 'bill/@0/bill_type', 0)
-        self.assert_json_equal('', 'bill/@0/total', "152.88€")
+        self.assert_json_equal('', 'bill/@0/total', 152.88)
         self.assert_json_equal('', 'bill/@0/comment', "{[b]}cotisation{[/b]}")
         self.assert_json_equal('', 'bill/@1/bill_type', 1)
         self.assert_json_equal('', 'bill/@2/bill_type', 1)
@@ -1969,15 +1969,15 @@ class AdherentFamilyTest(BaseAdherentTest):
         self.assert_observer('core.custom', 'diacamma.invoice', 'billList')
         self.assert_count_equal('bill', 5)
         self.assert_json_equal('', 'bill/@0/third', "LES DALTONS")
-        self.assert_json_equal('', 'bill/@0/total', "152.88€")  # Subscription: art1:12.34 + art5:64.10 x 2
+        self.assert_json_equal('', 'bill/@0/total', 152.88)  # Subscription: art1:12.34 + art5:64.10 x 2
         self.assert_json_equal('', 'bill/@1/third', "Dalton")
-        self.assert_json_equal('', 'bill/@1/total', "76.44€")  # Subscription: art1:12.34 + art5:64.10
+        self.assert_json_equal('', 'bill/@1/total', 76.44)  # Subscription: art1:12.34 + art5:64.10
         self.assert_json_equal('', 'bill/@2/third', "Luke")
-        self.assert_json_equal('', 'bill/@2/total', "76.44€")  # Subscription: art1:12.34 + art5:64.10
+        self.assert_json_equal('', 'bill/@2/total', 76.44)  # Subscription: art1:12.34 + art5:64.10
         self.assert_json_equal('', 'bill/@3/third', "GOC Marie")
-        self.assert_json_equal('', 'bill/@3/total', "76.44€")  # Subscription: art1:12.34 + art5:64.10
+        self.assert_json_equal('', 'bill/@3/total', 76.44)  # Subscription: art1:12.34 + art5:64.10
         self.assert_json_equal('', 'bill/@4/third', "UHADIK-FEPIZIBU")
-        self.assert_json_equal('', 'bill/@4/total', "152.88€")  # Subscription: art1:12.34 + art5:64.10 x 2
+        self.assert_json_equal('', 'bill/@4/total', 152.88)  # Subscription: art1:12.34 + art5:64.10 x 2
 
         self.factory.xfer = AdherentThirdList()
         self.calljson('/diacamma.member/adherentThirdList', {'dateref': '2010-01-15'}, False)
@@ -2063,8 +2063,8 @@ class AdherentFamilyTest(BaseAdherentTest):
         self.assert_observer('core.custom', 'diacamma.invoice', 'billList')
         self.assert_count_equal('bill', 3)
         self.assert_json_equal('', 'bill/@0/third', "Dalton")
-        self.assert_json_equal('', 'bill/@0/total', "546.97€")  # Subscription: art1:12.34 + art5:64.10 / Prestations: art1:12.34 + Subscription: art1:12.34 + art5:64.10 / Prestations: art2:56.78 + art3:324.97
+        self.assert_json_equal('', 'bill/@0/total', 546.97)  # Subscription: art1:12.34 + art5:64.10 / Prestations: art1:12.34 + Subscription: art1:12.34 + art5:64.10 / Prestations: art2:56.78 + art3:324.97
         self.assert_json_equal('', 'bill/@1/third', "Luke")
-        self.assert_json_equal('', 'bill/@1/total', "413.75€")  # Subscription: art1:12.34 + art5:64.10 / Prestations: art1:12.34 + art3:324.97
+        self.assert_json_equal('', 'bill/@1/total', 413.75)  # Subscription: art1:12.34 + art5:64.10 / Prestations: art1:12.34 + art3:324.97
         self.assert_json_equal('', 'bill/@2/third', "GOC Marie")
-        self.assert_json_equal('', 'bill/@2/total', "470.53€")  # Subscription: art1:12.34 + art5:64.10 / Prestations: art1:12.34 + art2:56.78 + art3:324.97
+        self.assert_json_equal('', 'bill/@2/total', 470.53)  # Subscription: art1:12.34 + art5:64.10 / Prestations: art1:12.34 + art2:56.78 + art3:324.97
