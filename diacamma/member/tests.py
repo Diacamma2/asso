@@ -365,7 +365,7 @@ class SeasonTest(LucteriosTest):
         self.assert_json_equal('TAB', '__tab_2', 'Les cotisations')
         self.assert_json_equal('TAB', '__tab_3', 'Les prestations')
         self.assertFalse('__tab_4' in self.json_data.keys(), self.json_data.keys())
-        self.assert_grid_equal('prestation', {'name': "nom", 'description': "description", 'team': "group", 'activity': "passion", 'article.price_txt': "prix"}, 0)
+        self.assert_grid_equal('prestation', {'name': "nom", 'description': "description", 'team': "group", 'activity': "passion", 'article.price': "prix"}, 0)
 
         self.factory.xfer = PrestationAddModify()
         self.calljson('/diacamma.member/prestationAddModify', {}, False)
@@ -385,7 +385,7 @@ class SeasonTest(LucteriosTest):
         self.assert_json_equal('', 'prestation/@0/description', "blablabla")
         self.assert_json_equal('', 'prestation/@0/team', "team3")
         self.assert_json_equal('', 'prestation/@0/activity', "activity2")
-        self.assert_json_equal('', 'prestation/@0/article.price_txt', "12,34 €")
+        self.assert_json_equal('', 'prestation/@0/article.price', 12.34)
 
         self.factory.xfer = PrestationDel()
         self.calljson('/diacamma.member/prestationDel', {"prestation": 1, 'CONFIRME': 'YES'}, False)

@@ -925,7 +925,7 @@ class Prestation(LucteriosModel):
             return six.text_type(self.team)
 
     def get_text(self):
-        return "%s %s" % (self.__str__(), self.article.price_txt)
+        return "%s %s" % (self.__str__(), get_amount_from_format_devise(self.article.price, 5))
 
     @property
     def article_query(self):
@@ -937,7 +937,7 @@ class Prestation(LucteriosModel):
         fields.append((Params.getvalue("member-team-text"), "team"))
         if Params.getvalue("member-activite-enable"):
             fields.append((Params.getvalue("member-activite-text"), "activity"))
-        fields.append((_('price'), "article.price_txt"))
+        fields.append("article.price")
         return fields
 
     @classmethod
@@ -956,7 +956,7 @@ class Prestation(LucteriosModel):
         if Params.getvalue("member-activite-enable"):
             fields.append(((Params.getvalue("member-activite-text"), "activity"),))
         fields.append('article')
-        fields.append(((_('price'), "article.price_txt"),))
+        fields.append("article.price")
         return fields
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
