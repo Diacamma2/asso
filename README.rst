@@ -1,3 +1,15 @@
+.. image:: https://img.shields.io/pypi/djversions/diacamma-asso
+    :target: https://pypi.org/project/diacamma-asso/
+    :alt: Django version
+
+.. image:: https://img.shields.io/pypi/v/diacamma-asso
+    :target: https://pypi.org/project/diacamma-asso/
+    :alt: Latest Version
+
+.. image:: https://img.shields.io/pypi/pyversions/diacamma-asso
+    :target: https://pypi.org/project/diacamma-asso/
+    :alt: Supported Python versions
+
 Diacamma Asso appli of Lucterios framework
 ============================================
 
