@@ -55,6 +55,7 @@ from diacamma.accounting.tools import get_amount_from_format_devise,\
 from diacamma.accounting.models import CostAccounting
 from diacamma.payoff.views import get_html_payment
 from diacamma.payoff.models import PaymentMethod
+from lucterios.framework.auditlog import auditlog
 
 
 class Season(LucteriosModel):
@@ -361,6 +362,9 @@ class Period(LucteriosModel):
 
     def __str__(self):
         return "%d: %s => %s" % (self.num, formats.date_format(self.begin_date, "SHORT_DATE_FORMAT"), formats.date_format(self.end_date, "SHORT_DATE_FORMAT"))
+
+    def get_auditlog_object(self):
+        return self.season
 
     @classmethod
     def get_default_fields(cls):
@@ -1259,6 +1263,9 @@ class DocAdherent(LucteriosModel):
     def __str__(self):
         return "%s %s" % (self.document, self.value)
 
+    def get_auditlog_object(self):
+        return self.subscription
+
     @classmethod
     def get_default_fields(cls):
         return ["document", "value"]
@@ -1292,6 +1299,9 @@ class License(LucteriosModel):
         if Params.getvalue("member-licence-enabled") and (self.value is not None):
             val.append(self.value)
         return " ".join(val)
+
+    def get_auditlog_object(self):
+        return self.subscription
 
     @classmethod
     def get_default_fields(cls):
@@ -1521,3 +1531,19 @@ def member_checkparam():
     Parameter.check_and_create(name="member-family-type", typeparam=1, title=_("member-family-type"), args="{}", value='0', meta='("contacts","StructureType", Q(), "id", False)')
     Parameter.check_and_create(name="member-size-page", typeparam=1, title=_("member-size-page"), args="{}", value='25', meta='("","", "[(25,\'25\'),(50,\'50\'),(100,\'100\'),(250,\'250\'),]", "", True)')
     Parameter.check_and_create(name="member-fields", typeparam=0, title=_("member-fields"), args="{'Multi':False}", value='')
+
+
+@Signal.decorate('auditlog_register')
+def member_auditlog_register():
+    auditlog.register(Activity)
+    auditlog.register(Team)
+    auditlog.register(Age, include_fields=["name", "date_min", "date_max"])
+    auditlog.register(SubscriptionType, include_fields=["name", "description", 'duration', 'unactive', 'price', 'articles'])
+    auditlog.register(Season, include_fields=["designation", 'iscurrent'])
+    auditlog.register(Period)
+    auditlog.register(Document, include_fields=[])
+    auditlog.register(Prestation, include_fields=[])
+    auditlog.register(Adherent)
+    auditlog.register(Subscription, include_fields=["season", "subscriptiontype", "status", "begin_date", "end_date"])
+    auditlog.register(DocAdherent, include_fields=[])
+    auditlog.register(License, include_fields=[])

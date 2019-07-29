@@ -47,6 +47,7 @@ from diacamma.member.models import Activity, Adherent, Subscription, Season
 from diacamma.accounting.tools import get_amount_from_format_devise,\
     format_with_devise
 from django.db.models.aggregates import Count
+from lucterios.framework.auditlog import auditlog
 
 
 class DegreeType(LucteriosModel):
@@ -232,6 +233,9 @@ class Organizer(LucteriosModel):
     def __str__(self):
         return self.contact
 
+    def get_auditlog_object(self):
+        return self.event
+
     def set_has_responsible(self):
         all_organizer = Organizer.objects.filter(event=self.event)
         for organizer_item in all_organizer:
@@ -357,6 +361,9 @@ class Participant(LucteriosModel):
 
     def __str__(self):
         return six.text_type(self.contact)
+
+    def get_auditlog_object(self):
+        return self.event
 
     @classmethod
     def get_default_fields(cls):
@@ -510,3 +517,14 @@ def event_checkparam():
                                args="{'Multi':False}", value=_('Sub-degree'))
     Parameter.check_and_create(name="event-comment-text", typeparam=0,
                                title=_("event-comment-text"), args="{'Multi':True}", value='')
+
+
+@Signal.decorate('auditlog_register')
+def event_auditlog_register():
+    auditlog.register(DegreeType)
+    auditlog.register(SubDegreeType)
+    auditlog.register(Event, include_fields=['activity', 'status', 'event_type', 'date_txt', 'default_article',
+                                             'default_article_nomember', 'comment'])
+    auditlog.register(Organizer)
+    auditlog.register(Participant, include_fields=["contact", 'degree_result', 'subdegree_result', 'comment', 'article', 'reduce'])
+    auditlog.register(Degree)
