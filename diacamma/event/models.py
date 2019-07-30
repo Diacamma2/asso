@@ -521,10 +521,10 @@ def event_checkparam():
 
 @Signal.decorate('auditlog_register')
 def event_auditlog_register():
-    auditlog.register(DegreeType)
-    auditlog.register(SubDegreeType)
+    auditlog.register(DegreeType, exclude_fields=['ID'])
+    auditlog.register(SubDegreeType, exclude_fields=['ID'])
     auditlog.register(Event, include_fields=['activity', 'status', 'event_type', 'date_txt', 'default_article',
                                              'default_article_nomember', 'comment'])
-    auditlog.register(Organizer)
+    auditlog.register(Organizer, exclude_fields=['ID'])
     auditlog.register(Participant, include_fields=["contact", 'degree_result', 'subdegree_result', 'comment', 'article', 'reduce'])
-    auditlog.register(Degree)
+    auditlog.register(Degree, exclude_fields=['ID'])
