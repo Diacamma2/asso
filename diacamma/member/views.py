@@ -1020,7 +1020,7 @@ class AdherentStatistic(XferContainerCustom):
             lab = XferCompLabelForm('lbl_season')
             lab.set_color('red')
             lab.set_value_as_infocenter(_('no subscription!'))
-            lab.set_location(1, 1, 2)
+            lab.set_location(1, 2, 2)
             self.add_component(lab)
         else:
             tab_iden = 0

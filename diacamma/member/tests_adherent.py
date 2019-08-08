@@ -657,7 +657,7 @@ class AdherentTest(BaseAdherentTest):
         self.factory.xfer = AdherentStatistic()
         self.calljson('/diacamma.member/adherentStatistic', {'season': 1}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'adherentStatistic')
-        self.assert_count_equal('', 3)
+        self.assert_count_equal('', 4)
 
         self.factory.xfer = AdherentStatistic()
         self.calljson('/diacamma.member/adherentStatistic', {'dateref': '2009-10-01'}, False)
