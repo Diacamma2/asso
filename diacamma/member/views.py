@@ -37,9 +37,6 @@ from lucterios.framework.xferadvance import XferAddEditor
 from lucterios.framework.xferadvance import XferShowEditor
 from lucterios.framework.xferadvance import XferDelete
 from lucterios.framework.xfersearch import XferSearchEditor
-from lucterios.CORE.xferprint import XferPrintAction
-from lucterios.CORE.xferprint import XferPrintLabel
-from lucterios.CORE.xferprint import XferPrintListing
 from lucterios.framework.tools import FORMTYPE_NOMODAL, ActionsManage, MenuManage, \
     FORMTYPE_REFRESH, CLOSE_NO, SELECT_SINGLE, WrapAction, FORMTYPE_MODAL, \
     SELECT_MULTI, CLOSE_YES, SELECT_NONE
@@ -51,15 +48,19 @@ from lucterios.framework.tools import convert_date, same_day_months_after
 from lucterios.framework.error import LucteriosException, IMPORTANT
 from lucterios.framework import signal_and_lock
 
+from lucterios.CORE.xferprint import XferPrintAction
+from lucterios.CORE.xferprint import XferPrintLabel
+from lucterios.CORE.xferprint import XferPrintListing
 from lucterios.CORE.parameters import Params
 
 from lucterios.contacts.models import Individual, LegalEntity, Responsability
 from lucterios.contacts.views_contacts import LegalEntityAddModify
 
 from diacamma.accounting.models import Third
-from diacamma.member.models import Adherent, Subscription, Season, Age, Team, Activity, License, DocAdherent, SubscriptionType, CommandManager, Prestation
 from diacamma.accounting.views import ThirdList
 from diacamma.accounting.tools import format_with_devise
+from diacamma.invoice.models import get_or_create_customer, Bill
+from diacamma.member.models import Adherent, Subscription, Season, Age, Team, Activity, License, DocAdherent, SubscriptionType, CommandManager, Prestation
 
 
 MenuManage.add_sub("association", None, "diacamma.member/images/association.png", _("Association"), _("Association tools"), 30)
@@ -1072,6 +1073,22 @@ class SubscriptionAddForCurrent(SubscriptionAddModify):
             self.item.adherent = Adherent()
         self.item.season = Season.current_season()
         SubscriptionAddModify.fillresponse(self)
+
+
+@signal_and_lock.Signal.decorate('post_merge')
+def post_merge_member(item):
+    if isinstance(item, Individual):
+        item = item.get_final_child()
+        if isinstance(item, Adherent) and (item.family is not None):
+            adh_third = Third.objects.filter(contact_id=item.id).first()
+            if adh_third is not None:
+                family_third = get_or_create_customer(item.family.id)
+                for bill in Bill.objects.filter(third=adh_third, status=0):
+                    bill.third = family_third
+                    bill.save()
+                    subscription = bill.subscription_set.first()
+                    if (subscription is not None) and (subscription.status in (0, 1)):
+                        subscription.change_bill()
 
 
 @signal_and_lock.Signal.decorate('situation')

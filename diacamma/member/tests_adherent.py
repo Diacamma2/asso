@@ -27,7 +27,7 @@ from shutil import rmtree
 from datetime import date
 from _io import StringIO
 
-from django.utils import formats, six
+from django.utils import six
 from os.path import isfile
 from base64 import b64decode
 
@@ -35,13 +35,17 @@ from lucterios.framework.test import LucteriosTest
 from lucterios.framework.filetools import get_user_dir
 from lucterios.CORE.models import Parameter
 from lucterios.CORE.parameters import Params
+from lucterios.CORE.views import ObjectMerge
 from lucterios.contacts.views_contacts import LegalEntityShow
 from lucterios.contacts.models import LegalEntity
 from lucterios.contacts.views import ContactImport
 from lucterios.contacts.tests_contacts import change_ourdetail
 
 from diacamma.invoice.views import BillList, BillTransition, BillFromQuotation, BillAddModify, BillShow, DetailAddModify
+from diacamma.invoice.models import get_or_create_customer
 from diacamma.accounting.views import ThirdShow
+from diacamma.accounting.models import FiscalYear
+from diacamma.accounting.test_tools import fill_accounts_fr
 
 from diacamma.member.models import Season
 from diacamma.member.views import AdherentActiveList, AdherentAddModify, AdherentShow,\
@@ -54,9 +58,6 @@ from diacamma.member.views import AdherentActiveList, AdherentAddModify, Adheren
     AdherentThirdList
 from diacamma.member.test_tools import default_season, default_financial, default_params,\
     default_adherents, default_subscription, set_parameters, default_prestation
-from diacamma.accounting.models import FiscalYear
-from diacamma.accounting.test_tools import fill_accounts_fr
-from diacamma.invoice.models import get_or_create_customer
 
 
 class BaseAdherentTest(LucteriosTest):
@@ -1890,6 +1891,102 @@ class AdherentFamilyTest(BaseAdherentTest):
         self.assert_json_equal('', 'bill/@3/bill_type', 1)
         self.assert_json_equal('', 'bill/@4/bill_type', 1)
         self.assert_json_equal('', 'bill/@5/bill_type', 1)
+
+    def test_merge(self):
+        default_adherents()
+        default_subscription()
+        self.add_family()
+        self.factory.xfer = AdherentFamilySelect()
+        self.calljson('/diacamma.member/adherentFamilySelect', {'adherent': 2, 'legal_entity': 7}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.member', 'adherentFamilySelect')
+        self.factory.xfer = AdherentFamilySelect()
+        self.calljson('/diacamma.member/adherentFamilySelect', {'adherent': 5, 'legal_entity': 7}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.member', 'adherentFamilySelect')
+
+        self.factory.xfer = SubscriptionAddModify()
+        self.calljson('/diacamma.member/subscriptionAddModify', {'SAVE': 'YES', 'status': 2, 'adherent': 2, 'dateref': '2014-10-01', 'subscriptiontype': 1, 'season': 10, 'team': 1, 'activity': 1}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.member', 'subscriptionAddModify')
+        self.factory.xfer = SubscriptionAddModify()
+        self.calljson('/diacamma.member/subscriptionAddModify', {'SAVE': 'YES', 'status': 2, 'adherent': 3, 'dateref': '2014-10-01', 'subscriptiontype': 1, 'season': 10, 'team': 2, 'activity': 1}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.member', 'subscriptionAddModify')
+        self.factory.xfer = SubscriptionAddModify()
+        self.calljson('/diacamma.member/subscriptionAddModify', {'SAVE': 'YES', 'status': 2, 'adherent': 4, 'dateref': '2014-10-01', 'subscriptiontype': 1, 'season': 10, 'team': 3, 'activity': 2}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.member', 'subscriptionAddModify')
+        self.factory.xfer = SubscriptionAddModify()
+        self.calljson('/diacamma.member/subscriptionAddModify', {'SAVE': 'YES', 'status': 2, 'adherent': 5, 'dateref': '2014-10-01', 'subscriptiontype': 1, 'season': 10, 'team': 1, 'activity': 2}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.member', 'subscriptionAddModify')
+        self.factory.xfer = SubscriptionAddModify()
+        self.calljson('/diacamma.member/subscriptionAddModify', {'SAVE': 'YES', 'status': 2, 'adherent': 6, 'dateref': '2014-10-01', 'subscriptiontype': 1, 'season': 10, 'team': 2, 'activity': 1}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.member', 'subscriptionAddModify')
+
+        self.factory.xfer = AdherentActiveList()
+        self.calljson('/diacamma.member/adherentActiveList', {}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentActiveList')
+        self.assert_count_equal('adherent', 5)
+        self.assert_json_equal('', 'adherent/@0/id', 2)
+        self.assert_json_equal('', 'adherent/@0/firstname', 'Avrel')
+        self.assert_json_equal('', 'adherent/@0/lastname', 'Dalton')
+        self.assert_json_equal('', 'adherent/@0/family', 'LES DALTONS')
+        self.assert_json_equal('', 'adherent/@1/id', 4)
+        self.assert_json_equal('', 'adherent/@1/firstname', 'Jack')
+        self.assert_json_equal('', 'adherent/@1/lastname', 'Dalton')
+        self.assert_json_equal('', 'adherent/@1/family', None)
+        self.assert_json_equal('', 'adherent/@2/id', 5)
+        self.assert_json_equal('', 'adherent/@2/firstname', 'Joe')
+        self.assert_json_equal('', 'adherent/@2/lastname', 'Dalton')
+        self.assert_json_equal('', 'adherent/@2/family', 'LES DALTONS')
+        self.assert_json_equal('', 'adherent/@3/id', 3)
+        self.assert_json_equal('', 'adherent/@3/firstname', 'William')
+        self.assert_json_equal('', 'adherent/@3/lastname', 'Dalton')
+        self.assert_json_equal('', 'adherent/@3/family', None)
+        self.assert_json_equal('', 'adherent/@4/id', 6)
+        self.assert_json_equal('', 'adherent/@4/firstname', 'Lucky')
+        self.assert_json_equal('', 'adherent/@4/lastname', 'Luke')
+        self.assert_json_equal('', 'adherent/@4/family', None)
+
+        self.factory.xfer = BillList()
+        self.calljson('/diacamma.invoice/billList', {}, False)
+        self.assert_observer('core.custom', 'diacamma.invoice', 'billList')
+        self.assert_count_equal('bill', 4)
+        self.assert_json_equal('', 'bill/@0/third', "LES DALTONS")
+        self.assert_json_equal('', 'bill/@1/third', "Dalton William")
+        self.assert_json_equal('', 'bill/@2/third', "Dalton Jack")
+        self.assert_json_equal('', 'bill/@3/third', "Luke Lucky")
+
+        self.factory.xfer = ObjectMerge()
+        self.calljson('/CORE/objectMerge',
+                      {'modelname': 'contacts.Individual', 'field_id': 'individual', 'individual': '2;3', 'CONFIRME': 'YES', 'mrg_object': '3'}, False)
+        self.assert_observer('core.acknowledge', 'CORE', 'objectMerge')
+
+        self.factory.xfer = AdherentActiveList()
+        self.calljson('/diacamma.member/adherentActiveList', {}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentActiveList')
+        self.assert_count_equal('adherent', 4)
+        self.assert_json_equal('', 'adherent/@0/id', 4)
+        self.assert_json_equal('', 'adherent/@0/firstname', 'Jack')
+        self.assert_json_equal('', 'adherent/@0/lastname', 'Dalton')
+        self.assert_json_equal('', 'adherent/@0/family', None)
+        self.assert_json_equal('', 'adherent/@1/id', 5)
+        self.assert_json_equal('', 'adherent/@1/firstname', 'Joe')
+        self.assert_json_equal('', 'adherent/@1/lastname', 'Dalton')
+        self.assert_json_equal('', 'adherent/@1/family', 'LES DALTONS')
+        self.assert_json_equal('', 'adherent/@2/id', 3)
+        self.assert_json_equal('', 'adherent/@2/firstname', 'William')
+        self.assert_json_equal('', 'adherent/@2/lastname', 'Dalton')
+        self.assert_json_equal('', 'adherent/@2/family', 'LES DALTONS')
+        self.assert_json_equal('', 'adherent/@3/id', 6)
+        self.assert_json_equal('', 'adherent/@3/firstname', 'Lucky')
+        self.assert_json_equal('', 'adherent/@3/lastname', 'Luke')
+        self.assert_json_equal('', 'adherent/@3/family', None)
+
+        self.factory.xfer = BillList()
+        self.calljson('/diacamma.invoice/billList', {}, False)
+        self.assert_observer('core.custom', 'diacamma.invoice', 'billList')
+        self.assert_count_equal('bill', 4)
+        self.assert_json_equal('', 'bill/@0/third', "LES DALTONS")
+        self.assert_json_equal('', 'bill/@1/third', "LES DALTONS")
+        self.assert_json_equal('', 'bill/@2/third', "Dalton Jack")
+        self.assert_json_equal('', 'bill/@3/third', "Luke Lucky")
 
     def test_import(self):
         csv_content = """"nom","prenom","sexe","famille","adresse","codePostal","ville","fixe","portable","mail","Type"
