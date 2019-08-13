@@ -369,7 +369,7 @@ class AdherentThirdList(ThirdList):
         self.fieldnames = ["contact", "contact.address", "contact.city", "contact.tel1", "contact.tel2", "contact.email", (_("adherents"), "adherents")]
         legal_filter = Q(contact__legalentity__responsability__individual__adherent__subscription__season=season)
         indiv_filter = Q(contact__individual__adherent__subscription__season=season)
-        dates_filter = Q(supporting__bill__date__gte=season.begin_date) & Q(supporting__bill__date__lte=season.end_date)
+        dates_filter = Q(supporting__bill__subscription__season=season)
         self.filter = Q()
         if contact_filter != "":
             q_legalentity = Q(contact__legalentity__name__icontains=contact_filter)

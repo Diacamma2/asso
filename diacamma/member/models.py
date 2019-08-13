@@ -34,7 +34,7 @@ from django.db import models
 from django.db.models.aggregates import Min, Max, Count
 from django.db.models import Q
 from django.utils.translation import ugettext_lazy as _
-from django.utils import formats, six
+from django.utils import formats, six, timezone
 from django_fsm import FSMIntegerField, transition
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
@@ -44,6 +44,7 @@ from lucterios.framework.error import LucteriosException, IMPORTANT
 from lucterios.framework.tools import convert_date, same_day_months_after, toHtml, get_bool_textual
 from lucterios.framework.signal_and_lock import Signal
 from lucterios.framework.filetools import get_tmp_dir
+from lucterios.framework.auditlog import auditlog
 
 from lucterios.CORE.models import Parameter, PrintModel, LucteriosUser
 from lucterios.CORE.parameters import Params
@@ -55,7 +56,6 @@ from diacamma.accounting.tools import get_amount_from_format_devise,\
 from diacamma.accounting.models import CostAccounting
 from diacamma.payoff.views import get_html_payment
 from diacamma.payoff.models import PaymentMethod
-from lucterios.framework.auditlog import auditlog
 
 
 class Season(LucteriosModel):
@@ -1065,18 +1065,22 @@ class Subscription(LucteriosModel):
             new_cmt.extend(cmt)
             Detail.create_for_bill(self.bill, art, designation="{[br/]}".join(new_cmt))
         for presta in self.prestations.all():
-            new_cmt = [presta.name]
+            new_cmt = [presta.description]
             new_cmt.extend(cmt)
             Detail.create_for_bill(self.bill, presta.article, designation="{[br/]}".join(new_cmt))
 
     def _search_or_create_bill(self, bill_type):
         new_third = get_or_create_customer(self.adherent.get_ref_contact().id)
         bill_list = Bill.objects.filter(third=new_third, bill_type=bill_type, status=0).annotate(subscription_count=Count('subscription')).filter(subscription_count__gte=1).order_by('-date')
+        if bill_type == 0:
+            date_ref = timezone.now()
+        else:
+            date_ref = self.season.date_ref
         if len(bill_list) > 0:
             self.bill = bill_list[0]
-            self.bill.date = self.season.date_ref
+            self.bill.date = date_ref
         if self.bill is None:
-            self.bill = Bill.objects.create(bill_type=bill_type, date=self.season.date_ref, third=new_third)
+            self.bill = Bill.objects.create(bill_type=bill_type, date=date_ref, third=new_third)
 
     def change_bill(self):
         if (len(self.subscriptiontype.articles.all()) == 0) and (len(self.prestations.all()) == 0):
