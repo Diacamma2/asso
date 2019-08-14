@@ -222,12 +222,12 @@ class Season(LucteriosModel):
         nb_del = 0
         nb_add = 0
         nb_update = 0
-        for adh in Adherent.objects.filter(Q(user__is_active=True)):
-            if len(adh.subscription_set.filter(Q(season=self) & Q(status=2))) == 0:
+        for adh in Adherent.objects.filter(Q(user__is_active=True)).exclude(Q(responsability__legal_entity_id=1)):
+            if len(adh.subscription_set.filter(Q(season=self) & Q(status__in=(1, 2)))) == 0:
                 adh.user.is_active = False
                 adh.user.save()
                 nb_del += 1
-        for adh in Adherent.objects.filter(Q(subscription__status=2) & Q(subscription__season=self)).distinct():
+        for adh in Adherent.objects.filter(Q(subscription__status__in=(1, 2)) & Q(subscription__season=self)).distinct():
             if adh.user_id is None:
                 if adh.email != '':
                     username_temp = adh.firstname.lower() + adh.lastname.upper()[0]
