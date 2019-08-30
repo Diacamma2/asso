@@ -742,8 +742,15 @@ class AdherentConnection(XferContainerAcknowledge):
     def fillresponse(self):
         if self.confirme(_("Do you want to check the access right for all adherents ?")):
             if self.traitment("static/lucterios.CORE/images/info.png", _("Please, waiting..."), ""):
-                nb_del, nb_add, nb_update = Season.current_season().check_connection()
-                self.traitment_data[2] = _("{[center]}{[b]}Result{[/b]}{[/center]}{[br/]}%(nb_del)s removed connection(s).{[br/]}%(nb_add)s added connection(s).{[br/]}%(nb_update)s updated connection(s).") % {'nb_del': nb_del, 'nb_add': nb_add, 'nb_update': nb_update}
+                nb_del, nb_add, nb_update, error_sending = Season.current_season().check_connection()
+                ending_msg = _("{[center]}{[b]}Result{[/b]}{[/center]}{[br/]}%(nb_del)s removed connection(s).{[br/]}%(nb_add)s added connection(s).{[br/]}%(nb_update)s updated connection(s).") % {'nb_del': nb_del, 'nb_add': nb_add, 'nb_update': nb_update}
+                if len(error_sending) > 0:
+                    ending_msg += _("{[br/]}{[br/]}%d email(s) failed:") % len(error_sending)
+                    ending_msg += "{[ul]}"
+                    for error_item in error_sending:
+                        ending_msg += "{[li]}%s : %s{[/li]}" % error_item
+                    ending_msg += "{[/ul]}"
+                self.traitment_data[2] = ending_msg
 
 
 class BaseAdherentFamilyList(XferContainerCustom):

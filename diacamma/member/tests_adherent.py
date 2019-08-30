@@ -37,7 +37,7 @@ from lucterios.CORE.models import Parameter, LucteriosUser
 from lucterios.CORE.parameters import Params
 from lucterios.CORE.views import ObjectMerge
 from lucterios.contacts.views_contacts import LegalEntityShow
-from lucterios.contacts.models import LegalEntity
+from lucterios.contacts.models import LegalEntity, Responsability
 from lucterios.contacts.views import ContactImport
 from lucterios.contacts.tests_contacts import change_ourdetail
 
@@ -47,7 +47,7 @@ from diacamma.accounting.views import ThirdShow
 from diacamma.accounting.models import FiscalYear
 from diacamma.accounting.test_tools import fill_accounts_fr
 
-from diacamma.member.models import Season
+from diacamma.member.models import Season, Adherent
 from diacamma.member.views import AdherentActiveList, AdherentAddModify, AdherentShow,\
     SubscriptionAddModify, SubscriptionShow, LicenseAddModify, LicenseDel,\
     AdherentDoc, AdherentLicense, AdherentLicenseSave, AdherentStatistic,\
@@ -57,7 +57,8 @@ from diacamma.member.views import AdherentActiveList, AdherentAddModify, Adheren
     FamilyAdherentCreate, FamilyAdherentAdded, AdherentListing,\
     AdherentThirdList, AdherentConnection
 from diacamma.member.test_tools import default_season, default_financial, default_params,\
-    default_adherents, default_subscription, set_parameters, default_prestation
+    default_adherents, default_subscription, set_parameters, default_prestation,\
+    create_adherent
 
 
 class BaseAdherentTest(LucteriosTest):
@@ -1572,6 +1573,19 @@ class AdherentTest(BaseAdherentTest):
         change_ourdetail()
         Parameter.change_value('member-connection', True)
         Params.clear()
+        adh_luke = Adherent.objects.get(firstname='Lucky')
+        adh_luke.user = LucteriosUser.objects.create(username='lucky', first_name=adh_luke.firstname, last_name=adh_luke.lastname, email=adh_luke.email, is_active=False)
+        adh_luke.save()
+        new_adh = create_adherent("Ma'a", 'Dalton', '1961-04-12')
+        new_adh.user = LucteriosUser.objects.create(username='maa', first_name=new_adh.firstname, last_name=new_adh.lastname, email=new_adh.email, is_active=True)
+        new_adh.save()
+        new_adh = create_adherent("Rantanplan", 'Chien', '2010-01-01')
+        new_adh.user = LucteriosUser.objects.create(username='rantanplan', first_name=new_adh.firstname, last_name=new_adh.lastname, email=new_adh.email, is_active=True)
+        new_adh.save()
+        Responsability.objects.create(individual=new_adh, legal_entity_id=1)
+        adh_joe = Adherent.objects.get(firstname='Joe')
+        adh_joe.email = 'badèèè@worldcompany.com'
+        adh_joe.save()
 
         self.factory.xfer = AdherentActiveList()
         self.calljson('/diacamma.member/adherentActiveList', {'dateref': '2009-10-01'}, False)
@@ -1582,14 +1596,22 @@ class AdherentTest(BaseAdherentTest):
         server = TestReceiver()
         server.start(1025)
         try:
-            self.assertEqual(1, len(LucteriosUser.objects.filter(is_active=True)))
+            self.assertEqual(3, len(LucteriosUser.objects.filter(is_active=True)))
             self.factory.xfer = AdherentConnection()
             self.calljson('/diacamma.member/adherentConnection', {'CONFIRME': 'YES', 'RELOAD': 'YES'}, False)
             self.assert_observer('core.custom', 'diacamma.member', 'adherentConnection')
-            self.assert_json_equal('LABELFORM', 'info', '{[center]}{[b]}Résultat{[/b]}{[/center]}{[br/]}0 connexion(s) supprimée(s).{[br/]}5 connexion(s) ajoutée(s).{[br/]}0 connexion(s) réactivée(s).')
+            self.assert_json_equal('LABELFORM', 'info', '{[center]}{[b]}Résultat{[/b]}{[/center]}{[br/]}1 connexion(s) supprimée(s).{[br/]}3 connexion(s) ajoutée(s).{[br/]}1 connexion(s) réactivée(s).{[br/]}{[br/]}1 courriel(s) ont échoué:{[ul]}{[li]}Dalton Joe : ', True)
 
-            self.assertEqual(5, server.count())
-            self.assertEqual(6, len(LucteriosUser.objects.filter(is_active=True)))
+            print('email sending %s' % [server.get(srv_id)[2] for srv_id in range(server.count())])
+            self.assertEqual(4, server.count())
+            self.assertEqual(7, len(LucteriosUser.objects.filter(is_active=True)))
+
+            self.factory.xfer = AdherentConnection()
+            self.calljson('/diacamma.member/adherentConnection', {'CONFIRME': 'YES', 'RELOAD': 'YES'}, False)
+            self.assert_observer('core.custom', 'diacamma.member', 'adherentConnection')
+            self.assert_json_equal('LABELFORM', 'info', '{[center]}{[b]}Résultat{[/b]}{[/center]}{[br/]}0 connexion(s) supprimée(s).{[br/]}0 connexion(s) ajoutée(s).{[br/]}0 connexion(s) réactivée(s).')
+            self.assertEqual(4, server.count())
+            self.assertEqual(7, len(LucteriosUser.objects.filter(is_active=True)))
         finally:
             server.stop()
 

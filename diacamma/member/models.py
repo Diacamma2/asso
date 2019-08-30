@@ -56,6 +56,7 @@ from diacamma.accounting.tools import get_amount_from_format_devise,\
 from diacamma.accounting.models import CostAccounting
 from diacamma.payoff.views import get_html_payment
 from diacamma.payoff.models import PaymentMethod
+from lucterios.mailing.functions import EmailException
 
 
 class Season(LucteriosModel):
@@ -222,37 +223,41 @@ class Season(LucteriosModel):
         nb_del = 0
         nb_add = 0
         nb_update = 0
+        error_sending = []
         for adh in Adherent.objects.filter(Q(user__is_active=True)).exclude(Q(responsability__legal_entity_id=1)):
             if len(adh.subscription_set.filter(Q(season=self) & Q(status__in=(1, 2)))) == 0:
                 adh.user.is_active = False
                 adh.user.save()
                 nb_del += 1
         for adh in Adherent.objects.filter(Q(subscription__status__in=(1, 2)) & Q(subscription__season=self)).distinct():
-            if adh.user_id is None:
-                if adh.email != '':
-                    username_temp = adh.firstname.lower() + adh.lastname.upper()[0]
-                    username_temp = ''.join(letter for letter in normalize('NFD', username_temp) if category(letter) != 'Mn')
-                    username = ''
-                    inc = ''
-                    while (username == ''):
-                        username = "%s%s" % (username_temp, inc)
-                        users = LucteriosUser.objects.filter(username=username)
-                        if len(users) > 0:
-                            username = ''
-                            if (inc == ''):
-                                inc = 1
-                            else:
-                                inc += 1
-                    user = LucteriosUser.objects.create(username=username, first_name=adh.firstname, last_name=adh.lastname, email=adh.email)
-                    user.generate_password()
-                    adh.user = user
-                    adh.save()
-                    nb_add += 1
-            elif not adh.user.is_active:
-                adh.user.is_active = True
-                adh.user.save()
-                nb_update += 1
-        return nb_del, nb_add, nb_update
+            try:
+                if adh.user_id is None:
+                    if adh.email != '':
+                        username_temp = adh.firstname.lower() + adh.lastname.upper()[0]
+                        username_temp = ''.join(letter for letter in normalize('NFD', username_temp) if category(letter) != 'Mn')
+                        username = ''
+                        inc = ''
+                        while (username == ''):
+                            username = "%s%s" % (username_temp, inc)
+                            users = LucteriosUser.objects.filter(username=username)
+                            if len(users) > 0:
+                                username = ''
+                                if (inc == ''):
+                                    inc = 1
+                                else:
+                                    inc += 1
+                        adh.user = LucteriosUser.objects.create(username=username, first_name=adh.firstname, last_name=adh.lastname, email=adh.email)
+                        adh.save()
+                        adh.user.generate_password()
+                        nb_add += 1
+                elif not adh.user.is_active:
+                    adh.user.is_active = True
+                    adh.user.save()
+                    adh.user.generate_password()
+                    nb_update += 1
+            except EmailException as email_err:
+                error_sending.append((six.text_type(adh), six.text_type(email_err)))
+        return nb_del, nb_add, nb_update, error_sending
 
     @property
     def reference_year(self):
