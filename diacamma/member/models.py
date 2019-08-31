@@ -220,6 +220,7 @@ class Season(LucteriosModel):
         return stat_res
 
     def check_connection(self):
+        defaultgroup = Params.getobject("contacts-defaultgroup")
         nb_del = 0
         nb_add = 0
         nb_update = 0
@@ -248,11 +249,15 @@ class Season(LucteriosModel):
                                     inc += 1
                         adh.user = LucteriosUser.objects.create(username=username, first_name=adh.firstname, last_name=adh.lastname, email=adh.email)
                         adh.save()
+                        if defaultgroup is not None:
+                            adh.user.groups.add(defaultgroup)
                         adh.user.generate_password()
                         nb_add += 1
                 elif not adh.user.is_active:
                     adh.user.is_active = True
                     adh.user.save()
+                    if defaultgroup is not None:
+                        adh.user.groups.add(defaultgroup)
                     adh.user.generate_password()
                     nb_update += 1
             except EmailException as email_err:

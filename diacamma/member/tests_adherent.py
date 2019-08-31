@@ -33,7 +33,7 @@ from base64 import b64decode
 
 from lucterios.framework.test import LucteriosTest
 from lucterios.framework.filetools import get_user_dir
-from lucterios.CORE.models import Parameter, LucteriosUser
+from lucterios.CORE.models import Parameter, LucteriosUser, LucteriosGroup
 from lucterios.CORE.parameters import Params
 from lucterios.CORE.views import ObjectMerge
 from lucterios.contacts.views_contacts import LegalEntityShow
@@ -1569,6 +1569,10 @@ class AdherentTest(BaseAdherentTest):
     def test_connexion(self):
         from lucterios.mailing.test_tools import configSMTP, TestReceiver
         self.add_subscriptions()
+        new_groupe = LucteriosGroup.objects.create(name='new_groupe')
+        param = Parameter.objects.get(name='contacts-defaultgroup')
+        param.value = '%d' % new_groupe.id
+        param.save()
         configSMTP('localhost', 1025)
         change_ourdetail()
         Parameter.change_value('member-connection', True)
@@ -1603,6 +1607,7 @@ class AdherentTest(BaseAdherentTest):
             self.assert_json_equal('LABELFORM', 'info', '{[center]}{[b]}Résultat{[/b]}{[/center]}{[br/]}1 connexion(s) supprimée(s).{[br/]}3 connexion(s) ajoutée(s).{[br/]}1 connexion(s) réactivée(s).{[br/]}{[br/]}1 courriel(s) ont échoué:{[ul]}{[li]}Dalton Joe : ', True)
 
             print('email sending %s' % [server.get(srv_id)[2] for srv_id in range(server.count())])
+            self.assertEqual([['Avrel.Dalton@worldcompany.com'], ['Jack.Dalton@worldcompany.com'], ['Lucky.Luke@worldcompany.com'], ['William.Dalton@worldcompany.com']], sorted([server.get(srv_id)[2] for srv_id in range(server.count())]))
             self.assertEqual(4, server.count())
             self.assertEqual(7, len(LucteriosUser.objects.filter(is_active=True)))
 
@@ -1614,6 +1619,32 @@ class AdherentTest(BaseAdherentTest):
             self.assertEqual(7, len(LucteriosUser.objects.filter(is_active=True)))
         finally:
             server.stop()
+        user = LucteriosUser.objects.get(first_name='Avrel')
+        self.assertEqual('Dalton', user.last_name)
+        self.assertEqual('avrelD', user.username)
+        self.assertEqual('Avrel.Dalton@worldcompany.com', user.email)
+        self.assertEqual(True, user.is_active)
+        self.assertEqual([new_groupe], list(user.groups.all()))
+
+        user = LucteriosUser.objects.get(first_name='Lucky')
+        self.assertEqual('lucky', user.username)
+        self.assertEqual(True, user.is_active)
+        self.assertEqual([new_groupe], list(user.groups.all()))
+
+        user = LucteriosUser.objects.get(first_name='Joe')
+        self.assertEqual('joeD', user.username)
+        self.assertEqual(True, user.is_active)
+        self.assertEqual([new_groupe], list(user.groups.all()))
+
+        user = LucteriosUser.objects.get(first_name="Ma'a")
+        self.assertEqual('maa', user.username)
+        self.assertEqual(False, user.is_active)
+        self.assertEqual([], list(user.groups.all()))
+
+        user = LucteriosUser.objects.get(first_name="Rantanplan")
+        self.assertEqual('rantanplan', user.username)
+        self.assertEqual(True, user.is_active)
+        self.assertEqual([], list(user.groups.all()))
 
 
 class AdherentFamilyTest(BaseAdherentTest):
