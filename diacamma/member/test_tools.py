@@ -108,7 +108,7 @@ def default_adherents():
     create_adherent('Lucky', 'Luke', '1979-06-04')  # adherent 6 - 2009 = 30ans
 
 
-def default_subscription():
+def default_subscription(with_light=False):
     sub1 = SubscriptionType.objects.create(
         name="Annually", description="AAA", duration=0)
     sub1.articles.set(Article.objects.filter(id__in=(1, 5)))
@@ -125,6 +125,12 @@ def default_subscription():
         name="Calendar", description="DDD", duration=3)
     sub4.articles.set(Article.objects.filter(id__in=(1, 5)))
     sub4.save()
+
+    if with_light:
+        sub5 = SubscriptionType.objects.create(
+            name="Annually light", description="AAA-", duration=0)
+        sub5.articles.set(Article.objects.filter(id__in=(1,)))
+        sub5.save()
 
 
 def set_parameters(values):

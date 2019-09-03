@@ -1108,6 +1108,16 @@ class Subscription(LucteriosModel):
             if create_bill:
                 self._search_or_create_bill(bill_type)
                 modify = True
+            if (self.bill.status == 1):
+                old_bill = self.bill
+                old_bill.cancel()
+                old_bill.save()
+                self.bill = None
+                self._search_or_create_bill(bill_type)
+                for subscription_item in old_bill.subscription_set.all():
+                    subscription_item.bill = self.bill
+                    subscription_item.save(with_bill=False)
+                modify = True
             if (self.bill.status == 0):
                 self.bill.bill_type = bill_type
                 if hasattr(self, 'xfer'):
