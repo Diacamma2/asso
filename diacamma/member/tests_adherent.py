@@ -1932,6 +1932,58 @@ class AdherentFamilyTest(BaseAdherentTest):
         self.assert_json_equal('', 'bill/@1/total', 76.44 + 76.44)
         self.assert_json_equal('', 'bill/@1/comment', "{[b]}cotisation{[/b]}")
 
+    def test_cancel_cotation(self):
+        default_adherents()
+        default_subscription(True)
+
+        family_id = self.add_family()
+        self.factory.xfer = AdherentFamilySelect()
+        self.calljson('/diacamma.member/adherentFamilySelect', {'adherent': 2, 'legal_entity': family_id}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.member', 'adherentFamilySelect')
+        self.factory.xfer = AdherentFamilySelect()
+        self.calljson('/diacamma.member/adherentFamilySelect', {'adherent': 5, 'legal_entity': family_id}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.member', 'adherentFamilySelect')
+
+        self.factory.xfer = SubscriptionAddModify()
+        self.calljson('/diacamma.member/subscriptionAddModify', {'SAVE': 'YES', 'status': 1, 'adherent': 2, 'dateref': '2014-10-01', 'subscriptiontype': 1, 'season': 10, 'team': 2, 'activity': 1, 'value': 'abc123'}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.member', 'subscriptionAddModify')
+        self.factory.xfer = SubscriptionAddModify()
+        self.calljson('/diacamma.member/subscriptionAddModify', {'SAVE': 'YES', 'status': 1, 'adherent': 5, 'dateref': '2014-10-01', 'subscriptiontype': 1, 'season': 10, 'team': 2, 'activity': 1, 'value': 'abc123'}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.member', 'subscriptionAddModify')
+
+        self.factory.xfer = BillTransition()
+        self.calljson('/diacamma.invoice/billTransition', {'bill': 1, 'TRANSITION': 'valid', 'CONFIRME': 'YES', 'withpayoff': False, 'sendemail': False}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.invoice', 'billTransition')
+
+        self.factory.xfer = BillList()
+        self.calljson('/diacamma.invoice/billList', {'status_filter': -2}, False)
+        self.assert_observer('core.custom', 'diacamma.invoice', 'billList')
+        self.assert_count_equal('bill', 1)
+        self.assert_json_equal('', 'bill/@0/status', 1)
+        self.assert_json_equal('', 'bill/@0/third', "LES DALTONS")
+        self.assert_json_equal('', 'bill/@0/bill_type', 0)
+        self.assert_json_equal('', 'bill/@0/total', 76.44 + 76.44)
+        self.assert_json_equal('', 'bill/@0/comment', "{[b]}cotisation{[/b]}")
+
+        self.factory.xfer = SubscriptionTransition()
+        self.calljson('/diacamma.member/subscriptionTransition', {'CONFIRME': 'YES', 'subscription': 1, 'TRANSITION': 'cancel'}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.member', 'subscriptionTransition')
+
+        self.factory.xfer = BillList()
+        self.calljson('/diacamma.invoice/billList', {'status_filter': -2}, False)
+        self.assert_observer('core.custom', 'diacamma.invoice', 'billList')
+        self.assert_count_equal('bill', 2)
+        self.assert_json_equal('', 'bill/@0/status', 0)
+        self.assert_json_equal('', 'bill/@0/third', "LES DALTONS")
+        self.assert_json_equal('', 'bill/@0/bill_type', 0)
+        self.assert_json_equal('', 'bill/@0/total', 76.44)
+        self.assert_json_equal('', 'bill/@0/comment', "{[b]}cotisation{[/b]}")
+        self.assert_json_equal('', 'bill/@1/status', 2)
+        self.assert_json_equal('', 'bill/@1/third', "LES DALTONS")
+        self.assert_json_equal('', 'bill/@1/bill_type', 0)
+        self.assert_json_equal('', 'bill/@1/total', 76.44 + 76.44)
+        self.assert_json_equal('', 'bill/@1/comment', "{[b]}cotisation{[/b]}")
+
     def test_command(self):
         from lucterios.mailing.test_tools import configSMTP, TestReceiver, decode_b64
         Season.objects.get(id=16).set_has_actif()

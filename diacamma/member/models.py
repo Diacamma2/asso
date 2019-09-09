@@ -32,6 +32,7 @@ from unicodedata import normalize, category
 
 from django.db import models
 from django.db.models.aggregates import Min, Max, Count
+from django.db.models.fields import BooleanField
 from django.db.models import Q
 from django.utils.translation import ugettext_lazy as _
 from django.utils import formats, six, timezone
@@ -676,6 +677,18 @@ class Adherent(Individual):
         return fields
 
     @classmethod
+    def _get_search_doc_fields(cls):
+        fields = []
+        try:
+            document_list = Season.current_season().document_set.all()
+        except LucteriosException:
+            document_list = []
+        for doc_item in document_list:
+            dbfield = BooleanField("%s > %s > %s" % (_('subscription'), _('documents needs'), doc_item.name))
+            fields.append(('doc_%d' % doc_item.id, dbfield, 'subscription__docadherent__value', Q(subscription__docadherent__document=doc_item)))
+        return fields
+
+    @classmethod
     def get_search_fields(cls):
         ident_field = []
         ident_field.extend(super(Adherent, cls).get_search_fields())
@@ -683,8 +696,10 @@ class Adherent(Individual):
             ident_field.append('num')
         if Params.getvalue("member-birth"):
             ident_field.extend(['birthday', 'birthplace'])
-        ident_field.extend(['subscription_set.status', 'subscription_set.season', 'subscription_set.subscriptiontype',
-                            'subscription_set.begin_date', 'subscription_set.end_date'])
+
+        ident_field.extend(['subscription_set.status', 'subscription_set.season'])
+        ident_field.extend(cls._get_search_doc_fields())
+        ident_field.extend(['subscription_set.subscriptiontype', 'subscription_set.begin_date', 'subscription_set.end_date'])
         if Params.getvalue("member-team-enable"):
             ident_field.append('subscription_set.license_set.team')
         if Params.getvalue("member-activite-enable"):
@@ -1190,7 +1205,7 @@ class Subscription(LucteriosModel):
                 for presta in self.prestations.all():
                     License.objects.create(subscription=self, activity_id=presta.activity_id, team_id=presta.team_id)
             if self.status >= 2:
-                self.prestations.through.objects.all().delete()
+                self.prestations.set([])
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None, with_bill=True):
         is_new = self.id is None
@@ -1223,6 +1238,18 @@ class Subscription(LucteriosModel):
     @transition(field=status, source=1, target=3)
     def cancel(self):
         if self.bill is not None:
+            other_subscription = self.bill.subscription_set.exclude(id=self.id)
+            if len(other_subscription) > 0:
+                old_bill = self.bill
+                self.bill = None
+                self._search_or_create_bill(old_bill.bill_type)
+                new_bill = self.bill
+                for other_item in other_subscription:
+                    other_item.bill = new_bill
+                    other_item.save(with_bill=False)
+                other_item.change_bill()
+                self.bill = old_bill
+
             if self.bill.status == 0:
                 self.bill.delete()
             elif (self.bill.status == 1) and (self.bill.bill_type == 0):
