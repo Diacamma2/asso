@@ -1094,7 +1094,7 @@ class Subscription(LucteriosModel):
             new_cmt.extend(cmt)
             Detail.create_for_bill(self.bill, presta.article, designation="{[br/]}".join(new_cmt))
 
-    def _search_or_create_bill(self, bill_type):
+    def _search_or_create_bill(self, bill_type, parentbill=None):
         new_third = get_or_create_customer(self.adherent.get_ref_contact().id)
         bill_list = Bill.objects.filter(third=new_third, bill_type=bill_type, status=0).annotate(subscription_count=Count('subscription')).filter(subscription_count__gte=1).order_by('-date')
         if bill_type == 0:
@@ -1105,7 +1105,7 @@ class Subscription(LucteriosModel):
             self.bill = bill_list[0]
             self.bill.date = date_ref
         if self.bill is None:
-            self.bill = Bill.objects.create(bill_type=bill_type, date=date_ref, third=new_third)
+            self.bill = Bill.objects.create(bill_type=bill_type, date=date_ref, third=new_third, parentbill=parentbill)
 
     def change_bill(self):
         if (len(self.subscriptiontype.articles.all()) == 0) and (len(self.prestations.all()) == 0):
@@ -1128,7 +1128,7 @@ class Subscription(LucteriosModel):
                 old_bill.cancel()
                 old_bill.save()
                 self.bill = None
-                self._search_or_create_bill(bill_type)
+                self._search_or_create_bill(bill_type, parentbill=old_bill)
                 for subscription_item in old_bill.subscription_set.all():
                     subscription_item.bill = self.bill
                     subscription_item.save(with_bill=False)
@@ -1235,21 +1235,24 @@ class Subscription(LucteriosModel):
 
     transitionname__cancel = _("Cancel")
 
+    def create_other_bill(self):
+        other_subscription = self.bill.subscription_set.exclude(id=self.id)
+        if len(other_subscription) > 0:
+            old_bill = self.bill
+            self.bill = None
+            self._search_or_create_bill(old_bill.bill_type, parentbill=old_bill)
+            new_bill = self.bill
+            for other_item in other_subscription:
+                other_item.bill = new_bill
+                other_item.save(with_bill=False)
+
+            other_item.change_bill()
+            self.bill = old_bill
+
     @transition(field=status, source=1, target=3)
     def cancel(self):
         if self.bill is not None:
-            other_subscription = self.bill.subscription_set.exclude(id=self.id)
-            if len(other_subscription) > 0:
-                old_bill = self.bill
-                self.bill = None
-                self._search_or_create_bill(old_bill.bill_type)
-                new_bill = self.bill
-                for other_item in other_subscription:
-                    other_item.bill = new_bill
-                    other_item.save(with_bill=False)
-                other_item.change_bill()
-                self.bill = old_bill
-
+            self.create_other_bill()
             if self.bill.status == 0:
                 self.bill.delete()
             elif (self.bill.status == 1) and (self.bill.bill_type == 0):
@@ -1283,6 +1286,7 @@ class Subscription(LucteriosModel):
         old_bill = self.bill
         LucteriosModel.delete(self, using=using)
         if (old_bill is not None) and (old_bill.bill_type == 0):
+            self.create_other_bill()
             if old_bill.status == 0:
                 old_bill.delete()
             elif old_bill.status == 1:
