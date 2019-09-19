@@ -7,6 +7,5 @@ Aide relative aux fonctionnalités de gestion d'évenement.
    :maxdepth: 2
 
    newevent.rst
-   config.rst
    statistic.rst
-
+   config.rst
