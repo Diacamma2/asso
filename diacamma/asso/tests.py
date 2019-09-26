@@ -55,7 +55,7 @@ class AssoTest(BaseAdherentTest):
 
         self.calljson('/CORE/statusMenu', {})
         self.assert_observer('core.custom', 'CORE', 'statusMenu')
-        self.assert_count_equal('', 19)
+        self.assert_count_equal('', 20)
 
     def test_wizard(self):
         self.calljson('/CORE/authentification', {'username': 'admin', 'password': 'admin'})
