@@ -1584,7 +1584,7 @@ def member_checkparam():
     Parameter.check_and_create(name="member-subscription-mode", typeparam=4, title=_("member-subscription-mode"), args="{'Enum':3}", value='0',
                                param_titles=(_("member-subscription-mode.0"), _("member-subscription-mode.1"), _("member-subscription-mode.2")))
     Parameter.check_and_create(name="member-family-type", typeparam=1, title=_("member-family-type"), args="{}", value='0', meta='("contacts","StructureType", Q(), "id", False)')
-    Parameter.check_and_create(name="member-size-page", typeparam=1, title=_("member-size-page"), args="{}", value='25', meta='("","", "[(25,\'25\'),(50,\'50\'),(100,\'100\'),(250,\'250\'),]", "", True)')
+    Parameter.check_and_create(name="member-size-page", typeparam=1, title=_("member-size-page"), args="{}", value='25', meta='("","", "[(25,\'25\'),(50,\'50\'),(100,\'100\'),(250,\'250\'),(500,\'500\'),]", "", True)')
     Parameter.check_and_create(name="member-fields", typeparam=0, title=_("member-fields"), args="{'Multi':False}", value='')
 
 
