@@ -36,7 +36,6 @@ from lucterios.framework.xferadvance import XferListEditor, TITLE_OK, TITLE_ADD,
 from lucterios.framework.xferadvance import XferAddEditor
 from lucterios.framework.xferadvance import XferShowEditor
 from lucterios.framework.xferadvance import XferDelete
-from lucterios.framework.xfersearch import XferSearchEditor
 from lucterios.framework.tools import FORMTYPE_NOMODAL, ActionsManage, MenuManage, \
     FORMTYPE_REFRESH, CLOSE_NO, SELECT_SINGLE, WrapAction, FORMTYPE_MODAL, \
     SELECT_MULTI, CLOSE_YES, SELECT_NONE
@@ -51,6 +50,7 @@ from lucterios.framework import signal_and_lock
 from lucterios.CORE.xferprint import XferPrintAction
 from lucterios.CORE.xferprint import XferPrintLabel
 from lucterios.CORE.xferprint import XferPrintListing
+from lucterios.CORE.editors import XferSavedCriteriaSearchEditor
 from lucterios.CORE.parameters import Params
 
 from lucterios.contacts.models import Individual, LegalEntity, Responsability
@@ -279,14 +279,14 @@ class AdherentActiveList(AdherentAbstractList):
 
 
 @MenuManage.describ('member.change_adherent', FORMTYPE_NOMODAL, 'member.actions', _('To find an adherent following a set of criteria.'))
-class AdherentSearch(XferSearchEditor):
+class AdherentSearch(XferSavedCriteriaSearchEditor):
     icon = "adherent.png"
     model = Adherent
     field_id = 'adherent'
     caption = _("Search adherent")
 
     def __init__(self, **kwargs):
-        XferSearchEditor.__init__(self, **kwargs)
+        XferSavedCriteriaSearchEditor.__init__(self, **kwargs)
         self.size_by_page = Params.getvalue("member-size-page")
 
 
