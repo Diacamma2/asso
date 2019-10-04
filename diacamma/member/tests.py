@@ -616,7 +616,7 @@ class CategoriesTest(LucteriosTest):
                                                                                  "member-subscription-mode", "member-size-page", "member-fields", "member-subscription-message"])}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'categoryParamEdit')
         self.assert_json_equal('SELECT', 'member-size-page', '25')
-        self.assert_select_equal('member-size-page', 4)
+        self.assert_select_equal('member-size-page', 5)
         self.assert_json_equal('CHECKLIST', 'member-fields', ['num', 'firstname', 'lastname', 'tel1', 'tel2', 'email', 'license'])
         self.assert_select_equal('member-fields', 17, checked=True)
 
