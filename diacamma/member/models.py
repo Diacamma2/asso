@@ -50,14 +50,14 @@ from lucterios.framework.auditlog import auditlog
 from lucterios.CORE.models import Parameter, PrintModel, LucteriosUser
 from lucterios.CORE.parameters import Params
 from lucterios.contacts.models import Individual, LegalEntity, Responsability
+from lucterios.mailing.functions import EmailException
 
 from diacamma.invoice.models import Article, Bill, Detail, get_or_create_customer
 from diacamma.accounting.tools import get_amount_from_format_devise,\
     format_with_devise
-from diacamma.accounting.models import CostAccounting
+from diacamma.accounting.models import CostAccounting, Third
 from diacamma.payoff.views import get_html_payment
 from diacamma.payoff.models import PaymentMethod
-from lucterios.mailing.functions import EmailException
 
 
 class Season(LucteriosModel):
@@ -940,6 +940,36 @@ class Adherent(Individual):
         verbose_name_plural = _('adherents')
 
 
+class ThirdAdherent(Third):
+
+    def set_context(self, xfer):
+        self.season_id = xfer.getparam("season_id", 0)
+        if (self.season_id == 0):
+            dateref = convert_date(xfer.getparam("dateref", ""), Season.current_season().date_ref)
+            self.season_id = Season.get_from_date(dateref).id
+
+    @property
+    def adherents(self):
+        contact = self.contact.get_final_child()
+        if isinstance(contact, Adherent):
+            return [six.text_type(contact)]
+        elif isinstance(contact, LegalEntity):
+            family_type = Params.getobject("member-family-type")
+            if family_type is None:
+                raise LucteriosException(IMPORTANT, _('No family type!'))
+            adhs = []
+            for resp in contact.responsability_set.filter(individual__adherent__subscription__season_id=self.season_id).distinct():
+                adh = resp.individual.get_final_child()
+                if adh.family == contact:
+                    adhs.append(six.text_type(adh))
+            return sorted(set(adhs))
+        return
+
+    class Meta(object):
+        default_permissions = []
+        proxy = True
+
+
 class Prestation(LucteriosModel):
     name = models.CharField(_('name'), max_length=50)
     description = models.TextField(_('description'), null=True, default="")
@@ -1028,6 +1058,14 @@ class Subscription(LucteriosModel):
         fields = ["season", "subscriptiontype", "status", "begin_date", "end_date"]
         if Params.getvalue("member-licence-enabled") or Params.getvalue("member-team-enable") or Params.getvalue("member-activite-enable"):
             fields.append("involvement")
+        return fields
+
+    @classmethod
+    def get_other_fields(cls):
+        fields = cls.get_default_fields()
+        del fields[4]
+        del fields[3]
+        fields.insert(1, "adherent")
         return fields
 
     @classmethod

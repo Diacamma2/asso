@@ -2216,7 +2216,7 @@ class AdherentFamilyTest(BaseAdherentTest):
         self.calljson('/diacamma.member/adherentActiveList', {'dateref': '2010-01-15'}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'adherentActiveList')
         self.assert_count_equal('adherent', 0)
-        self.assertEqual(len(self.json_actions), 4)
+        self.assertEqual(len(self.json_actions), 3)
 
         self.assertEqual(1, LegalEntity.objects.filter(structure_type_id=3).count())
 

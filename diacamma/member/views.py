@@ -60,7 +60,8 @@ from diacamma.accounting.models import Third
 from diacamma.accounting.views import ThirdList
 from diacamma.accounting.tools import format_with_devise
 from diacamma.invoice.models import get_or_create_customer, Bill
-from diacamma.member.models import Adherent, Subscription, Season, Age, Team, Activity, License, DocAdherent, SubscriptionType, CommandManager, Prestation
+from diacamma.member.models import Adherent, Subscription, Season, Age, Team, Activity, License, DocAdherent, SubscriptionType, CommandManager, Prestation,\
+    ThirdAdherent
 
 
 MenuManage.add_sub("association", None, "diacamma.member/images/association.png", _("Association"), _("Association tools"), 30)
@@ -273,89 +274,28 @@ class AdherentActiveList(AdherentAbstractList):
         if Params.getvalue("member-licence-enabled"):
             self.get_components(self.field_id).add_action(self.request, AdherentLicense.get_action(_("License"), ""),
                                                           unique=SELECT_SINGLE, close=CLOSE_NO)
-        self.add_action(ActionsManage.get_action_url(ThirdAdherent.get_long_name(), "ThirdList", self), pos_act=0, close=CLOSE_YES, modal=FORMTYPE_NOMODAL)
         if Params.getvalue("member-subscription-mode") == 1:
             self.add_action(SubscriptionModerate.get_action(_("Moderation"), "images/up.png"), pos_act=0, close=CLOSE_NO)
 
 
-@MenuManage.describ('member.change_adherent', FORMTYPE_NOMODAL, 'member.actions', _('To find an adherent following a set of criteria.'))
-class AdherentSearch(XferSavedCriteriaSearchEditor):
-    icon = "adherent.png"
-    model = Adherent
-    field_id = 'adherent'
-    caption = _("Search adherent")
-
-    def __init__(self, **kwargs):
-        XferSavedCriteriaSearchEditor.__init__(self, **kwargs)
-        self.size_by_page = Params.getvalue("member-size-page")
+def show_thirdlist(request):
+    if AdherentActiveList.get_action().check_permission(request):
+        return Params.getobject("member-family-type") is not None
+    else:
+        return False
 
 
-@MenuManage.describ('member.change_adherent', FORMTYPE_NOMODAL, 'member.actions', _('List of adherents with old subscribtion not renew yet'))
-class AdherentRenewList(AdherentAbstractList):
-    caption = _("Adherents to renew")
-
-    def fillresponse_header(self):
-        self.params['is_renew'] = True
-        AdherentAbstractList.fillresponse_header(self)
-        self.fieldnames = Adherent.get_renew_fields()
-
-    def fillresponse(self):
-        AdherentAbstractList.fillresponse(self)
-        self.item.editor.add_email_selector(self, 0, self.get_max_row() + 1, 10)
-        self.get_components('title').colspan = 10
-        self.get_components(self.field_id).colspan = 10
-        if Params.getvalue("member-subscription-mode") == 1:
-            self.add_action(SubscriptionModerate.get_action(_("Moderation"), "images/up.png"), pos_act=0, close=CLOSE_NO)
-
-
-@ActionsManage.affect_grid(TITLE_CREATE, "images/new.png")
-@ActionsManage.affect_show(TITLE_MODIFY, "images/edit.png", close=CLOSE_YES)
-@MenuManage.describ('contacts.add_abstractcontact')
-class AdherentAddModify(XferAddEditor):
-    icon = "adherent.png"
-    model = Adherent
-    field_id = 'adherent'
-    caption_add = _("Add adherent")
-    caption_modify = _("Modify adherent")
-
-
-class ThirdAdherent(Third):
-
-    def set_context(self, xfer):
-        self.season_id = xfer.getparam("season_id", 0)
-        if (self.season_id == 0):
-            dateref = convert_date(xfer.getparam("dateref", ""), Season.current_season().date_ref)
-            self.season_id = Season.get_from_date(dateref).id
-
-    @property
-    def adherents(self):
-        contact = self.contact.get_final_child()
-        if isinstance(contact, Adherent):
-            return [six.text_type(contact)]
-        elif isinstance(contact, LegalEntity):
-            family_type = Params.getobject("member-family-type")
-            if family_type is None:
-                raise LucteriosException(IMPORTANT, _('No family type!'))
-            adhs = []
-            for resp in contact.responsability_set.filter(individual__adherent__subscription__season_id=self.season_id).distinct():
-                adh = resp.individual.get_final_child()
-                if adh.family == contact:
-                    adhs.append(six.text_type(adh))
-            return sorted(set(adhs))
-        return
-
-    class Meta(object):
-        default_permissions = []
-        proxy = True
-
-
-@ActionsManage.affect_other(_('Address'), "images/show.png", condition=lambda xfer: Params.getobject("member-family-type") is not None)
-@MenuManage.describ('contacts.change_abstractcontact')
+@MenuManage.describ(show_thirdlist, FORMTYPE_NOMODAL, 'member.actions', _('List of  families of members up to date with their subscription'))
 class AdherentThirdList(ThirdList):
     icon = "adherent.png"
     model = ThirdAdherent
     field_id = 'third'
-    caption = _("Address of season adherents")
+    caption = _("Season adherents")
+
+    def __init__(self, **kwargs):
+        ThirdList.__init__(self, **kwargs)
+        self.size_by_page = Params.getvalue("member-size-page")
+        self.caption = _("Address of season adherents")
 
     def fillresponse_header(self):
         family_type = Params.getobject("member-family-type")
@@ -398,6 +338,47 @@ class AdherentThirdList(ThirdList):
         grid = self.get_components(self.field_id)
         grid.colspan = 3
         grid.add_action(self.request, ActionsManage.get_action_url(Third.get_long_name(), "Show", self), modal=FORMTYPE_MODAL, unique=SELECT_SINGLE, close=CLOSE_NO)
+
+
+@MenuManage.describ('member.change_adherent', FORMTYPE_NOMODAL, 'member.actions', _('To find an adherent following a set of criteria.'))
+class AdherentSearch(XferSavedCriteriaSearchEditor):
+    icon = "adherent.png"
+    model = Adherent
+    field_id = 'adherent'
+    caption = _("Search adherent")
+
+    def __init__(self, **kwargs):
+        XferSavedCriteriaSearchEditor.__init__(self, **kwargs)
+        self.size_by_page = Params.getvalue("member-size-page")
+
+
+@MenuManage.describ('member.change_adherent', FORMTYPE_NOMODAL, 'member.actions', _('List of adherents with old subscribtion not renew yet'))
+class AdherentRenewList(AdherentAbstractList):
+    caption = _("Adherents to renew")
+
+    def fillresponse_header(self):
+        self.params['is_renew'] = True
+        AdherentAbstractList.fillresponse_header(self)
+        self.fieldnames = Adherent.get_renew_fields()
+
+    def fillresponse(self):
+        AdherentAbstractList.fillresponse(self)
+        self.item.editor.add_email_selector(self, 0, self.get_max_row() + 1, 10)
+        self.get_components('title').colspan = 10
+        self.get_components(self.field_id).colspan = 10
+        if Params.getvalue("member-subscription-mode") == 1:
+            self.add_action(SubscriptionModerate.get_action(_("Moderation"), "images/up.png"), pos_act=0, close=CLOSE_NO)
+
+
+@ActionsManage.affect_grid(TITLE_CREATE, "images/new.png")
+@ActionsManage.affect_show(TITLE_MODIFY, "images/edit.png", close=CLOSE_YES)
+@MenuManage.describ('contacts.add_abstractcontact')
+class AdherentAddModify(XferAddEditor):
+    icon = "adherent.png"
+    model = Adherent
+    field_id = 'adherent'
+    caption_add = _("Add adherent")
+    caption_modify = _("Modify adherent")
 
 
 @ActionsManage.affect_list(TITLE_PRINT, "images/print.png", condition=lambda xfer: Params.getobject("member-family-type") is not None)
@@ -1212,3 +1193,32 @@ def add_account_subscription(current_contact, xfer):
             btn.set_action(xfer.request, SubscriptionAddForCurrent.get_action(
                 _('Subscription'), 'diacamma.member/images/adherent.png'), close=CLOSE_NO)
             xfer.add_component(btn)
+
+
+@signal_and_lock.Signal.decorate('third_addon')
+def thirdaddon_member(item, xfer):
+    if WrapAction.is_permission(xfer.request, 'member.change_subscription'):
+        season = Season.current_season()
+        if xfer.getparam("dateref") is None:
+            season = Season.get_from_date(convert_date(xfer.getparam("dateref", ""), season.date_ref))
+        contact = item.contact.get_final_child()
+        contact_filter = None
+        if isinstance(contact, LegalEntity):
+            contact_filter = Q(adherent__responsability__legal_entity=contact)
+        if isinstance(contact, Adherent):
+            contact_filter = Q(adherent=contact)
+        if contact_filter is None:
+            return
+        subscriptions = Subscription.objects.filter(Q(season=season) & contact_filter)
+        if len(subscriptions) > 0:
+            if xfer.getparam("dateref") is not None:
+                xfer.new_tab(_('002@Subscription'), num=1)
+            else:
+                xfer.new_tab(_('002@Subscription'))
+            row = xfer.get_max_row() + 1
+            grid = XferCompGrid('subscription')
+            grid.set_model(subscriptions, Subscription.get_other_fields(), xfer)
+            grid.set_location(0, row + 1, 2)
+            grid.add_action_notified(xfer, model=Subscription)
+            grid.set_size(350, 500)
+            xfer.add_component(grid)
