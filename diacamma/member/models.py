@@ -55,7 +55,7 @@ from lucterios.mailing.functions import EmailException
 from diacamma.invoice.models import Article, Bill, Detail, get_or_create_customer
 from diacamma.accounting.tools import get_amount_from_format_devise,\
     format_with_devise
-from diacamma.accounting.models import CostAccounting, Third
+from diacamma.accounting.models import Third
 from diacamma.payoff.views import get_html_payment
 from diacamma.payoff.models import PaymentMethod
 
@@ -1153,6 +1153,9 @@ class Subscription(LucteriosModel):
             if (self.status == 2) and (self.bill is not None) and (self.bill.bill_type == 0) and (self.bill.status == 1):
                 self.bill = self.bill.convert_to_bill()
                 modify = True
+                convert_bill = True
+            else:
+                convert_bill = False
             create_bill = (self.bill is None)
             if self.status == 1:
                 bill_type = 0
@@ -1171,7 +1174,7 @@ class Subscription(LucteriosModel):
                     subscription_item.bill = self.bill
                     subscription_item.save(with_bill=False)
                 modify = True
-            if (self.bill.status == 0):
+            if (self.bill.status == 0) and not convert_bill:
                 self.bill.bill_type = bill_type
                 if hasattr(self, 'xfer'):
                     self.bill.date = convert_date(self.xfer.getparam('dateref'), self.season.date_ref)
@@ -1181,9 +1184,6 @@ class Subscription(LucteriosModel):
                     self.bill.date = self.season.date_ref
                 if (self.bill.date < self.season.begin_date) or (self.bill.date > self.season.end_date):
                     self.bill.date = self.season.date_ref
-                cost_acc = CostAccounting.objects.filter(is_default=True)
-                if len(cost_acc) > 0:
-                    self.bill.cost_accounting = cost_acc[0]
                 cmt = ["{[b]}%s{[/b]}" % _("subscription")]
                 if self.bill.third.contact.id == self.adherent.id:
                     cmt.append(_("Subscription of '%s'") % six.text_type(self.adherent))

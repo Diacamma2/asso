@@ -1880,7 +1880,7 @@ class AdherentFamilyTest(BaseAdherentTest):
         self.assert_json_equal('', 'bill/@1/total', 152.88)
         self.assert_json_equal('', 'bill/@1/comment', "{[b]}cotisation{[/b]}")
 
-    def _prep_subscription(self):
+    def _prep_family(self):
         default_adherents()
         default_subscription(True)
         family_id = self.add_family()
@@ -1890,6 +1890,9 @@ class AdherentFamilyTest(BaseAdherentTest):
         self.factory.xfer = AdherentFamilySelect()
         self.calljson('/diacamma.member/adherentFamilySelect', {'adherent': 5, 'legal_entity': family_id}, False)
         self.assert_observer('core.acknowledge', 'diacamma.member', 'adherentFamilySelect')
+
+    def _prep_subscription(self):
+        self._prep_family()
         self.factory.xfer = SubscriptionAddModify()
         self.calljson('/diacamma.member/subscriptionAddModify', {'SAVE': 'YES', 'status': 1, 'adherent': 2, 'dateref': '2014-10-01', 'subscriptiontype': 1, 'season': 10, 'team': 2, 'activity': 1, 'value': 'abc123'}, False)
         self.assert_observer('core.acknowledge', 'diacamma.member', 'subscriptionAddModify')
@@ -2369,3 +2372,161 @@ class AdherentFamilyTest(BaseAdherentTest):
         self.assert_json_equal('', 'bill/@1/total', 413.75)  # Subscription: art1:12.34 + art5:64.10 / Prestations: art1:12.34 + art3:324.97
         self.assert_json_equal('', 'bill/@2/third', "GOC Marie")
         self.assert_json_equal('', 'bill/@2/total', 470.53)  # Subscription: art1:12.34 + art5:64.10 / Prestations: art1:12.34 + art2:56.78 + art3:324.97
+
+    def test_with_prestation_valid_subscription(self):
+        self._prep_family()
+        default_prestation()
+        set_parameters(["team"])
+        self.factory.xfer = SubscriptionAddModify()
+        self.calljson('/diacamma.member/subscriptionAddModify', {'SAVE': 'YES', 'adherent': 2, 'status': 1, 'dateref': '2014-10-01',
+                                                                 'subscriptiontype': 1, 'season': 10, 'prestations': '1;2'}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.member', 'subscriptionAddModify')
+        self.factory.xfer = SubscriptionAddModify()
+        self.calljson('/diacamma.member/subscriptionAddModify', {'SAVE': 'YES', 'adherent': 5, 'status': 1, 'dateref': '2014-10-01',
+                                                                 'subscriptiontype': 1, 'season': 10, 'prestations': '2'}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.member', 'subscriptionAddModify')
+
+        self.factory.xfer = BillList()
+        self.calljson('/diacamma.invoice/billList', {'bill_type': -1, 'status_filter': -2}, False)
+        self.assert_observer('core.custom', 'diacamma.invoice', 'billList')
+        self.assert_count_equal('bill', 1)
+        self.assert_json_equal('', 'bill/@0/id', 1)
+        self.assert_json_equal('', 'bill/@0/third', "LES DALTONS")
+        self.assert_json_equal('', 'bill/@0/bill_type', 0)
+        self.assert_json_equal('', 'bill/@0/status', 0)
+        self.assert_json_equal('', 'bill/@0/total', 278.78)  # Subscription: art1:12.34 + art5:64.10 / Prestations: art1:12.34 + art2:56.78 + Subscription: art1:12.34 + art5:64.10 / Prestations: art2:56.78
+
+        self.factory.xfer = BillTransition()
+        self.calljson('/diacamma.invoice/billTransition', {'CONFIRME': 'YES', 'bill': 1, 'withpayoff': False, 'TRANSITION': 'valid'}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.invoice', 'billTransition')
+
+        self.factory.xfer = SubscriptionShow()
+        self.calljson('/diacamma.member/subscriptionShow', {'adherent': 2, 'dateref': '2014-10-01', 'subscription': 1}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'subscriptionShow')
+        self.assert_json_equal('LABELFORM', 'status', 1)
+        self.assert_json_equal('LABELFORM', 'prestations', ['team2', 'team3'])
+
+        self.factory.xfer = SubscriptionShow()
+        self.calljson('/diacamma.member/subscriptionShow', {'adherent': 5, 'dateref': '2014-10-01', 'subscription': 2}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'subscriptionShow')
+        self.assert_json_equal('LABELFORM', 'status', 1)
+        self.assert_json_equal('LABELFORM', 'prestations', ['team2'])
+
+        self.factory.xfer = BillList()
+        self.calljson('/diacamma.invoice/billList', {'bill_type': -1, 'status_filter': -2}, False)
+        self.assert_observer('core.custom', 'diacamma.invoice', 'billList')
+        self.assert_count_equal('bill', 1)
+        self.assert_json_equal('', 'bill/@0/third', "LES DALTONS")
+        self.assert_json_equal('', 'bill/@0/bill_type', 0)
+        self.assert_json_equal('', 'bill/@0/status', 1)
+        self.assert_json_equal('', 'bill/@0/total', 278.78)  # Subscription: art1:12.34 + art5:64.10 / Prestations: art1:12.34 + art2:56.78 + Subscription: art1:12.34 + art5:64.10 / Prestations: art2:56.78
+
+        self.factory.xfer = SubscriptionTransition()
+        self.calljson('/diacamma.member/subscriptionTransition', {'CONFIRME': 'YES', 'subscription': 1, 'TRANSITION': 'validate'}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.member', 'subscriptionTransition')
+
+        self.factory.xfer = SubscriptionShow()
+        self.calljson('/diacamma.member/subscriptionShow', {'adherent': 2, 'dateref': '2014-10-01', 'subscription': 1}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'subscriptionShow')
+        self.assert_json_equal('LABELFORM', 'status', 2)
+        self.assert_count_equal('license', 2)
+
+        self.factory.xfer = SubscriptionShow()
+        self.calljson('/diacamma.member/subscriptionShow', {'adherent': 5, 'dateref': '2014-10-01', 'subscription': 2}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'subscriptionShow')
+        self.assert_json_equal('LABELFORM', 'status', 2)
+        self.assert_count_equal('license', 1)
+
+        self.factory.xfer = BillList()
+        self.calljson('/diacamma.invoice/billList', {'bill_type': -1, 'status_filter': -2}, False)
+        self.assert_observer('core.custom', 'diacamma.invoice', 'billList')
+        self.assert_count_equal('bill', 2)
+        self.assert_json_equal('', 'bill/@0/id', 2)
+        self.assert_json_equal('', 'bill/@0/third', "LES DALTONS")
+        self.assert_json_equal('', 'bill/@0/bill_type', 1)
+        self.assert_json_equal('', 'bill/@0/status', 0)
+        self.assert_json_equal('', 'bill/@0/total', 278.78)  # Subscription: art1:12.34 + art5:64.10 / Prestations: art1:12.34 + art2:56.78 + Subscription: art1:12.34 + art5:64.10 / Prestations: art2:56.78
+        self.assert_json_equal('', 'bill/@1/id', 1)
+        self.assert_json_equal('', 'bill/@1/third', "LES DALTONS")
+        self.assert_json_equal('', 'bill/@1/bill_type', 0)
+        self.assert_json_equal('', 'bill/@1/status', 3)
+        self.assert_json_equal('', 'bill/@1/total', 278.78)  # Subscription: art1:12.34 + art5:64.10 / Prestations: art1:12.34 + art2:56.78 + Subscription: art1:12.34 + art5:64.10 / Prestations: art2:56.78
+
+    def test_with_prestation_convert_bill(self):
+        self._prep_family()
+        default_prestation()
+        set_parameters(["team"])
+        self.factory.xfer = SubscriptionAddModify()
+        self.calljson('/diacamma.member/subscriptionAddModify', {'SAVE': 'YES', 'adherent': 2, 'status': 1, 'dateref': '2014-10-01',
+                                                                 'subscriptiontype': 1, 'season': 10, 'prestations': '1;2'}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.member', 'subscriptionAddModify')
+        self.factory.xfer = SubscriptionAddModify()
+        self.calljson('/diacamma.member/subscriptionAddModify', {'SAVE': 'YES', 'adherent': 5, 'status': 1, 'dateref': '2014-10-01',
+                                                                 'subscriptiontype': 1, 'season': 10, 'prestations': '2'}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.member', 'subscriptionAddModify')
+
+        self.factory.xfer = BillList()
+        self.calljson('/diacamma.invoice/billList', {'bill_type': -1, 'status_filter': -2}, False)
+        self.assert_observer('core.custom', 'diacamma.invoice', 'billList')
+        self.assert_count_equal('bill', 1)
+        self.assert_json_equal('', 'bill/@0/id', 1)
+        self.assert_json_equal('', 'bill/@0/third', "LES DALTONS")
+        self.assert_json_equal('', 'bill/@0/bill_type', 0)
+        self.assert_json_equal('', 'bill/@0/status', 0)
+        self.assert_json_equal('', 'bill/@0/total', 278.78)  # Subscription: art1:12.34 + art5:64.10 / Prestations: art1:12.34 + art2:56.78 + Subscription: art1:12.34 + art5:64.10 / Prestations: art2:56.78
+
+        self.factory.xfer = BillTransition()
+        self.calljson('/diacamma.invoice/billTransition', {'CONFIRME': 'YES', 'bill': 1, 'withpayoff': False, 'TRANSITION': 'valid'}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.invoice', 'billTransition')
+
+        self.factory.xfer = SubscriptionShow()
+        self.calljson('/diacamma.member/subscriptionShow', {'adherent': 2, 'dateref': '2014-10-01', 'subscription': 1}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'subscriptionShow')
+        self.assert_json_equal('LABELFORM', 'status', 1)
+        self.assert_json_equal('LABELFORM', 'prestations', ['team2', 'team3'])
+
+        self.factory.xfer = SubscriptionShow()
+        self.calljson('/diacamma.member/subscriptionShow', {'adherent': 5, 'dateref': '2014-10-01', 'subscription': 2}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'subscriptionShow')
+        self.assert_json_equal('LABELFORM', 'status', 1)
+        self.assert_json_equal('LABELFORM', 'prestations', ['team2'])
+
+        self.factory.xfer = BillList()
+        self.calljson('/diacamma.invoice/billList', {'bill_type': -1, 'status_filter': -2}, False)
+        self.assert_observer('core.custom', 'diacamma.invoice', 'billList')
+        self.assert_count_equal('bill', 1)
+        self.assert_json_equal('', 'bill/@0/third', "LES DALTONS")
+        self.assert_json_equal('', 'bill/@0/bill_type', 0)
+        self.assert_json_equal('', 'bill/@0/status', 1)
+        self.assert_json_equal('', 'bill/@0/total', 278.78)  # Subscription: art1:12.34 + art5:64.10 / Prestations: art1:12.34 + art2:56.78 + Subscription: art1:12.34 + art5:64.10 / Prestations: art2:56.78
+
+        self.factory.xfer = BillFromQuotation()
+        self.calljson('/diacamma.invoice/billFromQuotation', {'CONFIRME': 'YES', 'bill': 1}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.invoice', 'billFromQuotation')
+
+        self.factory.xfer = SubscriptionShow()
+        self.calljson('/diacamma.member/subscriptionShow', {'adherent': 2, 'dateref': '2014-10-01', 'subscription': 1}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'subscriptionShow')
+        self.assert_json_equal('LABELFORM', 'status', 2)
+        self.assert_count_equal('license', 2)
+
+        self.factory.xfer = SubscriptionShow()
+        self.calljson('/diacamma.member/subscriptionShow', {'adherent': 5, 'dateref': '2014-10-01', 'subscription': 2}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'subscriptionShow')
+        self.assert_json_equal('LABELFORM', 'status', 2)
+        self.assert_count_equal('license', 1)
+
+        self.factory.xfer = BillList()
+        self.calljson('/diacamma.invoice/billList', {'bill_type': -1, 'status_filter': -2}, False)
+        self.assert_observer('core.custom', 'diacamma.invoice', 'billList')
+        self.assert_count_equal('bill', 2)
+        self.assert_json_equal('', 'bill/@0/id', 2)
+        self.assert_json_equal('', 'bill/@0/third', "LES DALTONS")
+        self.assert_json_equal('', 'bill/@0/bill_type', 1)
+        self.assert_json_equal('', 'bill/@0/status', 0)
+        self.assert_json_equal('', 'bill/@0/total', 278.78)  # Subscription: art1:12.34 + art5:64.10 / Prestations: art1:12.34 + art2:56.78 + Subscription: art1:12.34 + art5:64.10 / Prestations: art2:56.78
+        self.assert_json_equal('', 'bill/@1/id', 1)
+        self.assert_json_equal('', 'bill/@1/third', "LES DALTONS")
+        self.assert_json_equal('', 'bill/@1/bill_type', 0)
+        self.assert_json_equal('', 'bill/@1/status', 3)
+        self.assert_json_equal('', 'bill/@1/total', 278.78)  # Subscription: art1:12.34 + art5:64.10 / Prestations: art1:12.34 + art2:56.78 + Subscription: art1:12.34 + art5:64.10 / Prestations: art2:56.78
