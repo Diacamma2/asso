@@ -1145,6 +1145,30 @@ class Subscription(LucteriosModel):
         if self.bill is None:
             self.bill = Bill.objects.create(bill_type=bill_type, date=date_ref, third=new_third, parentbill=parentbill)
 
+    def _regenerate_bill(self, bill_type):
+        self.bill.bill_type = bill_type
+        if hasattr(self, 'xfer'):
+            self.bill.date = convert_date(self.xfer.getparam('dateref'), self.season.date_ref)
+        elif hasattr(self, 'dateref'):
+            self.bill.date = convert_date(self.dateref, self.season.date_ref)
+        else:
+            self.bill.date = self.season.date_ref
+        if (self.bill.date < self.season.begin_date) or (self.bill.date > self.season.end_date):
+            self.bill.date = self.season.date_ref
+        cmt = ["{[b]}%s{[/b]}" % _("subscription")]
+        if self.bill.third.contact.id == self.adherent.id:
+            cmt.append(_("Subscription of '%s'") % six.text_type(self.adherent))
+        self.bill.comment = "{[br/]}".join(cmt)
+        self.bill.save()
+        self.bill.detail_set.all().delete()
+        subscription_list = list(self.bill.subscription_set.all())
+        if self not in subscription_list:
+            subscription_list.append(self)
+        for subscription in subscription_list:
+            subscription._add_detail_bill()
+        if hasattr(self, 'send_email_param'):
+            self.sendemail(self.send_email_param)
+
     def change_bill(self):
         if (len(self.subscriptiontype.articles.all()) == 0) and (len(self.prestations.all()) == 0):
             return False
@@ -1175,28 +1199,7 @@ class Subscription(LucteriosModel):
                     subscription_item.save(with_bill=False)
                 modify = True
             if (self.bill.status == 0) and not convert_bill:
-                self.bill.bill_type = bill_type
-                if hasattr(self, 'xfer'):
-                    self.bill.date = convert_date(self.xfer.getparam('dateref'), self.season.date_ref)
-                elif hasattr(self, 'dateref'):
-                    self.bill.date = convert_date(self.dateref, self.season.date_ref)
-                else:
-                    self.bill.date = self.season.date_ref
-                if (self.bill.date < self.season.begin_date) or (self.bill.date > self.season.end_date):
-                    self.bill.date = self.season.date_ref
-                cmt = ["{[b]}%s{[/b]}" % _("subscription")]
-                if self.bill.third.contact.id == self.adherent.id:
-                    cmt.append(_("Subscription of '%s'") % six.text_type(self.adherent))
-                self.bill.comment = "{[br/]}".join(cmt)
-                self.bill.save()
-                self.bill.detail_set.all().delete()
-                subscription_list = list(self.bill.subscription_set.all())
-                if self not in subscription_list:
-                    subscription_list.append(self)
-                for subscription in subscription_list:
-                    subscription._add_detail_bill()
-                if hasattr(self, 'send_email_param'):
-                    self.sendemail(self.send_email_param)
+                self._regenerate_bill(bill_type)
         if (self.status == 3) and (self.bill is not None):
             if self.bill.status == 0:
                 self.bill.delete()

@@ -236,6 +236,36 @@ class SubscriptionEditor(LucteriosEditor):
                 activity_id = Activity.objects.all()[0].id
             License.objects.create(subscription=self.item, value=value, activity_id=activity_id, team_id=team_id)
 
+    def _add_season_comp(self, xfer, row):
+        season = self.item.season
+        if self.item.subscriptiontype.duration == 0:  # annually
+            lbl = XferCompLabelForm("seasondates")
+            lbl.set_location(1, row)
+            lbl.set_value("%s => %s" % (formats.date_format(season.begin_date, "SHORT_DATE_FORMAT"), formats.date_format(season.end_date, "SHORT_DATE_FORMAT")))
+            lbl.description = _('annually')
+            xfer.add_component(lbl)
+        elif self.item.subscriptiontype.duration == 1:  # periodic
+            sel = XferCompSelect('period')
+            sel.set_needed(True)
+            sel.set_select_query(season.period_set.all())
+            sel.set_location(1, row)
+            sel.description = _('period')
+            xfer.add_component(sel)
+        elif self.item.subscriptiontype.duration == 2:  # monthly
+            sel = XferCompSelect('month')
+            sel.set_needed(True)
+            sel.set_select(season.get_months())
+            sel.set_location(1, row)
+            sel.description = _('month')
+            xfer.add_component(sel)
+        elif self.item.subscriptiontype.duration == 3:  # calendar
+            begindate = XferCompDate('begin_date')
+            begindate.set_needed(True)
+            begindate.set_value(season.date_ref)
+            begindate.set_location(1, row)
+            begindate.description = _('begin date')
+            xfer.add_component(begindate)
+
     def edit(self, xfer):
         autocreate = xfer.getparam('autocreate', 0) == 1
         xfer.change_to_readonly("adherent")
@@ -275,35 +305,7 @@ class SubscriptionEditor(LucteriosEditor):
             self.item.subscriptiontype = SubscriptionType.objects.get(id=cmp_subscriptiontype.value)
         cmp_subscriptiontype.set_action(xfer.request, xfer.get_action(), close=CLOSE_NO, modal=FORMTYPE_REFRESH)
         row = xfer.get_max_row() + 1
-        season = self.item.season
-        if self.item.subscriptiontype.duration == 0:  # annually
-            lbl = XferCompLabelForm("seasondates")
-            lbl.set_location(1, row)
-            lbl.set_value("%s => %s" % (formats.date_format(
-                season.begin_date, "SHORT_DATE_FORMAT"), formats.date_format(season.end_date, "SHORT_DATE_FORMAT")))
-            lbl.description = _('annually')
-            xfer.add_component(lbl)
-        elif self.item.subscriptiontype.duration == 1:  # periodic
-            sel = XferCompSelect('period')
-            sel.set_needed(True)
-            sel.set_select_query(season.period_set.all())
-            sel.set_location(1, row)
-            sel.description = _('period')
-            xfer.add_component(sel)
-        elif self.item.subscriptiontype.duration == 2:  # monthly
-            sel = XferCompSelect('month')
-            sel.set_needed(True)
-            sel.set_select(season.get_months())
-            sel.set_location(1, row)
-            sel.description = _('month')
-            xfer.add_component(sel)
-        elif self.item.subscriptiontype.duration == 3:  # calendar
-            begindate = XferCompDate('begin_date')
-            begindate.set_needed(True)
-            begindate.set_value(season.date_ref)
-            begindate.set_location(1, row)
-            begindate.description = _('begin date')
-            xfer.add_component(begindate)
+        self._add_season_comp(xfer, row)
         if Params.getvalue("member-team-enable") and (len(Prestation.objects.all()) > 0) and ((self.item.id is None) or (self.item.status in (0, 1))):
             xfer.filltab_from_model(1, row + 1, False, ['prestations'])
         elif self.item.id is None:
