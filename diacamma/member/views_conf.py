@@ -24,6 +24,7 @@ along with Lucterios.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import unicode_literals
 
 from django.utils.translation import ugettext_lazy as _
+from django.db.models import Q
 from django.conf import settings
 from django.utils import six
 
@@ -36,15 +37,17 @@ from lucterios.framework import signal_and_lock
 from lucterios.CORE.parameters import Params
 from lucterios.CORE.views import ParamEdit, ObjectMerge
 
-from diacamma.member.models import Activity, Age, Team, Season, SubscriptionType,\
-    Adherent
+from diacamma.member.models import Activity, Age, Team, Season, SubscriptionType, Adherent, TaxReceipt
+from lucterios.framework.xfergraphic import XferContainerAcknowledge
+from diacamma.payoff.views import SupportingPrint, can_send_email
+from diacamma.accounting.models import FiscalYear
 
 
 def fill_params(xfer, param_lists=None, smallbtn=False):
     if param_lists is None:
         param_lists = ["member-team-enable", "member-team-text", "member-activite-enable", "member-activite-text", "member-age-enable",
                        "member-licence-enabled", "member-filter-genre", "member-numero", "member-birth", "member-family-type", "member-connection",
-                       "member-subscription-mode", "member-size-page", "member-fields", "member-subscription-message"]
+                       "member-subscription-mode", "member-size-page", "member-fields", "member-tax-receipt", "member-subscription-message"]
     if len(param_lists) >= 3:
         nb_col = 2
     else:
@@ -201,6 +204,72 @@ class ActivityShow(XferShowEditor):
     model = Activity
     field_id = 'activity'
     caption = _("Show activity")
+
+
+def show_taxreceipt(request):
+    if TaxReceiptShow.get_action().check_permission(request):
+        return Params.getvalue("member-tax-receipt") != ""
+    else:
+        return False
+
+
+@MenuManage.describ(show_taxreceipt, FORMTYPE_NOMODAL, 'financial', _('Management of tax receipts'))
+class TaxReceiptList(XferListEditor):
+    icon = "taxreceipt.png"
+    model = TaxReceipt
+    field_id = 'taxreceipt'
+    caption = _("Tax receipts")
+
+    def fillresponse_header(self):
+        select_year = self.getparam('fiscal_year')
+        self.item.fiscal_year = FiscalYear.get_current(select_year)
+        self.fill_from_model(0, 1, False, ['fiscal_year'])
+        comp_year = self.get_components('fiscal_year')
+        comp_year.set_action(self.request, self.get_action(), close=CLOSE_NO, modal=FORMTYPE_REFRESH)
+        self.filter = Q(fiscal_year=self.item.fiscal_year)
+
+
+@ActionsManage.affect_grid(TITLE_EDIT, "images/show.png", unique=SELECT_SINGLE)
+@MenuManage.describ('member.change_taxreceipt')
+class TaxReceiptShow(XferShowEditor):
+    icon = "taxreceipt.png"
+    model = TaxReceipt
+    field_id = 'taxreceipt'
+    caption = _("Show tax receipt")
+
+
+@ActionsManage.affect_grid(_("Send"), "lucterios.mailing/images/email.png", close=CLOSE_NO, unique=SELECT_MULTI, condition=lambda xfer, gridname='': can_send_email(xfer))
+@ActionsManage.affect_show(_("Send"), "lucterios.mailing/images/email.png", close=CLOSE_NO, condition=lambda xfer: can_send_email(xfer))
+@MenuManage.describ('member.change_taxreceipt')
+class TaxReceiptEmail(XferContainerAcknowledge):
+    caption = _("Send by email")
+    icon = "taxreceipt.png"
+    model = TaxReceipt
+    field_id = 'taxreceipt'
+
+    def fillresponse(self):
+        self.redirect_action(ActionsManage.get_action_url('payoff.Supporting', 'Email', self),
+                             close=CLOSE_NO, params={'item_name': self.field_id, "modelname": ""})
+
+
+@ActionsManage.affect_grid(_("Print"), "images/print.png", close=CLOSE_NO, unique=SELECT_MULTI)
+@ActionsManage.affect_show(_("Print"), "images/print.png", close=CLOSE_NO)
+@MenuManage.describ('member.change_taxreceipt')
+class TaxReceiptPrint(SupportingPrint):
+    icon = "taxreceipt.png"
+    model = TaxReceipt
+    field_id = 'taxreceipt'
+    caption = _("Print tax receipt")
+
+    def get_print_name(self):
+        if len(self.items) == 1:
+            current_taxreceipt = self.items[0]
+            return current_taxreceipt.get_document_filename()
+        else:
+            return six.text_type(self.caption)
+
+    def items_callback(self):
+        return self.items
 
 
 @signal_and_lock.Signal.decorate('conf_wizard')

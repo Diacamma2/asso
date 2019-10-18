@@ -54,10 +54,11 @@ from lucterios.mailing.functions import EmailException
 
 from diacamma.invoice.models import Article, Bill, Detail, get_or_create_customer
 from diacamma.accounting.tools import get_amount_from_format_devise,\
-    format_with_devise
-from diacamma.accounting.models import Third
+    format_with_devise, correct_accounting_code
+from diacamma.accounting.models import Third, FiscalYear, EntryAccount,\
+    EntryLineAccount
 from diacamma.payoff.views import get_html_payment
-from diacamma.payoff.models import PaymentMethod
+from diacamma.payoff.models import PaymentMethod, Supporting
 
 
 class Season(LucteriosModel):
@@ -1440,6 +1441,86 @@ class License(LucteriosModel):
         default_permissions = []
 
 
+class TaxReceipt(Supporting):
+    num = models.IntegerField(verbose_name=_('numeros'), null=True)
+    fiscal_year = models.ForeignKey(FiscalYear, verbose_name=_('fiscal year'), null=False, db_index=True, on_delete=models.PROTECT)
+    entries = models.ManyToManyField(EntryAccount, verbose_name=_('entries'))
+
+    total = LucteriosVirtualField(verbose_name=_('total'), compute_from='get_total', format_string=lambda: format_with_devise(5))
+    num_txt = LucteriosVirtualField(verbose_name=_('numeros'), compute_from='get_num_txt')
+
+    def __str__(self):
+        return _("Tax receipt #%s") % self.get_num_txt()
+
+    @classmethod
+    def get_default_fields(cls):
+        return ["num_txt", "third", 'total']
+
+    @classmethod
+    def get_show_fields(cls):
+        return ["fiscal_year", "num_txt", "third", "entryline_set", 'total']
+
+    def get_num_txt(self):
+        if (self.fiscal_year is None) or (self.num is None):
+            return None
+        else:
+            return "%s-%d" % (self.fiscal_year.letter, self.num)
+
+    @property
+    def entryline_set(self):
+        return EntryLineAccount.objects.filter(Q(entry__in=list(self.entries.all())) & Q(account=self.get_account_tax_receipt(self.fiscal_year)))
+
+    def get_total(self):
+        total = 0
+        if self.id is not None:
+            for entryline in self.entryline_set:
+                total += entryline.amount
+        return total
+
+    def get_total_payed(self, ignore_payoff=-1):
+        return self.get_total()
+
+    def payoff_is_revenu(self):
+        return False
+
+    @classmethod
+    def get_account_tax_receipt(cls, year):
+        tax_receipt = Params.getvalue("member-tax-receipt")
+        if tax_receipt != '':
+            tax_receipt = correct_accounting_code(tax_receipt)
+            try:
+                return year.chartsaccount_set.get(code=tax_receipt)
+            except ObjectDoesNotExist:
+                pass
+        return None
+
+    @classmethod
+    def create_all(cls, year):
+        account_tax_receipt = cls.get_account_tax_receipt(year)
+        if account_tax_receipt is not None:
+            third_entries = {}
+            for entry in EntryAccount.objects.filter(Q(year=year) & Q(entrylineaccount__account=account_tax_receipt)):
+                thirds = [third_line.third for third_line in entry.get_thirds()]
+                if (len(thirds) == 1) and (thirds[0] is not None):
+                    third = thirds[0]
+                    if third.id not in third_entries:
+                        third_entries[third.id] = {'third': third, 'entries': []}
+                    third_entries[third.id]['entries'].append(entry)
+            for receipt_info in sorted(third_entries.values(), key=lambda item: str(item['third'])):
+                if cls.objects.filter(Q(third=receipt_info['third']) & Q(fiscal_year=year)).count() == 0:
+                    num_val = cls.objects.filter(Q(fiscal_year=year)).aggregate(Max('num'))
+                    new_tax_receipt = cls.objects.create(fiscal_year=year, third=receipt_info['third'],
+                                                         num=num_val['num__max'] + 1 if num_val['num__max'] is not None else 1)
+                    new_tax_receipt.entries.set(receipt_info['entries'])
+                    new_tax_receipt.save()
+
+    class Meta(object):
+        verbose_name = _('tax receipt')
+        verbose_name_plural = _('tax receipts')
+        ordering = ['fiscal_year', 'num', 'third']
+        default_permissions = ['change']
+
+
 class CommandManager(object):
 
     def __init__(self, user, file_name, items):
@@ -1608,6 +1689,19 @@ class CommandManager(object):
         return (nb_sub, nb_bill)
 
 
+@Signal.decorate('check_report')
+def check_report_member(year):
+    for taxreceipt in TaxReceipt.objects.filter(fiscal_year=year):
+        taxreceipt.get_saved_pdfreport()
+
+
+@Signal.decorate('finalize_year_after')
+def finalize_year_after_member(xfer):
+    year = FiscalYear.get_current(xfer.getparam('year'))
+    TaxReceipt.create_all(year)
+    check_report_member(year)
+
+
 @Signal.decorate('checkparam')
 def member_checkparam():
     Parameter.check_and_create(name="member-age-enable", typeparam=3, title=_("member-age-enable"), args="{}", value='True')
@@ -1627,6 +1721,7 @@ def member_checkparam():
     Parameter.check_and_create(name="member-family-type", typeparam=1, title=_("member-family-type"), args="{}", value='0', meta='("contacts","StructureType", Q(), "id", False)')
     Parameter.check_and_create(name="member-size-page", typeparam=1, title=_("member-size-page"), args="{}", value='25', meta='("","", "[(25,\'25\'),(50,\'50\'),(100,\'100\'),(250,\'250\'),(500,\'500\'),]", "", True)')
     Parameter.check_and_create(name="member-fields", typeparam=0, title=_("member-fields"), args="{'Multi':False}", value='')
+    Parameter.check_and_create(name="member-tax-receipt", typeparam=0, title=_("member-tax-receipt"), args="{'Multi':False}", value='')
 
 
 @Signal.decorate('auditlog_register')
