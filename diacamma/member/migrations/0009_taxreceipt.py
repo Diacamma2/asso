@@ -29,11 +29,12 @@ class Migration(migrations.Migration):
                 ('num', models.IntegerField(null=True, verbose_name='numeros')),
                 ('entries', models.ManyToManyField(to='accounting.EntryAccount', verbose_name='entries')),
                 ('fiscal_year', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='accounting.FiscalYear', verbose_name='fiscal year')),
+                ('date', models.DateField(verbose_name='date', null=False)),
             ],
             options={
                 'verbose_name': 'tax receipt',
                 'verbose_name_plural': 'tax receipts',
-                'ordering': ['fiscal_year', 'third'],
+                'ordering': ['fiscal_year', 'num', 'third'],
                 'default_permissions': ['change'],
             },
             bases=('payoff.supporting',),

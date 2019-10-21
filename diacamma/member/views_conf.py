@@ -37,7 +37,8 @@ from lucterios.framework import signal_and_lock
 from lucterios.CORE.parameters import Params
 from lucterios.CORE.views import ParamEdit, ObjectMerge
 
-from diacamma.member.models import Activity, Age, Team, Season, SubscriptionType, Adherent, TaxReceipt
+from diacamma.member.models import Activity, Age, Team, Season, SubscriptionType, Adherent, TaxReceipt,\
+    check_report_member
 from lucterios.framework.xfergraphic import XferContainerAcknowledge
 from diacamma.payoff.views import SupportingPrint, can_send_email
 from diacamma.accounting.models import FiscalYear
@@ -225,8 +226,24 @@ class TaxReceiptList(XferListEditor):
         self.item.fiscal_year = FiscalYear.get_current(select_year)
         self.fill_from_model(0, 1, False, ['fiscal_year'])
         comp_year = self.get_components('fiscal_year')
+        comp_year.colspan = 2
         comp_year.set_action(self.request, self.get_action(), close=CLOSE_NO, modal=FORMTYPE_REFRESH)
         self.filter = Q(fiscal_year=self.item.fiscal_year)
+
+
+@ActionsManage.affect_list(_('Check'), "images/ok.png")
+@MenuManage.describ('member.change_taxreceipt')
+class TaxReceiptCheck(XferContainerAcknowledge):
+    icon = "taxreceipt.png"
+    model = TaxReceipt
+    field_id = 'taxreceipt'
+    caption = _("Check tax receipt")
+
+    def fillresponse(self, fiscal_year):
+        year = FiscalYear.get_current(fiscal_year)
+        if self.confirme(_('Do you want to generate tax receipte for year "%s" ?{[br/]}{[u]}Warning:{[/u]} Tax receipts are not removable.') % year):
+            TaxReceipt.create_all(year)
+            check_report_member(year)
 
 
 @ActionsManage.affect_grid(TITLE_EDIT, "images/show.png", unique=SELECT_SINGLE)

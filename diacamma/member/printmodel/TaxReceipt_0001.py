@@ -31,7 +31,7 @@ name = _("tax receipt")
 kind = 2
 modelname = TaxReceipt.get_long_name()
 value = """
-<model hmargin="10.0" vmargin="10.0" page_width="210.0" page_height="297.0">
+<model hmargin="10.0" vmargin="10.0" page_width="210.0" page_height="148.5">
 <header extent="25.0">
 <text height="20.0" width="120.0" top="5.0" left="70.0" padding="1.0" spacing="0.0" border_color="black" border_style="" border_width="0.2" text_align="center" line_height="20" font_family="sans-serif" font_weight="" font_size="20">
 {[b]}#OUR_DETAIL.name{[/b]}
@@ -48,24 +48,38 @@ value = """
 </text>
 </bottom>
 <body>
-<text height="8.0" width="190.0" top="0.0" left="0.0" padding="1.0" spacing="0.0" border_color="black" border_style="" border_width="0.2" text_align="center" line_height="15" font_family="sans-serif" font_weight="" font_size="15">
-{[b]}%(tax receipt)s #num_txt{[/b]}
+<text height="8.0" width="120.0" top="0.0" left="0.0" padding="1.0" spacing="0.0" border_color="black" border_style="" border_width="0.2" text_align="center" line_height="15" font_family="sans-serif" font_weight="" font_size="15">
+{[b]}%(tax receipt title)s{[/b]}{[br/]}
+{[font size="10"]}{[i]}%(legal reference)s{[/i]}{[/font]}
 </text>
-<text height="8.0" width="190.0" top="8.0" left="0.0" padding="1.0" spacing="0.0" border_color="black" border_style="" border_width="0.2" text_align="center" line_height="13" font_family="sans-serif" font_weight="" font_size="13">
-#fiscal_year
+<text height="8.0" width="60.0" top="0.0" left="130.0" padding="1.0" spacing="0.0" border_color="black" border_style="" border_width="0.2" text_align="left" line_height="12" font_family="sans-serif" font_weight="" font_size="11">
+%(Number receipt)s : {[b]}#num{[/b]}{[br/]}
+%(Year)s : {[b]}#fiscal_year{[/b]}
 </text>
-<text height="20.0" width="100.0" top="25.0" left="80.0" padding="1.0" spacing="0.0" border_color="black" border_style="" border_width="0.2" text_align="center" line_height="11" font_family="sans-serif" font_weight="" font_size="11">
+<text height="20.0" width="190.0" top="20.0" left="0.0" padding="1.0" spacing="0.0" border_color="black" border_style="" border_width="0.2" text_align="center" line_height="11" font_family="sans-serif" font_weight="" font_size="10">
+{[font size="15"]}{[b]}{[u]}%(contributor)s{[/u]}{[/b]}{[/font]}{[br/]}
 {[b]}#third.contact.str{[/b]}{[br/]}#third.contact.address{[br/]}#third.contact.postal_code #third.contact.city
 </text>
-<text height="15.0" width="30.0" top="220.0" left="140.0" padding="1.0" spacing="0.0" border_color="black" border_style="" border_width="0.2" text_align="right" line_height="9" font_family="sans-serif" font_weight="" font_size="9">
-{[u]}{[b]}%(total)s{[/b]}{[/u]}{[br/]}
+<text height="15.0" width="170.0" top="45.0" left="10.0" padding="1.0" spacing="0.0" border_color="black" border_style="" border_width="0.2" text_align="left" line_height="9" font_family="sans-serif" font_weight="" font_size="9">
+%(text recipient)s : {[b]}***#total***{[/b]}{[br/]}
+{[br/]}
+%(Date payoff)s : {[b]}#date_payoff{[/b]}{[br/]}
+%(Mode payoff)s : {[b]}#mode_payoff{[/b]}{[br/]}
 </text>
-<text height="15.0" width="20.0" top="220.0" left="170.0" padding="1.0" spacing="0.0" border_color="black" border_style="" border_width="0.2" text_align="right" line_height="9" font_family="sans-serif" font_weight="" font_size="9">
-{[u]}#total{[/u]}{[br/]}
+<text height="15.0" width="60.0" top="60.0" left="130.0" padding="1.0" spacing="0.0" border_color="black" border_style="" border_width="0.2" text_align="right" line_height="9" font_family="sans-serif" font_weight="" font_size="9">
+#date{[br/]}
+%(signature)s
 </text>
 </body>
 </model>
 """ % {
-        'tax receipt': _('Tax receipt'),
-        'total': ('total'),
+        'tax receipt title': _('Tax receipt for donation'),
+        'legal reference': _('legal reference'),
+        'Number receipt': _('Number receipt'),
+        'Year': _('Year'),
+        'contributor': _('CONTRIBUTOR'),
+        'text recipient': _('Recipient acknowledges receipt of donations'),
+        'Date payoff': _('Date payoff'),
+        'Mode payoff': _('Mode payoff'),
+        'signature': _('Signature')
 }
