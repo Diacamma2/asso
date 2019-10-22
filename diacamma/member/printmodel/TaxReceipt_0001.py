@@ -52,24 +52,27 @@ value = """
 {[b]}%(tax receipt title)s{[/b]}{[br/]}
 {[font size="10"]}{[i]}%(legal reference)s{[/i]}{[/font]}
 </text>
-<text height="8.0" width="60.0" top="0.0" left="130.0" padding="1.0" spacing="0.0" border_color="black" border_style="" border_width="0.2" text_align="left" line_height="12" font_family="sans-serif" font_weight="" font_size="11">
+<text height="8.0" width="60.0" top="0.0" left="130.0" padding="1.0" spacing="0.0" border_color="black" border_style="" border_width="0.2" text_align="left" line_height="13" font_family="sans-serif" font_weight="" font_size="11">
 %(Number receipt)s : {[b]}#num{[/b]}{[br/]}
-%(Year)s : {[b]}#fiscal_year{[/b]}
+%(Year)s : {[b]}#year{[/b]}
 </text>
-<text height="20.0" width="190.0" top="20.0" left="0.0" padding="1.0" spacing="0.0" border_color="black" border_style="" border_width="0.2" text_align="center" line_height="11" font_family="sans-serif" font_weight="" font_size="10">
+<text height="20.0" width="190.0" top="20.0" left="0.0" padding="1.0" spacing="0.0" border_color="black" border_style="" border_width="0.2" text_align="center" line_height="12" font_family="sans-serif" font_weight="" font_size="10">
 {[font size="15"]}{[b]}{[u]}%(contributor)s{[/u]}{[/b]}{[/font]}{[br/]}
 {[b]}#third.contact.str{[/b]}{[br/]}#third.contact.address{[br/]}#third.contact.postal_code #third.contact.city
 </text>
-<text height="15.0" width="170.0" top="45.0" left="10.0" padding="1.0" spacing="0.0" border_color="black" border_style="" border_width="0.2" text_align="left" line_height="9" font_family="sans-serif" font_weight="" font_size="9">
+<text height="15.0" width="170.0" top="45.0" left="10.0" padding="1.0" spacing="0.0" border_color="black" border_style="" border_width="0.2" text_align="left" line_height="10" font_family="sans-serif" font_weight="" font_size="9">
 %(text recipient)s : {[b]}***#total***{[/b]}{[br/]}
 {[br/]}
 %(Date payoff)s : {[b]}#date_payoff{[/b]}{[br/]}
 %(Mode payoff)s : {[b]}#mode_payoff{[/b]}{[br/]}
 </text>
-<text height="15.0" width="60.0" top="60.0" left="130.0" padding="1.0" spacing="0.0" border_color="black" border_style="" border_width="0.2" text_align="right" line_height="9" font_family="sans-serif" font_weight="" font_size="9">
+<text height="15.0" width="60.0" top="60.0" left="130.0" padding="1.0" spacing="0.0" border_color="black" border_style="" border_width="0.2" text_align="right" line_height="10" font_family="sans-serif" font_weight="" font_size="9">
 #date{[br/]}
 %(signature)s
 </text>
+<image height="20.0" width="20.0" top="70.0" left="160.0" padding="1.0" spacing="0.0" border_color="black" border_style="" border_width="0.2">
+#DEFAULT_DOCUMENTS.signature
+</image>
 </body>
 </model>
 """ % {

@@ -26,22 +26,21 @@ from __future__ import unicode_literals
 from django.utils.translation import ugettext_lazy as _
 from django.db.models import Q
 from django.conf import settings
-from django.utils import six
+from django.utils import six, timezone
 
 from lucterios.framework.xferadvance import XferAddEditor, XferListEditor, TITLE_MODIFY, TITLE_DELETE, TITLE_ADD, TITLE_EDIT, XferShowEditor
 from lucterios.framework.xferadvance import XferDelete
 from lucterios.framework.tools import ActionsManage, MenuManage, FORMTYPE_NOMODAL, CLOSE_NO, SELECT_MULTI, SELECT_SINGLE, WrapAction, FORMTYPE_REFRESH
 from lucterios.framework.error import LucteriosException, IMPORTANT
-from lucterios.framework.xfercomponents import XferCompButton, XferCompLabelForm, XferCompCheck, XferCompCheckList
+from lucterios.framework.xfercomponents import XferCompButton, XferCompLabelForm, XferCompCheck, XferCompCheckList,\
+    XferCompFloat
 from lucterios.framework import signal_and_lock
+from lucterios.framework.xfergraphic import XferContainerAcknowledge
 from lucterios.CORE.parameters import Params
 from lucterios.CORE.views import ParamEdit, ObjectMerge
 
-from diacamma.member.models import Activity, Age, Team, Season, SubscriptionType, Adherent, TaxReceipt,\
-    check_report_member
-from lucterios.framework.xfergraphic import XferContainerAcknowledge
+from diacamma.member.models import Activity, Age, Team, Season, SubscriptionType, Adherent, TaxReceipt
 from diacamma.payoff.views import SupportingPrint, can_send_email
-from diacamma.accounting.models import FiscalYear
 
 
 @signal_and_lock.Signal.decorate('config')
@@ -228,13 +227,14 @@ class TaxReceiptList(XferListEditor):
     caption = _("Tax receipts")
 
     def fillresponse_header(self):
-        select_year = self.getparam('fiscal_year')
-        self.item.fiscal_year = FiscalYear.get_current(select_year)
-        self.fill_from_model(0, 1, False, ['fiscal_year'])
-        comp_year = self.get_components('fiscal_year')
-        comp_year.colspan = 2
+        select_year = self.getparam('year', timezone.now().year)
+        comp_year = XferCompFloat('year', minval=1900, maxval=2100, precval=0)
+        comp_year.set_value(select_year)
+        comp_year.set_location(1, 1)
         comp_year.set_action(self.request, self.get_action(), close=CLOSE_NO, modal=FORMTYPE_REFRESH)
-        self.filter = Q(fiscal_year=self.item.fiscal_year)
+        comp_year.description = _('year')
+        self.add_component(comp_year)
+        self.filter = Q(year=select_year)
 
 
 @ActionsManage.affect_list(_('Check'), "images/ok.png")
@@ -245,11 +245,9 @@ class TaxReceiptCheck(XferContainerAcknowledge):
     field_id = 'taxreceipt'
     caption = _("Check tax receipt")
 
-    def fillresponse(self, fiscal_year):
-        year = FiscalYear.get_current(fiscal_year)
+    def fillresponse(self, year=0):
         if self.confirme(_('Do you want to generate tax receipte for year "%s" ?{[br/]}{[u]}Warning:{[/u]} Tax receipts are not removable.') % year):
             TaxReceipt.create_all(year)
-            check_report_member(year)
 
 
 @ActionsManage.affect_grid(TITLE_EDIT, "images/show.png", unique=SELECT_SINGLE)

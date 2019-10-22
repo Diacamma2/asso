@@ -26,15 +26,16 @@ class Migration(migrations.Migration):
             name='TaxReceipt',
             fields=[
                 ('supporting_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='payoff.Supporting')),
-                ('num', models.IntegerField(null=True, verbose_name='numeros')),
+                ('num', models.IntegerField(null=False, verbose_name='numeros')),
                 ('entries', models.ManyToManyField(to='accounting.EntryAccount', verbose_name='entries')),
                 ('fiscal_year', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='accounting.FiscalYear', verbose_name='fiscal year')),
+                ('year', models.IntegerField(null=False, verbose_name='year')),
                 ('date', models.DateField(verbose_name='date', null=False)),
             ],
             options={
                 'verbose_name': 'tax receipt',
                 'verbose_name_plural': 'tax receipts',
-                'ordering': ['fiscal_year', 'num', 'third'],
+                'ordering': ['year', 'num', 'third'],
                 'default_permissions': ['change'],
             },
             bases=('payoff.supporting',),

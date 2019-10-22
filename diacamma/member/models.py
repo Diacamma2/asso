@@ -31,6 +31,7 @@ from os import unlink
 from unicodedata import normalize, category
 
 from django.db import models
+from django.db.models.query import QuerySet
 from django.db.models.aggregates import Min, Max, Count
 from django.db.models.fields import BooleanField
 from django.db.models import Q
@@ -43,8 +44,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from lucterios.framework.models import LucteriosModel, LucteriosVirtualField,\
     get_value_if_choices
 from lucterios.framework.error import LucteriosException, IMPORTANT
-from lucterios.framework.tools import convert_date, same_day_months_after, toHtml, get_bool_textual,\
-    get_date_formating
+from lucterios.framework.tools import convert_date, same_day_months_after, toHtml, get_bool_textual
 from lucterios.framework.signal_and_lock import Signal
 from lucterios.framework.filetools import get_tmp_dir
 from lucterios.framework.auditlog import auditlog
@@ -55,13 +55,10 @@ from lucterios.contacts.models import Individual, LegalEntity, Responsability
 from lucterios.mailing.functions import EmailException
 
 from diacamma.invoice.models import Article, Bill, Detail, get_or_create_customer
-from diacamma.accounting.tools import get_amount_from_format_devise,\
-    format_with_devise, correct_accounting_code, current_system_account
-from diacamma.accounting.models import Third, FiscalYear, EntryAccount,\
-    EntryLineAccount
+from diacamma.accounting.tools import get_amount_from_format_devise, format_with_devise, current_system_account
+from diacamma.accounting.models import Third, FiscalYear, EntryAccount, EntryLineAccount
 from diacamma.payoff.views import get_html_payment
 from diacamma.payoff.models import PaymentMethod, Supporting, Payoff
-from django.db.models.query import QuerySet
 
 
 class Season(LucteriosModel):
@@ -1449,19 +1446,31 @@ class TaxReceiptPayoffSet(QuerySet):
     def __init__(self, model=None, query=None, using=None, hints=None):
         QuerySet.__init__(self, model=Payoff, query=query, using=using, hints=hints)
         self._result_cache = None
-        self.taxreceipt = self._hints['taxreceipt']
+        self.taxreceipt = self._hints['taxreceipt'] if 'taxreceipt' in self._hints else None
+        self.entry = self._hints['entry'] if 'entry' in self._hints else None
+        self.current_third = self._hints['third'] if 'third' in self._hints else None
 
     def _fetch_all(self):
         if self._result_cache is None:
             self._result_cache = []
             links = []
-            for entry in self.taxreceipt.entries.all():
-                for entryline in entry.entrylineaccount_set.all():
+            if self.taxreceipt is not None:
+                if self.current_third is None:
+                    self.current_third = self.taxreceipt.third
+                for entry in self.taxreceipt.entries.all():
+                    for entryline in entry.entrylineaccount_set.all():
+                        if entryline.link is not None:
+                            links.append(entryline.link)
+            if self.entry is not None:
+                for entryline in self.entry.entrylineaccount_set.all():
                     if entryline.link is not None:
                         links.append(entryline.link)
             for entry_letter in EntryAccount.objects.filter(Q(entrylineaccount__link__in=links)).distinct():
+                if entry_letter.close is False:
+                    self._result_cache = []
+                    return
                 for entryline_letter in entry_letter.entrylineaccount_set.filter(Q(account__code__regex=current_system_account().get_cash_mask())):
-                    new_payoff = Payoff(date=entryline_letter.entry.date_value, amount=entryline_letter.amount, mode=2, payer=str(self.taxreceipt.third))
+                    new_payoff = Payoff(date=entryline_letter.entry.date_value, amount=entryline_letter.amount, mode=2, payer=str(self.current_third))
                     new_payoff.id = -10 * (len(self._result_cache) + 1)
                     old_payoff = entry_letter.payoff_set.all().first()
                     if old_payoff is None:
@@ -1474,31 +1483,47 @@ class TaxReceiptPayoffSet(QuerySet):
                         new_payoff.bank_account = old_payoff.bank_account
                     self._result_cache.append(new_payoff)
 
+    @property
+    def last_date_payoff(self):
+        dates = sorted(set([payoff.date for payoff in self.all()]))
+        if len(dates) > 0:
+            return dates[-1]
+        else:
+            return None
+
 
 class TaxReceipt(Supporting):
-    num = models.IntegerField(verbose_name=_('numeros'), null=True)
+    num = models.IntegerField(verbose_name=_('numeros'), null=False)
     fiscal_year = models.ForeignKey(FiscalYear, verbose_name=_('fiscal year'), null=False, db_index=True, on_delete=models.PROTECT)
+    year = models.IntegerField(verbose_name=_('year'), null=False)
     entries = models.ManyToManyField(EntryAccount, verbose_name=_('entries'))
     date = models.DateField(verbose_name=_('date'), null=False)
     total = LucteriosVirtualField(verbose_name=_('total'), compute_from='get_total', format_string=lambda: format_with_devise(5))
-    date_payoff = LucteriosVirtualField(verbose_name=_('date payoff'), compute_from='get_date_payoff')
+    date_payoff = LucteriosVirtualField(verbose_name=_('date payoff'), compute_from='get_date_payoff', format_string='D')
     mode_payoff = LucteriosVirtualField(verbose_name=_('mode payoff'), compute_from='get_mode_payoff')
 
     def __str__(self):
-        return _("Tax receipt #%s") % self.num
+        return _("Tax receipt #%(num)s of %(year)s") % {'num': self.num, 'year': self.year}
 
     @classmethod
     def get_default_fields(cls):
-        return ["num", "third", 'total']
+        return ["num", "date", "third", 'total']
 
     @classmethod
     def get_show_fields(cls):
         fields = ["fiscal_year", ("num", 'date'), "third", "entryline_set", 'total', ('date_payoff', 'mode_payoff')]
         return fields
 
+    @classmethod
+    def get_print_fields(cls):
+        return ["fiscal_year", "year", "num", 'date', 'total', 'date_payoff', 'mode_payoff', "third", "entryline_set", 'OUR_DETAIL', 'DEFAULT_DOCUMENTS']
+
     @property
     def entryline_set(self):
-        return EntryLineAccount.objects.filter(Q(entry__in=list(self.entries.all())) & Q(account=self.get_account_tax_receipt(self.fiscal_year)))
+        if self.id is None:
+            return EntryLineAccount.objects.filter(Q(entry__isnull=True))
+        tax_receipt = Params.getvalue("member-tax-receipt")
+        return EntryLineAccount.objects.filter(Q(entry__in=list(self.entries.all())) & Q(account__code__regex=r'^%s[0-9a-zA-Z]*$' % tax_receipt))
 
     @property
     def payoff_set(self):
@@ -1517,11 +1542,13 @@ class TaxReceipt(Supporting):
     def payoff_is_revenu(self):
         return False
 
+    def generate_accountlink(self):
+        return
+
     def get_date_payoff(self):
         if self.id is None:
             return None
-        dates = sorted(set([payoff.date for payoff in self.payoff_set.all()]))
-        return ", ".join([get_date_formating(date) for date in dates])
+        return self.payoff_set.last_date_payoff
 
     def get_mode_payoff(self):
         if self.id is None:
@@ -1536,40 +1563,34 @@ class TaxReceipt(Supporting):
         return self.get_date_payoff().split(',')[-1].strip()
 
     @classmethod
-    def get_account_tax_receipt(cls, year):
+    def create_all(cls, year):
         tax_receipt = Params.getvalue("member-tax-receipt")
         if tax_receipt != '':
-            tax_receipt = correct_accounting_code(tax_receipt)
-            try:
-                return year.chartsaccount_set.get(code=tax_receipt)
-            except ObjectDoesNotExist:
-                pass
-        return None
-
-    @classmethod
-    def create_all(cls, year):
-        account_tax_receipt = cls.get_account_tax_receipt(year)
-        if account_tax_receipt is not None:
             third_entries = {}
-            for entry in EntryAccount.objects.filter(Q(close=True) & Q(year=year) & Q(entrylineaccount__account=account_tax_receipt)):
+            for entry in EntryAccount.objects.filter(Q(close=True) & Q(entrylineaccount__account__code__regex=r'^%s[0-9a-zA-Z]*$' % tax_receipt) & Q(taxreceipt=None)):
                 thirds = [third_line.third for third_line in entry.get_thirds() if third_line.link is not None]
                 if (len(thirds) == 1) and (thirds[0] is not None):
                     third = thirds[0]
-                    if third.id not in third_entries:
-                        third_entries[third.id] = {'third': third, 'entries': []}
-                    third_entries[third.id]['entries'].append(entry)
+                    date_payoff = TaxReceiptPayoffSet(hints={'entry': entry, 'third': third}).last_date_payoff
+                    if (date_payoff is not None) and (date_payoff.year == year):
+                        if third.id not in third_entries:
+                            third_entries[third.id] = {'third': third, 'entries': [], 'date': date_payoff}
+                        if date_payoff > third_entries[third.id]['date']:
+                            third_entries[third.id]['date'] = date_payoff
+                        third_entries[third.id]['entries'].append(entry)
             for receipt_info in sorted(third_entries.values(), key=lambda item: str(item['third'])):
-                if cls.objects.filter(Q(third=receipt_info['third']) & Q(fiscal_year=year)).count() == 0:
-                    num_val = cls.objects.filter(Q(fiscal_year=year)).aggregate(Max('num'))
-                    new_tax_receipt = cls.objects.create(fiscal_year=year, third=receipt_info['third'], date=timezone.now(),
-                                                         num=num_val['num__max'] + 1 if num_val['num__max'] is not None else 1)
-                    new_tax_receipt.entries.set(receipt_info['entries'])
-                    new_tax_receipt.save()
+                num_val = cls.objects.filter(Q(year=year)).aggregate(Max('num'))
+                new_tax_receipt = cls.objects.create(year=year, third=receipt_info['third'], date=timezone.now(),
+                                                     fiscal_year=FiscalYear.get_current(receipt_info['date']),
+                                                     num=num_val['num__max'] + 1 if num_val['num__max'] is not None else 1)
+                new_tax_receipt.entries.set(receipt_info['entries'])
+                new_tax_receipt.save()
+                new_tax_receipt.get_saved_pdfreport()
 
     class Meta(object):
         verbose_name = _('tax receipt')
         verbose_name_plural = _('tax receipts')
-        ordering = ['fiscal_year', 'num', 'third']
+        ordering = ['year', 'num', 'third']
         default_permissions = ['change']
 
 
@@ -1745,13 +1766,6 @@ class CommandManager(object):
 def check_report_member(year):
     for taxreceipt in TaxReceipt.objects.filter(fiscal_year=year):
         taxreceipt.get_saved_pdfreport()
-
-
-@Signal.decorate('finalize_year_after')
-def finalize_year_after_member(xfer):
-    year = FiscalYear.get_current(xfer.getparam('year'))
-    TaxReceipt.create_all(year)
-    check_report_member(year)
 
 
 @Signal.decorate('checkparam')
