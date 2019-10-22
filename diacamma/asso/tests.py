@@ -26,7 +26,7 @@ from __future__ import unicode_literals
 
 from lucterios.framework.test import add_user
 from lucterios.contacts.models import Individual
-from lucterios.CORE.views import get_wizard_step_list
+from lucterios.CORE.views import get_wizard_step_list, Configuration
 from lucterios.documents.views import DocumentShow
 
 from diacamma.member.test_tools import set_parameters
@@ -87,7 +87,7 @@ class AssoTest(BaseAdherentTest):
 
         self.calljson('/CORE/configurationWizard', {'steplist': steplist, 'step': 5})
         self.assert_observer('core.custom', 'CORE', 'configurationWizard')
-        self.assert_count_equal('', 11)
+        self.assert_count_equal('', 14)
 
         self.calljson('/CORE/configurationWizard', {'steplist': steplist, 'step': 6})
         self.assert_observer('core.custom', 'CORE', 'configurationWizard')
@@ -153,3 +153,13 @@ class AssoTest(BaseAdherentTest):
         self.calljson('/CORE/situationMenu', {})
         self.assert_observer('core.custom', 'CORE', 'situationMenu')
         self.assert_count_equal('', 8)
+
+    def test_config(self):
+        self.factory.xfer = Configuration()
+        self.calljson('/CORE/configuration', {}, False)
+        self.assert_observer('core.custom', 'CORE', 'configuration')
+        self.assert_count_equal('', 7 + 6 + 7)
+        self.assert_action_equal(self.json_comp["05@Adresses et Contacts_btn"]['action'],
+                                 ("Modifier", 'images/edit.png', 'CORE', 'paramEdit', 0, 1, 1, {'params': ['contacts-mailtoconfig', 'contacts-createaccount', 'contacts-defaultgroup', 'contacts-size-page']}))
+        self.assert_action_equal(self.json_comp["20@Adhérents_btn"]['action'],
+                                 ("Modifier", 'images/edit.png', 'CORE', 'paramEdit', 0, 1, 1, {'params': ["member-family-type", "member-connection", "member-subscription-mode", "member-size-page", "member-tax-receipt"]}))

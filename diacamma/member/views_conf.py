@@ -44,11 +44,17 @@ from diacamma.payoff.views import SupportingPrint, can_send_email
 from diacamma.accounting.models import FiscalYear
 
 
+@signal_and_lock.Signal.decorate('config')
+def config_member(setting_list):
+    setting_list['20@%s' % _("Adherents")] = ["member-family-type", "member-connection", "member-subscription-mode", "member-size-page", "member-tax-receipt"]
+    return True
+
+
 def fill_params(xfer, param_lists=None, smallbtn=False):
     if param_lists is None:
         param_lists = ["member-team-enable", "member-team-text", "member-activite-enable", "member-activite-text", "member-age-enable",
-                       "member-licence-enabled", "member-filter-genre", "member-numero", "member-birth", "member-family-type", "member-connection",
-                       "member-subscription-mode", "member-size-page", "member-fields", "member-tax-receipt", "member-subscription-message"]
+                       "member-licence-enabled", "member-filter-genre", "member-numero", "member-birth",
+                       "member-fields", "member-subscription-message"]
     if len(param_lists) >= 3:
         nb_col = 2
     else:
@@ -303,7 +309,9 @@ def conf_wizard_member(wizard_ident, xfer):
         xfer.add_title(_("Diacamma member"), _('Subscriptions'), _('Configuration of subscription'))
         xfer.fill_grid(15, SubscriptionType, "subscriptiontype", SubscriptionType.objects.all())
         xfer.get_components("subscriptiontype").colspan = 6
-        fill_params(xfer, ["member-subscription-mode", "member-subscription-message"], True)
+        fill_params(xfer, ["member-subscription-mode", "member-connection",
+                           "member-family-type", "member-tax-receipt",
+                           "member-subscription-message"], True)
     elif (xfer is not None) and (wizard_ident == "member_category"):
         xfer.add_title(_("Diacamma member"), _("Categories"), _('Configuration of categories'))
         xfer.new_tab(_('Parameters'))
@@ -327,4 +335,4 @@ def conf_wizard_member(wizard_ident, xfer):
                 grid.delete_action("diacamma.member/activityAddModify", True)
     elif (xfer is not None) and (wizard_ident == "member_params"):
         xfer.add_title(_("Diacamma member"), _('Parameters'), _('Configuration of main parameters'))
-        fill_params(xfer, ["member-licence-enabled", "member-filter-genre", "member-numero", "member-birth", "member-connection"], True)
+        fill_params(xfer, ["member-licence-enabled", "member-filter-genre", "member-numero", "member-birth", "member-fields"], True)
