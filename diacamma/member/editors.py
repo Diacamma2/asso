@@ -34,7 +34,8 @@ from lucterios.framework.xfercomponents import XferCompLabelForm, XferCompDate, 
     XferCompSelect, XferCompCheck, XferCompButton
 from lucterios.framework.error import LucteriosException, IMPORTANT
 from lucterios.framework.tools import CLOSE_NO, FORMTYPE_REFRESH, ActionsManage, get_icon_path,\
-    FORMTYPE_MODAL, CLOSE_YES
+    FORMTYPE_MODAL, CLOSE_YES, SELECT_SINGLE
+from lucterios.framework.xferadvance import TITLE_EDIT
 
 from lucterios.contacts.editors import IndividualEditor
 
@@ -342,3 +343,12 @@ class LicenseEditor(LucteriosEditor):
         else:
             default_act = Activity.objects.all()[0]
             xfer.params['activity'] = default_act.id
+
+
+class TaxReceiptEditor(LucteriosEditor):
+
+    def show(self, xfer):
+        from diacamma.accounting.views_entries import EntryAccountOpenFromLine
+        entryline = xfer.get_components('entryline')
+        entryline.actions = []
+        entryline.add_action(xfer.request, EntryAccountOpenFromLine.get_action(TITLE_EDIT, "images/edit.png"), close=CLOSE_NO, unique=SELECT_SINGLE)
