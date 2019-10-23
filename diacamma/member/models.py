@@ -1450,40 +1450,66 @@ class TaxReceiptPayoffSet(QuerySet):
         self.entry = self._hints['entry'] if 'entry' in self._hints else None
         self.current_third = self._hints['third'] if 'third' in self._hints else None
 
+    def _add_payoff(self, entryline):
+        new_payoff = Payoff(date=entryline.entry.date_value, amount=entryline.amount, mode=2, payer=str(self.current_third))
+        new_payoff.id = -10 * (len(self._result_cache) + 1)
+        old_payoff = entryline.entry.payoff_set.all().first()
+        if entryline.account.type_of_account == 4:
+            new_payoff.mode = 6
+        elif old_payoff is None:
+            if entryline.account.code == Params.getvalue("payoff-cash-account"):
+                new_payoff.mode = 0
+        else:
+            new_payoff.mode = old_payoff.mode
+            new_payoff.payer = old_payoff.payer
+            new_payoff.reference = old_payoff.reference
+            new_payoff.bank_account = old_payoff.bank_account
+        self._result_cache.append(new_payoff)
+        return 1
+
+    def _fill_from_links(self, links, origin_entries):
+        origin_entries_id = [entry.id for entry in origin_entries]
+        for link in links:
+            nb_line = 0
+            for entry_letter in EntryAccount.objects.filter(Q(entrylineaccount__link=link)).exclude(id__in=origin_entries_id).distinct():
+                if entry_letter.close is False:
+                    self._result_cache = []
+                    return False
+                entryline_letter_list = entry_letter.entrylineaccount_set.filter(Q(account__code__regex=current_system_account().get_cash_mask()) | Q(account__type_of_account=4))
+                if len(entryline_letter_list) > 0:
+                    for entryline_letter in entryline_letter_list:
+                        nb_line += self._add_payoff(entryline_letter)
+                elif entry_letter == entry_letter.year.entryaccount_set.filter(journal__id=5).order_by('num').last():
+                    entryline = entry_letter.entrylineaccount_set.filter(Q(link=link)).first()
+                    entryline_query = Q(entry__year__last_fiscalyear=entry_letter.year) & Q(entry__journal_id=1)
+                    entryline_query &= Q(third=entryline.third)
+                    entryline_query &= Q(amount=-1 * entryline.amount)
+                    entryline_query &= Q(account__code=entryline.account.code)
+                    nextyear_entryline = EntryLineAccount.objects.filter(entryline_query).first()
+                    if (nextyear_entryline is not None) and (nextyear_entryline.link is not None):
+                        if self._fill_from_links([nextyear_entryline.link], origin_entries + [nextyear_entryline.entry]):
+                            nb_line += 1
+            if nb_line == 0:
+                self._result_cache = []
+                return False
+        return True
+
     def _fetch_all(self):
         if self._result_cache is None:
             self._result_cache = []
             links = []
+            entries = []
             if self.taxreceipt is not None:
                 if self.current_third is None:
                     self.current_third = self.taxreceipt.third
-                for entry in self.taxreceipt.entries.all():
-                    for entryline in entry.entrylineaccount_set.all():
-                        if entryline.link is not None:
-                            links.append(entryline.link)
+                entries = list(self.taxreceipt.entries.all())
             if self.entry is not None:
-                for entryline in self.entry.entrylineaccount_set.all():
+                entries.append(self.entry)
+            for entry in entries:
+                for entryline in entry.entrylineaccount_set.all():
                     if entryline.link is not None:
                         links.append(entryline.link)
-            for entry_letter in EntryAccount.objects.filter(Q(entrylineaccount__link__in=links)).distinct():
-                if entry_letter.close is False:
-                    self._result_cache = []
-                    return
-                for entryline_letter in entry_letter.entrylineaccount_set.filter(Q(account__code__regex=current_system_account().get_cash_mask()) | Q(account__type_of_account=4)):
-                    new_payoff = Payoff(date=entryline_letter.entry.date_value, amount=entryline_letter.amount, mode=2, payer=str(self.current_third))
-                    new_payoff.id = -10 * (len(self._result_cache) + 1)
-                    old_payoff = entry_letter.payoff_set.all().first()
-                    if entryline_letter.account.type_of_account == 4:
-                        new_payoff.mode = 6
-                    elif old_payoff is None:
-                        if entryline_letter.account.code == Params.getvalue("payoff-cash-account"):
-                            new_payoff.mode = 0
-                    else:
-                        new_payoff.mode = old_payoff.mode
-                        new_payoff.payer = old_payoff.payer
-                        new_payoff.reference = old_payoff.reference
-                        new_payoff.bank_account = old_payoff.bank_account
-                    self._result_cache.append(new_payoff)
+            self._fill_from_links(links, entries)
 
     @property
     def last_date_payoff(self):
