@@ -29,7 +29,7 @@ from lucterios.framework.xfergraphic import XferContainerAcknowledge
 from lucterios.CORE.models import Parameter
 from lucterios.CORE.parameters import Params
 
-from diacamma.accounting.test_tools import default_compta_fr
+from diacamma.accounting.test_tools import default_compta_fr, create_third
 from diacamma.invoice.test_tools import default_articles
 from diacamma.payoff.test_tools import default_bankaccount_fr
 from diacamma.member.editors import SeasonEditor
@@ -61,6 +61,7 @@ def default_season():
 def default_params():
     Parameter.change_value('member-team-text', 'group')
     Parameter.change_value('member-activite-text', 'passion')
+    Parameter.change_value('member-tax-receipt', '708')
     Params.clear()
     default = Activity.objects.get(id=1)
     default.name = "activity1"
@@ -97,15 +98,18 @@ def create_adherent(firstname, lastname, birthday):
     return new_adh
 
 
-def default_adherents():
+def default_adherents(third_must_created=False):
+    adherent_list = []
     # adherent 2 - 2009 = 9ans
-    create_adherent('Avrel', 'Dalton', '2000-02-10')
+    adherent_list.append(create_adherent('Avrel', 'Dalton', '2000-02-10'))
     # adherent 3 - 2009 = 11ans
-    create_adherent('William', 'Dalton', '1998-03-31')
+    adherent_list.append(create_adherent('William', 'Dalton', '1998-03-31'))
     # adherent 4 - 2009 = 17ans
-    create_adherent('Jack', 'Dalton', '1992-04-23')
-    create_adherent('Joe', 'Dalton', '1989-05-18')  # adherent 5 - 2009 = 20ans
-    create_adherent('Lucky', 'Luke', '1979-06-04')  # adherent 6 - 2009 = 30ans
+    adherent_list.append(create_adherent('Jack', 'Dalton', '1992-04-23'))
+    adherent_list.append(create_adherent('Joe', 'Dalton', '1989-05-18'))  # adherent 5 - 2009 = 20ans
+    adherent_list.append(create_adherent('Lucky', 'Luke', '1979-06-04'))  # adherent 6 - 2009 = 30ans
+    if third_must_created:
+        create_third([adh.id for adh in adherent_list], ['411'])
 
 
 def default_subscription(with_light=False):

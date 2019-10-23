@@ -1469,11 +1469,13 @@ class TaxReceiptPayoffSet(QuerySet):
                 if entry_letter.close is False:
                     self._result_cache = []
                     return
-                for entryline_letter in entry_letter.entrylineaccount_set.filter(Q(account__code__regex=current_system_account().get_cash_mask())):
+                for entryline_letter in entry_letter.entrylineaccount_set.filter(Q(account__code__regex=current_system_account().get_cash_mask()) | Q(account__type_of_account=4)):
                     new_payoff = Payoff(date=entryline_letter.entry.date_value, amount=entryline_letter.amount, mode=2, payer=str(self.current_third))
                     new_payoff.id = -10 * (len(self._result_cache) + 1)
                     old_payoff = entry_letter.payoff_set.all().first()
-                    if old_payoff is None:
+                    if entryline_letter.account.type_of_account == 4:
+                        new_payoff.mode = 6
+                    elif old_payoff is None:
                         if entryline_letter.account.code == Params.getvalue("payoff-cash-account"):
                             new_payoff.mode = 0
                     else:
@@ -1551,16 +1553,16 @@ class TaxReceipt(Supporting):
         return self.payoff_set.last_date_payoff
 
     def get_mode_payoff(self):
+        def get_mode_text(mode):
+            if mode == 6:
+                return str(_('waiver of fee'))
+            else:
+                return get_value_if_choices(mode, field)
         if self.id is None:
             return None
         field = Payoff.get_field_by_name('mode')
         modes = sorted(set([payoff.mode for payoff in self.payoff_set.all()]))
-        return ", ".join([get_value_if_choices(mode, field) for mode in modes])
-
-    def get_date(self):
-        if self.id is None:
-            return None
-        return self.get_date_payoff().split(',')[-1].strip()
+        return ", ".join([get_mode_text(mode) for mode in modes])
 
     @classmethod
     def create_all(cls, year):
@@ -1580,7 +1582,7 @@ class TaxReceipt(Supporting):
                         third_entries[third.id]['entries'].append(entry)
             for receipt_info in sorted(third_entries.values(), key=lambda item: str(item['third'])):
                 num_val = cls.objects.filter(Q(year=year)).aggregate(Max('num'))
-                new_tax_receipt = cls.objects.create(year=year, third=receipt_info['third'], date=timezone.now(),
+                new_tax_receipt = cls.objects.create(year=year, third=receipt_info['third'], date=timezone.now().date(),
                                                      fiscal_year=FiscalYear.get_current(receipt_info['date']),
                                                      num=num_val['num__max'] + 1 if num_val['num__max'] is not None else 1)
                 new_tax_receipt.entries.set(receipt_info['entries'])
