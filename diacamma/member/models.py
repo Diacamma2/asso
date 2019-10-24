@@ -1551,7 +1551,7 @@ class TaxReceipt(Supporting):
         if self.id is None:
             return EntryLineAccount.objects.filter(Q(entry__isnull=True))
         tax_receipt = Params.getvalue("member-tax-receipt")
-        return EntryLineAccount.objects.filter(Q(entry__in=list(self.entries.all())) & Q(account__code__regex=r'^%s[0-9a-zA-Z]*$' % tax_receipt))
+        return EntryLineAccount.objects.filter(Q(entry__in=list(self.entries.all())) & Q(account__code__in=tax_receipt.split(';')))
 
     @property
     def payoff_set(self):
@@ -1595,7 +1595,7 @@ class TaxReceipt(Supporting):
         tax_receipt = Params.getvalue("member-tax-receipt")
         if tax_receipt != '':
             third_entries = {}
-            for entry in EntryAccount.objects.filter(Q(close=True) & Q(entrylineaccount__account__code__regex=r'^%s[0-9a-zA-Z]*$' % tax_receipt) & Q(taxreceipt=None)):
+            for entry in EntryAccount.objects.filter(Q(close=True) & Q(entrylineaccount__account__code__in=tax_receipt.split(';')) & Q(taxreceipt=None)):
                 thirds = [third_line.third for third_line in entry.get_thirds() if third_line.link is not None]
                 if (len(thirds) == 1) and (thirds[0] is not None):
                     third = thirds[0]
@@ -1815,7 +1815,8 @@ def member_checkparam():
     Parameter.check_and_create(name="member-family-type", typeparam=1, title=_("member-family-type"), args="{}", value='0', meta='("contacts","StructureType", Q(), "id", False)')
     Parameter.check_and_create(name="member-size-page", typeparam=1, title=_("member-size-page"), args="{}", value='25', meta='("","", "[(25,\'25\'),(50,\'50\'),(100,\'100\'),(250,\'250\'),(500,\'500\'),]", "", True)')
     Parameter.check_and_create(name="member-fields", typeparam=0, title=_("member-fields"), args="{'Multi':False}", value='')
-    Parameter.check_and_create(name="member-tax-receipt", typeparam=0, title=_("member-tax-receipt"), args="{'Multi':False}", value='')
+    Parameter.check_and_create(name="member-tax-receipt", typeparam=0, title=_("member-tax-receipt"), args="{'Multi':True}", value='',
+                               meta='("accounting","ChartsAccount","import diacamma.accounting.tools;django.db.models.Q(code__regex=diacamma.accounting.tools.current_system_account().get_revenue_mask()) & django.db.models.Q(year__is_actif=True)", "code", True)')
 
 
 @Signal.decorate('auditlog_register')
