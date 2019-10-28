@@ -4,6 +4,7 @@ Prise en main
 Le logiciel *Diacamma Asso* comprends un grand nombre de paramétrages et peu paraître difficile à configurer au besoin de votre structure.
 
 Nous vous proposons cette explication pour vous aider à franchir cette première étape dans l'utilisation de cet outil.
+Un assistant de configuration reprends ces différents étapes pour vous aider également à configurer ce logiciel.
 
 Suivez pas à pas les différents phases de réglages. Dans chaque étape, nous ne ré-détaillons pas les fonctionnalités. 
 Nous vous invitons également à vous référer au reste du manuel utilisateur pour cela.
@@ -48,7 +49,7 @@ Réglage de votre facturier
    
 	Menu *Administration/Modules (conf.)/Configuration commercial du facturier*
 
-   Menu *Administration/Modules (conf.)/Configuration financière du facturier*
+	Menu *Administration/Modules (conf.)/Configuration financière du facturier*
 
 Vérifiez que les paramètres du facturier vous correspondent.
 Vous pouvez aussi ici, configurer le RIB de votre compte bancaire principal ainsi qu'en ajouter des secondaires.
@@ -59,7 +60,7 @@ Création de votre premier exercice comptable
 
 	Menu *Administration/Modules (conf.)/Configuration comptables*
 
-	Menu *Finance/Comptabilité/plan comptable*
+	Menu *Comptabilité/Gestion comptable/plan comptable*
 
 Ouvrer votre premier exercice comptable et rendez le actifs.
 Vous devrez aussi créer le plan comptable de cette exercice pour avoir une comptabilité pleinement opérationnel.
@@ -84,9 +85,9 @@ Notez que pour chaque nouvelle cotisation saisie, une facture non-validée sera 
 Mise à jours comptable
 ----------------------
 
-	Menu *Finance/Comptabilité/écritures comptable*
+	Menu *Comptabilité/Gestion comptable/écritures comptable*
    
-	Menu *Finance/Comptabilité/Modèle d'écriture*
+	Menu *Comptabilité/Gestion comptable/Modèle d'écriture*
 
 Si vous mettez en place *Diacamma Asso* au cours de votre exercice, vous devrez également saisir votre report à nouveau de l'exercice précédent ainsi que ressaisir les écritures du début d'année.
 Attention: n'oubliez pas que l'ajout d'une cotisation d'adhérent génère une facture ainsi que des écritures comptables associées. Prenez en compte dans la reprise de votre comptabilité.

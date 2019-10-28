@@ -11,6 +11,7 @@ Aide relative aux fonctionnalités de gestion d'adhésion.
    subscription.rst
    renew.rst
    statistic.rst
+   taxreceipt.rst
    config.rst
 
 

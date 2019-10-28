@@ -3,10 +3,18 @@ Configuration
 
 Pour vous permettre d'exploiter au mieux le logiciel, certains paramétrages sont nécessaires.
 
+Générale
+--------
+
+Le menu *Administration/Configuration générale*, onglet *Adhérents*, vous permet de modifier des paramètrages généraux relatives à la gestion des adhésions.
+
+	.. image:: conf_general.png
+
+
 Saisons et cotisations
 ----------------------
 
-Le menu *administration/Modules (conf.)/Les saisons et les cotisations* vous permet de modifier à la gestion des licences sportives, en l'occurrence, les saisons sportives et les types de cotisations.
+Le menu *Administration/Modules (conf.)/Les saisons et les cotisations* vous permet de modifier à la gestion des licences sportives, en l'occurrence, les saisons sportives et les types de cotisations.
 
 **Les Saisons**
 
@@ -57,7 +65,7 @@ De plus, dans la facture d'adhésion est ajouté alors l'article relatif à cet 
 Catégories
 ----------
 
-Le menu *administration/Modules (conf.)/Catégories* vous permet de modifier ce qui peut catégoriser un adhérent: les catégories d'âge, les équipes ou cours et les activités ainsi que la possibilité d'activer ou non ces différents classifications.
+Le menu *Administration/Modules (conf.)/Catégories* vous permet de modifier ce qui peut catégoriser un adhérent: les catégories d'âge, les équipes ou cours et les activités ainsi que la possibilité d'activer ou non ces différents classifications.
 
 Vous pouvez ne pas vouloir utiliser certaines catégories. Pour cela, désactivez là depuis l'écran de paramétrages.
 De la même façon, vous pouvez préciser si vous souhaitez pouvoir créer automatiquement une connexion par adhérent actif, afficher un numéro d'adhérent ou gérer des numéros de licence.
