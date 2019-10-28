@@ -42,7 +42,7 @@ from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 
 from lucterios.framework.models import LucteriosModel, LucteriosVirtualField,\
-    get_value_if_choices
+    get_value_if_choices, LucteriosDecimalField
 from lucterios.framework.error import LucteriosException, IMPORTANT
 from lucterios.framework.tools import convert_date, same_day_months_after, toHtml, get_bool_textual
 from lucterios.framework.signal_and_lock import Signal
@@ -52,6 +52,7 @@ from lucterios.framework.auditlog import auditlog
 from lucterios.CORE.models import Parameter, PrintModel, LucteriosUser
 from lucterios.CORE.parameters import Params
 from lucterios.contacts.models import Individual, LegalEntity, Responsability
+from lucterios.documents.models import FolderContainer
 from lucterios.mailing.functions import EmailException
 
 from diacamma.invoice.models import Article, Bill, Detail, get_or_create_customer
@@ -59,6 +60,7 @@ from diacamma.accounting.tools import get_amount_from_format_devise, format_with
 from diacamma.accounting.models import Third, FiscalYear, EntryAccount, EntryLineAccount
 from diacamma.payoff.views import get_html_payment
 from diacamma.payoff.models import PaymentMethod, Supporting, Payoff
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 
 class Season(LucteriosModel):
@@ -1523,7 +1525,7 @@ class TaxReceiptPayoffSet(QuerySet):
 class TaxReceipt(Supporting):
     num = models.IntegerField(verbose_name=_('numeros'), null=False)
     fiscal_year = models.ForeignKey(FiscalYear, verbose_name=_('fiscal year'), null=False, db_index=True, on_delete=models.PROTECT)
-    year = models.IntegerField(verbose_name=_('year'), null=False)
+    year = models.IntegerField(verbose_name=_('year'), null=False, unique_for_year=True)
     entries = models.ManyToManyField(EntryAccount, verbose_name=_('entries'))
     date = models.DateField(verbose_name=_('date'), null=False)
     total = LucteriosVirtualField(verbose_name=_('total'), compute_from='get_total', format_string=lambda: format_with_devise(5))
@@ -1531,7 +1533,7 @@ class TaxReceipt(Supporting):
     mode_payoff = LucteriosVirtualField(verbose_name=_('mode payoff'), compute_from='get_mode_payoff')
 
     def __str__(self):
-        return _("Tax receipt #%(num)s of %(year)s") % {'num': self.num, 'year': self.year}
+        return _("Tax receipt #%(num)s-%(year)s %(third)s") % {'num': self.num, 'year': self.year, 'third': self.third}
 
     @classmethod
     def get_default_fields(cls):
@@ -1539,7 +1541,7 @@ class TaxReceipt(Supporting):
 
     @classmethod
     def get_show_fields(cls):
-        fields = ["fiscal_year", ("num", 'date'), "third", "entryline_set", 'total', ('date_payoff', 'mode_payoff')]
+        fields = ["year", ("num", 'date'), "third", "entryline_set", 'total', ('date_payoff', 'mode_payoff')]
         return fields
 
     @classmethod
@@ -1589,6 +1591,10 @@ class TaxReceipt(Supporting):
         field = Payoff.get_field_by_name('mode')
         modes = sorted(set([payoff.mode for payoff in self.payoff_set.all()]))
         return ", ".join([get_mode_text(mode) for mode in modes])
+
+    def add_pdf_document(self, title, user, metadata, pdf_content):
+        folder, _new = FolderContainer.objects.get_or_create(name="%d" % self.year)
+        return folder.add_pdf_document(title, user, metadata, pdf_content)
 
     @classmethod
     def create_all(cls, year):

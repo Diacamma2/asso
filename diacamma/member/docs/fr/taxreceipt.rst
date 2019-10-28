@@ -58,3 +58,5 @@ Une fois généré, chaque reçu pourra être imprimé en PDF ainsi qu'envoyer p
 
 **Attention:** la génération de reçus fiscaux est définitive. Comme ils correspondent à la réalité d'une comptabilité validée, il n'est pas possible de les corriger ou de les annuler.
 
+**Note:** Une version PDF des reçus est automatiquement sauvegardée dans le gestionnaire de document dans un répertoire ayant pour nom l'année civile. Si ce répertoire n'existe pas, il est créé.
+

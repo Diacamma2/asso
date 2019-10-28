@@ -29,7 +29,7 @@ class Migration(migrations.Migration):
                 ('num', models.IntegerField(null=False, verbose_name='numeros')),
                 ('entries', models.ManyToManyField(to='accounting.EntryAccount', verbose_name='entries')),
                 ('fiscal_year', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='accounting.FiscalYear', verbose_name='fiscal year')),
-                ('year', models.IntegerField(null=False, verbose_name='year')),
+                ('year', models.IntegerField(null=False, verbose_name='year', unique_for_year=True)),
                 ('date', models.DateField(verbose_name='date', null=False)),
             ],
             options={
