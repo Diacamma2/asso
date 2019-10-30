@@ -41,8 +41,7 @@ from django_fsm import FSMIntegerField, transition
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 
-from lucterios.framework.models import LucteriosModel, LucteriosVirtualField,\
-    get_value_if_choices, LucteriosDecimalField
+from lucterios.framework.models import LucteriosModel, LucteriosVirtualField, get_value_if_choices
 from lucterios.framework.error import LucteriosException, IMPORTANT
 from lucterios.framework.tools import convert_date, same_day_months_after, toHtml, get_bool_textual
 from lucterios.framework.signal_and_lock import Signal
@@ -60,7 +59,6 @@ from diacamma.accounting.tools import get_amount_from_format_devise, format_with
 from diacamma.accounting.models import Third, FiscalYear, EntryAccount, EntryLineAccount
 from diacamma.payoff.views import get_html_payment
 from diacamma.payoff.models import PaymentMethod, Supporting, Payoff
-from django.core.validators import MinValueValidator, MaxValueValidator
 
 
 class Season(LucteriosModel):
