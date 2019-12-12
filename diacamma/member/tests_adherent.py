@@ -2561,7 +2561,7 @@ class TaxtReceiptTest(InvoiceTest):
 
         self.factory.xfer = EntryAccountList()
         self.calljson('/diacamma.accounting/entryAccountList',
-                      {'year': '1', 'journal': '-1', 'filter': '0'}, False)
+                      {'year': '1', 'journal': '0', 'filter': '0'}, False)
         self.assert_observer('core.custom', 'diacamma.accounting', 'entryAccountList')
         self.assert_count_equal('entryline', 4)
         self.assert_json_equal('LABELFORM', 'result', [100.00, 0.00, 100.00, 100.00, 0.00])
@@ -2594,7 +2594,7 @@ class TaxtReceiptTest(InvoiceTest):
 
         self.factory.xfer = EntryAccountList()
         self.calljson('/diacamma.accounting/entryAccountList',
-                      {'year': '1', 'journal': '-1', 'filter': '2'}, False)
+                      {'year': '1', 'journal': '0', 'filter': '2'}, False)
         self.assert_observer('core.custom', 'diacamma.accounting', 'entryAccountList')
         self.assert_count_equal('entryline', 2)
         self.assert_json_equal('LABELFORM', 'result', [100.00, 0.00, 100.00, 100.00, 0.00])
@@ -2627,7 +2627,7 @@ class TaxtReceiptTest(InvoiceTest):
 
         self.factory.xfer = EntryAccountList()
         self.calljson('/diacamma.accounting/entryAccountList',
-                      {'year': '1', 'journal': '-1', 'filter': '2'}, False)
+                      {'year': '1', 'journal': '0', 'filter': '2'}, False)
         self.assert_observer('core.custom', 'diacamma.accounting', 'entryAccountList')
         self.assert_count_equal('entryline', 4)
         self.assert_json_equal('LABELFORM', 'result', [100.00, 0.00, 100.00, 100.00, 100.00])
@@ -2694,7 +2694,7 @@ class TaxtReceiptTest(InvoiceTest):
 
         self.factory.xfer = EntryAccountList()
         self.calljson('/diacamma.accounting/entryAccountList',
-                      {'year': '1', 'journal': '-1', 'filter': '2'}, False)
+                      {'year': '1', 'journal': '0', 'filter': '2'}, False)
         self.assert_observer('core.custom', 'diacamma.accounting', 'entryAccountList')
         self.assert_count_equal('entryline', 7 + 3)
         self.assert_json_equal('LABELFORM', 'result', [400.00, 0.00, 400.00, 200.00, 200.00])
@@ -2748,7 +2748,7 @@ class TaxtReceiptTest(InvoiceTest):
 
         self.factory.xfer = EntryAccountList()
         self.calljson('/diacamma.accounting/entryAccountList',
-                      {'year': '1', 'journal': '-1', 'filter': '2'}, False)
+                      {'year': '1', 'journal': '0', 'filter': '2'}, False)
         self.assert_observer('core.custom', 'diacamma.accounting', 'entryAccountList')
         self.assert_count_equal('entryline', 9)
         self.assert_json_equal('LABELFORM', 'result', [400.00, 0.00, 400.00, 400.00, 400.00])
@@ -2789,16 +2789,16 @@ class TaxtReceiptTest(InvoiceTest):
 
         self.factory.xfer = EntryAccountClose()
         self.calljson('/diacamma.accounting/entryAccountClose',
-                      {'CONFIRME': 'YES', 'year': '1', 'journal': '-1', "entryline": "1;2"}, False)
+                      {'CONFIRME': 'YES', 'year': '1', 'journal': '0', "entryline": "1;2"}, False)
         self.assert_observer('core.acknowledge', 'diacamma.accounting', 'entryAccountClose')
 
         self.factory.xfer = EntryAccountLink()
-        self.calljson('/diacamma.accounting/entryAccountLink', {'year': '1', 'journal': '-1', 'filter': '0', 'entryline': '4;1'}, False)
+        self.calljson('/diacamma.accounting/entryAccountLink', {'year': '1', 'journal': '0', 'filter': '0', 'entryline': '4;1'}, False)
         self.assert_observer('core.acknowledge', 'diacamma.accounting', 'entryAccountLink')
 
         self.factory.xfer = EntryAccountList()
         self.calljson('/diacamma.accounting/entryAccountList',
-                      {'year': '1', 'journal': '-1', 'filter': '0'}, False)
+                      {'year': '1', 'journal': '0', 'filter': '0'}, False)
         self.assert_observer('core.custom', 'diacamma.accounting', 'entryAccountList')
         self.assert_count_equal('entryline', 4)
         self.assert_json_equal('LABELFORM', 'result', [100.00, 100.00, 0.00, 0.00, 0.00])
@@ -2843,7 +2843,7 @@ class TaxtReceiptTest(InvoiceTest):
 
         self.factory.xfer = EntryAccountClose()
         self.calljson('/diacamma.accounting/entryAccountClose',
-                      {'CONFIRME': 'YES', 'year': '2', 'journal': '-1', "entryline": "1;2;3;4;5;6;7"}, False)
+                      {'CONFIRME': 'YES', 'year': '2', 'journal': '0', "entryline": "1;2;3;4;5;6;7"}, False)
         self.assert_observer('core.acknowledge', 'diacamma.accounting', 'entryAccountClose')
 
         old_year.set_context(self.factory.xfer)
@@ -2851,7 +2851,7 @@ class TaxtReceiptTest(InvoiceTest):
 
         self.factory.xfer = EntryAccountList()
         self.calljson('/diacamma.accounting/entryAccountList',
-                      {'year': '2', 'journal': '-1', 'filter': '2'}, False)
+                      {'year': '2', 'journal': '0', 'filter': '2'}, False)
         self.assert_observer('core.custom', 'diacamma.accounting', 'entryAccountList')
         self.assert_count_equal('entryline', 7 + 5)
         self.assert_json_equal('LABELFORM', 'result', [400.00, 0.00, 400.00, 250.00, 250.00])
@@ -2880,12 +2880,12 @@ class TaxtReceiptTest(InvoiceTest):
         self.assert_observer('core.acknowledge', 'diacamma.accounting', 'entryAccountClose')
 
         self.factory.xfer = EntryAccountLink()
-        self.calljson('/diacamma.accounting/entryAccountLink', {'year': '1', 'journal': '-1', 'filter': '0', 'entryline': '17;18;19;20'}, False)
+        self.calljson('/diacamma.accounting/entryAccountLink', {'year': '1', 'journal': '0', 'filter': '0', 'entryline': '17;18;19;20'}, False)
         self.assert_observer('core.acknowledge', 'diacamma.accounting', 'entryAccountLink')
 
         self.factory.xfer = EntryAccountList()
         self.calljson('/diacamma.accounting/entryAccountList',
-                      {'year': '1', 'journal': '-1', 'filter': '0'}, False)
+                      {'year': '1', 'journal': '0', 'filter': '0'}, False)
         self.assert_observer('core.custom', 'diacamma.accounting', 'entryAccountList')
         self.assert_count_equal('entryline', 7 + 2)
         self.assert_json_equal('LABELFORM', 'result', [0.00, 0.00, 0.00, 400.00, 400.00])
