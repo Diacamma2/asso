@@ -429,7 +429,7 @@ class SubscriptionType(LucteriosModel):
         return self.name
 
     def get_text_value(self):
-        return "%s [%s]" % (self.name, get_amount_from_format_devise(self.price, 5))
+        return "%s [%s]" % (self.name, get_amount_from_format_devise(self.price, 7))
 
     @classmethod
     def get_default_fields(cls):
@@ -985,7 +985,7 @@ class Prestation(LucteriosModel):
             return six.text_type(self.team)
 
     def get_text(self):
-        return "%s %s" % (self.__str__(), get_amount_from_format_devise(self.article.price, 5))
+        return "%s %s" % (self.__str__(), get_amount_from_format_devise(self.article.price, 7))
 
     @property
     def article_query(self):

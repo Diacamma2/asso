@@ -386,7 +386,7 @@ class Participant(LucteriosModel):
         if self.article_id is None:
             return None
         elif abs(self.reduce) > 0.0001:
-            return "%s (-%s)" % (self.article.ref_price, get_amount_from_format_devise(self.reduce, 5))
+            return "%s (-%s)" % (self.article.ref_price, get_amount_from_format_devise(self.reduce, 7))
         else:
             return self.article.ref_price
 
