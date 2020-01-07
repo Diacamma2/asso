@@ -1347,14 +1347,17 @@ class AdherentTest(BaseAdherentTest):
                       {'SAVE': 'YES', 'adherent': 2, 'dateref': '2009-10-01', 'subscription': 1, 'team': 1, 'activity': 1}, False)
         self.assert_observer('core.acknowledge', 'diacamma.member', 'licenseAddModify')
 
-        self.factory.xfer = BillShow()
-        self.calljson('/diacamma.invoice/billShow', {'bill': 1}, False)
-        self.assert_observer('core.custom', 'diacamma.invoice', 'billShow')
-        self.assert_json_equal('LABELFORM', 'info', ["la date n'est pas incluse dans l'exercice"])
-
         self.factory.xfer = BillAddModify()
         self.calljson('/diacamma.invoice/billAddModify', {'bill': 1, 'date': '2010-04-01', 'SAVE': 'YES'}, False)
         self.assert_observer('core.acknowledge', 'diacamma.invoice', 'billAddModify')
+
+        self.factory.xfer = BillShow()
+        self.calljson('/diacamma.invoice/billShow', {'bill': 1}, False)
+        self.assert_observer('core.custom', 'diacamma.invoice', 'billShow')
+        print('season', Season.objects.get(id=10))
+        print('year', new_year)
+        print('date', self.get_json_path('date'))
+        self.assert_json_equal('LABELFORM', 'info', [])
 
         self.factory.xfer = BillTransition()
         self.calljson('/diacamma.invoice/billTransition', {'bill': 1, 'TRANSITION': 'valid', 'CONFIRME': 'YES', 'withpayoff': False, 'sendemail': False}, False)
