@@ -178,8 +178,8 @@ msgid "subscription types"
 msgstr "types de cotisation"
 
 #: models.py:489
-msgid "1 activity is needs!"
-msgstr "1 activité est nécessaire !"
+msgid "One activity is needs!"
+msgstr "Une activité est nécessaire !"
 
 #: models.py:493 models.py:980 models.py:1390 printmodel/Adherent_0003.py:56
 msgid "activity"
@@ -325,7 +325,7 @@ msgstr "Radier"
 
 #: models.py:1312 models.py:1318
 msgid "Re-open"
-msgstr "Ré-éditer"
+msgstr "Rééditer"
 
 #: models.py:1326
 msgid "You cannot delete this subscription!"
@@ -450,10 +450,10 @@ msgstr "message de nouvelle de cotisation"
 
 #: models.py:1819
 msgid ""
-"Welcome,{[br/]}{[br/]}You have a new subscription.Joint, the quotation "
+"Welcome,{[br/]}{[br/]}you have a new subscription.Joint, the quotation "
 "relative.{[br/]}{[br/]}Regards,"
 msgstr ""
-"Bienvenue,{[br/]}{[br/]}Vous avez une nouvelle cotisation. Ci-joint, le "
+"Bienvenue,{[br/]}{[br/]}vous avez une nouvelle cotisation. Ci-joint, le "
 "devis correspondant.{[br/]}{[br/]}Salutations,"
 
 #: models.py:1820
@@ -462,15 +462,15 @@ msgstr "Mode de cotisation"
 
 #: models.py:1821
 msgid "member-subscription-mode.0"
-msgstr "Pas d'auto-cotisation"
+msgstr "Pas d'autocotisation"
 
 #: models.py:1821
 msgid "member-subscription-mode.1"
-msgstr "Auto-cotisation avec moderation"
+msgstr "Autocotisation avec modération"
 
 #: models.py:1821
 msgid "member-subscription-mode.2"
-msgstr "Auto-cotisation automatique"
+msgstr "Autocotisation automatique"
 
 #: models.py:1822
 msgid "member-family-type"
@@ -600,7 +600,7 @@ msgstr "Nature(s) du versement réalisé"
 
 #: printmodel/TaxReceipt_0001.py:87
 msgid "Signature"
-msgstr "Signature ou caché de l'association"
+msgstr "Signature ou cachet de l'association"
 
 #: views.py:67
 msgid "Association"
@@ -617,7 +617,7 @@ msgstr "Adhérents"
 #: views.py:70
 msgid "Management of adherents and subscriptions."
 msgstr ""
-"Ensemble d'actions permettant la gestion d'adhérents et d'adhésion:{[br/]}"
+"Ensemble d'actions permettant la gestion d'adhérents et d'adhésions:{[br/]}"
 "{[ul]}{[li]}Lister vos adhérents avec toutes leurs coordonnées.{[/li]}{[li]}"
 "Gérer leurs cotisations par activités et catégories.{[/li]}{[li]}Gérer les "
 "renouvellements d’adhésion.{[/li]}{[li]}Générer automatiquement devis ou "
@@ -674,7 +674,7 @@ msgstr "Adhérents de la saison"
 
 #: views.py:298
 msgid "Address of season adherents"
-msgstr "Adhérents de la saison (par famille ou individuel)"
+msgstr "Adhérents de la saison (familles ou individus)"
 
 #: views.py:324
 msgid "Filtrer by contact"
@@ -690,7 +690,7 @@ msgstr "Recherche d'adhérent"
 
 #: views.py:355
 msgid "List of adherents with old subscribtion not renew yet"
-msgstr "Liste d'anciens adhérents pas encore renouvelés"
+msgstr "Anciens adhérents n'ayant pas renouvelé leur adhésion"
 
 #: views.py:357
 msgid "Adherents to renew"
@@ -727,8 +727,8 @@ msgid ""
 "{[br/]}Same subscription(s) will be applicated.{[br/]}No validated bill will "
 "be created for each subscritpion."
 msgstr ""
-"{[b]}Voulez-vous que ces %d ancien(s) adhérent(s) selectionné(s) soit "
-"renouvelé(s)?{[/b]}{[br/]}La même cotisation sera appliquée.{[br/]}Une "
+"{[b]}Renouvelez-vous l(es) ancien(s) adhérent(s) sélectionné(s) ?{[/b]}"
+"{[br/]}La même cotisation sera appliquée.{[br/]}Une "
 "facture non-validée sera créée pour chaque cotisation."
 
 #: views.py:496
@@ -747,7 +747,7 @@ msgstr "Envoyer un devis par courriel à chaque adhérent"
 #, python-format
 msgid "%(nbsub)d new subscription and %(nbbill)d quotation have been sent."
 msgstr ""
-"%(nbsub)d nouvelle(s) cotisation(s) et %(nbbill)d dévis ont été envoyé(s)."
+"Envoi de %(nbsub)d nouvelle(s) cotisation(s) et de %(nbbill)d devis."
 
 #: views.py:549
 #, python-format
@@ -829,7 +829,7 @@ msgstr "Filtrer par nom"
 
 #: views.py:853
 msgid "Subscriptions to moderate"
-msgstr "Cotisations à moderer"
+msgstr "Cotisations à modérer"
 
 #: views.py:882 views_season.py:173
 msgid "Add subscription"
@@ -916,8 +916,8 @@ msgid "Result by seniority"
 msgstr "Résultat par ancienneté"
 
 #: views.py:1024
-msgid "count of subscription"
-msgstr "nombre de cotisation"
+msgid "count of subscriptions"
+msgstr "nombre de cotisations"
 
 #: views.py:1027 views.py:1031
 #, python-format
@@ -1022,7 +1022,7 @@ msgstr "Contrôle"
 
 #: views_conf.py:246
 msgid "Check tax receipt"
-msgstr "Contrôle les reçus fiscaux"
+msgstr "Contrôlez les reçus fiscaux"
 
 #: views_conf.py:249
 #, python-format
@@ -1069,7 +1069,7 @@ msgstr "Les cotisations"
 msgid "Configuration of subscription"
 msgstr ""
 "Dans cet écran, vous pouvez ajouter vos différents types d'adhésion pour "
-"votre association.{[br/]}Le paramètre \"mode de cotisation\" vous permet de "
+"votre association. {[br/]}Le paramètre \"mode de cotisation\" vous permet de "
 "donner la possibilité à un adhérent de créer une demande d'adhésion."
 
 #: views_conf.py:314
