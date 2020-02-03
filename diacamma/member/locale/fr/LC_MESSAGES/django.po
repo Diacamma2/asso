@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-01-25 16:35+0000\n"
-"PO-Revision-Date: 2019-10-23 14:22+0200\n"
+"POT-Creation-Date: 2020-02-03 11:52+0000\n"
+"PO-Revision-Date: 2020-02-03 12:50+0100\n"
 "Last-Translator: b'Paul ARULATEDA <paul531@orange.fr>'\n"
 "Language-Team: \n"
 "Language: fr\n"
@@ -177,7 +177,7 @@ msgstr "type de cotisation"
 msgid "subscription types"
 msgstr "types de cotisation"
 
-#: models.py:489
+#: models.py:488
 msgid "1 activity is needs!"
 msgstr "Une activité est nécessaire !"
 
@@ -450,7 +450,7 @@ msgstr "message de nouvelle de cotisation"
 
 #: models.py:1817
 msgid ""
-"Welcome,{[br/]}{[br/]}you have a new subscription.Joint, the quotation "
+"Welcome,{[br/]}{[br/]}You have a new subscription.Joint, the quotation "
 "relative.{[br/]}{[br/]}Regards,"
 msgstr ""
 "Bienvenue,{[br/]}{[br/]}vous avez une nouvelle cotisation. Ci-joint, le "
@@ -739,8 +739,8 @@ msgid ""
 "{[br/]}Same subscription(s) will be applicated.{[br/]}No validated bill will "
 "be created for each subscritpion."
 msgstr ""
-"{[b]}Renouvelez-vous l(es) ancien(s) adhérent(s) sélectionné(s) ?{[/b]}"
-"{[br/]}La même cotisation sera appliquée.{[br/]}Une "
+"{[b]}Voulez-vous que ces %d ancien(s) adhérent(s) selectionné(s) soit "
+"renouvelé(s)?{[/b]}{[br/]}La même cotisation sera appliquée.{[br/]}Une "
 "facture non-validée sera créée pour chaque cotisation."
 
 #: views.py:496
@@ -758,8 +758,7 @@ msgstr "Envoyer un devis par courriel à chaque adhérent"
 #: views.py:547
 #, python-format
 msgid "%(nbsub)d new subscription and %(nbbill)d quotation have been sent."
-msgstr ""
-"Envoi de %(nbsub)d nouvelle(s) cotisation(s) et de %(nbbill)d devis."
+msgstr "Envoi de %(nbsub)d nouvelle(s) cotisation(s) et de %(nbbill)d devis."
 
 #: views.py:549
 #, python-format
@@ -928,7 +927,7 @@ msgid "Result by seniority"
 msgstr "Résultat par ancienneté"
 
 #: views.py:1024
-msgid "count of subscriptions"
+msgid "count of subscription"
 msgstr "nombre de cotisations"
 
 #: views.py:1027 views.py:1031
