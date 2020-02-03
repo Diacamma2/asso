@@ -48,7 +48,8 @@ from lucterios.framework.signal_and_lock import Signal
 from lucterios.framework.filetools import get_tmp_dir
 from lucterios.framework.auditlog import auditlog
 
-from lucterios.CORE.models import Parameter, PrintModel, LucteriosUser
+from lucterios.CORE.models import Parameter, PrintModel, LucteriosUser,\
+    LucteriosGroup
 from lucterios.CORE.parameters import Params
 from lucterios.contacts.models import Individual, LegalEntity, Responsability
 from lucterios.documents.models import FolderContainer
@@ -1821,6 +1822,13 @@ def member_checkparam():
     Parameter.check_and_create(name="member-fields", typeparam=0, title=_("member-fields"), args="{'Multi':False}", value='')
     Parameter.check_and_create(name="member-tax-receipt", typeparam=0, title=_("member-tax-receipt"), args="{'Multi':True}", value='',
                                meta='("accounting","ChartsAccount","import diacamma.accounting.tools;django.db.models.Q(code__regex=diacamma.accounting.tools.current_system_account().get_revenue_mask()) & django.db.models.Q(year__is_actif=True)", "code", True)')
+
+    LucteriosGroup.redefine_generic(_("# member (administrator)"), Season.get_permission(True, True, True), Adherent.get_permission(True, True, True),
+                                    Subscription.get_permission(True, True, True), TaxReceipt.get_permission(True, True, True))
+    LucteriosGroup.redefine_generic(_("# member (editor)"), Adherent.get_permission(True, True, False),
+                                    Subscription.get_permission(True, True, False), TaxReceipt.get_permission(True, True, False))
+    LucteriosGroup.redefine_generic(_("# member (shower)"), Adherent.get_permission(True, False, False),
+                                    Subscription.get_permission(True, False, False), TaxReceipt.get_permission(True, False, False))
 
 
 @Signal.decorate('auditlog_register')

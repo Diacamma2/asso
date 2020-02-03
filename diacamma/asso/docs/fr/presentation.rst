@@ -17,7 +17,7 @@ Les différents modules disponibles vous permettront, par exemple, de:
  - Gérer vos devis, factures et factures proformat pour les adhérents subventionnés par un CE, entre autre.
 
 Ce manuel vous aidera dans l'utilisation de ce logiciel.
-Si malgré tout, vous ne trouvez pas la réponse à vos problèmes, visiter notre site http://www.diacamma.org où vous trouverez des tutoriels et des astuces.
+Si malgré tout, vous ne trouvez pas la réponse à vos problèmes, visiter notre site https://www.diacamma.org où vous trouverez des tutoriels et des astuces.
 
 Installation
 ------------
@@ -31,12 +31,12 @@ Cette organisation est particulièrement intéressante pour permette à plusieur
 
 Quel responsable ne s'est pas arraché les cheveux suite à un échanges de documents via une clef USB où certaines modifications importantes se perdent?
 
-Pour plus d'information, visiter notre site http://www.diacamma.org
+Pour plus d'information, visiter notre site https://www.diacamma.org
 
 Aides et support
 ----------------
 
-Sur le site officiel du logiciel, http://www.diacamma.org, où vous trouverez des tutoriels et un forum pour échanger des astuces entre utilisateurs.
+Sur le site officiel du logiciel, https://www.diacamma.org, où vous trouverez des tutoriels et un forum pour échanger des astuces entre utilisateurs.
 
 Si vous souhaitez un service et un support plus personnalisé, vous pouvez faire confiance à notre partenaire officiel SLETO.
 Pour en savoir plus sur des solutions d'hébergement et de support, rendez vous sur https://www.sleto.net
