@@ -213,7 +213,7 @@ class AdherentTest(BaseAdherentTest):
         self.assert_observer('core.custom', 'diacamma.member', 'adherentShow')
         self.assert_json_equal('LABELFORM', 'firstname', "Avrel")
         self.assert_json_equal('LABELFORM', 'lastname', "Dalton")
-        self.assert_grid_equal('subscription', {'status': "status", 'season': "saison", 'subscriptiontype': "type de cotisation", 'begin_date': "date de début", 'end_date': "date de fin", 'involvement': "participation"}, 0)
+        self.assert_grid_equal('subscription', {'status': "statut", 'season': "saison", 'subscriptiontype': "type de cotisation", 'begin_date': "date de début", 'end_date': "date de fin", 'involvement': "participation"}, 0)
 
         self.factory.xfer = SubscriptionAddModify()
         self.calljson('/diacamma.member/subscriptionAddModify',
@@ -658,7 +658,7 @@ class AdherentTest(BaseAdherentTest):
         content_csv = csv_value.split('\n')
         self.assertEqual(len(content_csv), 8, str(content_csv))
         self.assertEqual(content_csv[1].strip(), '"Adhérents cotisants - date de référence : 1 octobre 2009"')
-        self.assertEqual(content_csv[3].strip(), '"status : en création & validé,,passion : activity2,,group : team2, team3,,Âge : Minimes, Benjamins, Poussins,,genre : Femme"')
+        self.assertEqual(content_csv[3].strip(), '"statut : en création & validé,,passion : activity2,,group : team2, team3,,Âge : Minimes, Benjamins, Poussins,,genre : Femme"')
         self.assertEqual(content_csv[4].strip(), '"nom";"adresse";"ville";"tel";"courriel";')
 
     def test_statistic(self):
@@ -1219,7 +1219,7 @@ class AdherentTest(BaseAdherentTest):
         self.assert_observer('core.custom', 'diacamma.member', 'adherentShow')
         self.assert_json_equal('LABELFORM', 'firstname', "Avrel")
         self.assert_json_equal('LABELFORM', 'lastname', "Dalton")
-        self.assert_grid_equal('subscription', {'status': "status", 'season': "saison", 'subscriptiontype': "type de cotisation", 'begin_date': "date de début", 'end_date': "date de fin", 'involvement': "participation"}, 0)
+        self.assert_grid_equal('subscription', {'status': "statut", 'season': "saison", 'subscriptiontype': "type de cotisation", 'begin_date': "date de début", 'end_date': "date de fin", 'involvement': "participation"}, 0)
 
         self.factory.xfer = SubscriptionAddModify()
         self.calljson('/diacamma.member/subscriptionAddModify',
@@ -2658,7 +2658,7 @@ class TaxtReceiptTest(InvoiceTest):
         self.assert_count_equal('entryline', 1)
         self.assert_json_equal('LABELFORM', 'total', 100.0)
         self.assert_json_equal('LABELFORM', 'date_payoff', '2015-04-03')
-        self.assert_json_equal('LABELFORM', 'mode_payoff', 'espèce')
+        self.assert_json_equal('LABELFORM', 'mode_payoff', 'espèces')
 
         self.factory.xfer = TaxReceiptPrint()
         self.calljson('/diacamma.member/taxReceiptPrint', {'taxreceipt': '2', 'PRINT_PERSITENT': True, 'PRINT_MODE': 3, 'MODEL': 8}, False)

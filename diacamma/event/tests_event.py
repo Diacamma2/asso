@@ -58,7 +58,7 @@ class EventTest(LucteriosTest):
         self.factory.xfer = EventListExamination()
         self.calljson('/diacamma.event/eventListExamination', {}, False)
         self.assert_observer('core.custom', 'diacamma.event', 'eventListExamination')
-        self.assert_grid_equal('event', {'activity': "passion", 'status': "status", 'date_txt': "date", 'comment': "commentaire"}, 0)
+        self.assert_grid_equal('event', {'activity': "passion", 'status': "statut", 'date_txt': "date", 'comment': "commentaire"}, 0)
         self.assertEqual(self.json_context['event_type'], 0)
 
         self.factory.xfer = EventAddModify()
@@ -386,7 +386,7 @@ class EventTest(LucteriosTest):
         self.factory.xfer = EventListExamination()
         self.calljson('/diacamma.event/eventListExamination', {}, False)
         self.assert_observer('core.custom', 'diacamma.event', 'eventListExamination')
-        self.assert_grid_equal('event', {'status': "status", 'date_txt': "date", 'comment': "commentaire"}, 0)
+        self.assert_grid_equal('event', {'status': "statut", 'date_txt': "date", 'comment': "commentaire"}, 0)
 
         self.factory.xfer = EventAddModify()
         self.calljson('/diacamma.event/eventAddModify', {}, False)
