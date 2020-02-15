@@ -25,7 +25,7 @@ Vous pouvez modifier les paramètres de la gestion des licences sportives, en l'
 	.. image:: season_list.png
 
 Ici, vous pourrez ajouter de nouvelles saisons au fur et à mesure de l'utilisation du logiciel. Vous pourrez également déterminer la saison courante (dite active).
-De plus, chaque saison est découpée en quatre périodes et douze mois.
+De plus, chaque saison est découpée en quatre périodes et en douze mois.
 
 C'est la plus petite date de début et la plus grande de fin qui définissent la plage de votre saison. Vos saisons peuvent être d'une durée supérieure à un an et peuvent se chevaucher.
 Vous pouvez modifier les dates de début et de fin de chaque période. Vous pouvez aussi ajouter ou supprimer une période, mais vous devez toujours en avoir au moins deux.
@@ -81,12 +81,15 @@ Vous pouvez également personnaliser la désignation 'équipe' et 'activité'.
 
 Vous pourrez ici renseigner les catégories d'âges existantes dans votre association avec un nom de catégorie, une année (de naissance) de début et de fin de la catégorie.
 
-Vous n'aurez pas besoin de changer les valeurs des années de naissance ultérieurement : le décalage est effectué automatiquement d'année en année !
+Vous n'aurez pas besoin de changer les valeurs des années de naissance ultérieurement : le décalage est effectué automatiquement d'année en année.
+
 	.. image:: age.png
 
 **Les équipes/cours**
 
-Vous gérez différentes équipes ou différents cours et vous souhaitez pouvoir vos adhérents selon ce critère ? Renseignez-les ici, vous pourrez alors affecter des adhérents à ces équipes ou cours et ainsi les retrouver plus facilement.
+Vous gérez différentes équipes ou différents cours et vous souhaitez pouvoir gérer vos adhérents selon ce critère.
+Renseignez-les ici, vous pourrez alors affecter des adhérents à ces équipes ou cours et ainsi les retrouver plus facilement.
+
 	.. image:: team.png
 
 **Les activités**

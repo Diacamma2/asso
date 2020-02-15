@@ -28,7 +28,8 @@ Cette image, intégrée dans le modèle d'impression par défaut, sera insérée
 
 **Préciser la justification du reçu fiscal**
 
-L'association doit indiquer sur les reçus à quel titre elle les émet. En général, elle précise la date de parution au JO de sa situation d'utilité publique.
+L'association doit indiquer sur les reçus à quel titre elle les émet ce reçu.
+En général, elle précise la date de parution au Journal Officiel de sa situation d'utilité publique.
 
 
      Menu *Général/Nos coordonnées*
@@ -57,19 +58,19 @@ L'ouverture du droit à déduction fiscale nait du règlement du produit ouvrant
 
 Les reçus fiscaux de l'année sélectionnée peuvent être générés, via le bouton "Contrôle" (situé en bas à droite) :
 
- - L'outil extrait tous les mouvements satisfaisant aux conditions suivantes :
+ * L'outil extrait tous les mouvements satisfaisant aux conditions suivantes :
  
-    - les codes comptables doivent correspondre à des produits ouvrant droit à déduction fiscale (Menu */Configuration générale*)
-    - les écritures associées doivent avoir été validées
-    - les créances liées aux mouvements doivent être lettrées afin d'attester qu'elles sont bien réglées
-    - le règlement doit avoir eu lieu sur l'année spécifiée
-    - les mouvements ne doivent pas être déjà associés à des reçus fiscaux
+    * les codes comptables doivent correspondre à des produits ouvrant droit à déduction fiscale (Menu */Configuration générale*)
+    * les écritures associées doivent avoir été validées
+    * les créances liées aux mouvements doivent être lettrées afin d'attester qu'elles sont bien réglées
+    * le règlement doit avoir eu lieu sur l'année spécifiée
+    * les mouvements ne doivent pas être déjà associés à des reçus fiscaux
 
 Les mouvements satisfaisant à ces cinq conditions sont reportés dans le reçu de chaque tiers concerné.
 
- - Attribution d'un numéro unique (spécifique à l'année civile) à tout reçu fiscal
-
- - Possibilité de gérer des reçus fiscaux pour "abandon de frais" : Ces dons peuvent prendre plusieurs formes (argent, abandon de revenus ou de produits, renonciation expresse à des frais engagés dans le cadre d’une activité bénévole respectant certaines conditions)
+ * Attribution d'un numéro unique (spécifique à l'année civile) à tout reçu fiscal
+ * Possibilité de gérer des reçus fiscaux pour "abandon de frais"
+ 	Ces dons peuvent prendre plusieurs formes (argent, abandon de revenus ou de produits, renonciation expresse à des frais engagés dans le cadre d’une activité bénévole respectant certaines conditions)
 
 Une fois généré, chaque reçu pourra être imprimé en PDF et pourra être envoyé par courriel (tout comme les factures).
 
