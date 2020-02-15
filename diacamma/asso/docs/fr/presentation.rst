@@ -9,7 +9,7 @@ Avec *Diacamma Asso*, donnez à votre association le logiciel qu'elle mérite. P
 
 L'application de base est entièrement gratuite et vous permet de gérer les accès à vos données et au carnet d'adresses de votre association.
 
-Les différents modules disponibles vous permettront, par exemple, de:
+Les différents modules disponibles vous permettront, par exemple, de :
 
  - Gérer plus spécifiquement vos adhérents avec leurs licences sportives et le suivi de leur parcours.
  - Gérer vos documents de façon centralisée grâce à la gestion documentaire.
@@ -27,9 +27,9 @@ Vous pouvez installer *Diacamma Asso* sur un ordinateur dédié à votre associa
 *Diacamma Asso* est un logiciel client/serveur : vous pouvez l'installer sur un ordinateur centralisateur et accéder aux données depuis un autre PC connecté au premier, sans limite du nombre d'utilisateurs simultanés.
 Si le PC contenant les données est connecté de manière permanente à internet, vous aurez accès à vos données depuis n'importe où dans le monde!
 
-Cette organisation est particulièrement intéressante pour permette à plusieurs cadres associatifs d'avoir accès à des données communes.
+Cette organisation est particulièrement intéressante pour permettre à plusieurs cadres associatifs d'avoir accès à des données communes.
 
-Quel responsable ne s'est pas arraché les cheveux suite à un échanges de documents via une clef USB où certaines modifications importantes se perdent?
+Quel responsable ne s'est pas arraché les cheveux suite à un échange de documents via une clef USB où certaines modifications importantes se perdent?
 
 Pour plus d'information, visiter notre site https://www.diacamma.org
 
