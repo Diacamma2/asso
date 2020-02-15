@@ -1,62 +1,78 @@
 Reçus fiscaux
 =============
 
-Pour les associations agréées à délivrer des reçus fiscaux, *Diacamma* vous permet de les générer.
+Si votre association est d'intérêt général, elle peut délivrer des reçus fiscaux à ses donateurs et à ses membres. Vous pouvez utiliser *Diacamma* pour cela.
 
 Configuration
 -------------
 
-Afin de réaliser au mieux ces reçus fiscaux, voilà quelque configuration à vérifier:
+**Indiquer les codes comptables des produits pouvant donner droit à une déduction fiscale**
 
-**Indiquer le codes comptables soumis à reçu**
-Menu *Administration > Configuration générale*, onglet *Adhérents*, champ "code comptable des reçus fiscaux"
-Séléctionnez ici les codes de produit correspondant à un revenu soumis à une déduction fiscale.
-Après rafraîchissement de l'application, un nouveau menu *Comptabilité > Reçus fiscaux* apparaît.
+     Menu *Administration/Configuration générale* - onglet "Adhérents"
 
-**Ajouter une image de signature.**
-Une fois ajouté dans le gestionnaire de documentation, référencez la comme tel depuis le menu *Administration > Configuration générale*, onglet *Gestion documentaire*, champ "image de cachet ou de signature".
-Cette image sera ajouter dans le document PDF du reçu dans la zone "signature" du modèle d'impression par défaut.
+Mettez à jour le champ "code comptable des reçus fiscaux" avec les comptes de produits concernés.
+Après rafraîchissement de l'application, le menu *Comptabilité/Reçus fiscaux* est maintenant disponible.
+
+
+**Ajouter une image de signature**
+
+     Menu *Bureautique/Gestion de fichiers et de documents/Documents*
+
+Ajoutez dans le *Gestionnaire de documents* le fichier image devant être utilisé comme cachet ou signature de votre association.
+
+     Menu *Administration/Configuration générale* - onglet "Gestion documentaire"
+
+Dans un second temps, mettez à jour le champ "image de cachet ou de signature".
+Cette image, intégrée dans le modèle d'impression par défaut, sera insérée automatiquement dans le reçu au format PDF, zone "signature".
  
-**Préciser la justification du reçu fiscal.**
-L'association doit indiquer sur les reçu à quel titre elle peut les émettre.
-En général, elle précise la date de parution au JO de sa situation d'utilité publique.
-Rajouter donc cette mention depuis le menu *Général > Nos coordonnées* en éditant la fiche et l'ajoutant sur le terme "N° SIRET/SIREN"
-Ce champ est ajouté par défaut en pied de page sur le reçu.
 
-**Ajouter le logo de votre structure.**
-Afin d'éviter d'avoir un logo par défaut dans vos reçus fiscaux en PDF, modifiez le logo de votre association.
-Depuis le menu *Général > Nos coordonnées*, éditez la fiche et associez lui une image.
+**Préciser la justification du reçu fiscal**
+
+L'association doit indiquer sur les reçus à quel titre elle les émet. En général, elle précise la date de parution au JO de sa situation d'utilité publique.
 
 
-Génération
-----------
+     Menu *Général/Nos coordonnées*
 
-Depuis le menu *Comptabilité > Reçus fiscaux*, on peux visualiser les reçus fiscaux déjà réalisés et filtrés par année civile.
+Éditez la fiche de votre association et renseignez le champ "N° SIRET/SIREN". Ce champ est ajouté par défaut en pied de page du reçu.
+
+
+**Ajouter le logo de votre structure**
+
+Afin d'éviter d'avoir le logo par défaut dans vos reçus, enregistrez sous *Diacamma* le logo de votre association.
+
+     Menu *Général/Nos coordonnées*
+
+Éditez la fiche de votre association et associez-lui une image.
+
+
+Génération des reçus
+--------------------
+     
+     Menu *Comptabilité/Reçus fiscaux*
+     
+Visualisez les reçus fiscaux déjà produits et filtrez-les sur l'année civile.
+L'ouverture du droit à déduction fiscale nait du règlement du produit ouvrant droit à déduction. C'est pour cela que le reçu fiscal est établi sur l'année du règlement. En cas de règlement fractionné, c'est le dernier versement qui fait naître le droit à déduction.
 
 	.. image:: taxreceipts.png
 
-L'ensemble des reçus est généré manuellement, par année civil, via un bouton *Contrôle* (en bas à droite):
+Les reçus fiscaux de l'année sélectionnée peuvent être générés, via le bouton "Contrôle" (situé en bas à droite) :
 
- - L'outil recherche toutes les lignes d'écritures validées avec les codes (précisés en configuration) non déjà associé à un reçu fiscal.
-C'est son montant qui sera reporté sur le reçu.
-L'outil regarde alors le tiers associés (unique).
-*Celui-ci doit être lettré garantissant qu'il est bien soldé.*
+ - L'outil extrait tous les mouvements satisfaisant aux conditions suivantes :
+ 
+    - les codes comptables doivent correspondre à des produits ouvrant droit à déduction fiscale (Menu */Configuration générale*)
+    - les écritures associées doivent avoir été validées
+    - les créances liées aux mouvements doivent être lettrées afin d'attester qu'elles sont bien réglées
+    - le règlement doit avoir eu lieu sur l'année spécifiée
+    - les mouvements ne doivent pas être déjà associés à des reçus fiscaux
 
- - L'outil recherche donc tout les écritures associées à son lettrage.
-Toutes ses écritures doivent être également validées.
+Les mouvements satisfaisant à ces cinq conditions sont reportés dans le reçu de chaque tiers concerné.
 
- - Et de là, l'outil extrait l'ensemble des règlements.
-C'est ces règlements, et en particulier le dernier, qui font foi pour le reçu fiscal.
-C'est donc sur l'année de ce dernier règlement que sera constitué le reçu fiscal.
-Si le règlement est réalisé sur un autre exercice, c'est l'année de règlement qui fera foi comme date du reçu fiscal.
+ - Attribution d'un numéro unique (spécifique à l'année civile) à tout reçu fiscal
 
- - Attribution d'un numéro unique par année civil de ce nouveau reçu fiscal.
+ - Possibilité de gérer des reçus fiscaux pour "abandon de frais" : Ces dons peuvent prendre plusieurs formes (argent, abandon de revenus ou de produits, renonciation expresse à des frais engagés dans le cadre d’une activité bénévole respectant certaines conditions)
 
- - Possibilité de gérer des reçus fiscaux pour "abandon de frais": à la place d'une écriture de règlement, c'est une écriture de charge qui est lettré avec l'écriture d'origine défiscalisable.
+Une fois généré, chaque reçu pourra être imprimé en PDF et pourra être envoyé par courriel (tout comme les factures).
 
-Une fois généré, chaque reçu pourra être imprimé en PDF ainsi qu'envoyer par courriel (comme les factures).
+**Attention :** la génération de reçus fiscaux est définitive. Comme ils correspondent à la réalité d'une comptabilité validée, il n'est pas possible de les corriger ou de les annuler.
 
-**Attention:** la génération de reçus fiscaux est définitive. Comme ils correspondent à la réalité d'une comptabilité validée, il n'est pas possible de les corriger ou de les annuler.
-
-**Note:** Une version PDF des reçus est automatiquement sauvegardée dans le gestionnaire de document dans un répertoire ayant pour nom l'année civile. Si ce répertoire n'existe pas, il est créé.
-
+**Note:** Une version PDF des reçus est automatiquement sauvegardée dans le *Gestionnaire de documents*, dans un répertoire ayant pour nom l'année civile. Si ce répertoire n'existe pas, il est créé.
