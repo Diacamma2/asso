@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-02-03 11:52+0000\n"
+"POT-Creation-Date: 2020-02-22 18:09+0000\n"
 "PO-Revision-Date: 2020-02-03 12:50+0100\n"
 "Last-Translator: b'Paul ARULATEDA <paul531@orange.fr>'\n"
 "Language-Team: \n"
@@ -233,7 +233,7 @@ msgstr "participation"
 msgid "reference date"
 msgstr "date de référence"
 
-#: models.py:677 views.py:1189 views.py:1215 views.py:1217
+#: models.py:677 views.py:1198 views.py:1224 views.py:1226
 msgid "002@Subscription"
 msgstr "Cotisation"
 
@@ -276,7 +276,7 @@ msgstr "facture"
 
 #: models.py:1046 views.py:182 views.py:212
 msgid "status"
-msgstr "status"
+msgstr "statut"
 
 #: models.py:1047
 msgid "waiting"
@@ -663,7 +663,7 @@ msgstr "Liste des adhérents à jour de leur cotisation"
 msgid "Subscribe adherents"
 msgstr "Adhérents cotisants"
 
-#: views.py:272 views.py:472 views.py:1194
+#: views.py:272 views.py:472 views.py:1203
 msgid "Subscription"
 msgstr "Cotisation"
 
@@ -940,17 +940,22 @@ msgstr "Résultat par %s"
 msgid "Active adherents: %d"
 msgstr "Adhérents actifs : %d"
 
-#: views.py:1145
+#: views.py:1148
+#, python-format
+msgid "Active families: %d"
+msgstr "Foyers actifs : %d"
+
+#: views.py:1154
 #, python-format
 msgid "No validated adherents: %d"
 msgstr "Adhérents non-validés : %d"
 
-#: views.py:1151
+#: views.py:1160
 #, python-format
 msgid "Adherents waiting moderation: %d"
 msgstr "Adhérents en attente de modération : %d"
 
-#: views.py:1161
+#: views.py:1170
 #, python-format
 msgid "limitation: %d activities allowed"
 msgstr "limitation : %d activités autorisées"
