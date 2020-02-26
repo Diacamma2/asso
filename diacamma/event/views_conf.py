@@ -52,7 +52,7 @@ def fill_params(xfer):
     xfer.add_component(btn)
 
 
-@MenuManage.describ('event.change_degreetype', FORMTYPE_NOMODAL, 'member.conf', _('Management of degrees'))
+@MenuManage.describ('event.change_degreetype', FORMTYPE_MODAL, 'member.conf', _('Management of degrees'))
 class EventConf(XferListEditor):
     icon = "degree.png"
     caption = _("Configuration of degrees")

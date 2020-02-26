@@ -89,7 +89,7 @@ class CategoryParamEdit(ParamEdit):
             self.add_component(new_comp_fields)
 
 
-@MenuManage.describ('CORE.change_parameter', FORMTYPE_NOMODAL, 'member.conf', _('Management of member categories'))
+@MenuManage.describ('CORE.change_parameter', FORMTYPE_MODAL, 'member.conf', _('Management of member categories'))
 class CategoryConf(XferListEditor):
     icon = "config.png"
     caption = _("Categories")
