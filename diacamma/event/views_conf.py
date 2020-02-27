@@ -31,8 +31,8 @@ from lucterios.framework.xferadvance import XferListEditor, TITLE_MODIFY,\
 from lucterios.framework.xferadvance import XferAddEditor
 from lucterios.framework.xferadvance import XferDelete
 from lucterios.framework.xfercomponents import XferCompButton
-from lucterios.framework.tools import FORMTYPE_NOMODAL, ActionsManage, MenuManage,\
-    SELECT_SINGLE, SELECT_MULTI, CLOSE_NO
+from lucterios.framework.tools import ActionsManage, MenuManage,\
+    SELECT_SINGLE, SELECT_MULTI, CLOSE_NO, FORMTYPE_MODAL
 from lucterios.CORE.parameters import Params
 from lucterios.CORE.views import ParamEdit
 

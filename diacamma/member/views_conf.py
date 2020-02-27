@@ -30,7 +30,8 @@ from django.utils import six, timezone
 
 from lucterios.framework.xferadvance import XferAddEditor, XferListEditor, TITLE_MODIFY, TITLE_DELETE, TITLE_ADD, TITLE_EDIT, XferShowEditor
 from lucterios.framework.xferadvance import XferDelete
-from lucterios.framework.tools import ActionsManage, MenuManage, FORMTYPE_NOMODAL, CLOSE_NO, SELECT_MULTI, SELECT_SINGLE, WrapAction, FORMTYPE_REFRESH
+from lucterios.framework.tools import ActionsManage, MenuManage, FORMTYPE_NOMODAL, CLOSE_NO, SELECT_MULTI, SELECT_SINGLE, WrapAction, FORMTYPE_REFRESH,\
+    FORMTYPE_MODAL
 from lucterios.framework.error import LucteriosException, IMPORTANT
 from lucterios.framework.xfercomponents import XferCompButton, XferCompLabelForm, XferCompCheck, XferCompCheckList,\
     XferCompFloat
