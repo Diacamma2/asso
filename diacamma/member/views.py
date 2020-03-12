@@ -51,7 +51,7 @@ from lucterios.CORE.xferprint import XferPrintAction
 from lucterios.CORE.xferprint import XferPrintLabel
 from lucterios.CORE.xferprint import XferPrintListing
 from lucterios.CORE.editors import XferSavedCriteriaSearchEditor
-from lucterios.CORE.parameters import Params
+from lucterios.CORE.parameters import Params, notfree_mode_connect
 
 from lucterios.contacts.models import Individual, LegalEntity, Responsability
 from lucterios.contacts.views_contacts import LegalEntityAddModify
@@ -707,7 +707,7 @@ class AdherentListing(XferPrintListing, AdherentFilter):
 
 def right_adherentconnection(request):
     if AdherentLicense.get_action().check_permission(request) and (signal_and_lock.Signal.call_signal("send_connection", None, None, None) != 0):
-        return Params.getvalue("member-connection")
+        return Params.getvalue("member-connection") == 1
     else:
         return False
 
@@ -858,7 +858,7 @@ class SubscriptionModerate(XferListEditor):
         self.params['status_filter'] = 0
 
 
-@ActionsManage.affect_grid(_("Show adherent"), "", intop=True, unique=SELECT_SINGLE, condition=lambda xfer, gridname='': (xfer.getparam('adherent') is None) and (xfer.getparam('individual') is None))
+@ActionsManage.affect_grid(_("Show adherent"), "images/open.png", intop=True, unique=SELECT_SINGLE, condition=lambda xfer, gridname='': (xfer.getparam('adherent') is None) and (xfer.getparam('individual') is None))
 @MenuManage.describ('member.add_subscription')
 class SubscriptionOpenAdherent(XferContainerAcknowledge):
     icon = "adherent.png"
@@ -1063,6 +1063,74 @@ class SubscriptionAddForCurrent(SubscriptionAddModify):
         SubscriptionAddModify.fillresponse(self)
 
 
+def right_adherentaccess(request):
+    if not notfree_mode_connect():
+        return False
+    if (len(settings.AUTHENTICATION_BACKENDS) != 1) or (settings.AUTHENTICATION_BACKENDS[0] != 'django.contrib.auth.backends.ModelBackend'):
+        return False
+    if (signal_and_lock.Signal.call_signal("send_connection", None, None, None) == 0):
+        return False
+    if Params.getvalue("member-connection") != 2:
+        return False
+    return not request.user.is_authenticated
+
+
+@MenuManage.describ(right_adherentaccess, FORMTYPE_MODAL, 'core.general', _("Ask adherent access"))
+class AskAdherentAccess(XferContainerAcknowledge):
+    caption = _("Ask adherent access")
+    icon = "images/passwd.png"
+
+    def _fill_dialog(self):
+        dlg = self.create_custom()
+        img = XferCompImage('img')
+        img.set_value(self.icon_path())
+        img.set_location(0, 0, 1, 3)
+        dlg.add_component(img)
+        lbl = XferCompLabelForm('lbl_title')
+        lbl.set_location(1, 0, 2)
+        lbl.set_value_as_header(_("To receive by email a login and a password to connect in this site."))
+        dlg.add_component(lbl)
+        email = XferCompEdit('email')
+        email.set_location(1, 1)
+        email.mask = r"[^@]+@[^@]+\.[^@]+"
+        email.description = _("email")
+        dlg.add_component(email)
+        dlg.add_action(self.get_action(TITLE_OK, 'images/ok.png'), params={"CONFIRME": "YES"})
+        dlg.add_action(WrapAction(TITLE_CANCEL, 'images/cancel.png'))
+
+    def fillresponse(self):
+        try:
+            if self.getparam("CONFIRME", "") != "YES":
+                self._fill_dialog()
+            elif Season.current_season().ask_member_connection(self.getparam("email", "")):
+                self.message(_("Connection parametrer send."))
+            else:
+                self.message(_("This email don't match with an active adherent !"), 3)
+        except Exception as error:
+            self.message(str(error), 4)
+
+
+@signal_and_lock.Signal.decorate('auth_action')
+def auth_action_member(actions_basic):
+    actions_basic.append(AskAdherentAccess.get_action(_("Ask adherent access")))
+
+
+@ActionsManage.affect_list(_('Disable access'), "images/passwd.png")
+@MenuManage.describ(lambda request: Params.getvalue("member-connection") == 2)
+class AdherentDisableConnection(XferContainerAcknowledge):
+    icon = "adherent.png"
+    model = Adherent
+    field_id = 'adherent'
+    caption = _("Disable access right")
+
+    def fillresponse(self):
+        if self.confirme(_("Do you want to disable access right for old adherents ?")):
+            if self.traitment("static/lucterios.CORE/images/info.png", _("Please, waiting..."), ""):
+                nb_del = Season.current_season().disabled_old_connection()
+                ending_msg = _("{[center]}{[b]}Result{[/b]}{[/center]}{[br/]}%(nb_del)s removed connection(s).") % {'nb_del': nb_del}
+                self.traitment_data[2] = ending_msg
+
+
 @signal_and_lock.Signal.decorate('post_merge')
 def post_merge_member(item):
     if isinstance(item, Individual):
@@ -1190,18 +1258,43 @@ def change_bill_member(action, old_bill, new_bill):
             sub.save(with_bill=False)
 
 
+@MenuManage.describ('')
+class SubscriptionEditAdherent(AdherentAddModify):
+
+    def fillresponse(self):
+        self.item = Adherent.objects.filter(subscription__id=self.getparam('subscription', 0)).first()
+        AdherentAddModify.fillresponse(self)
+
+
 @signal_and_lock.Signal.decorate('add_account')
 def add_account_subscription(current_contact, xfer):
-    if Params.getvalue("member-subscription-mode") > 0:
-        current_subscription = Subscription.objects.filter(adherent_id=current_contact.id, season=Season.current_season())
-        if len(current_subscription) == 0:
-            xfer.new_tab(_('002@Subscription'))
-            row = xfer.get_max_row() + 1
-            btn = XferCompButton('btnnewsubscript')
-            btn.set_location(1, row)
-            btn.set_action(xfer.request, SubscriptionAddForCurrent.get_action(
-                _('Subscription'), 'diacamma.member/images/adherent.png'), close=CLOSE_NO)
-            xfer.add_component(btn)
+    adherent = Adherent.objects.filter(id=current_contact.id).first()
+    family = adherent.family if adherent is not None else None
+    if family is not None:
+        from lucterios.contacts.views import Account
+        for comp_id in [key for (key, comp) in xfer.components.items() if comp.tab == 1]:
+            del xfer.components[comp_id]
+        structure_type = xfer.get_components('structure_type')
+        if structure_type is not None:
+            xfer.remove_component("__tab_%d" % structure_type.tab)
+        Account.add_legalentity(xfer, family, _('family'), 1)
+        old_subcomp = xfer.get_components('subscription')
+        xfer.tab = old_subcomp.tab
+        current_subscriptions = Subscription.objects.filter(Q(adherent__responsability__legal_entity=family) & Q(season=Season.current_season()))
+        grid = XferCompGrid('subscription')
+        grid.no_pager = True
+        grid.set_model(current_subscriptions, Subscription.get_other_fields(), xfer)
+        grid.set_location(old_subcomp.col, old_subcomp.row, old_subcomp.colspan)
+        grid.add_action(xfer.request, SubscriptionEditAdherent.get_action(TITLE_EDIT, "images/edit.png"), modal=FORMTYPE_MODAL, close=CLOSE_NO, unique=SELECT_SINGLE)
+        xfer.add_component(grid)
+        xfer.actions = []
+    if (Params.getvalue("member-subscription-mode") > 0) and (Subscription.objects.filter(Q(adherent_id=current_contact.id) & Q(season=Season.current_season())).count() == 0):
+        xfer.new_tab(_('002@Subscription'))
+        row = xfer.get_max_row() + 1
+        btn = XferCompButton('btnnewsubscript')
+        btn.set_location(1, row)
+        btn.set_action(xfer.request, SubscriptionAddForCurrent.get_action(_('Subscription'), 'diacamma.member/images/adherent.png'), close=CLOSE_NO)
+        xfer.add_component(btn)
 
 
 @signal_and_lock.Signal.decorate('third_addon')

@@ -222,49 +222,97 @@ class Season(LucteriosModel):
                 stat_res.append((duration_title, res_city, res_type, res_older, res_team, res_activity))
         return stat_res
 
-    def check_connection(self):
-        defaultgroup = Params.getobject("contacts-defaultgroup")
+    def ask_member_connection(self, email):
+        import re
+        if re.match(r"[^@]+@[^@]+\.[^@]+", email) is None:
+            return False
+        adherent = None
+        usernamebase = None
+        ask_filter = Q(email__contains=email) | Q(responsability__legal_entity__email__contains=email)
+        ask_filter &= Q(subscription__status__in=(1, 2)) & Q(subscription__season=self)
+        adherents = Adherent.objects.filter(ask_filter).distinct()
+        if adherents.count() == 1:
+            adherent = adherents[0]
+            if adherent.family is not None:
+                adherents = Adherent.objects.filter(responsability__legal_entity=adherent.family)
+        if adherents.count() > 1:
+            family = adherents.first().family
+            if (family is not None) and (adherents.filter(responsability__legal_entity=family).distinct().count() == adherents.count()):
+                adherent = adherents.filter(user__isnull=False).first()
+                if adherent is None:
+                    adherent = adherents.first()
+                usernamebase = family.name
+        if adherent is None:
+            return False
+        else:
+            act_ret = self.activate_adherent(adherent, email=email, usernamebase=usernamebase)
+            if act_ret == 0:
+                adherent.user.generate_password()
+            return (act_ret >= 0)
+
+    def disabled_old_connection(self):
         nb_del = 0
+        for adherent in Adherent.objects.filter(Q(user__is_active=True)).exclude(Q(responsability__legal_entity_id=1)):
+            if len(adherent.subscription_set.filter(Q(season=self) & Q(status__in=(1, 2)))) == 0:
+                adherent.user.is_active = False
+                adherent.user.save()
+                nb_del += 1
+        return nb_del
+
+    def activate_adherent(self, adherent, email=None, usernamebase=None):
+        defaultgroup = Params.getobject("contacts-defaultgroup")
+        if adherent.user_id is None:
+            if adherent.email != '':
+                username_temp = adherent.firstname.lower() + adherent.lastname.upper()[0] if usernamebase is None else usernamebase
+                username_temp = ''.join(letter for letter in normalize('NFD', username_temp) if category(letter) != 'Mn')
+                username = ''
+                inc = ''
+                while username == '':
+                    username = "%s%s" % (username_temp, inc)
+                    users = LucteriosUser.objects.filter(username=username)
+                    if len(users) > 0:
+                        username = ''
+                        if (inc == ''):
+                            inc = 1
+                        else:
+                            inc += 1
+                adherent.user = LucteriosUser.objects.create(username=username, first_name=adherent.firstname, last_name=adherent.lastname, email=adherent.email if email is None else email)
+                adherent.save()
+                if defaultgroup is not None:
+                    adherent.user.groups.add(defaultgroup)
+                adherent.user.generate_password()
+                return 1
+            else:
+                return -1
+        elif not adherent.user.is_active:
+            adherent.user.email = adherent.email if email is None else email
+            adherent.user.is_active = True
+            adherent.user.save()
+            if defaultgroup is not None:
+                adherent.user.groups.add(defaultgroup)
+            adherent.user.generate_password()
+            return 2
+        else:
+            email = adherent.email if email is None else email
+            if adherent.user.email != email:
+                adherent.user.email = email
+                adherent.user.save()
+        return 0
+
+    def check_connection(self):
+        nb_del = self.disabled_old_connection()
         nb_add = 0
         nb_update = 0
         error_sending = []
-        for adh in Adherent.objects.filter(Q(user__is_active=True)).exclude(Q(responsability__legal_entity_id=1)):
-            if len(adh.subscription_set.filter(Q(season=self) & Q(status__in=(1, 2)))) == 0:
-                adh.user.is_active = False
-                adh.user.save()
-                nb_del += 1
-        for adh in Adherent.objects.filter(Q(subscription__status__in=(1, 2)) & Q(subscription__season=self)).distinct():
+        for adherent in Adherent.objects.filter(Q(subscription__status__in=(1, 2)) & Q(subscription__season=self)).distinct():
             try:
-                if adh.user_id is None:
-                    if adh.email != '':
-                        username_temp = adh.firstname.lower() + adh.lastname.upper()[0]
-                        username_temp = ''.join(letter for letter in normalize('NFD', username_temp) if category(letter) != 'Mn')
-                        username = ''
-                        inc = ''
-                        while (username == ''):
-                            username = "%s%s" % (username_temp, inc)
-                            users = LucteriosUser.objects.filter(username=username)
-                            if len(users) > 0:
-                                username = ''
-                                if (inc == ''):
-                                    inc = 1
-                                else:
-                                    inc += 1
-                        adh.user = LucteriosUser.objects.create(username=username, first_name=adh.firstname, last_name=adh.lastname, email=adh.email)
-                        adh.save()
-                        if defaultgroup is not None:
-                            adh.user.groups.add(defaultgroup)
-                        adh.user.generate_password()
-                        nb_add += 1
-                elif not adh.user.is_active:
-                    adh.user.is_active = True
-                    adh.user.save()
-                    if defaultgroup is not None:
-                        adh.user.groups.add(defaultgroup)
-                    adh.user.generate_password()
+                act_ret = self.activate_adherent(adherent)
+                if act_ret == 1:
+                    nb_add += 1
+                elif act_ret == 2:
                     nb_update += 1
             except EmailException as email_err:
-                error_sending.append((six.text_type(adh), six.text_type(email_err)))
+                error_sending.append((six.text_type(adherent), six.text_type(email_err)))
         return nb_del, nb_add, nb_update, error_sending
 
     @property
@@ -1808,7 +1856,8 @@ def member_checkparam():
     Parameter.check_and_create(name="member-team-text", typeparam=0, title=_("member-team-text"), args="{'Multi':False}", value=_('Team'))
     Parameter.check_and_create(name="member-activite-enable", typeparam=3, title=_("member-activite-enable"), args="{}", value="True")
     Parameter.check_and_create(name="member-activite-text", typeparam=0, title=_("member-activite-text"), args="{'Multi':False}", value=_('Activity'))
-    Parameter.check_and_create(name="member-connection", typeparam=3, title=_("member-connection"), args="{}", value='False')
+    Parameter.check_and_create(name="member-connection", typeparam=4, title=_("member-connection"), args="{'Enum':3}", value='0',
+                               param_titles=(_("member-connection.0"), _("member-connection.1"), _("member-connection.2")))
     Parameter.check_and_create(name="member-birth", typeparam=3, title=_("member-birth"), args="{}", value='True')
     Parameter.check_and_create(name="member-filter-genre", typeparam=3, title=_("member-filter-genre"), args="{}", value='True')
     Parameter.check_and_create(name="member-numero", typeparam=3, title=_("member-numero"), args="{}", value='True')
@@ -1821,7 +1870,7 @@ def member_checkparam():
     Parameter.check_and_create(name="member-size-page", typeparam=1, title=_("member-size-page"), args="{}", value='25', meta='("","", "[(25,\'25\'),(50,\'50\'),(100,\'100\'),(250,\'250\'),(500,\'500\'),]", "", True)')
     Parameter.check_and_create(name="member-fields", typeparam=0, title=_("member-fields"), args="{'Multi':False}", value='')
     Parameter.check_and_create(name="member-tax-receipt", typeparam=0, title=_("member-tax-receipt"), args="{'Multi':True}", value='',
-                               meta='("accounting","ChartsAccount","import diacamma.accounting.tools;django.db.models.Q(code__regex=diacamma.accounting.tools.current_system_account().get_revenue_mask()) & django.db.models.Q(year__is_actif=True)", "code", True)')
+                               meta='("accounting","ChartsAccount","import diacamma.accounting.tools;django.db.models.Q(code__regex=diacamma.accounting.tools.current_system_account().get_revenue_mask()) & django.db.models.Q(year__is_actif=True)", "code", False)')
 
     LucteriosGroup.redefine_generic(_("# member (administrator)"), Season.get_permission(True, True, True), Adherent.get_permission(True, True, True),
                                     Subscription.get_permission(True, True, True), TaxReceipt.get_permission(True, True, True))
