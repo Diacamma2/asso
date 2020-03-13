@@ -40,13 +40,17 @@ from lucterios.contacts.views_contacts import LegalEntityShow
 from lucterios.contacts.models import LegalEntity, Responsability
 from lucterios.contacts.views import ContactImport
 from lucterios.contacts.tests_contacts import change_ourdetail
+from lucterios.mailing.test_tools import configSMTP, TestReceiver, decode_b64
 
-from diacamma.invoice.views import BillList, BillTransition, BillFromQuotation, BillAddModify, BillShow, DetailAddModify
-from diacamma.invoice.models import get_or_create_customer
 from diacamma.accounting.views import ThirdShow
 from diacamma.accounting.models import FiscalYear
-from diacamma.accounting.test_tools import fill_accounts_fr, create_account,\
-    add_entry
+from diacamma.accounting.test_tools import fill_accounts_fr, create_account, add_entry
+from diacamma.accounting.views_entries import EntryAccountList, EntryAccountClose, EntryAccountLink
+from diacamma.invoice.views import BillList, BillTransition, BillFromQuotation, BillAddModify, BillShow, DetailAddModify
+from diacamma.invoice.models import get_or_create_customer
+from diacamma.invoice.test_tools import InvoiceTest
+from diacamma.payoff.views import PayoffAddModify
+from diacamma.payoff.test_tools import check_pdfreport
 
 from diacamma.member.models import Season, Adherent
 from diacamma.member.views import AdherentActiveList, AdherentAddModify, AdherentShow,\
@@ -56,17 +60,10 @@ from diacamma.member.views import AdherentActiveList, AdherentAddModify, Adheren
     AdherentCommandDelete, AdherentCommandModify, AdherentFamilyAdd,\
     AdherentFamilySelect, AdherentFamilyCreate, FamilyAdherentAdd,\
     FamilyAdherentCreate, FamilyAdherentAdded, AdherentListing,\
-    AdherentThirdList, AdherentConnection, SubscriptionDel
+    AdherentThirdList, AdherentConnection, SubscriptionDel, AdherentDisableConnection
 from diacamma.member.test_tools import default_season, default_financial, default_params,\
-    default_adherents, default_subscription, set_parameters, default_prestation,\
-    create_adherent
-from diacamma.invoice.test_tools import InvoiceTest
-from diacamma.payoff.views import PayoffAddModify
-from diacamma.accounting.views_entries import EntryAccountList,\
-    EntryAccountClose, EntryAccountLink
-from diacamma.member.views_conf import TaxReceiptList, TaxReceiptCheck,\
-    TaxReceiptShow, TaxReceiptPrint
-from diacamma.payoff.test_tools import check_pdfreport
+    default_adherents, default_subscription, set_parameters, default_prestation, create_adherent
+from diacamma.member.views_conf import TaxReceiptList, TaxReceiptCheck, TaxReceiptShow, TaxReceiptPrint
 
 
 class BaseAdherentTest(LucteriosTest):
@@ -110,6 +107,51 @@ class BaseAdherentTest(LucteriosTest):
         self.calljson('/diacamma.member/subscriptionAddModify',
                       {'SAVE': 'YES', 'adherent': 6, 'dateref': '%s-10-01' % year, 'subscriptiontype': 1, 'season': season_id, 'team': 1, 'activity': 2, 'value': '159'}, False)
         self.assert_observer('core.acknowledge', 'diacamma.member', 'subscriptionAddModify')
+
+    def add_family(self):
+        myfamily = LegalEntity()
+        myfamily.name = "LES DALTONS"
+        myfamily.structure_type_id = 3
+        myfamily.address = "Place des cocotiers"
+        myfamily.postal_code = "97200"
+        myfamily.city = "FORT DE FRANCE"
+        myfamily.country = "MARTINIQUE"
+        myfamily.tel1 = "01-23-45-67-89"
+        myfamily.email = "dalton@worldcompany.com"
+        myfamily.save()
+        return myfamily.id
+
+    def prep_family(self):
+        default_adherents()
+        default_subscription(True)
+        family_id = self.add_family()
+        self.factory.xfer = AdherentFamilySelect()
+        self.calljson('/diacamma.member/adherentFamilySelect', {'adherent': 2, 'legal_entity': family_id}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.member', 'adherentFamilySelect')
+        self.factory.xfer = AdherentFamilySelect()
+        self.calljson('/diacamma.member/adherentFamilySelect', {'adherent': 5, 'legal_entity': family_id}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.member', 'adherentFamilySelect')
+
+    def prep_subscription_family(self):
+        self.prep_family()
+        self.factory.xfer = SubscriptionAddModify()
+        self.calljson('/diacamma.member/subscriptionAddModify', {'SAVE': 'YES', 'status': 1, 'adherent': 2, 'dateref': '2014-10-01', 'subscriptiontype': 1, 'season': 10, 'team': 2, 'activity': 1, 'value': 'abc123'}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.member', 'subscriptionAddModify')
+        self.factory.xfer = SubscriptionAddModify()
+        self.calljson('/diacamma.member/subscriptionAddModify', {'SAVE': 'YES', 'status': 1, 'adherent': 5, 'dateref': '2014-10-01', 'subscriptiontype': 1, 'season': 10, 'team': 2, 'activity': 1, 'value': 'abc123'}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.member', 'subscriptionAddModify')
+        self.factory.xfer = BillTransition()
+        self.calljson('/diacamma.invoice/billTransition', {'bill': 1, 'TRANSITION': 'valid', 'CONFIRME': 'YES', 'withpayoff': False, 'sendemail': False}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.invoice', 'billTransition')
+        self.factory.xfer = BillList()
+        self.calljson('/diacamma.invoice/billList', {'status_filter': -2}, False)
+        self.assert_observer('core.custom', 'diacamma.invoice', 'billList')
+        self.assert_count_equal('bill', 1)
+        self.assert_json_equal('', 'bill/@0/status', 1)
+        self.assert_json_equal('', 'bill/@0/third', "LES DALTONS")
+        self.assert_json_equal('', 'bill/@0/bill_type', 0)
+        self.assert_json_equal('', 'bill/@0/total', 76.44 + 76.44)
+        self.assert_json_equal('', 'bill/@0/comment', "{[b]}cotisation{[/b]}")
 
 
 class AdherentTest(BaseAdherentTest):
@@ -1097,7 +1139,6 @@ class AdherentTest(BaseAdherentTest):
         self.assert_json_equal('', 'bill/@0/total', 76.44)
 
     def test_command(self):
-        from lucterios.mailing.test_tools import configSMTP, TestReceiver, decode_b64
         Season.objects.get(id=16).set_has_actif()
         self.add_subscriptions(year=2014, season_id=15)
 
@@ -1582,7 +1623,6 @@ class AdherentTest(BaseAdherentTest):
         self.assert_json_equal('', 'bill/@3/total', 470.53)  # Subscription: art1:12.34 + art5:64.10 / Prestations: art1:12.34 + art2:56.78 + art3:324.97
 
     def test_connexion(self):
-        from lucterios.mailing.test_tools import configSMTP, TestReceiver
         self.add_subscriptions()
         new_groupe = LucteriosGroup.objects.create(name='new_groupe')
         param = Parameter.objects.get(name='contacts-defaultgroup')
@@ -1590,7 +1630,7 @@ class AdherentTest(BaseAdherentTest):
         param.save()
         configSMTP('localhost', 1025)
         change_ourdetail()
-        Parameter.change_value('member-connection', True)
+        Parameter.change_value('member-connection', 1)
         Params.clear()
         adh_luke = Adherent.objects.get(firstname='Lucky')
         adh_luke.user = LucteriosUser.objects.create(username='lucky', first_name=adh_luke.firstname, last_name=adh_luke.lastname, email=adh_luke.email, is_active=False)
@@ -1731,19 +1771,6 @@ class AdherentFamilyTest(BaseAdherentTest):
         self.assert_json_equal('LABELFORM', 'country', 'MARTINIQUE')
         self.assert_json_equal('LINK', 'email', 'Avrel.Dalton@worldcompany.com')
         self.assert_json_equal('LABELFORM', 'tel2', '02-78-45-12-95')
-
-    def add_family(self):
-        myfamily = LegalEntity()
-        myfamily.name = "LES DALTONS"
-        myfamily.structure_type_id = 3
-        myfamily.address = "Place des cocotiers"
-        myfamily.postal_code = "97200"
-        myfamily.city = "FORT DE FRANCE"
-        myfamily.country = "MARTINIQUE"
-        myfamily.tel1 = "01-23-45-67-89"
-        myfamily.email = "dalton@worldcompany.com"
-        myfamily.save()
-        return myfamily.id
 
     def test_select_family(self):
         default_adherents()
@@ -1891,40 +1918,8 @@ class AdherentFamilyTest(BaseAdherentTest):
         self.assert_json_equal('', 'bill/@1/total', 152.88)
         self.assert_json_equal('', 'bill/@1/comment', "{[b]}cotisation{[/b]}")
 
-    def _prep_family(self):
-        default_adherents()
-        default_subscription(True)
-        family_id = self.add_family()
-        self.factory.xfer = AdherentFamilySelect()
-        self.calljson('/diacamma.member/adherentFamilySelect', {'adherent': 2, 'legal_entity': family_id}, False)
-        self.assert_observer('core.acknowledge', 'diacamma.member', 'adherentFamilySelect')
-        self.factory.xfer = AdherentFamilySelect()
-        self.calljson('/diacamma.member/adherentFamilySelect', {'adherent': 5, 'legal_entity': family_id}, False)
-        self.assert_observer('core.acknowledge', 'diacamma.member', 'adherentFamilySelect')
-
-    def _prep_subscription(self):
-        self._prep_family()
-        self.factory.xfer = SubscriptionAddModify()
-        self.calljson('/diacamma.member/subscriptionAddModify', {'SAVE': 'YES', 'status': 1, 'adherent': 2, 'dateref': '2014-10-01', 'subscriptiontype': 1, 'season': 10, 'team': 2, 'activity': 1, 'value': 'abc123'}, False)
-        self.assert_observer('core.acknowledge', 'diacamma.member', 'subscriptionAddModify')
-        self.factory.xfer = SubscriptionAddModify()
-        self.calljson('/diacamma.member/subscriptionAddModify', {'SAVE': 'YES', 'status': 1, 'adherent': 5, 'dateref': '2014-10-01', 'subscriptiontype': 1, 'season': 10, 'team': 2, 'activity': 1, 'value': 'abc123'}, False)
-        self.assert_observer('core.acknowledge', 'diacamma.member', 'subscriptionAddModify')
-        self.factory.xfer = BillTransition()
-        self.calljson('/diacamma.invoice/billTransition', {'bill': 1, 'TRANSITION': 'valid', 'CONFIRME': 'YES', 'withpayoff': False, 'sendemail': False}, False)
-        self.assert_observer('core.acknowledge', 'diacamma.invoice', 'billTransition')
-        self.factory.xfer = BillList()
-        self.calljson('/diacamma.invoice/billList', {'status_filter': -2}, False)
-        self.assert_observer('core.custom', 'diacamma.invoice', 'billList')
-        self.assert_count_equal('bill', 1)
-        self.assert_json_equal('', 'bill/@0/status', 1)
-        self.assert_json_equal('', 'bill/@0/third', "LES DALTONS")
-        self.assert_json_equal('', 'bill/@0/bill_type', 0)
-        self.assert_json_equal('', 'bill/@0/total', 76.44 + 76.44)
-        self.assert_json_equal('', 'bill/@0/comment', "{[b]}cotisation{[/b]}")
-
     def test_change_cotation(self):
-        self._prep_subscription()
+        self.prep_subscription_family()
 
         self.factory.xfer = SubscriptionAddModify()
         self.calljson('/diacamma.member/subscriptionAddModify', {'SAVE': 'YES', 'subscriptiontype': 5, 'subscription': 1}, False)
@@ -1954,7 +1949,7 @@ class AdherentFamilyTest(BaseAdherentTest):
                                                                             "diacamma.invoice", "billShow", 0, 1, 1, {'bill': 1}))
 
     def test_cancel_cotation(self):
-        self._prep_subscription()
+        self.prep_subscription_family()
 
         self.factory.xfer = SubscriptionTransition()
         self.calljson('/diacamma.member/subscriptionTransition', {'CONFIRME': 'YES', 'subscription': 1, 'TRANSITION': 'cancel'}, False)
@@ -1984,7 +1979,7 @@ class AdherentFamilyTest(BaseAdherentTest):
                                                                             "diacamma.invoice", "billShow", 0, 1, 1, {'bill': 1}))
 
     def test_delete_cotation(self):
-        self._prep_subscription()
+        self.prep_subscription_family()
 
         self.factory.xfer = SubscriptionDel()
         self.calljson('/diacamma.member/subscriptionDel', {'CONFIRME': 'YES', 'subscription': 1}, False)
@@ -2014,7 +2009,6 @@ class AdherentFamilyTest(BaseAdherentTest):
                                                                             "diacamma.invoice", "billShow", 0, 1, 1, {'bill': 1}))
 
     def test_command(self):
-        from lucterios.mailing.test_tools import configSMTP, TestReceiver, decode_b64
         Season.objects.get(id=16).set_has_actif()
         self.add_subscriptions(year=2014, season_id=15)
         self.add_family()
@@ -2385,7 +2379,7 @@ class AdherentFamilyTest(BaseAdherentTest):
         self.assert_json_equal('', 'bill/@2/total', 470.53)  # Subscription: art1:12.34 + art5:64.10 / Prestations: art1:12.34 + art2:56.78 + art3:324.97
 
     def test_with_prestation_valid_subscription(self):
-        self._prep_family()
+        self.prep_family()
         default_prestation()
         set_parameters(["team"])
         self.factory.xfer = SubscriptionAddModify()
@@ -2464,7 +2458,7 @@ class AdherentFamilyTest(BaseAdherentTest):
         self.assert_json_equal('', 'bill/@1/total', 278.78)  # Subscription: art1:12.34 + art5:64.10 / Prestations: art1:12.34 + art2:56.78 + Subscription: art1:12.34 + art5:64.10 / Prestations: art2:56.78
 
     def test_with_prestation_convert_bill(self):
-        self._prep_family()
+        self.prep_family()
         default_prestation()
         set_parameters(["team"])
         self.factory.xfer = SubscriptionAddModify()
@@ -2908,3 +2902,170 @@ class TaxtReceiptTest(InvoiceTest):
         self.calljson('/diacamma.member/taxReceiptList', {'year': 2014}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'taxReceiptList')
         self.assert_count_equal('taxreceipt', 0)
+
+
+class AdherentConnectionTest(BaseAdherentTest):
+
+    def setUp(self):
+        BaseAdherentTest.setUp(self)
+        Parameter.change_value('member-family-type', 3)
+        Parameter.change_value("member-fields", "firstname;lastname;tel1;tel2;email;family")
+        Parameter.change_value('member-connection', 2)
+        set_parameters([])
+        configSMTP('localhost', 3025)
+        change_ourdetail()
+
+    def test_connection_ask_failed(self):
+        self.assertEqual(LucteriosUser.objects.all().count(), 1)
+        self.add_subscriptions(year=2008, season_id=9)
+        self.calljson('/diacamma.member/askAdherentAccess', {})
+        self.assert_observer('core.custom', 'diacamma.member', 'askAdherentAccess')
+        self.assertEqual(len(self.json_context), 0)
+        self.assertEqual(len(self.json_actions), 2)
+        self.assert_count_equal('', 3)
+        self.assert_json_equal('EDIT', "email", '')
+
+        server = TestReceiver()
+        server.start(3025)
+        try:
+            self.calljson('/diacamma.member/askAdherentAccess', {"CONFIRME": "YES", "email": "inconnu@worldcompany.com"})
+            self.assert_observer('core.dialogbox', 'diacamma.member', 'askAdherentAccess')
+            self.assert_json_equal('', 'text', 'Ce courriel ne correspond pas avec un adhérent actif !')
+
+            self.calljson('/diacamma.member/askAdherentAccess', {"CONFIRME": "YES", "email": "Joe.Dalton@worldcompany.com"})
+            self.assert_observer('core.dialogbox', 'diacamma.member', 'askAdherentAccess')
+            self.assert_json_equal('', 'text', 'Ce courriel ne correspond pas avec un adhérent actif !')
+            self.assertEqual(0, server.count())
+        finally:
+            server.stop()
+        self.assertEqual(LucteriosUser.objects.all().count(), 1)
+
+    def test_connection_ask_simple(self):
+        self.assertEqual(LucteriosUser.objects.all().count(), 1)
+        self.add_subscriptions()
+        server = TestReceiver()
+        server.start(3025)
+        try:
+            self.calljson('/diacamma.member/askAdherentAccess', {"CONFIRME": "YES", "email": "Joe.Dalton@worldcompany.com"})
+            self.assert_observer('core.dialogbox', 'diacamma.member', 'askAdherentAccess')
+            self.assert_json_equal('', 'text', 'Les paramètres de connexion ont été envoyé.')
+
+            self.calljson('/diacamma.member/askAdherentAccess', {"CONFIRME": "YES", "email": "William.Dalton@worldcompany.com"})
+            self.assert_observer('core.dialogbox', 'diacamma.member', 'askAdherentAccess')
+            self.assert_json_equal('', 'text', 'Les paramètres de connexion ont été envoyé.')
+
+            self.assertEqual(2, server.count())
+            msg, _msg = server.check_first_message('Mot de passe de connexion', 2)
+            self.assertEqual('text/html', msg.get_content_type())
+            self.assertEqual('base64', msg.get('Content-Transfer-Encoding', ''))
+            message = decode_b64(msg.get_payload())
+            self.assertEqual('<html>Bienvenue<br/><br/>Confirmation de connexion à votre application :'
+                             '<br/> - Alias : joeD<br/> - Mot de passe : ', message[:115])
+            password = message[115:].split('<br/>')[0]
+        finally:
+            server.stop()
+
+        self.calljson('/CORE/authentification', {'username': 'joeD', 'password': password})
+        self.assert_observer('core.auth', 'CORE', 'authentification')
+        self.assert_json_equal('', '', 'OK')
+
+        self.calljson('/lucterios.contacts/account', {})
+        self.assert_observer('core.custom', 'lucterios.contacts', 'account')
+        self.assert_json_equal('LABELFORM', 'genre', 1)
+        self.assert_json_equal('LABELFORM', 'firstname', "Joe")
+        self.assert_json_equal('LABELFORM', 'lastname', "Dalton")
+        self.assert_json_equal('LINK', 'email', "Joe.Dalton@worldcompany.com")
+        self.assert_count_equal('subscription', 1)
+        self.assertEqual(LucteriosUser.objects.all().count(), 3)
+        self.assertEqual(LucteriosUser.objects.filter(is_active=True).count(), 3)
+
+    def test_connection_ask_family(self):
+        self.assertEqual(LucteriosUser.objects.all().count(), 1)
+        self.prep_subscription_family()
+        server = TestReceiver()
+        server.start(3025)
+        try:
+            self.calljson('/diacamma.member/askAdherentAccess', {"CONFIRME": "YES", "email": "dalton@worldcompany.com"})
+            self.assert_observer('core.dialogbox', 'diacamma.member', 'askAdherentAccess')
+            self.assert_json_equal('', 'text', 'Les paramètres de connexion ont été envoyé.')
+
+            self.calljson('/diacamma.member/askAdherentAccess', {"CONFIRME": "YES", "email": "Joe.Dalton@worldcompany.com"})
+            self.assert_observer('core.dialogbox', 'diacamma.member', 'askAdherentAccess')
+            self.assert_json_equal('', 'text', 'Les paramètres de connexion ont été envoyé.')
+
+            self.calljson('/diacamma.member/askAdherentAccess', {"CONFIRME": "YES", "email": "Avrel.Dalton@worldcompany.com"})
+            self.assert_observer('core.dialogbox', 'diacamma.member', 'askAdherentAccess')
+            self.assert_json_equal('', 'text', 'Les paramètres de connexion ont été envoyé.')
+
+            self.assertEqual(3, server.count())
+
+            self.assertEqual('mr-sylvestre@worldcompany.com', server.get(0)[1])
+            self.assertEqual(['dalton@worldcompany.com'], server.get(0)[2])
+            msg1, _msg = server.check_first_message('Mot de passe de connexion', 2)
+            self.assertEqual('text/html', msg1.get_content_type())
+            self.assertEqual('base64', msg1.get('Content-Transfer-Encoding', ''))
+            message = decode_b64(msg1.get_payload())
+            self.assertEqual('<html>Bienvenue<br/><br/>Confirmation de connexion à votre application :'
+                             '<br/> - Alias : LES DALTONS<br/> - Mot de passe : ', message[:122])
+            password1 = message[122:].split('<br/>')[0]
+
+            self.assertEqual('mr-sylvestre@worldcompany.com', server.get(1)[1])
+            self.assertEqual(['Joe.Dalton@worldcompany.com'], server.get(1)[2])
+            msg2, _msg = server.get_msg_index(1, 'Mot de passe de connexion')
+            message = decode_b64(msg2.get_payload())
+            self.assertEqual('<html>Bienvenue<br/><br/>Confirmation de connexion à votre application :'
+                             '<br/> - Alias : LES DALTONS<br/> - Mot de passe : ', message[:122])
+            password2 = message[122:].split('<br/>')[0]
+
+            self.assertEqual('mr-sylvestre@worldcompany.com', server.get(2)[1])
+            self.assertEqual(['Avrel.Dalton@worldcompany.com'], server.get(2)[2])
+            msg3, _msg = server.get_msg_index(2, 'Mot de passe de connexion')
+            message = decode_b64(msg3.get_payload())
+            self.assertEqual('<html>Bienvenue<br/><br/>Confirmation de connexion à votre application :'
+                             '<br/> - Alias : LES DALTONS<br/> - Mot de passe : ', message[:122])
+            password3 = message[122:].split('<br/>')[0]
+        finally:
+            server.stop()
+
+        self.calljson('/CORE/authentification', {'username': 'LES DALTONS', 'password': password1})
+        self.assert_observer('core.auth', 'CORE', 'authentification')
+        self.assert_json_equal('', '', 'BADAUTH')
+
+        self.calljson('/CORE/authentification', {'username': 'LES DALTONS', 'password': password2})
+        self.assert_observer('core.auth', 'CORE', 'authentification')
+        self.assert_json_equal('', '', 'BADAUTH')
+
+        self.calljson('/CORE/authentification', {'username': 'LES DALTONS', 'password': password3})
+        self.assert_observer('core.auth', 'CORE', 'authentification')
+        self.assert_json_equal('', '', 'OK')
+
+        self.calljson('/lucterios.contacts/account', {})
+        self.assert_observer('core.custom', 'lucterios.contacts', 'account')
+        self.assert_json_equal('LABELFORM', 'structure_type', "famille")
+        self.assert_json_equal('LABELFORM', 'name', "LES DALTONS")
+        self.assert_json_equal('LINK', 'email', "dalton@worldcompany.com")
+        self.assert_count_equal('subscription', 2)
+        self.assertEqual(LucteriosUser.objects.all().count(), 2)
+        self.assertEqual(LucteriosUser.objects.filter(is_active=True).count(), 2)
+
+    def test_disable_connexion(self):
+        self.add_subscriptions()
+        adh_luke = Adherent.objects.get(firstname='Lucky')
+        adh_luke.user = LucteriosUser.objects.create(username='lucky', first_name=adh_luke.firstname, last_name=adh_luke.lastname, email=adh_luke.email, is_active=False)
+        adh_luke.save()
+        new_adh = create_adherent("Ma'a", 'Dalton', '1961-04-12')
+        new_adh.user = LucteriosUser.objects.create(username='maa', first_name=new_adh.firstname, last_name=new_adh.lastname, email=new_adh.email, is_active=True)
+        new_adh.save()
+        new_adh = create_adherent("Rantanplan", 'Chien', '2010-01-01')
+        new_adh.user = LucteriosUser.objects.create(username='rantanplan', first_name=new_adh.firstname, last_name=new_adh.lastname, email=new_adh.email, is_active=True)
+        new_adh.save()
+        Responsability.objects.create(individual=new_adh, legal_entity_id=1)
+
+        self.assertEqual(LucteriosUser.objects.all().count(), 4)
+        self.assertEqual(len(LucteriosUser.objects.filter(is_active=True)), 3)
+        self.factory.xfer = AdherentDisableConnection()
+        self.calljson('/diacamma.member/adherentDisableConnection', {'CONFIRME': 'YES', 'RELOAD': 'YES'}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentDisableConnection')
+        self.assert_json_equal('LABELFORM', 'info', '{[center]}{[b]}Résultat{[/b]}{[/center]}{[br/]}1 connexion(s) supprimée(s).', True)
+        self.assertEqual(LucteriosUser.objects.all().count(), 4)
+        self.assertEqual(len(LucteriosUser.objects.filter(is_active=True)), 2)

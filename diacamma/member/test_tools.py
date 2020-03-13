@@ -100,12 +100,9 @@ def create_adherent(firstname, lastname, birthday):
 
 def default_adherents(third_must_created=False):
     adherent_list = []
-    # adherent 2 - 2009 = 9ans
-    adherent_list.append(create_adherent('Avrel', 'Dalton', '2000-02-10'))
-    # adherent 3 - 2009 = 11ans
-    adherent_list.append(create_adherent('William', 'Dalton', '1998-03-31'))
-    # adherent 4 - 2009 = 17ans
-    adherent_list.append(create_adherent('Jack', 'Dalton', '1992-04-23'))
+    adherent_list.append(create_adherent('Avrel', 'Dalton', '2000-02-10'))  # adherent 2 - 2009 = 9ans
+    adherent_list.append(create_adherent('William', 'Dalton', '1998-03-31'))  # adherent 3 - 2009 = 11ans
+    adherent_list.append(create_adherent('Jack', 'Dalton', '1992-04-23'))  # adherent 4 - 2009 = 17ans
     adherent_list.append(create_adherent('Joe', 'Dalton', '1989-05-18'))  # adherent 5 - 2009 = 20ans
     adherent_list.append(create_adherent('Lucky', 'Luke', '1979-06-04'))  # adherent 6 - 2009 = 30ans
     if third_must_created:
