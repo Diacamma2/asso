@@ -1274,7 +1274,7 @@ def add_account_subscription(current_contact, xfer):
         from lucterios.contacts.views import Account
         for comp_id in [key for (key, comp) in xfer.components.items() if comp.tab == 1]:
             del xfer.components[comp_id]
-        structure_type = xfer.get_components('structure_type')
+        structure_type = xfer.get_components('legalentity_structure_type')
         if structure_type is not None:
             xfer.remove_component("__tab_%d" % structure_type.tab)
         Account.add_legalentity(xfer, family, _('family'), 1)

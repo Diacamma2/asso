@@ -3041,9 +3041,9 @@ class AdherentConnectionTest(BaseAdherentTest):
 
         self.calljson('/lucterios.contacts/account', {})
         self.assert_observer('core.custom', 'lucterios.contacts', 'account')
-        self.assert_json_equal('LABELFORM', 'structure_type', "famille")
-        self.assert_json_equal('LABELFORM', 'name', "LES DALTONS")
-        self.assert_json_equal('LINK', 'email', "dalton@worldcompany.com")
+        self.assert_json_equal('LABELFORM', 'legalentity_structure_type', "famille")
+        self.assert_json_equal('LABELFORM', 'legalentity_name', "LES DALTONS")
+        self.assert_json_equal('LINK', 'legalentity_email', "dalton@worldcompany.com")
         self.assert_count_equal('subscription', 2)
         self.assertEqual(LucteriosUser.objects.all().count(), 2)
         self.assertEqual(LucteriosUser.objects.filter(is_active=True).count(), 2)
