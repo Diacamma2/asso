@@ -38,7 +38,7 @@ from lucterios.CORE.parameters import Params
 from lucterios.CORE.views import ObjectMerge
 from lucterios.contacts.views_contacts import LegalEntityShow
 from lucterios.contacts.models import LegalEntity, Responsability
-from lucterios.contacts.views import ContactImport
+from lucterios.contacts.views import ContactImport, CurrentLegalEntityModify
 from lucterios.contacts.tests_contacts import change_ourdetail
 from lucterios.mailing.test_tools import configSMTP, TestReceiver, decode_b64
 
@@ -3044,9 +3044,15 @@ class AdherentConnectionTest(BaseAdherentTest):
         self.assert_json_equal('LABELFORM', 'legalentity_structure_type', "famille")
         self.assert_json_equal('LABELFORM', 'legalentity_name', "LES DALTONS")
         self.assert_json_equal('LINK', 'legalentity_email', "dalton@worldcompany.com")
+        self.assert_action_equal(self.get_json_path('#btn_edit/action'), ("Editer", "images/edit.png",
+                                                                          "lucterios.contacts", "currentLegalEntityModify", 0, 1, 1, {'legal_entity': 7}))
         self.assert_count_equal('subscription', 2)
         self.assertEqual(LucteriosUser.objects.all().count(), 2)
         self.assertEqual(LucteriosUser.objects.filter(is_active=True).count(), 2)
+
+        self.calljson('/lucterios.contacts/currentLegalEntityModify', {'legal_entity': 7})
+        self.assert_observer('core.custom', 'lucterios.contacts', 'currentLegalEntityModify')
+        self.assert_count_equal('', 12)
 
     def test_disable_connexion(self):
         self.add_subscriptions()
