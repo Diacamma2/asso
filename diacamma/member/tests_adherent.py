@@ -1218,10 +1218,10 @@ class AdherentTest(BaseAdherentTest):
         self.assert_json_equal('', 'AdhCmd/@1/activity', "activity2")
         self.assert_json_equal('', 'AdhCmd/@1/reduce', 0.00)
 
-        configSMTP('localhost', 2025)
+        configSMTP('localhost', 3025)
         change_ourdetail()
         server = TestReceiver()
-        server.start(2025)
+        server.start(3025)
         try:
             self.assertEqual(0, server.count())
 
@@ -1628,7 +1628,7 @@ class AdherentTest(BaseAdherentTest):
         param = Parameter.objects.get(name='contacts-defaultgroup')
         param.value = '%d' % new_groupe.id
         param.save()
-        configSMTP('localhost', 1025)
+        configSMTP('localhost', 3125)
         change_ourdetail()
         Parameter.change_value('member-connection', 1)
         Params.clear()
@@ -1653,7 +1653,7 @@ class AdherentTest(BaseAdherentTest):
         self.assertEqual(len(self.json_actions), 4)
 
         server = TestReceiver()
-        server.start(1025)
+        server.start(3125)
         try:
             self.assertEqual(3, len(LucteriosUser.objects.filter(is_active=True)))
             self.factory.xfer = AdherentConnection()
@@ -2063,10 +2063,10 @@ class AdherentFamilyTest(BaseAdherentTest):
         self.assert_observer('core.custom', 'diacamma.member', 'adherentCommand')
         self.assert_count_equal('AdhCmd', 2)
 
-        configSMTP('localhost', 2025)
+        configSMTP('localhost', 3225)
         change_ourdetail()
         server = TestReceiver()
-        server.start(2025)
+        server.start(3225)
         try:
             self.assertEqual(0, server.count())
 
@@ -2906,13 +2906,16 @@ class TaxtReceiptTest(InvoiceTest):
 
 class AdherentConnectionTest(BaseAdherentTest):
 
+    smtp_port = 3425
+
     def setUp(self):
         BaseAdherentTest.setUp(self)
         Parameter.change_value('member-family-type', 3)
         Parameter.change_value("member-fields", "firstname;lastname;tel1;tel2;email;family")
         Parameter.change_value('member-connection', 2)
         set_parameters([])
-        configSMTP('localhost', 3025)
+        AdherentConnectionTest.smtp_port += 1
+        configSMTP('localhost', AdherentConnectionTest.smtp_port)
         change_ourdetail()
 
     def test_connection_ask_failed(self):
@@ -2926,7 +2929,7 @@ class AdherentConnectionTest(BaseAdherentTest):
         self.assert_json_equal('EDIT', "email", '')
 
         server = TestReceiver()
-        server.start(3025)
+        server.start(AdherentConnectionTest.smtp_port)
         try:
             self.calljson('/diacamma.member/askAdherentAccess', {"CONFIRME": "YES", "email": "inconnu@worldcompany.com"})
             self.assert_observer('core.dialogbox', 'diacamma.member', 'askAdherentAccess')
@@ -2944,7 +2947,7 @@ class AdherentConnectionTest(BaseAdherentTest):
         self.assertEqual(LucteriosUser.objects.all().count(), 1)
         self.add_subscriptions()
         server = TestReceiver()
-        server.start(3025)
+        server.start(AdherentConnectionTest.smtp_port)
         try:
             self.calljson('/diacamma.member/askAdherentAccess', {"CONFIRME": "YES", "email": "Joe.Dalton@worldcompany.com"})
             self.assert_observer('core.dialogbox', 'diacamma.member', 'askAdherentAccess')
@@ -2983,7 +2986,7 @@ class AdherentConnectionTest(BaseAdherentTest):
         self.assertEqual(LucteriosUser.objects.all().count(), 1)
         self.prep_subscription_family()
         server = TestReceiver()
-        server.start(3025)
+        server.start(AdherentConnectionTest.smtp_port)
         try:
             self.calljson('/diacamma.member/askAdherentAccess', {"CONFIRME": "YES", "email": "dalton@worldcompany.com"})
             self.assert_observer('core.dialogbox', 'diacamma.member', 'askAdherentAccess')
