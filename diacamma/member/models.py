@@ -127,15 +127,20 @@ class Season(LucteriosModel):
         for age in range(2):
             if age == 0:
                 new_query = query & Q(birthday__gte=birthday)
-                offset = +1
             else:
                 new_query = query & Q(birthday__lt=birthday)
-                offset = -1
             values = Adherent.objects.filter(new_query).values(field, 'genre').annotate(genre_sum=Count('genre'))
             for value in values:
                 if value[field] not in val_by_criteria.keys():
                     val_by_criteria[value[field]] = [0, 0, 0, 0]
-                val_by_criteria[value[field]][value['genre'] + offset] += value['genre_sum']
+                if (value['genre'] == 1) and (age == 1):  # MajM
+                    val_by_criteria[value[field]][0] += value['genre_sum']
+                elif (value['genre'] != 1) and (age == 1):  # MajW
+                    val_by_criteria[value[field]][1] += value['genre_sum']
+                elif (value['genre'] == 1) and (age == 0):  # MinM
+                    val_by_criteria[value[field]][2] += value['genre_sum']
+                elif (value['genre'] != 1) and (age == 0):  # MinW
+                    val_by_criteria[value[field]][3] += value['genre_sum']
                 total += value['genre_sum']
         total_by_criteria = [0, 0, 0, 0]
         values_by_criteria = []
