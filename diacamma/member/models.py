@@ -843,7 +843,10 @@ class Adherent(Individual):
                     working_subscription.save(with_bill=False)
                 if isinstance(working_subscription, tuple):
                     working_subscription = working_subscription[0]
-        except Exception:
+            else:
+                self._import_logs.append(_("subscription type '%s' unknown !") % type_name)
+        except Exception as import_error:
+            self._import_logs.append(str(import_error))
             logging.getLogger('diacamma.member').exception("import_data")
         return working_subscription
 
@@ -852,18 +855,22 @@ class Adherent(Individual):
         try:
             new_item = super(Adherent, cls).import_data(rowdata, dateformat)
             if new_item is not None:
+                new_item._import_logs = []
                 if ('family' in rowdata.keys()) and (rowdata['family'].strip() != ''):
                     new_item._import_family(rowdata['family'].strip())
                 working_subscription = None
-                if 'subscriptiontype' in rowdata.keys():
-                    working_subscription = new_item._import_subscription(rowdata['subscriptiontype'], dateformat, is_building='prestations' in rowdata)
+                if ('subscriptiontype' in rowdata.keys()) and (rowdata['subscriptiontype'].strip() != ''):
+                    working_subscription = new_item._import_subscription(rowdata['subscriptiontype'].strip(), dateformat, is_building='prestations' in rowdata)
                 if working_subscription is None:
                     working_subscription = new_item.last_subscription
+                cls.import_logs.extend(new_item._import_logs)
                 if working_subscription is not None:
-                    working_subscription.import_licence(rowdata)
+                    cls.import_logs.extend(working_subscription.import_licence(rowdata))
                     working_subscription.save(with_bill=True)
+                del new_item._import_logs
             return new_item
-        except Exception:
+        except Exception as import_error:
+            cls.import_logs.append(str(import_error))
             logging.getLogger('diacamma.member').exception("import_data")
             return None
 
@@ -1268,6 +1275,7 @@ class Subscription(LucteriosModel):
         return modify
 
     def import_licence(self, rowdata):
+        import_logs = []
         if ('prestations' in rowdata) and (rowdata['prestations'].strip() != ''):
             prestation_list = []
             for prestation_name in rowdata['prestations'].replace(',', ';').split(';'):
@@ -1275,6 +1283,8 @@ class Subscription(LucteriosModel):
                     new_prestation = Prestation.objects.get(name__iexact=prestation_name.strip())
                     prestation_list.append(new_prestation)
                 except Prestation.DoesNotExist:
+                    if prestation_name.strip() != '':
+                        import_logs.append(_("Prestation '%s' unknown !") % prestation_name.strip())
                     pass
             self.prestations.set(prestation_list)
         elif self.prestations.count() == 0:
@@ -1282,17 +1292,21 @@ class Subscription(LucteriosModel):
                 team = Team.objects.get(name__iexact=rowdata['team'])
             except Exception:
                 team = None
+                if 'team' in rowdata and (rowdata['team'].strip() != ''):
+                    import_logs.append(_("%s '%s' unknown !") % (Params.getvalue("member-team-text"), rowdata['team'].strip()))
             try:
                 activity = Activity.objects.get(name__iexact=rowdata['activity'])
             except Exception:
                 activity = Activity.objects.all()[0]
+                if 'activity' in rowdata and (rowdata['activity'].strip() != ''):
+                    import_logs.append(_("%s '%s' unknown !") % (Params.getvalue("member-activite-text"), rowdata['activity'].strip()))
             try:
                 value = rowdata['value']
             except Exception:
                 value = ''
             if ('subscriptiontype' in rowdata.keys()) or (team is not None) or (value != ''):
-                return License.objects.create(subscription=self, team=team, activity=activity, value=value)
-        return None
+                License.objects.create(subscription=self, team=team, activity=activity, value=value)
+        return import_logs
 
     def convert_prestations(self):
         if self.prestations.all().count() > 0:

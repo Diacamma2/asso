@@ -38,7 +38,7 @@ from lucterios.CORE.parameters import Params
 from lucterios.CORE.views import ObjectMerge
 from lucterios.contacts.views_contacts import LegalEntityShow
 from lucterios.contacts.models import LegalEntity, Responsability
-from lucterios.contacts.views import ContactImport, CurrentLegalEntityModify
+from lucterios.contacts.views import ContactImport
 from lucterios.contacts.tests_contacts import change_ourdetail
 from lucterios.mailing.test_tools import configSMTP, TestReceiver, decode_b64
 
@@ -888,8 +888,9 @@ class AdherentTest(BaseAdherentTest):
                                                             "fld_birthday": "DateNaissance", "fld_birthplace": "LieuNaissance", 'fld_subscriptiontype': 'Type',
                                                             'fld_team': 'Equipe', 'fld_activity': 'Activite', 'fld_value': 'NumLicence', }, False)
         self.assert_observer('core.custom', 'lucterios.contacts', 'contactImport')
-        self.assert_count_equal('', 2)
+        self.assert_count_equal('', 3)
         self.assert_json_equal('LABELFORM', 'result', "5 éléments ont été importés")
+        self.assert_json_equal('LABELFORM', 'import_error', [])
         self.assertEqual(len(self.json_actions), 1)
 
         self.factory.xfer = AdherentShow()
@@ -961,6 +962,32 @@ class AdherentTest(BaseAdherentTest):
         self.calljson('/diacamma.invoice/billList', {'bill_type': 1}, False)
         self.assert_observer('core.custom', 'diacamma.invoice', 'billList')
         self.assert_count_equal('bill', 10)
+
+    def test_bad_import(self):
+        csv_content = """'nom','prenom','sexe','adresse','codePostal','ville','fixe','portable','mail','DateNaissance','LieuNaissance','Type','NumLicence','Equipe','Activite'
+'USIF','Pierre','Homme','37 avenue de la plage','99673','TOUINTOUIN','0502851031','0439423854','pierre572@free.fr','12/09/1961','BIDON SUR MER','Annua','1000029-00099','team1','activity1'
+'NOJAXU','Amandine','Femme','11 avenue du puisatier','99247','BELLEVUE','0022456300','0020055601','amandine723@hotmail.fr','27/02/1976','ZINZIN','Periodic#2','1000030-00099','team7','activity2'
+'','',
+'GOC','Marie','Femme','33 impasse du 11 novembre','99150','BIDON SUR MER','0632763718','0310231012','marie762@free.fr','16/05/1998','KIKIMDILUI','Monthly#5','1000031-00099','team3','activity8'
+"""
+        self.add_subscriptions()
+        self.factory.xfer = AdherentActiveList()
+        self.calljson('/diacamma.member/adherentActiveList', {'dateref': '2010-01-15'}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentActiveList')
+        self.assert_count_equal('adherent', 3)
+
+        self.factory.xfer = ContactImport()
+        self.calljson('/lucterios.contacts/contactImport', {'step': 3, 'modelname': 'member.Adherent', 'quotechar': "'", 'delimiter': ',',
+                                                            'encoding': 'utf-8', 'dateformat': '%d/%m/%Y', 'csvcontent0': csv_content,
+                                                            "fld_lastname": "nom", "fld_firstname": "prenom", "fld_address": "adresse",
+                                                            "fld_postal_code": "codePostal", "fld_city": "ville", "fld_email": "mail",
+                                                            "fld_birthday": "DateNaissance", "fld_birthplace": "LieuNaissance", 'fld_subscriptiontype': 'Type',
+                                                            'fld_team': 'Equipe', 'fld_activity': 'Activite', 'fld_value': 'NumLicence', }, False)
+        self.assert_observer('core.custom', 'lucterios.contacts', 'contactImport')
+        self.assert_count_equal('', 3)
+        self.assert_json_equal('LABELFORM', 'result', "3 éléments ont été importés")
+        self.assert_json_equal('LABELFORM', 'import_error', ["Type de cotisation 'Annua' inconnue !", "group 'team7' inconnue !", "passion 'activity8' inconnue !"])
+        self.assertEqual(len(self.json_actions), 1)
 
     def test_status_subscription(self):
         default_adherents()
@@ -1588,8 +1615,9 @@ class AdherentTest(BaseAdherentTest):
                                                             "fld_birthday": "DateNaissance", "fld_birthplace": "LieuNaissance", 'fld_subscriptiontype': 'Type',
                                                             'fld_prestations': 'Cours', }, False)
         self.assert_observer('core.custom', 'lucterios.contacts', 'contactImport')
-        self.assert_count_equal('', 2)
+        self.assert_count_equal('', 3)
         self.assert_json_equal('LABELFORM', 'result', "4 éléments ont été importés")
+        self.assert_json_equal('LABELFORM', 'import_error', [])
         self.assertEqual(len(self.json_actions), 1)
 
         self.factory.xfer = AdherentActiveList()
@@ -1621,6 +1649,26 @@ class AdherentTest(BaseAdherentTest):
         self.assert_json_equal('', 'bill/@2/total', 413.75)  # Subscription: art1:12.34 + art5:64.10 / Prestations: art1:12.34 + art3:324.97
         self.assert_json_equal('', 'bill/@3/third', "GOC Marie")
         self.assert_json_equal('', 'bill/@3/total', 470.53)  # Subscription: art1:12.34 + art5:64.10 / Prestations: art1:12.34 + art2:56.78 + art3:324.97
+
+    def test_bad_import_with_prestation(self):
+        csv_content = """'nom','prenom','sexe','adresse','codePostal','ville','fixe','portable','mail','DateNaissance','LieuNaissance','Type','Cours'
+'Dalton','Avrel','Homme','rue de la liberté','99673','TOUINTOUIN','0502851031','0439423854','avrel.dalton@worldcompany.com','10/02/2000','BIDON SUR MER','Annually','Presta 6'
+"""
+        default_adherents()
+        default_subscription()
+        default_prestation()
+
+        self.factory.xfer = ContactImport()
+        self.calljson('/lucterios.contacts/contactImport', {'step': 3, 'modelname': 'member.Adherent', 'quotechar': "'", 'delimiter': ',',
+                                                            'encoding': 'utf-8', 'dateformat': '%d/%m/%Y', 'csvcontent0': csv_content,
+                                                            "fld_lastname": "nom", "fld_firstname": "prenom", "fld_address": "adresse",
+                                                            "fld_postal_code": "codePostal", "fld_city": "ville", "fld_email": "mail",
+                                                            "fld_birthday": "DateNaissance", "fld_birthplace": "LieuNaissance", 'fld_subscriptiontype': 'Type',
+                                                            'fld_prestations': 'Cours', }, False)
+        self.assert_observer('core.custom', 'lucterios.contacts', 'contactImport')
+        self.assert_count_equal('', 3)
+        self.assert_json_equal('LABELFORM', 'result', "1 élément a été importé")
+        self.assert_json_equal('LABELFORM', 'import_error', ["Prestation 'Presta 6' inconnue !"])
 
     def test_connexion(self):
         self.add_subscriptions()
@@ -2248,8 +2296,9 @@ class AdherentFamilyTest(BaseAdherentTest):
                                                             "fld_postal_code": "codePostal", "fld_city": "ville", "fld_email": "mail",
                                                             'fld_subscriptiontype': 'Type', 'fld_family': 'famille', }, False)
         self.assert_observer('core.custom', 'lucterios.contacts', 'contactImport')
-        self.assert_count_equal('', 2)
+        self.assert_count_equal('', 3)
         self.assert_json_equal('LABELFORM', 'result', "7 éléments ont été importés")
+        self.assert_json_equal('LABELFORM', 'import_error', [])
         self.assertEqual(len(self.json_actions), 1)
 
         self.factory.xfer = AdherentActiveList()
@@ -2346,8 +2395,9 @@ class AdherentFamilyTest(BaseAdherentTest):
                                                             "fld_family": "famille", "fld_postal_code": "codePostal", "fld_city": "ville", "fld_email": "mail",
                                                             'fld_subscriptiontype': 'Type', 'fld_prestations': 'Cours', }, False)
         self.assert_observer('core.custom', 'lucterios.contacts', 'contactImport')
-        self.assert_count_equal('', 2)
+        self.assert_count_equal('', 3)
         self.assert_json_equal('LABELFORM', 'result', "4 éléments ont été importés")
+        self.assert_json_equal('LABELFORM', 'import_error', [])
         self.assertEqual(len(self.json_actions), 1)
 
         self.factory.xfer = AdherentActiveList()
