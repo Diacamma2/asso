@@ -986,7 +986,7 @@ class AdherentTest(BaseAdherentTest):
         self.assert_observer('core.custom', 'lucterios.contacts', 'contactImport')
         self.assert_count_equal('', 3)
         self.assert_json_equal('LABELFORM', 'result', "3 éléments ont été importés")
-        self.assert_json_equal('LABELFORM', 'import_error', ["Type de cotisation 'Annua' inconnue !", "group 'team7' inconnue !", "passion 'activity8' inconnue !"])
+        self.assert_json_equal('LABELFORM', 'import_error', ["Type de cotisation 'Annua' inconnue !", "group 'team7' inconnu(e) !", "passion 'activity8' inconnu(e) !"])
         self.assertEqual(len(self.json_actions), 1)
 
     def test_status_subscription(self):
