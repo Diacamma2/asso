@@ -525,7 +525,7 @@ class AdherentCommand(XferContainerAcknowledge):
             dlg.params['CMD_FILE'] = cmd_manager.file_name
             dlg.add_component(grid)
             if len(grid.records) > 0:
-                fct_mailing_mod = import_module('lucterios.mailing.functions')
+                fct_mailing_mod = import_module('lucterios.mailing.email_functions')
                 if (fct_mailing_mod is not None) and fct_mailing_mod.will_mail_send():
                     chk = XferCompCheck('send_email')
                     chk.set_value(send_email)

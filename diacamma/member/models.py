@@ -53,7 +53,7 @@ from lucterios.CORE.models import Parameter, PrintModel, LucteriosUser,\
 from lucterios.CORE.parameters import Params
 from lucterios.contacts.models import Individual, LegalEntity, Responsability
 from lucterios.documents.models import FolderContainer
-from lucterios.mailing.functions import EmailException
+from lucterios.mailing.email_functions import EmailException
 
 from diacamma.invoice.models import Article, Bill, Detail, get_or_create_customer
 from diacamma.accounting.tools import get_amount_from_format_devise, format_with_devise, current_system_account
