@@ -1004,14 +1004,24 @@ class Adherent(Individual):
 
 class ThirdAdherent(Third):
 
+    emails = LucteriosVirtualField(verbose_name=_('emails'), compute_from='get_emails')
+    adherents = LucteriosVirtualField(verbose_name=_("adherents"), compute_from='get_adherents')
+
     def set_context(self, xfer):
         self.season_id = xfer.getparam("season_id", 0)
         if (self.season_id == 0):
             dateref = convert_date(xfer.getparam("dateref", ""), Season.current_season().date_ref)
             self.season_id = Season.get_from_date(dateref).id
 
-    @property
-    def adherents(self):
+    def get_emails(self):
+        contact = self.contact.get_final_child()
+        emails = contact.email.replace(',', ';').split(';')
+        if isinstance(contact, LegalEntity):
+            for resp in contact.responsability_set.filter(individual__adherent__subscription__season_id=self.season_id).distinct():
+                emails.extend(resp.individual.email.replace(',', ';').split(';'))
+        return list(set(emails))
+
+    def get_adherents(self):
         contact = self.contact.get_final_child()
         if isinstance(contact, Adherent):
             return [six.text_type(contact)]

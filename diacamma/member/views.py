@@ -306,7 +306,7 @@ class AdherentThirdList(ThirdList):
         dateref = convert_date(self.getparam("dateref", ""), Season.current_season().date_ref)
         season = Season.get_from_date(dateref)
         self.params['season_id'] = season.id
-        self.fieldnames = ["contact", "contact.address", "contact.city", "contact.tel1", "contact.tel2", "contact.email", (_("adherents"), "adherents")]
+        self.fieldnames = ["contact", "contact.address", "contact.city", "contact.tel1", "contact.tel2", "emails", "adherents"]
         legal_filter = Q(contact__legalentity__responsability__individual__adherent__subscription__season=season)
         indiv_filter = Q(contact__individual__adherent__subscription__season=season)
         dates_filter = Q(supporting__bill__subscription__season=season)
@@ -332,6 +332,11 @@ class AdherentThirdList(ThirdList):
         dtref.description = _("reference date")
         dtref.set_action(self.request, self.get_action(), modal=FORMTYPE_REFRESH)
         self.add_component(dtref)
+
+    def get_items_from_filter(self):
+        items = ThirdList.get_items_from_filter(self)
+        items.model = self.model
+        return items
 
     def fillresponse(self):
         ThirdList.fillresponse(self)
