@@ -32,8 +32,8 @@ from django.utils.translation import ugettext_lazy as _
 from django.utils import six
 from django_fsm import transition, FSMIntegerField
 
-from lucterios.framework.models import LucteriosModel, get_value_if_choices,\
-    LucteriosVirtualField
+from lucterios.framework.models import LucteriosModel
+from lucterios.framework.model_fields import get_value_if_choices, LucteriosVirtualField
 from lucterios.framework.tools import get_date_formating
 from lucterios.framework.error import LucteriosException, IMPORTANT
 from lucterios.framework.signal_and_lock import Signal
@@ -44,8 +44,7 @@ from lucterios.contacts.models import Individual
 from diacamma.invoice.models import Article, Bill, Detail, get_or_create_customer
 from diacamma.accounting.models import CostAccounting
 from diacamma.member.models import Activity, Adherent, Subscription, Season
-from diacamma.accounting.tools import get_amount_from_format_devise,\
-    format_with_devise
+from diacamma.accounting.tools import get_amount_from_format_devise
 from django.db.models.aggregates import Count
 from lucterios.framework.auditlog import auditlog
 
