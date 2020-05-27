@@ -1873,6 +1873,15 @@ class CommandManager(object):
         return (nb_sub, nb_bill)
 
 
+@Signal.decorate('third_search')
+def member_third_search(search_result):
+    for field_name in ["season", "subscriptiontype", "status"]:
+        Subscription_search = Bill.convert_field_for_search('subscription_set', (field_name, Subscription._meta.get_field(field_name), field_name, Q()))
+        bill_search = Supporting.convert_field_for_search('bill', Subscription_search)
+        search_result.append(Third.convert_field_for_search('supporting_set', bill_search, add_verbose=False))
+    return True
+
+
 @Signal.decorate('check_report')
 def check_report_member(year):
     for taxreceipt in TaxReceipt.objects.filter(fiscal_year=year):
