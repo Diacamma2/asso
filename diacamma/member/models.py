@@ -56,7 +56,7 @@ from lucterios.contacts.models import Individual, LegalEntity, Responsability
 from lucterios.documents.models import FolderContainer
 from lucterios.mailing.email_functions import EmailException
 
-from diacamma.invoice.models import Article, Bill, Detail, get_or_create_customer
+from diacamma.invoice.models import Article, Bill, Detail, get_or_create_customer, invoice_addon_for_third
 from diacamma.accounting.tools import get_amount_from_format_devise, format_with_devise, current_system_account
 from diacamma.accounting.models import Third, FiscalYear, EntryAccount, EntryLineAccount
 from diacamma.payoff.views import get_html_payment
@@ -745,9 +745,9 @@ class Adherent(Individual):
         return fields
 
     @classmethod
-    def get_search_fields(cls):
+    def get_search_fields(cls, with_addon=True):
         ident_field = []
-        ident_field.extend(super(Adherent, cls).get_search_fields())
+        ident_field.extend(super(Adherent, cls).get_search_fields(with_addon=False))
         if Params.getvalue("member-numero"):
             ident_field.append('num')
         if Params.getvalue("member-birth"):
@@ -762,6 +762,8 @@ class Adherent(Individual):
             ident_field.append('subscription_set.license_set.activity')
         if Params.getvalue("member-licence-enabled"):
             ident_field.append('subscription_set.license_set.value')
+        if with_addon:
+            Signal.call_signal("addon_search", cls, ident_field)
         return ident_field
 
     @classmethod
@@ -1873,13 +1875,22 @@ class CommandManager(object):
         return (nb_sub, nb_bill)
 
 
-@Signal.decorate('third_search')
-def member_third_search(search_result):
-    for field_name in ["season", "subscriptiontype", "status"]:
-        Subscription_search = Bill.convert_field_for_search('subscription_set', (field_name, Subscription._meta.get_field(field_name), field_name, Q()))
-        bill_search = Supporting.convert_field_for_search('bill', Subscription_search)
-        search_result.append(Third.convert_field_for_search('supporting_set', bill_search, add_verbose=False))
-    return True
+@Signal.decorate('addon_search')
+def member_addon_search(model, search_result):
+    res = False
+    if model is Third:
+        for field_name in ["season", "subscriptiontype", "status"]:
+            Subscription_search = Bill.convert_field_for_search('subscription_set', (field_name, Subscription._meta.get_field(field_name), field_name, Q()))
+            bill_search = Supporting.convert_field_for_search('bill', Subscription_search)
+            search_result.append(Third.convert_field_for_search('supporting_set', bill_search, add_verbose=False))
+        res = True
+    if model is Adherent:
+        for subfield in invoice_addon_for_third():
+            family = LegalEntity.convert_field_for_search('third_set', subfield, add_verbose=False)
+            responsability = Responsability.convert_field_for_search('legal_entity', family, add_verbose=str(_('family')))
+            search_result.append(Adherent.convert_field_for_search('responsability_set', responsability, add_verbose=False))
+        res = True
+    return res
 
 
 @Signal.decorate('check_report')
