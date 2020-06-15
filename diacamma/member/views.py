@@ -506,7 +506,7 @@ class AdherentCommand(XferContainerAcknowledge):
     field_id = 'adherent'
     caption = _("Command subscription")
 
-    def fillresponse(self, send_email=True):
+    def fillresponse(self, send_email=False):
         cmd_manager = CommandManager(self.request.user, self.getparam('CMD_FILE', ''), self.items)
         if self.getparam('SAVE') is None:
             dlg = self.create_custom(self.model)
@@ -540,7 +540,9 @@ class AdherentCommand(XferContainerAcknowledge):
                 else:
                     dlg.params['send_email'] = False
                 dlg.add_action(AdherentCommand.get_action(TITLE_OK, "images/ok.png"), close=CLOSE_YES, params={'SAVE': 'YES'})
-            dlg.add_action(WrapAction(TITLE_CLOSE, 'images/close.png'))
+                dlg.add_action(WrapAction(TITLE_CANCEL, 'images/cancel.png'))
+            else:
+                dlg.add_action(WrapAction(TITLE_CLOSE, 'images/close.png'))
         else:
             dateref = convert_date(self.getparam("dateref", ""), Season.current_season().date_ref)
             if send_email:
