@@ -28,13 +28,11 @@ from django.db.models import Q
 from django.conf import settings
 from django.utils import six, timezone
 
-from lucterios.framework.xferadvance import XferAddEditor, XferListEditor, TITLE_MODIFY, TITLE_DELETE, TITLE_ADD, TITLE_EDIT, XferShowEditor
+from lucterios.framework.xferadvance import XferAddEditor, XferListEditor, TITLE_MODIFY, TITLE_DELETE, TITLE_ADD, TITLE_EDIT, XferShowEditor, TITLE_CLONE
 from lucterios.framework.xferadvance import XferDelete
-from lucterios.framework.tools import ActionsManage, MenuManage, FORMTYPE_NOMODAL, CLOSE_NO, SELECT_MULTI, SELECT_SINGLE, WrapAction, FORMTYPE_REFRESH,\
-    FORMTYPE_MODAL
+from lucterios.framework.tools import ActionsManage, MenuManage, FORMTYPE_NOMODAL, CLOSE_NO, SELECT_MULTI, SELECT_SINGLE, WrapAction, FORMTYPE_REFRESH, FORMTYPE_MODAL
 from lucterios.framework.error import LucteriosException, IMPORTANT
-from lucterios.framework.xfercomponents import XferCompButton, XferCompLabelForm, XferCompCheck, XferCompCheckList,\
-    XferCompFloat
+from lucterios.framework.xfercomponents import XferCompButton, XferCompLabelForm, XferCompCheckList, XferCompFloat, XferCompSelect
 from lucterios.framework import signal_and_lock
 from lucterios.framework.xfergraphic import XferContainerAcknowledge
 from lucterios.CORE.parameters import Params
@@ -104,22 +102,23 @@ class CategoryConf(XferListEditor):
             self.new_tab(_('Age'))
             self.fill_grid(0, Age, "age", Age.objects.all())
         if Params.getvalue("member-team-enable") == 1:
-            show_only_enabled_team = self.getparam('show_only_enabled_team', True)
+            team_filter = self.getparam('team_filter', 0)
             self.new_tab(Params.getvalue("member-team-text"))
-            if show_only_enabled_team:
-                team_list = Team.objects.filter(unactive=False)
-            else:
-                team_list = Team.objects.all()
-            self.fill_grid(0, Team, "team", team_list)
-            if show_only_enabled_team:
-                grid = self.get_components('team')
-                grid.delete_header('unactive')
-            check = XferCompCheck('show_only_enabled_team')
-            check.set_location(0, 2)
-            check.set_value(show_only_enabled_team)
-            check.description = _('show only enabled team')
+            check = XferCompSelect('team_filter')
+            check.set_location(0, 1)
+            check.set_select([(0, _('show only enabled team')), (1, _('show all teams')), (2, _('show only disabled team'))])
+            check.set_value(team_filter)
+            check.description = _('team filter')
             check.set_action(self.request, self.get_action(), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
             self.add_component(check)
+            if team_filter == 1:
+                team_list = Team.objects.all()
+            else:
+                team_list = Team.objects.filter(unactive=(team_filter == 2))
+            self.fill_grid(2, Team, "team", team_list)
+            if team_filter != 1:
+                grid = self.get_components('team')
+                grid.delete_header('unactive')
         if Params.getvalue("member-activite-enable") == 1:
             self.new_tab(Params.getvalue("member-activite-text"))
             self.fill_grid(0, Activity, "activity", Activity.objects.all())
@@ -174,6 +173,33 @@ class TeamDel(XferDelete):
     model = Team
     field_id = 'team'
     caption = _("Delete team")
+
+
+@ActionsManage.affect_grid(TITLE_CLONE, 'images/clone.png', unique=SELECT_SINGLE)
+@MenuManage.describ('CORE.add_parameter')
+class TeamClone(XferContainerAcknowledge):
+    icon = "config.png"
+    model = Team
+    field_id = 'team'
+    caption_add = _("Add team")
+
+    def fillresponse(self):
+        self.item.clone()
+        self.redirect_action(TeamAddModify.get_action(), params={self.field_id: self.item.id})
+
+
+@ActionsManage.affect_grid(_("dis-en-abled"), 'images/ok.png', unique=SELECT_MULTI)
+@MenuManage.describ('CORE.add_parameter')
+class TeamEnabled(XferContainerAcknowledge):
+    icon = "config.png"
+    model = Team
+    field_id = 'team'
+    caption_add = _("Enabled team")
+
+    def fillresponse(self):
+        for item in self.items:
+            item.unactive = not item.unactive
+            item.save()
 
 
 @ActionsManage.affect_grid(TITLE_ADD, "images/add.png")

@@ -71,6 +71,7 @@ def default_params():
     Team.objects.create(name="team1", description="team N°1{[br/]}The bests")
     Team.objects.create(name="team2", description="team N°2{[br/]}The chalengers")
     Team.objects.create(name="team3", description="team N°3{[br/]}The newbies")
+    Team.objects.create(name="team4", description="team N°4{[br/]}Old - not used", unactive=True)
     Age.objects.create(name="Poussins", minimum=9, maximum=10)
     Age.objects.create(name="Benjamins", minimum=11, maximum=12)
     Age.objects.create(name="Minimes", minimum=13, maximum=14)
@@ -111,25 +112,25 @@ def default_adherents(third_must_created=False):
 
 def default_subscription(with_light=False):
     sub1 = SubscriptionType.objects.create(
-        name="Annually", description="AAA", duration=0)
+        name="Annually", description="AAA", duration=0, order_key=3)
     sub1.articles.set(Article.objects.filter(id__in=(1, 5)))
     sub1.save()
     sub2 = SubscriptionType.objects.create(
-        name="Periodic", description="BBB", duration=1)
+        name="Periodic", description="BBB", duration=1, order_key=2)
     sub2.articles.set(Article.objects.filter(id__in=(1, 5)))
     sub2.save()
     sub3 = SubscriptionType.objects.create(
-        name="Monthly", description="CCC", duration=2)
+        name="Monthly", description="CCC", duration=2, order_key=5)
     sub3.articles.set(Article.objects.filter(id__in=(1, 5)))
     sub3.save()
     sub4 = SubscriptionType.objects.create(
-        name="Calendar", description="DDD", duration=3)
+        name="Calendar", description="DDD", duration=3, order_key=4)
     sub4.articles.set(Article.objects.filter(id__in=(1, 5)))
     sub4.save()
 
     if with_light:
         sub5 = SubscriptionType.objects.create(
-            name="Annually light", description="AAA-", duration=0)
+            name="Annually light", description="AAA-", duration=0, order_key=1)
         sub5.articles.set(Article.objects.filter(id__in=(1,)))
         sub5.save()
 

@@ -477,6 +477,7 @@ class SubscriptionType(LucteriosModel):
     duration = models.IntegerField(verbose_name=_('duration'), choices=((0, _('annually')), (1, _('periodic')), (2, _('monthly')), (3, _('calendar'))), null=False, default=0, db_index=True)
     unactive = models.BooleanField(verbose_name=_('unactive'), default=False)
     articles = models.ManyToManyField(Article, verbose_name=_('articles'), blank=True)
+    order_key = models.IntegerField(verbose_name=_('order key'), null=True, default=None)
 
     price = LucteriosVirtualField(verbose_name=_('price'), compute_from='get_price', format_string=lambda: format_with_devise(5))
 
@@ -488,7 +489,7 @@ class SubscriptionType(LucteriosModel):
 
     @classmethod
     def get_default_fields(cls):
-        return ["name", "description", 'duration', "unactive", 'price']
+        return ["order_key", "name", "description", 'duration', "unactive", 'price']
 
     @classmethod
     def get_edit_fields(cls):
@@ -505,10 +506,30 @@ class SubscriptionType(LucteriosModel):
                 total_price += art.price
         return total_price
 
+    def up_order(self):
+        prec_subtypes = SubscriptionType.objects.filter(order_key__lt=self.order_key).order_by('-order_key')
+        if len(prec_subtypes) > 0:
+            prec_subtype = prec_subtypes[0]
+            order_key = prec_subtype.order_key
+            prec_subtype.order_key = self.order_key
+            self.order_key = order_key
+            prec_subtype.save()
+            self.save()
+
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        if self.order_key is None:
+            val = SubscriptionType.objects.all().aggregate(Max('order_key'))
+            if val['order_key__max'] is None:
+                self.order_key = 1
+            else:
+                self.order_key = val['order_key__max'] + 1
+        return LucteriosModel.save(self, force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
+
     class Meta(object):
         verbose_name = _('subscription type')
         verbose_name_plural = _('subscription types')
         default_permissions = []
+        ordering = ['order_key']
 
 
 class Activity(LucteriosModel):
@@ -568,6 +589,12 @@ class Team(LucteriosModel):
     @classmethod
     def get_show_fields(cls):
         return ["name", "description", "unactive"]
+
+    def clone(self):
+        self.name = _("copy of %s") % self.name
+        self.id = None
+        self.unactive = False
+        self.save()
 
     class Meta(object):
         verbose_name = _('team')
@@ -1065,6 +1092,10 @@ class Prestation(LucteriosModel):
     def article_query(self):
         return Article.objects.filter(isdisabled=False, stockable=0)
 
+    @property
+    def team_query(self):
+        return Team.objects.filter(unactive=False)
+
     @classmethod
     def get_default_fields(cls):
         fields = ["name", "description"]
@@ -1306,13 +1337,13 @@ class Subscription(LucteriosModel):
             except Exception:
                 team = None
                 if 'team' in rowdata and (rowdata['team'].strip() != ''):
-                    import_logs.append(_("%s '%s' unknown !") % (Params.getvalue("member-team-text"), rowdata['team'].strip()))
+                    import_logs.append(_("%(name)s '%(value)s' unknown !") % {'name': Params.getvalue("member-team-text"), 'value': rowdata['team'].strip()})
             try:
                 activity = Activity.objects.get(name__iexact=rowdata['activity'])
             except Exception:
                 activity = Activity.objects.all()[0]
                 if 'activity' in rowdata and (rowdata['activity'].strip() != ''):
-                    import_logs.append(_("%s '%s' unknown !") % (Params.getvalue("member-activite-text"), rowdata['activity'].strip()))
+                    import_logs.append(_("%(name)s '%(value)s' unknown !") % {'name': Params.getvalue("member-activite-text"), 'value': rowdata['activity'].strip()})
             try:
                 value = rowdata['value']
             except Exception:
@@ -1514,6 +1545,10 @@ class License(LucteriosModel):
         if Params.getvalue("member-licence-enabled"):
             fields.append("value")
         return fields
+
+    @property
+    def team_query(self):
+        return Team.objects.filter(unactive=False)
 
     class Meta(object):
         verbose_name = _('involvement')
@@ -1897,6 +1932,12 @@ def member_addon_search(model, search_result):
 def check_report_member(year):
     for taxreceipt in TaxReceipt.objects.filter(fiscal_year=year):
         taxreceipt.get_saved_pdfreport()
+
+
+@Signal.decorate('convertdata')
+def member_convertdata():
+    for subtype in SubscriptionType.objects.filter(order_key__isnull=True).order_by('id'):
+        subtype.save()
 
 
 @Signal.decorate('checkparam')

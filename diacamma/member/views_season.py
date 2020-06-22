@@ -192,6 +192,18 @@ class SubscriptionTypeDel(XferDelete):
     caption = _("Delete subscription")
 
 
+@ActionsManage.affect_grid(_('Up'), "images/up.png", unique=SELECT_SINGLE)
+@MenuManage.describ('payoff.add_subscription')
+class SubscriptionTypeUp(XferContainerAcknowledge):
+    icon = "season.png"
+    model = SubscriptionType
+    field_id = 'subscriptiontype'
+    caption = _("Up subscription")
+
+    def fillresponse(self):
+        self.item.up_order()
+
+
 @ActionsManage.affect_grid(TITLE_ADD, "images/add.png")
 @ActionsManage.affect_grid(TITLE_MODIFY, "images/edit.png", unique=SELECT_SINGLE)
 @MenuManage.describ('member.add_subscription')
