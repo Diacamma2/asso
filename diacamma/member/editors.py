@@ -294,7 +294,7 @@ class SubscriptionEditor(LucteriosEditor):
             if self.item.season_id is None:
                 self.item.season = Season.current_season()
                 cmp_season.set_value(self.item.season.id)
-            cmp_season.set_action(xfer.request, xfer.get_action(),
+            cmp_season.set_action(xfer.request, xfer.return_action(),
                                   close=CLOSE_NO, modal=FORMTYPE_REFRESH)
             if (last_subscription is not None) and (xfer.getparam('subscriptiontype') is None):
                 cmp_subscriptiontype.set_value(
@@ -304,7 +304,7 @@ class SubscriptionEditor(LucteriosEditor):
                 raise LucteriosException(IMPORTANT, _("No subscription type defined!"))
             cmp_subscriptiontype.get_json()
             self.item.subscriptiontype = SubscriptionType.objects.get(id=cmp_subscriptiontype.value)
-        cmp_subscriptiontype.set_action(xfer.request, xfer.get_action(), close=CLOSE_NO, modal=FORMTYPE_REFRESH)
+        cmp_subscriptiontype.set_action(xfer.request, xfer.return_action(), close=CLOSE_NO, modal=FORMTYPE_REFRESH)
         row = xfer.get_max_row() + 1
         self._add_season_comp(xfer, row)
         if Params.getvalue("member-team-enable") and (len(Prestation.objects.all()) > 0) and ((self.item.id is None) or (self.item.status in (0, 1))):

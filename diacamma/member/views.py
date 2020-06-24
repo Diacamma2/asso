@@ -204,7 +204,7 @@ class AdherentAbstractList(XferListEditor, AdherentFilter):
         btn = XferCompButton('btndateref')
         btn.is_default = True
         btn.set_location(max(col1, col2), row + 1)
-        btn.set_action(self.request, self.get_action(_('Refresh'), ''), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
+        btn.set_action(self.request, self.return_action(_('Refresh'), ''), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
         self.add_component(btn)
 
         info_list = []
@@ -319,7 +319,7 @@ class AdherentThirdList(ThirdList):
 
         comp = XferCompEdit('filter')
         comp.set_value(contact_filter)
-        comp.set_action(self.request, self.get_action(), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
+        comp.set_action(self.request, self.return_action(), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
         comp.set_location(0, 1, 2)
         comp.description = _('Filtrer by contact')
         comp.is_default = True
@@ -330,7 +330,7 @@ class AdherentThirdList(ThirdList):
         dtref.set_needed(True)
         dtref.set_location(2, 1)
         dtref.description = _("reference date")
-        dtref.set_action(self.request, self.get_action(), modal=FORMTYPE_REFRESH)
+        dtref.set_action(self.request, self.return_action(), modal=FORMTYPE_REFRESH)
         self.add_component(dtref)
 
     def get_items_from_filter(self):
@@ -633,7 +633,7 @@ class AdherentCommandModify(XferContainerAcknowledge):
                     lbl.description = ftitle
                     dlg.add_component(lbl)
                 row += 1
-            dlg.add_action(self.get_action(TITLE_OK, "images/ok.png"), close=CLOSE_YES, params={'SAVE': 'YES'})
+            dlg.add_action(self.return_action(TITLE_OK, "images/ok.png"), close=CLOSE_YES, params={'SAVE': 'YES'})
             dlg.add_action(WrapAction(TITLE_CLOSE, 'images/close.png'))
         else:
             cmd_item = cmd_manager.get(AdhCmd)
@@ -768,7 +768,7 @@ class BaseAdherentFamilyList(XferContainerCustom):
         comp = XferCompEdit('namefilter')
         comp.set_value(name_filter)
         comp.is_default = True
-        comp.set_action(self.request, self.get_action(), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
+        comp.set_action(self.request, self.return_action(), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
         comp.set_location(0, 1)
         comp.description = _('Filtrer by name')
         self.add_component(comp)
@@ -1001,14 +1001,14 @@ class AdherentStatistic(XferContainerCustom):
         sel.set_value(working_season.id)
         sel.set_location(1, 0)
         sel.description = _('season')
-        sel.set_action(self.request, self.get_action('', ''), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
+        sel.set_action(self.request, self.return_action('', ''), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
         self.add_component(sel)
 
         check = XferCompCheck('only_valid')
         check.set_value(only_valid)
         check.set_location(1, 1)
         check.description = _('only validated subscription')
-        check.set_action(self.request, self.get_action('', ''), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
+        check.set_action(self.request, self.return_action('', ''), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
         self.add_component(check)
 
         stat_result = working_season.get_statistic(only_valid)
@@ -1102,7 +1102,7 @@ class AskAdherentAccess(XferContainerAcknowledge):
         email.mask = r"[^@]+@[^@]+\.[^@]+"
         email.description = _("email")
         dlg.add_component(email)
-        dlg.add_action(self.get_action(TITLE_OK, 'images/ok.png'), params={"CONFIRME": "YES"})
+        dlg.add_action(self.return_action(TITLE_OK, 'images/ok.png'), params={"CONFIRME": "YES"})
         dlg.add_action(WrapAction(TITLE_CANCEL, 'images/cancel.png'))
 
     def fillresponse(self):

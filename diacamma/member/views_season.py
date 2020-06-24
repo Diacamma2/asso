@@ -56,7 +56,7 @@ class SeasonSubscription(XferListEditor):
         edt.set_value(show_filter)
         edt.set_location(0, 3)
         edt.description = _('Show season')
-        edt.set_action(self.request, self.get_action(),
+        edt.set_action(self.request, self.return_action(),
                        modal=FORMTYPE_REFRESH, close=CLOSE_NO)
         self.add_component(edt)
         self.filter = Q()

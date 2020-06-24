@@ -45,7 +45,7 @@ class ParticipantEditor(LucteriosEditor):
 
     def edit(self, xfer):
         xfer.change_to_readonly('contact')
-        xfer.get_components('article').set_action(xfer.request, xfer.get_action('', ''), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
+        xfer.get_components('article').set_action(xfer.request, xfer.return_action('', ''), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
         if xfer.item.article_id is None:
             xfer.remove_component('reduce')
         if xfer.item.event.event_type == 0:
@@ -68,8 +68,8 @@ class EventEditor(LucteriosEditor):
         date_end.set_needed(True)
         if date_end.value is None:
             date_end.value = date.today()
-        xfer.get_components('default_article').set_action(xfer.request, xfer.get_action('', ''), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
-        xfer.get_components('default_article_nomember').set_action(xfer.request, xfer.get_action('', ''), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
+        xfer.get_components('default_article').set_action(xfer.request, xfer.return_action('', ''), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
+        xfer.get_components('default_article_nomember').set_action(xfer.request, xfer.return_action('', ''), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
 
     def show(self, xfer):
         participant = xfer.get_components('participant')

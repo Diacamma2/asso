@@ -167,7 +167,7 @@ class EventTransition(XferTransition):
             edt.set_location(4, row_id)
             dlg.add_component(edt)
             row_id += 1
-        dlg.add_action(self.get_action(TITLE_OK, "images/ok.png"), close=CLOSE_YES, params={'CONFIRME': 'YES'})
+        dlg.add_action(self.return_action(TITLE_OK, "images/ok.png"), close=CLOSE_YES, params={'CONFIRME': 'YES'})
         dlg.add_action(WrapAction(TITLE_CANCEL, 'images/cancel.png'))
 
     def fill_confirm(self, transition, trans):
@@ -337,7 +337,7 @@ class DegreeStatistic(XferContainerCustom):
         sel.set_value(working_season.id)
         sel.set_location(1, 0)
         sel.description = _('season')
-        sel.set_action(self.request, self.get_action('', ''), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
+        sel.set_action(self.request, self.return_action('', ''), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
         self.add_component(sel)
         stat_result = Degree.get_statistic(working_season)
         if len(stat_result) == 0:

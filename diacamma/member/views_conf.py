@@ -109,7 +109,7 @@ class CategoryConf(XferListEditor):
             check.set_select([(0, _('show only enabled team')), (1, _('show all teams')), (2, _('show only disabled team'))])
             check.set_value(team_filter)
             check.description = _('team filter')
-            check.set_action(self.request, self.get_action(), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
+            check.set_action(self.request, self.return_action(), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
             self.add_component(check)
             if team_filter == 1:
                 team_list = Team.objects.all()
@@ -258,7 +258,7 @@ class TaxReceiptList(XferListEditor):
         comp_year = XferCompFloat('year', minval=1900, maxval=2100, precval=0)
         comp_year.set_value(select_year)
         comp_year.set_location(1, 1)
-        comp_year.set_action(self.request, self.get_action(), close=CLOSE_NO, modal=FORMTYPE_REFRESH)
+        comp_year.set_action(self.request, self.return_action(), close=CLOSE_NO, modal=FORMTYPE_REFRESH)
         comp_year.description = _('year')
         self.add_component(comp_year)
         self.filter = Q(year=select_year)
