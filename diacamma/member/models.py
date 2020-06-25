@@ -1253,14 +1253,17 @@ class Subscription(LucteriosModel):
 
     def _regenerate_bill(self, bill_type):
         self.bill.bill_type = bill_type
-        if hasattr(self, 'xfer'):
-            self.bill.date = convert_date(self.xfer.getparam('dateref'), self.season.date_ref)
-        elif hasattr(self, 'dateref'):
-            self.bill.date = convert_date(self.dateref, self.season.date_ref)
+        if bill_type == 1:
+            if hasattr(self, 'xfer'):
+                self.bill.date = convert_date(self.xfer.getparam('dateref'), self.season.date_ref)
+            elif hasattr(self, 'dateref'):
+                self.bill.date = convert_date(self.dateref, self.season.date_ref)
+            else:
+                self.bill.date = self.season.date_ref
+            if (self.bill.date < self.season.begin_date) or (self.bill.date > self.season.end_date):
+                self.bill.date = self.season.date_ref
         else:
-            self.bill.date = self.season.date_ref
-        if (self.bill.date < self.season.begin_date) or (self.bill.date > self.season.end_date):
-            self.bill.date = self.season.date_ref
+            self.bill.date = timezone.now()
         cmt = ["{[b]}%s{[/b]}" % _("subscription")]
         if self.bill.third.contact.id == self.adherent.id:
             cmt.append(_("Subscription of '%s'") % six.text_type(self.adherent))
