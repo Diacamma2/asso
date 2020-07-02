@@ -29,7 +29,6 @@ from django.db import models
 from django.db.models import Q
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.utils.translation import ugettext_lazy as _
-from django.utils import six
 from django_fsm import transition, FSMIntegerField
 
 from lucterios.framework.models import LucteriosModel
@@ -139,7 +138,7 @@ class Event(LucteriosModel):
         if Params.getvalue("member-activite-enable"):
             return "%s %s" % (self.activity, self.date)
         else:
-            return six.text_type(self.date)
+            return str(self.date)
 
     @classmethod
     def get_default_fields(cls):
@@ -275,13 +274,13 @@ class Degree(LucteriosModel):
 
     def __str__(self):
         if (self.subdegree is None) or (Params.getvalue("event-subdegree-enable") == 0):
-            return six.text_type(self.degree)
+            return str(self.degree)
         else:
             return "%s %s" % (self.degree, self.subdegree)
 
     def get_text(self):
         if (self.subdegree is None) or (Params.getvalue("event-subdegree-enable") == 0):
-            return six.text_type(self.degree.name)
+            return str(self.degree.name)
         else:
             return "%s %s" % (self.degree.name, self.subdegree.name)
 
@@ -359,7 +358,7 @@ class Participant(LucteriosModel):
     article_ref_price = LucteriosVirtualField(verbose_name=_('article'), compute_from='get_article_ref_price')
 
     def __str__(self):
-        return six.text_type(self.contact)
+        return str(self.contact)
 
     def get_auditlog_object(self):
         return self.event
@@ -470,7 +469,7 @@ class Participant(LucteriosModel):
             for participant in participant_list:
                 detail_comment = [participant.article.designation]
                 if participant.bill.third.contact.id != participant.contact.id:
-                    detail_comment.append(_("Participant: %s") % six.text_type(participant.contact))
+                    detail_comment.append(_("Participant: %s") % str(participant.contact))
                     if (participant.event.event_type == 1) and (participant.comment is not None) and (participant.comment != ''):
                         detail_comment.append(participant.comment)
                 Detail.create_for_bill(participant.bill, participant.article, reduce=participant.reduce, designation="{[br/]}".join(detail_comment))

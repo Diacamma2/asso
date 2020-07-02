@@ -27,7 +27,6 @@ from shutil import rmtree
 from datetime import date
 from _io import StringIO
 
-from django.utils import six
 from os.path import isfile
 from base64 import b64decode
 
@@ -696,7 +695,7 @@ class AdherentTest(BaseAdherentTest):
         self.factory.xfer = AdherentListing()
         self.calljson('/diacamma.member/adherentListing', new_context, False)
         self.assert_observer('core.print', 'diacamma.member', 'adherentListing')
-        csv_value = b64decode(six.text_type(self.response_json['print']['content'])).decode("utf-8")
+        csv_value = b64decode(str(self.response_json['print']['content'])).decode("utf-8")
         content_csv = csv_value.split('\n')
         self.assertEqual(len(content_csv), 10, str(content_csv))
         self.assertEqual(content_csv[1].strip(), '"Adhérents cotisants - date de référence : 1 octobre 2009"')
@@ -862,8 +861,8 @@ class AdherentTest(BaseAdherentTest):
         self.assert_count_equal('CSV', 6)
         self.assert_count_equal('#CSV/actions', 0)
         self.assertEqual(len(self.json_actions), 3)
-        self.assert_action_equal(self.json_actions[0], (six.text_type('Retour'), 'images/left.png', 'lucterios.contacts', 'contactImport', 0, 2, 1, {'step': '0'}))
-        self.assert_action_equal(self.json_actions[1], (six.text_type('Ok'), 'images/ok.png', 'lucterios.contacts', 'contactImport', 0, 2, 1, {'step': '2'}))
+        self.assert_action_equal(self.json_actions[0], (str('Retour'), 'images/left.png', 'lucterios.contacts', 'contactImport', 0, 2, 1, {'step': '0'}))
+        self.assert_action_equal(self.json_actions[1], (str('Ok'), 'images/ok.png', 'lucterios.contacts', 'contactImport', 0, 2, 1, {'step': '2'}))
         self.assertEqual(len(self.json_context), 8)
 
         self.factory.xfer = ContactImport()
@@ -878,7 +877,7 @@ class AdherentTest(BaseAdherentTest):
         self.assert_count_equal('CSV', 6)
         self.assert_count_equal('#CSV/actions', 0)
         self.assertEqual(len(self.json_actions), 3)
-        self.assert_action_equal(self.json_actions[1], (six.text_type('Ok'), 'images/ok.png', 'lucterios.contacts', 'contactImport', 0, 2, 1, {'step': '3'}))
+        self.assert_action_equal(self.json_actions[1], (str('Ok'), 'images/ok.png', 'lucterios.contacts', 'contactImport', 0, 2, 1, {'step': '3'}))
 
         self.factory.xfer = ContactImport()
         self.calljson('/lucterios.contacts/contactImport', {'step': 3, 'modelname': 'member.Adherent', 'quotechar': "'", 'delimiter': ',',
@@ -1760,7 +1759,7 @@ class AdherentFamilyTest(BaseAdherentTest):
 
     def test_show_adherent(self):
         self.add_subscriptions()
-        self.assertEqual("famille", six.text_type(Params.getobject('member-family-type')))
+        self.assertEqual("famille", str(Params.getobject('member-family-type')))
 
         self.factory.xfer = AdherentShow()
         self.calljson('/diacamma.member/adherentShow',

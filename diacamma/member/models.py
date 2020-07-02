@@ -36,7 +36,7 @@ from django.db.models.aggregates import Min, Max, Count
 from django.db.models.fields import BooleanField
 from django.db.models import Q
 from django.utils.translation import ugettext_lazy as _
-from django.utils import formats, six, timezone
+from django.utils import formats, timezone
 from django_fsm import FSMIntegerField, transition
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
@@ -150,11 +150,11 @@ class Season(LucteriosModel):
             criteria_name = criteria
             try:
                 if (name == 'type'):
-                    criteria_name = six.text_type(SubscriptionType.objects.get(id=criteria))
+                    criteria_name = str(SubscriptionType.objects.get(id=criteria))
                 elif (name == 'team'):
-                    criteria_name = six.text_type(Team.objects.get(id=criteria))
+                    criteria_name = str(Team.objects.get(id=criteria))
                 elif (name == 'activity'):
-                    criteria_name = six.text_type(Activity.objects.get(id=criteria))
+                    criteria_name = str(Activity.objects.get(id=criteria))
             except Exception:
                 criteria_name = '---'
             values_by_criteria.append({name: criteria_name,
@@ -318,7 +318,7 @@ class Season(LucteriosModel):
                 elif act_ret == 2:
                     nb_update += 1
             except EmailException as email_err:
-                error_sending.append((six.text_type(adherent), six.text_type(email_err)))
+                error_sending.append((str(adherent), str(email_err)))
         return nb_del, nb_add, nb_update, error_sending
 
     @property
@@ -710,7 +710,7 @@ class Adherent(Individual):
             wanted_fields = wanted_fields_text.split(";")
             allowed_fields = cls.get_allowed_fields()
             for allowed_field in allowed_fields:
-                if isinstance(allowed_field, six.text_type) and (allowed_field in wanted_fields):
+                if isinstance(allowed_field, str) and (allowed_field in wanted_fields):
                     fields.append(allowed_field)
                 elif isinstance(allowed_field, tuple) and (len(allowed_field) == 2) and (allowed_field[1] in wanted_fields):
                     fields.append(allowed_field)
@@ -722,7 +722,7 @@ class Adherent(Individual):
     def get_fields_title(cls, adh_fields):
         fields = []
         for adh_field in adh_fields:
-            if isinstance(adh_field, six.text_type):
+            if isinstance(adh_field, str):
                 dep_field = cls.get_field_by_name(adh_field)
                 fields.append((adh_field, dep_field.verbose_name))
             elif isinstance(adh_field, tuple) and (len(adh_field) == 2):
@@ -921,7 +921,7 @@ class Adherent(Individual):
                 color = "green"
             else:
                 color = "red"
-            value += "%s: {[font color='%s']}%s{[/font]}{[br/]}" % (six.text_type(doc.document), color, get_bool_textual(doc.value))
+            value += "%s: {[font color='%s']}%s{[/font]}{[br/]}" % (str(doc.document), color, get_bool_textual(doc.value))
         return value
 
     def get_age_category(self):
@@ -1054,7 +1054,7 @@ class ThirdAdherent(Third):
     def get_adherents(self):
         contact = self.contact.get_final_child()
         if isinstance(contact, Adherent):
-            return [six.text_type(contact)]
+            return [str(contact)]
         elif isinstance(contact, LegalEntity):
             family_type = Params.getobject("member-family-type")
             if family_type is None:
@@ -1063,7 +1063,7 @@ class ThirdAdherent(Third):
             for resp in contact.responsability_set.filter(individual__adherent__subscription__season_id=self.season_id).distinct():
                 adh = resp.individual.get_final_child()
                 if adh.family == contact:
-                    adhs.append(six.text_type(adh))
+                    adhs.append(str(adh))
             return sorted(set(adhs))
         return
 
@@ -1083,7 +1083,7 @@ class Prestation(LucteriosModel):
         if Params.getvalue("member-activite-enable"):
             return "%s [%s]" % (self.team, self.activity)
         else:
-            return six.text_type(self.team)
+            return str(self.team)
 
     def get_text(self):
         return "%s %s" % (self.__str__(), get_amount_from_format_devise(self.article.price, 7))
@@ -1154,7 +1154,7 @@ class Subscription(LucteriosModel):
     involvement = LucteriosVirtualField(verbose_name=_('involvement'), compute_from='get_involvement')
 
     def __str__(self):
-        if not isinstance(self.begin_date, six.text_type) and not isinstance(self.end_date, six.text_type):
+        if not isinstance(self.begin_date, str) and not isinstance(self.end_date, str):
             return "%s:%s->%s" % (self.subscriptiontype, formats.date_format(self.begin_date, "SHORT_DATE_FORMAT"), formats.date_format(self.end_date, "SHORT_DATE_FORMAT"))
         else:
             return self.subscriptiontype
@@ -1191,10 +1191,10 @@ class Subscription(LucteriosModel):
         res = []
         if self.prestations.all().count() == 0:
             for lic in self.license_set.all():
-                res.append(six.text_type(lic))
+                res.append(str(lic))
         else:
             for presta in self.prestations.all():
-                res.append(six.text_type(presta))
+                res.append(str(presta))
         return res
 
     @property
@@ -1205,7 +1205,7 @@ class Subscription(LucteriosModel):
     def prestations_query(self):
         select_list = []
         for item in Prestation.objects.filter(team__unactive=False):
-            select_list.append((item.id, six.text_type(item)))
+            select_list.append((item.id, str(item)))
         return select_list
 
     def set_periode(self, dateref):
@@ -1228,7 +1228,7 @@ class Subscription(LucteriosModel):
     def _add_detail_bill(self):
         cmt = []
         if self.bill.third.contact.id != self.adherent.id:
-            cmt.append(_("Subscription of '%s'") % six.text_type(self.adherent))
+            cmt.append(_("Subscription of '%s'") % str(self.adherent))
         for art in self.subscriptiontype.articles.all():
             new_cmt = [art.designation]
             new_cmt.extend(cmt)
@@ -1266,7 +1266,7 @@ class Subscription(LucteriosModel):
             self.bill.date = timezone.now()
         cmt = ["{[b]}%s{[/b]}" % _("subscription")]
         if self.bill.third.contact.id == self.adherent.id:
-            cmt.append(_("Subscription of '%s'") % six.text_type(self.adherent))
+            cmt.append(_("Subscription of '%s'") % str(self.adherent))
         self.bill.comment = "{[br/]}".join(cmt)
         self.bill.save()
         self.bill.detail_set.all().delete()
@@ -1505,9 +1505,9 @@ class License(LucteriosModel):
     def __str__(self):
         val = []
         if Params.getvalue("member-team-enable") and (self.team is not None):
-            val.append(six.text_type(self.team))
+            val.append(str(self.team))
         if Params.getvalue("member-activite-enable") and (self.activity is not None):
-            val.append("[%s]" % six.text_type(self.activity))
+            val.append("[%s]" % str(self.activity))
         if Params.getvalue("member-licence-enabled") and (self.value is not None):
             val.append(self.value)
         return " ".join(val)
@@ -1821,16 +1821,16 @@ class CommandManager(object):
     def get_txt(self, content_item):
         item = Adherent.objects.get(id=content_item["adherent"])
         cmd_value = {}
-        cmd_value["adherent"] = six.text_type(item)
+        cmd_value["adherent"] = str(item)
         cmd_value["type"] = SubscriptionType.objects.get(id=content_item["type"]).get_text_value()
         cmd_value["age"] = item.age_category
         teams = []
         for team in Team.objects.filter(id__in=content_item["team"]):
-            teams.append(six.text_type(team))
+            teams.append(str(team))
         cmd_value["team"] = '{[br/]}'.join(teams)
         activities = []
         for team in Activity.objects.filter(id__in=content_item["activity"]):
-            activities.append(six.text_type(team))
+            activities.append(str(team))
         cmd_value["activity"] = '{[br/]}'.join(activities)
         cmd_value["licence"] = '{[br/]}'.join(content_item["licence"])
         cmd_value["reduce"] = content_item["reduce"]

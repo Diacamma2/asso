@@ -25,7 +25,6 @@ along with Lucterios.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import unicode_literals
 
 from django.utils.translation import ugettext_lazy as _
-from django.utils import six
 from django.db.models import Q
 
 from lucterios.framework.xferadvance import XferListEditor, TITLE_PRINT,\
@@ -146,7 +145,7 @@ class EventTransition(XferTransition):
         row_id = 5
         for participant in self.item.participant_set.all():
             lbl = XferCompLabelForm('name_%d' % participant.id)
-            lbl.set_value_as_name(six.text_type(participant))
+            lbl.set_value_as_name(str(participant))
             lbl.set_location(0, row_id)
             dlg.add_component(lbl)
             lbl = XferCompLabelForm('current_%d' % participant.id)
@@ -271,7 +270,7 @@ class ParticipantOpen(XferContainerAcknowledge):
         modal_name = current_contact.__class__.get_long_name()
         field_id = current_contact.__class__.__name__.lower()
         self.redirect_action(ActionsManage.get_action_url(modal_name, 'Show', self), modal=FORMTYPE_MODAL,
-                             close=CLOSE_NO, params={field_id: six.text_type(current_contact.id)})
+                             close=CLOSE_NO, params={field_id: str(current_contact.id)})
 
 
 @ActionsManage.affect_grid(TITLE_ADD, "images/add.png", condition=lambda xfer, gridname='': hasattr(xfer.item, 'status') and (xfer.item.status == 0))
@@ -354,7 +353,7 @@ class DegreeStatistic(XferContainerCustom):
                 if activity is not None:
                     lab = XferCompLabelForm("lblactivite_%d" % activity.id)
                     lab.set_italic()
-                    lab.set_value(six.text_type(activity))
+                    lab.set_value(str(activity))
                     lab.set_location(0, pos_y, 3)
                     self.add_component(lab)
                     pos_y += 1
@@ -364,7 +363,7 @@ class DegreeStatistic(XferContainerCustom):
                     lab.set_location(1, pos_y)
                     self.add_component(lab)
                     lab = XferCompLabelForm("val_%d" % pos_y)
-                    lab.set_value(six.text_type(val))
+                    lab.set_value(str(val))
                     lab.set_location(2, pos_y)
                     self.add_component(lab)
                     subtotal += val
@@ -377,7 +376,7 @@ class DegreeStatistic(XferContainerCustom):
                     self.add_component(lab)
                     lab = XferCompLabelForm("subtotal_%d" % activity.id)
                     lab.set_italic()
-                    lab.set_value(six.text_type(subtotal))
+                    lab.set_value(str(subtotal))
                     lab.set_location(2, pos_y)
                     self.add_component(lab)
                     pos_y += 1
@@ -386,7 +385,7 @@ class DegreeStatistic(XferContainerCustom):
             lab.set_location(1, pos_y)
             self.add_component(lab)
             lab = XferCompLabelForm("total")
-            lab.set_value_as_name(six.text_type(total))
+            lab.set_value_as_name(str(total))
             lab.set_location(2, pos_y)
             self.add_component(lab)
         self.add_action(DegreeStatisticPrint.get_action(TITLE_PRINT, "images/print.png"),

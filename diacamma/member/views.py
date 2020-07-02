@@ -26,7 +26,7 @@ from __future__ import unicode_literals
 from importlib import import_module
 
 from django.utils.translation import ugettext_lazy as _
-from django.utils import six, formats
+from django.utils import formats
 from django.db.models import Q
 from django.conf import settings
 
@@ -213,7 +213,7 @@ class AdherentAbstractList(XferListEditor, AdherentFilter):
         info_list.append("")
         if Params.getvalue("member-activite-enable") and (len(activity) > 0):
             info_list.append("{[b]}{[u]}%s{[/u]}{[/b]} : %s" % (Params.getvalue("member-activite-text"),
-                                                                ", ".join([six.text_type(activity_item) for activity_item in Activity.objects.filter(id__in=activity)])))
+                                                                ", ".join([str(activity_item) for activity_item in Activity.objects.filter(id__in=activity)])))
             info_list.append("")
         if Params.getvalue("member-team-enable"):
             if len(team) == 1:
@@ -224,12 +224,12 @@ class AdherentAbstractList(XferListEditor, AdherentFilter):
                 info_list.append("")
             elif len(team) > 1:
                 info_list.append("{[b]}{[u]}%s{[/u]}{[/b]} : %s" % (Params.getvalue("member-team-text"),
-                                                                    ", ".join([six.text_type(team_item) for team_item in Team.objects.filter(id__in=team)])))
+                                                                    ", ".join([str(team_item) for team_item in Team.objects.filter(id__in=team)])))
                 info_list.append("")
 
         if Params.getvalue("member-age-enable") and (len(age) > 0):
             info_list.append("{[b]}{[u]}%s{[/u]}{[/b]} : %s" % (_("Age"),
-                                                                ", ".join([six.text_type(age_item) for age_item in Age.objects.filter(id__in=age)])))
+                                                                ", ".join([str(age_item) for age_item in Age.objects.filter(id__in=age)])))
             info_list.append("")
 
         if Params.getvalue("member-filter-genre") and (genre != 0):
@@ -432,14 +432,14 @@ class AdherentLicense(XferContainerCustom):
             row += 1
             if Params.getvalue("member-team-enable"):
                 lbl = XferCompLabelForm('team_%d' % lic.id)
-                lbl.set_value(six.text_type(lic.team))
+                lbl.set_value(str(lic.team))
                 lbl.set_location(1, row)
                 lbl.description = Params.getvalue("member-team-text")
                 self.add_component(lbl)
                 row += 1
             if Params.getvalue("member-activite-enable"):
                 lbl = XferCompLabelForm('activity_%d' % lic.id)
-                lbl.set_value(six.text_type(lic.activity))
+                lbl.set_value(str(lic.activity))
                 lbl.set_location(1, row)
                 lbl.description = Params.getvalue("member-activite-text")
                 self.add_component(lbl)
@@ -1206,7 +1206,7 @@ def summary_member(xfer):
                 current_season = Season.current_season()
                 dateref = current_season.date_ref
                 lab = XferCompLabelForm('memberseason')
-                lab.set_value_as_headername(six.text_type(current_season))
+                lab.set_value_as_headername(str(current_season))
                 lab.set_location(0, row + 1, 4)
                 xfer.add_component(lab)
                 nb_adh = Adherent.objects.filter(Q(subscription__begin_date__lte=dateref) & Q(subscription__end_date__gte=dateref) & Q(subscription__status=2)).distinct().count()
@@ -1237,7 +1237,7 @@ def summary_member(xfer):
                     xfer.add_component(lab)
             except LucteriosException as lerr:
                 lbl = XferCompLabelForm("member_error")
-                lbl.set_value_center(six.text_type(lerr))
+                lbl.set_value_center(str(lerr))
                 lbl.set_location(0, row + 1, 4)
                 xfer.add_component(lbl)
             if hasattr(settings, "DIACAMMA_MAXACTIVITY"):

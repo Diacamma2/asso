@@ -26,7 +26,7 @@ from __future__ import unicode_literals
 from django.utils.translation import ugettext_lazy as _
 from django.db.models import Q
 from django.conf import settings
-from django.utils import six, timezone
+from django.utils import timezone
 
 from lucterios.framework.xferadvance import XferAddEditor, XferListEditor, TITLE_MODIFY, TITLE_DELETE, TITLE_ADD, TITLE_EDIT, XferShowEditor, TITLE_CLONE
 from lucterios.framework.xferadvance import XferDelete
@@ -61,7 +61,7 @@ def fill_params(xfer, param_lists=None, smallbtn=False):
 
     comp_fields = xfer.get_components("member-fields")
     if comp_fields is not None:
-        comp_fields.value = "{[br/]}".join([six.text_type(fields_title[1]) for fields_title in Adherent.get_default_fields_title()])
+        comp_fields.value = "{[br/]}".join([str(fields_title[1]) for fields_title in Adherent.get_default_fields_title()])
 
     btn = XferCompButton('editparam')
     btn.set_is_mini(smallbtn)
@@ -314,7 +314,7 @@ class TaxReceiptPrint(SupportingPrint):
             current_taxreceipt = self.items[0]
             return current_taxreceipt.get_document_filename()
         else:
-            return six.text_type(self.caption)
+            return str(self.caption)
 
     def items_callback(self):
         return self.items

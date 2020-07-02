@@ -27,7 +27,7 @@ from datetime import timedelta
 
 from django.db.models.aggregates import Max
 from django.utils.translation import ugettext_lazy as _
-from django.utils import formats, six
+from django.utils import formats
 
 from lucterios.framework.editors import LucteriosEditor
 from lucterios.framework.xfercomponents import XferCompLabelForm, XferCompDate, XferCompFloat,\
@@ -150,7 +150,7 @@ class AdherentEditor(IndividualEditor):
             if current_family is None:
                 lbl.set_value(None)
             else:
-                lbl.set_value(six.text_type(self.item.family))
+                lbl.set_value(str(self.item.family))
             lbl.set_location(1, row_init, 2)
             lbl.description = _('family')
             xfer.add_component(lbl)
@@ -164,7 +164,7 @@ class AdherentEditor(IndividualEditor):
             else:
                 act = ActionsManage.get_action_url('contacts.LegalEntity', 'Show', xfer)
                 act.set_value("", "images/edit.png")
-                btn.set_action(xfer.request, act, modal=FORMTYPE_MODAL, close=CLOSE_NO, params={'legal_entity': six.text_type(current_family.id)})
+                btn.set_action(xfer.request, act, modal=FORMTYPE_MODAL, close=CLOSE_NO, params={'legal_entity': str(current_family.id)})
             xfer.add_component(btn)
 
         if xfer.item.current_subscription is not None:
@@ -175,7 +175,7 @@ class AdherentEditor(IndividualEditor):
                 ckc = XferCompCheck("doc_%d" % doc.id)
                 ckc.set_value(doc.value)
                 ckc.set_location(2, row)
-                ckc.description = six.text_type(doc.document)
+                ckc.description = str(doc.document)
                 xfer.add_component(ckc)
                 row += 1
             if row != row_init + 1:
