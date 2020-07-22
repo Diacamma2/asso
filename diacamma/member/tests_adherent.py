@@ -3021,7 +3021,7 @@ class AdherentConnectionTest(BaseAdherentTest):
         self.assert_observer('core.auth', 'CORE', 'authentification')
         self.assert_json_equal('', '', 'OK')
 
-        self.calljson('/lucterios.contacts/account', {})
+        self.calljson('/lucterios.contacts/account', {}, 'get')
         self.assert_observer('core.custom', 'lucterios.contacts', 'account')
         self.assert_json_equal('LABELFORM', 'genre', 1)
         self.assert_json_equal('LABELFORM', 'firstname', "Joe")
@@ -3091,7 +3091,7 @@ class AdherentConnectionTest(BaseAdherentTest):
         self.assert_observer('core.auth', 'CORE', 'authentification')
         self.assert_json_equal('', '', 'OK')
 
-        self.calljson('/lucterios.contacts/account', {})
+        self.calljson('/lucterios.contacts/account', {}, 'get')
         self.assert_observer('core.custom', 'lucterios.contacts', 'account')
         self.assert_json_equal('LABELFORM', 'legalentity_structure_type', "famille")
         self.assert_json_equal('LABELFORM', 'legalentity_name', "LES DALTONS")
