@@ -320,6 +320,8 @@ class DegreeStatistic(XferContainerCustom):
     model = Degree
     field_id = 'degree'
     caption = _("Statistic")
+    readonly = True
+    methods_allowed = ('GET', )
 
     def fillresponse(self, season):
         if season is None:

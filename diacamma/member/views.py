@@ -962,6 +962,8 @@ class AdherentStatistic(XferContainerCustom):
     model = Adherent
     field_id = 'adherent'
     caption = _("Statistic")
+    readonly = True
+    methods_allowed = ('GET', )
 
     def add_static_grid(self, grid_title, grid_name, stat_city, main_id, main_name):
         row = self.get_max_row()
