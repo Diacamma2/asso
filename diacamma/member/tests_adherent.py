@@ -861,8 +861,8 @@ class AdherentTest(BaseAdherentTest):
         self.assert_count_equal('CSV', 6)
         self.assert_count_equal('#CSV/actions', 0)
         self.assertEqual(len(self.json_actions), 3)
-        self.assert_action_equal(self.json_actions[0], (str('Retour'), 'images/left.png', 'lucterios.contacts', 'contactImport', 0, 2, 1, {'step': '0'}))
-        self.assert_action_equal(self.json_actions[1], (str('Ok'), 'images/ok.png', 'lucterios.contacts', 'contactImport', 0, 2, 1, {'step': '2'}))
+        self.assert_action_equal('POST', self.json_actions[0], (str('Retour'), 'images/left.png', 'lucterios.contacts', 'contactImport', 0, 2, 1, {'step': '0'}))
+        self.assert_action_equal('POST', self.json_actions[1], (str('Ok'), 'images/ok.png', 'lucterios.contacts', 'contactImport', 0, 2, 1, {'step': '2'}))
         self.assertEqual(len(self.json_context), 8)
 
         self.factory.xfer = ContactImport()
@@ -877,7 +877,7 @@ class AdherentTest(BaseAdherentTest):
         self.assert_count_equal('CSV', 6)
         self.assert_count_equal('#CSV/actions', 0)
         self.assertEqual(len(self.json_actions), 3)
-        self.assert_action_equal(self.json_actions[1], (str('Ok'), 'images/ok.png', 'lucterios.contacts', 'contactImport', 0, 2, 1, {'step': '3'}))
+        self.assert_action_equal('POST', self.json_actions[1], (str('Ok'), 'images/ok.png', 'lucterios.contacts', 'contactImport', 0, 2, 1, {'step': '3'}))
 
         self.factory.xfer = ContactImport()
         self.calljson('/lucterios.contacts/contactImport', {'step': 3, 'modelname': 'member.Adherent', 'quotechar': "'", 'delimiter': ',',
@@ -1992,8 +1992,8 @@ class AdherentFamilyTest(BaseAdherentTest):
         self.factory.xfer = BillShow()
         self.calljson('/diacamma.invoice/billShow', {'bill': 2}, False)
         self.assert_observer('core.custom', 'diacamma.invoice', 'billShow')
-        self.assert_action_equal(self.get_json_path('#parentbill/action'), ("origine", "diacamma.invoice/images/origin.png",
-                                                                            "diacamma.invoice", "billShow", 0, 1, 1, {'bill': 1}))
+        self.assert_action_equal('GET', self.get_json_path('#parentbill/action'), ("origine", "diacamma.invoice/images/origin.png",
+                                                                                   "diacamma.invoice", "billShow", 0, 1, 1, {'bill': 1}))
 
     def test_cancel_cotation(self):
         self.prep_subscription_family()
@@ -2022,8 +2022,8 @@ class AdherentFamilyTest(BaseAdherentTest):
         self.factory.xfer = BillShow()
         self.calljson('/diacamma.invoice/billShow', {'bill': 2}, False)
         self.assert_observer('core.custom', 'diacamma.invoice', 'billShow')
-        self.assert_action_equal(self.get_json_path('#parentbill/action'), ("origine", "diacamma.invoice/images/origin.png",
-                                                                            "diacamma.invoice", "billShow", 0, 1, 1, {'bill': 1}))
+        self.assert_action_equal('GET', self.get_json_path('#parentbill/action'), ("origine", "diacamma.invoice/images/origin.png",
+                                                                                   "diacamma.invoice", "billShow", 0, 1, 1, {'bill': 1}))
 
     def test_delete_cotation(self):
         self.prep_subscription_family()
@@ -2052,8 +2052,8 @@ class AdherentFamilyTest(BaseAdherentTest):
         self.factory.xfer = BillShow()
         self.calljson('/diacamma.invoice/billShow', {'bill': 2}, False)
         self.assert_observer('core.custom', 'diacamma.invoice', 'billShow')
-        self.assert_action_equal(self.get_json_path('#parentbill/action'), ("origine", "diacamma.invoice/images/origin.png",
-                                                                            "diacamma.invoice", "billShow", 0, 1, 1, {'bill': 1}))
+        self.assert_action_equal('GET', self.get_json_path('#parentbill/action'), ("origine", "diacamma.invoice/images/origin.png",
+                                                                                   "diacamma.invoice", "billShow", 0, 1, 1, {'bill': 1}))
 
     def test_command(self):
         Season.objects.get(id=16).set_has_actif()
@@ -3096,8 +3096,8 @@ class AdherentConnectionTest(BaseAdherentTest):
         self.assert_json_equal('LABELFORM', 'legalentity_structure_type', "famille")
         self.assert_json_equal('LABELFORM', 'legalentity_name', "LES DALTONS")
         self.assert_json_equal('LINK', 'legalentity_email', "dalton@worldcompany.com")
-        self.assert_action_equal(self.get_json_path('#btn_edit/action'), ("Editer", "images/edit.png",
-                                                                          "lucterios.contacts", "currentLegalEntityModify", 0, 1, 1, {'legal_entity': 7}))
+        self.assert_action_equal('POST', self.get_json_path('#btn_edit/action'), ("Editer", "images/edit.png",
+                                                                                  "lucterios.contacts", "currentLegalEntityModify", 0, 1, 1, {'legal_entity': 7}))
         self.assert_count_equal('subscription', 2)
         self.assertEqual(LucteriosUser.objects.all().count(), 2)
         self.assertEqual(LucteriosUser.objects.filter(is_active=True).count(), 2)
