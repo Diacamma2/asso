@@ -218,6 +218,8 @@ class OrganizerAddModify(ContactSelection):
     select_class = OrganizerSave
     model = Organizer
     inital_model = Individual
+    readonly = False
+    methods_allowed = ('POST', 'PUT')
 
 
 @ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", unique=SELECT_MULTI, condition=lambda xfer, gridname='': xfer.item.status == 0)
@@ -264,6 +266,8 @@ class ParticipantOpen(XferContainerAcknowledge):
     model = Participant
     field_id = 'participant'
     caption_add = _("Add participant")
+    readonly = True
+    methods_allowed = ('GET', )
 
     def fillresponse(self):
         current_contact = self.item.contact.get_final_child()
@@ -281,6 +285,8 @@ class ParticipantAdd(AdherentSelection):
     mode_select = SELECT_MULTI
     model = Participant
     select_class = ParticipantSave
+    readonly = False
+    methods_allowed = ('POST', 'PUT')
 
 
 @ActionsManage.affect_grid(_("Add contact"), "images/add.png", condition=lambda xfer, gridname='': xfer.item.status == 0)
@@ -292,6 +298,8 @@ class ParticipantAddContact(ContactSelection):
     select_class = ParticipantSave
     model = Participant
     inital_model = Individual
+    readonly = False
+    methods_allowed = ('POST', 'PUT')
 
 
 @ActionsManage.affect_grid(TITLE_MODIFY, "images/edit.png", unique=SELECT_SINGLE, condition=lambda xfer, gridname='': (xfer.item.status == 0))

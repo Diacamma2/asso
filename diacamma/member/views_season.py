@@ -80,7 +80,7 @@ class SeasonSubscription(XferListEditor):
 
 
 @ActionsManage.affect_grid(_("Active"), "images/ok.png", unique=SELECT_SINGLE)
-@MenuManage.describ('member.change_season')
+@MenuManage.describ('member.add_season')
 class SeasonActive(XferContainerAcknowledge):
     icon = "season.png"
     model = Season
@@ -112,7 +112,7 @@ class SeasonShow(XferShowEditor):
 
 @ActionsManage.affect_grid(TITLE_ADD, "images/add.png")
 @ActionsManage.affect_grid(TITLE_MODIFY, "images/edit.png", unique=SELECT_SINGLE)
-@MenuManage.describ('member.change_season')
+@MenuManage.describ('member.add_season')
 class DocummentAddModify(XferAddEditor):
     icon = "season.png"
     model = Document
@@ -122,7 +122,7 @@ class DocummentAddModify(XferAddEditor):
 
 
 @ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", unique=SELECT_MULTI)
-@MenuManage.describ('member.change_season')
+@MenuManage.describ('member.add_season')
 class DocummentDel(XferDelete):
     icon = "season.png"
     model = Document
@@ -131,7 +131,7 @@ class DocummentDel(XferDelete):
 
 
 @ActionsManage.affect_grid(_('Import doc.'), "images/clone.png", unique=SELECT_SINGLE, close=CLOSE_NO)
-@MenuManage.describ('member.change_season')
+@MenuManage.describ('member.add_season')
 class SeasonDocummentClone(XferContainerAcknowledge):
     icon = "season.png"
     model = Season
