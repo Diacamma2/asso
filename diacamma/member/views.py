@@ -27,7 +27,8 @@ from importlib import import_module
 
 from django.utils.translation import ugettext_lazy as _
 from django.utils import formats
-from django.db.models import Q
+from django.db.models.functions import Concat, Trim
+from django.db.models import Q, Value
 from django.conf import settings
 
 from lucterios.framework.xferadvance import XferListEditor, TITLE_OK, TITLE_ADD,\
@@ -53,15 +54,14 @@ from lucterios.CORE.xferprint import XferPrintListing
 from lucterios.CORE.editors import XferSavedCriteriaSearchEditor
 from lucterios.CORE.parameters import Params, notfree_mode_connect
 
-from lucterios.contacts.models import Individual, LegalEntity, Responsability
+from lucterios.contacts.models import Individual, LegalEntity, Responsability,\
+    AbstractContact
 from lucterios.contacts.views_contacts import LegalEntityAddModify
 
 from diacamma.accounting.models import Third
-from diacamma.accounting.views import ThirdList
 from diacamma.accounting.tools import format_with_devise
 from diacamma.invoice.models import get_or_create_customer, Bill
-from diacamma.member.models import Adherent, Subscription, Season, Age, Team, Activity, License, DocAdherent, SubscriptionType, CommandManager, Prestation,\
-    ThirdAdherent
+from diacamma.member.models import Adherent, Subscription, Season, Age, Team, Activity, License, DocAdherent, SubscriptionType, CommandManager, Prestation, ContactAdherent
 
 
 MenuManage.add_sub("association", None, "diacamma.member/images/association.png", _("Association"), _("Association tools"), 30)
@@ -286,16 +286,20 @@ def show_thirdlist(request):
 
 
 @MenuManage.describ(show_thirdlist, FORMTYPE_NOMODAL, 'member.actions', _('List of  families of members up to date with their subscription'))
-class AdherentThirdList(ThirdList):
+class AdherentContactList(XferListEditor):
     icon = "adherent.png"
-    model = ThirdAdherent
-    field_id = 'third'
+    model = ContactAdherent
+    field_id = 'abstractcontact'
     caption = _("Season adherents")
 
     def __init__(self, **kwargs):
-        ThirdList.__init__(self, **kwargs)
+        XferListEditor.__init__(self, **kwargs)
         self.size_by_page = Params.getvalue("member-size-page")
         self.caption = _("Address of season adherents")
+
+    def get_items_from_filter(self):
+        items = self.model.objects.annotate(completename=Trim(Concat('legalentity__name', Value(' '), 'individual__lastname', Value(' '), 'individual__firstname')))
+        return items.filter(self.filter).order_by('completename').distinct()
 
     def fillresponse_header(self):
         family_type = Params.getobject("member-family-type")
@@ -303,20 +307,6 @@ class AdherentThirdList(ThirdList):
             raise LucteriosException(IMPORTANT, _('No family type!'))
 
         contact_filter = self.getparam('filter', '')
-        dateref = convert_date(self.getparam("dateref", ""), Season.current_season().date_ref)
-        season = Season.get_from_date(dateref)
-        self.params['season_id'] = season.id
-        self.fieldnames = ["contact", "contact.address", "contact.city", "contact.tel1", "contact.tel2", "emails", "adherents"]
-        legal_filter = Q(contact__legalentity__responsability__individual__adherent__subscription__season=season)
-        indiv_filter = Q(contact__individual__adherent__subscription__season=season)
-        dates_filter = Q(supporting__bill__subscription__season=season)
-        self.filter = Q()
-        if contact_filter != "":
-            q_legalentity = Q(contact__legalentity__name__icontains=contact_filter)
-            q_individual = Q(completename__icontains=contact_filter)
-            self.filter &= (q_legalentity | q_individual)
-        self.filter &= dates_filter & (legal_filter | indiv_filter)
-
         comp = XferCompEdit('filter')
         comp.set_value(contact_filter)
         comp.set_action(self.request, self.return_action(), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
@@ -325,6 +315,7 @@ class AdherentThirdList(ThirdList):
         comp.is_default = True
         self.add_component(comp)
 
+        dateref = convert_date(self.getparam("dateref", ""), Season.current_season().date_ref)
         dtref = XferCompDate('dateref')
         dtref.set_value(dateref)
         dtref.set_needed(True)
@@ -333,16 +324,23 @@ class AdherentThirdList(ThirdList):
         dtref.set_action(self.request, self.return_action(), modal=FORMTYPE_REFRESH)
         self.add_component(dtref)
 
-    def get_items_from_filter(self):
-        items = ThirdList.get_items_from_filter(self)
-        items.model = self.model
-        return items
+        season = Season.get_from_date(dateref)
+        self.params['season_id'] = season.id
+        self.fieldnames = ["ident", "address", "city", "tel1", "tel2", "emails", "adherents"]
+        indiv_filter = Q(individual__adherent__subscription__season=season) & Q(individual__adherent__subscription__status__in=(1, 2)) & Q(individual__responsability__isnull=True)
+        legal_filter = Q(legalentity__responsability__individual__adherent__subscription__season=season) & Q(legalentity__responsability__individual__adherent__subscription__status__in=(1, 2)) & Q(legalentity__structure_type=family_type)
+        self.filter = Q()
+        if contact_filter != "":
+            q_legalentity = Q(legalentity__name__icontains=contact_filter)
+            q_individual = Q(completename__icontains=contact_filter)
+            self.filter &= (q_legalentity | q_individual)
+        self.filter &= (legal_filter | indiv_filter)
 
     def fillresponse(self):
-        ThirdList.fillresponse(self)
+        XferListEditor.fillresponse(self)
         grid = self.get_components(self.field_id)
         grid.colspan = 3
-        grid.add_action(self.request, ActionsManage.get_action_url(Third.get_long_name(), "Show", self), modal=FORMTYPE_MODAL, unique=SELECT_SINGLE, close=CLOSE_NO)
+        grid.add_action(self.request, ActionsManage.get_action_url(AbstractContact.get_long_name(), "Show", self), modal=FORMTYPE_MODAL, unique=SELECT_SINGLE, close=CLOSE_NO)
 
 
 @MenuManage.describ('member.change_adherent', FORMTYPE_NOMODAL, 'member.actions', _('To find an adherent following a set of criteria.'))
@@ -388,12 +386,12 @@ class AdherentAddModify(XferAddEditor):
 
 @ActionsManage.affect_list(TITLE_PRINT, "images/print.png", condition=lambda xfer: Params.getobject("member-family-type") is not None)
 @MenuManage.describ('contacts.change_abstractcontact')
-class AdherentThirdPrint(XferPrintAction):
+class AdherentContactPrint(XferPrintAction):
     icon = "adherent.png"
-    model = ThirdAdherent
-    field_id = 'third'
+    model = ContactAdherent
+    field_id = 'abstractcontact'
     caption = _("Print adherent")
-    action_class = AdherentThirdList
+    action_class = AdherentContactList
     with_text_export = True
 
 
@@ -1217,10 +1215,10 @@ def summary_member(xfer):
                 lab.set_location(0, row + 2, 4)
                 xfer.add_component(lab)
                 if show_thirdlist(xfer.request):
-                    legal_filter = Q(contact__legalentity__responsability__individual__adherent__subscription__season=current_season)
-                    indiv_filter = Q(contact__individual__adherent__subscription__season=current_season)
-                    dates_filter = Q(supporting__bill__subscription__season=current_season)
-                    nb_family = ThirdAdherent.objects.filter(dates_filter & (legal_filter | indiv_filter)).distinct().count()
+                    family_type = Params.getobject("member-family-type")
+                    legal_filter = Q(legalentity__responsability__individual__adherent__subscription__season=current_season) & Q(legalentity__responsability__individual__adherent__subscription__status__in=(1, 2)) & Q(legalentity__structure_type=family_type)
+                    indiv_filter = Q(individual__adherent__subscription__season=current_season) & Q(individual__adherent__subscription__status__in=(1, 2)) & Q(individual__responsability__isnull=True)
+                    nb_family = ContactAdherent.objects.filter(legal_filter | indiv_filter).distinct().count()
                     lab = XferCompLabelForm('familynb')
                     lab.set_value_as_header(_("Active families: %d") % nb_family)
                     lab.set_location(0, row + 3, 4)

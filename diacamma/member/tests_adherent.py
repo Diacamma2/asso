@@ -59,7 +59,7 @@ from diacamma.member.views import AdherentActiveList, AdherentAddModify, Adheren
     AdherentCommandDelete, AdherentCommandModify, AdherentFamilyAdd,\
     AdherentFamilySelect, AdherentFamilyCreate, FamilyAdherentAdd,\
     FamilyAdherentCreate, FamilyAdherentAdded, AdherentListing,\
-    AdherentThirdList, AdherentConnection, SubscriptionDel, AdherentDisableConnection
+    AdherentContactList, AdherentConnection, SubscriptionDel, AdherentDisableConnection
 from diacamma.member.test_tools import default_season, default_financial, default_params,\
     default_adherents, default_subscription, set_parameters, default_prestation, create_adherent
 from diacamma.member.views_conf import TaxReceiptList, TaxReceiptCheck, TaxReceiptShow, TaxReceiptPrint
@@ -2336,20 +2336,20 @@ class AdherentFamilyTest(BaseAdherentTest):
         self.assert_json_equal('', 'bill/@4/third', "UHADIK-FEPIZIBU")
         self.assert_json_equal('', 'bill/@4/total', 152.88)  # Subscription: art1:12.34 + art5:64.10 x 2
 
-        self.factory.xfer = AdherentThirdList()
-        self.calljson('/diacamma.member/adherentThirdList', {'dateref': '2010-01-15'}, False)
-        self.assert_observer('core.custom', 'diacamma.member', 'adherentThirdList')
-        self.assert_count_equal('third', 5)
-        self.assert_json_equal('', 'third/@0/contact', "Dalton")
-        self.assert_json_equal('', 'third/@0/adherents', ["Dalton Joe"])
-        self.assert_json_equal('', 'third/@1/contact', "GOC Marie")
-        self.assert_json_equal('', 'third/@1/adherents', ["GOC Marie"])
-        self.assert_json_equal('', 'third/@2/contact', "LES DALTONS")
-        self.assert_json_equal('', 'third/@2/adherents', ["Dalton Avrel", "Dalton Ma'a"])
-        self.assert_json_equal('', 'third/@3/contact', "Luke")
-        self.assert_json_equal('', 'third/@3/adherents', ["Luke Lucky"])
-        self.assert_json_equal('', 'third/@4/contact', "UHADIK-FEPIZIBU")
-        self.assert_json_equal('', 'third/@4/adherents', ["FEPIZIBU Benjamin", "UHADIK Jeanne"])
+        self.factory.xfer = AdherentContactList()
+        self.calljson('/diacamma.member/adherentContactList', {'dateref': '2010-01-15'}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentContactList')
+        self.assert_count_equal('abstractcontact', 5)
+        self.assert_json_equal('', 'abstractcontact/@0/ident', "Dalton")
+        self.assert_json_equal('', 'abstractcontact/@0/adherents', ["Dalton Joe"])
+        self.assert_json_equal('', 'abstractcontact/@1/ident', "GOC Marie")
+        self.assert_json_equal('', 'abstractcontact/@1/adherents', ["GOC Marie"])
+        self.assert_json_equal('', 'abstractcontact/@2/ident', "LES DALTONS")
+        self.assert_json_equal('', 'abstractcontact/@2/adherents', ["Dalton Avrel", "Dalton Ma'a"])
+        self.assert_json_equal('', 'abstractcontact/@3/ident', "Luke")
+        self.assert_json_equal('', 'abstractcontact/@3/adherents', ["Luke Lucky"])
+        self.assert_json_equal('', 'abstractcontact/@4/ident', "UHADIK-FEPIZIBU")
+        self.assert_json_equal('', 'abstractcontact/@4/adherents', ["FEPIZIBU Benjamin", "UHADIK Jeanne"])
 
     def test_import_with_prestation(self):
         csv_content = """'nom','prenom','famille','sexe','adresse','codePostal','ville','fixe','portable','mail','DateNaissance','LieuNaissance','Type','Cours'

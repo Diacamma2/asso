@@ -52,7 +52,8 @@ from lucterios.framework.auditlog import auditlog
 from lucterios.CORE.models import Parameter, PrintModel, LucteriosUser,\
     LucteriosGroup
 from lucterios.CORE.parameters import Params
-from lucterios.contacts.models import Individual, LegalEntity, Responsability
+from lucterios.contacts.models import Individual, LegalEntity, Responsability,\
+    AbstractContact
 from lucterios.documents.models import FolderContainer
 from lucterios.mailing.email_functions import EmailException
 
@@ -1014,6 +1015,11 @@ class Adherent(Individual):
         if current_family is None:
             return self
         else:
+            try:
+                Third.objects.get(contact_id=self.id)
+                get_or_create_customer(current_family.id)
+            except ObjectDoesNotExist:
+                pass
             return current_family
 
     def save(self, force_insert=False, force_update=False, using=None,
@@ -1032,10 +1038,21 @@ class Adherent(Individual):
         verbose_name_plural = _('adherents')
 
 
-class ThirdAdherent(Third):
+class ContactAdherent(AbstractContact):
 
+    ident = LucteriosVirtualField(verbose_name=_('contact'), compute_from='__str__')
     emails = LucteriosVirtualField(verbose_name=_('emails'), compute_from='get_emails')
     adherents = LucteriosVirtualField(verbose_name=_("adherents"), compute_from='get_adherents')
+
+    def __str__(self):
+        if hasattr(self, 'individual'):
+            return str(getattr(self, 'individual'))
+        elif hasattr(self, 'legalentity'):
+            return str(getattr(self, 'legalentity'))
+        elif self.get_final_child() != self:
+            return str(self.get_final_child())
+        else:
+            return "contact#%d" % self.id
 
     def set_context(self, xfer):
         self.season_id = xfer.getparam("season_id", 0)
@@ -1044,18 +1061,18 @@ class ThirdAdherent(Third):
             self.season_id = Season.get_from_date(dateref).id
 
     def get_emails(self):
-        contact = self.contact.get_final_child()
-        emails = contact.email.replace(',', ';').split(';')
-        if isinstance(contact, LegalEntity):
+        emails = self.email.replace(',', ';').split(';')
+        if hasattr(self, 'legalentity'):
+            contact = getattr(self, 'legalentity')
             for resp in contact.responsability_set.filter(individual__adherent__subscription__season_id=self.season_id).distinct():
                 emails.extend(resp.individual.email.replace(',', ';').split(';'))
         return list(set(emails))
 
     def get_adherents(self):
-        contact = self.contact.get_final_child()
-        if isinstance(contact, Adherent):
-            return [str(contact)]
-        elif isinstance(contact, LegalEntity):
+        if hasattr(self, 'individual'):
+            return [str(self)]
+        elif hasattr(self, 'legalentity'):
+            contact = getattr(self, 'legalentity')
             family_type = Params.getobject("member-family-type")
             if family_type is None:
                 raise LucteriosException(IMPORTANT, _('No family type!'))
