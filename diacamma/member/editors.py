@@ -351,4 +351,5 @@ class TaxReceiptEditor(LucteriosEditor):
         from diacamma.accounting.views_entries import EntryAccountOpenFromLine
         entryline = xfer.get_components('entryline')
         entryline.actions = []
+        entryline.delete_header('link')
         entryline.add_action(xfer.request, EntryAccountOpenFromLine.get_action(TITLE_EDIT, "images/edit.png"), close=CLOSE_NO, unique=SELECT_SINGLE)

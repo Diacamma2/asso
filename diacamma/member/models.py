@@ -59,7 +59,7 @@ from lucterios.mailing.email_functions import EmailException
 
 from diacamma.invoice.models import Article, Bill, Detail, get_or_create_customer, invoice_addon_for_third
 from diacamma.accounting.tools import get_amount_from_format_devise, format_with_devise, current_system_account
-from diacamma.accounting.models import Third, FiscalYear, EntryAccount, EntryLineAccount
+from diacamma.accounting.models import Third, FiscalYear, EntryAccount, EntryLineAccount, ChartsAccount, Journal
 from diacamma.payoff.views import get_html_payment
 from diacamma.payoff.models import PaymentMethod, Supporting, Payoff
 
@@ -1583,6 +1583,9 @@ class License(LucteriosModel):
 
 class TaxReceiptPayoffSet(QuerySet):
 
+    PAYOFF_MODE_FEE = 10
+    PAYOFF_MODE_REVENU = 11
+
     def __init__(self, model=None, query=None, using=None, hints=None):
         QuerySet.__init__(self, model=Payoff, query=query, using=using, hints=hints)
         self._result_cache = None
@@ -1594,8 +1597,10 @@ class TaxReceiptPayoffSet(QuerySet):
         new_payoff = Payoff(date=entryline.entry.date_value, amount=entryline.amount, mode=2, payer=str(self.current_third))
         new_payoff.id = -10 * (len(self._result_cache) + 1)
         old_payoff = entryline.entry.payoff_set.all().first()
-        if entryline.account.type_of_account == 4:
-            new_payoff.mode = 6
+        if entryline.account.type_of_account == ChartsAccount.TYPE_EXPENSE:
+            new_payoff.mode = TaxReceiptPayoffSet.PAYOFF_MODE_FEE
+        elif (entryline.account.type_of_account == ChartsAccount.TYPE_REVENUE) and (entryline.amount < 0):
+            new_payoff.mode = TaxReceiptPayoffSet.PAYOFF_MODE_REVENU
         elif old_payoff is None:
             if entryline.account.code == Params.getvalue("payoff-cash-account"):
                 new_payoff.mode = 0
@@ -1615,13 +1620,16 @@ class TaxReceiptPayoffSet(QuerySet):
                 if entry_letter.close is False:
                     self._result_cache = []
                     return False
-                entryline_letter_list = entry_letter.entrylineaccount_set.filter(Q(account__code__regex=current_system_account().get_cash_mask()) | Q(account__type_of_account=4))
+                entryline_query = Q(account__code__regex=current_system_account().get_cash_mask())
+                entryline_query |= Q(account__type_of_account=ChartsAccount.TYPE_EXPENSE)
+                entryline_query |= (Q(account__type_of_account=ChartsAccount.TYPE_REVENUE) & Q(amount__lt=0))
+                entryline_letter_list = entry_letter.entrylineaccount_set.filter(entryline_query)
                 if len(entryline_letter_list) > 0:
                     for entryline_letter in entryline_letter_list:
                         nb_line += self._add_payoff(entryline_letter)
-                elif entry_letter == entry_letter.year.entryaccount_set.filter(journal__id=5).order_by('num').last():
+                elif entry_letter == entry_letter.year.entryaccount_set.filter(journal__id=Journal.DEFAULT_OTHER).order_by('num').last():
                     entryline = entry_letter.entrylineaccount_set.filter(Q(link=link)).first()
-                    entryline_query = Q(entry__year__last_fiscalyear=entry_letter.year) & Q(entry__journal_id=1)
+                    entryline_query = Q(entry__year__last_fiscalyear=entry_letter.year) & Q(entry__journal_id=Journal.DEFAULT_LASTYEAR)
                     entryline_query &= Q(third=entryline.third)
                     entryline_query &= Q(amount=-1 * entryline.amount)
                     entryline_query &= Q(account__code=entryline.account.code)
@@ -1720,8 +1728,10 @@ class TaxReceipt(Supporting):
 
     def get_mode_payoff(self):
         def get_mode_text(mode):
-            if mode == 6:
+            if mode == TaxReceiptPayoffSet.PAYOFF_MODE_FEE:
                 return str(_('waiver of fee'))
+            elif mode == TaxReceiptPayoffSet.PAYOFF_MODE_REVENU:
+                return str(_('waiver of revenue or produce'))
             else:
                 return get_value_if_choices(mode, field)
         if self.id is None:

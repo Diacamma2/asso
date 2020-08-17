@@ -2869,6 +2869,48 @@ class TaxtReceiptTest(InvoiceTest):
         self.assert_json_equal('LABELFORM', 'date_payoff', '2015-03-15')
         self.assert_json_equal('LABELFORM', 'mode_payoff', 'abandon de frais')
 
+    def test_waiver_revenu(self):
+        details = [{'article': 2, 'designation': 'article 2', 'price': '100.00', 'quantity': 1}]
+        self._create_bill(details, 2, '2015-03-25', 4, True)
+        details = [{'article': 4, 'designation': 'article 4', 'price': '100.00', 'quantity': 1}]
+        self._create_bill(details, 3, '2015-03-29', 4, True)
+
+        self.factory.xfer = EntryAccountClose()
+        self.calljson('/diacamma.accounting/entryAccountClose',
+                      {'CONFIRME': 'YES', 'year': '1', 'journal': '0', "entryline": "1;2;3;4"}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.accounting', 'entryAccountClose')
+
+        self.factory.xfer = EntryAccountLink()
+        self.calljson('/diacamma.accounting/entryAccountLink', {'year': '1', 'journal': '0', 'filter': '0', 'entryline': '3;1'}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.accounting', 'entryAccountLink')
+
+        self.factory.xfer = EntryAccountList()
+        self.calljson('/diacamma.accounting/entryAccountList',
+                      {'year': '1', 'journal': '0', 'filter': '0'}, False)
+        self.assert_observer('core.custom', 'diacamma.accounting', 'entryAccountList')
+        self.assert_count_equal('entryline', 4)
+        self.assert_json_equal('LABELFORM', 'result', [0.00, 0.00, 0.00, 0.00, 0.00])
+
+        self.factory.xfer = TaxReceiptCheck()
+        self.calljson('/diacamma.member/taxReceiptCheck', {'year': 2015, 'CONFIRME': 'YES'}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.member', 'taxReceiptCheck')
+
+        self.factory.xfer = TaxReceiptList()
+        self.calljson('/diacamma.member/taxReceiptList', {'year': 2015}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'taxReceiptList')
+        self.assert_count_equal('taxreceipt', 1)
+
+        self.factory.xfer = TaxReceiptShow()
+        self.calljson('/diacamma.member/taxReceiptShow', {'taxreceipt': 3}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'taxReceiptShow')
+        self.assert_count_equal('', 9)
+        self.assert_json_equal('LABELFORM', 'num', 1)
+        self.assert_json_equal('LABELFORM', 'third', 'Dalton Joe')
+        self.assert_count_equal('entryline', 1)
+        self.assert_json_equal('LABELFORM', 'total', 100.0)
+        self.assert_json_equal('LABELFORM', 'date_payoff', '2015-03-25')
+        self.assert_json_equal('LABELFORM', 'mode_payoff', 'abandon de revenus ou de produits')
+
     def test_double_year(self):
         current_year = FiscalYear.get_current()
 
