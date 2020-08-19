@@ -37,12 +37,11 @@ from lucterios.framework.tools import CLOSE_NO, FORMTYPE_REFRESH, ActionsManage,
     FORMTYPE_MODAL, CLOSE_YES, SELECT_SINGLE
 from lucterios.framework.xferadvance import TITLE_EDIT
 
-from lucterios.contacts.editors import IndividualEditor
-
-from diacamma.member.models import Period, Season, SubscriptionType, License, convert_date, same_day_months_after, Activity,\
-    Adherent, Prestation
 from lucterios.CORE.parameters import Params
 from lucterios.contacts.models import Individual
+from lucterios.contacts.editors import IndividualEditor
+
+from diacamma.member.models import Period, Season, SubscriptionType, License, convert_date, same_day_months_after, Activity, Adherent, Prestation, Subscription
 
 
 class SeasonEditor(LucteriosEditor):
@@ -208,21 +207,21 @@ class SubscriptionEditor(LucteriosEditor):
                 self.item.adherent.__dict__.update(current_contact.__dict__)
                 self.item.adherent.save()
                 self.item.adherent_id = self.item.adherent.id
-        if self.item.subscriptiontype.duration == 0:  # periodic
+        if self.item.subscriptiontype.duration == SubscriptionType.DURATION_ANNUALLY:
             season = self.item.season
             self.item.begin_date = season.begin_date
             self.item.end_date = season.end_date
-        elif self.item.subscriptiontype.duration == 1:  # periodic
+        elif self.item.subscriptiontype.duration == SubscriptionType.DURATION_PERIODIC:
             periodid = xfer.getparam('period', 0)
             period = Period.objects.get(id=periodid)
             self.item.begin_date = period.begin_date
             self.item.end_date = period.end_date
-        elif self.item.subscriptiontype.duration == 2:  # monthly
+        elif self.item.subscriptiontype.duration == SubscriptionType.DURATION_MONTLY:
             month_num = xfer.getparam('month', '')
             self.item.begin_date = convert_date(month_num + '-01')
             self.item.end_date = same_day_months_after(
                 self.item.begin_date, 1) - timedelta(days=1)
-        elif self.item.subscriptiontype.duration == 3:  # calendar
+        elif self.item.subscriptiontype.duration == SubscriptionType.DURATION_CALENDAR:
             self.item.begin_date = convert_date(
                 xfer.getparam('begin_date', ''))
             self.item.end_date = same_day_months_after(
@@ -239,27 +238,27 @@ class SubscriptionEditor(LucteriosEditor):
 
     def _add_season_comp(self, xfer, row):
         season = self.item.season
-        if self.item.subscriptiontype.duration == 0:  # annually
+        if self.item.subscriptiontype.duration == SubscriptionType.DURATION_ANNUALLY:
             lbl = XferCompLabelForm("seasondates")
             lbl.set_location(1, row)
             lbl.set_value("%s => %s" % (formats.date_format(season.begin_date, "SHORT_DATE_FORMAT"), formats.date_format(season.end_date, "SHORT_DATE_FORMAT")))
             lbl.description = _('annually')
             xfer.add_component(lbl)
-        elif self.item.subscriptiontype.duration == 1:  # periodic
+        elif self.item.subscriptiontype.duration == SubscriptionType.DURATION_PERIODIC:
             sel = XferCompSelect('period')
             sel.set_needed(True)
             sel.set_select_query(season.period_set.all())
             sel.set_location(1, row)
             sel.description = _('period')
             xfer.add_component(sel)
-        elif self.item.subscriptiontype.duration == 2:  # monthly
+        elif self.item.subscriptiontype.duration == SubscriptionType.DURATION_MONTLY:
             sel = XferCompSelect('month')
             sel.set_needed(True)
             sel.set_select(season.get_months())
             sel.set_location(1, row)
             sel.description = _('month')
             xfer.add_component(sel)
-        elif self.item.subscriptiontype.duration == 3:  # calendar
+        elif self.item.subscriptiontype.duration == SubscriptionType.DURATION_CALENDAR:
             begindate = XferCompDate('begin_date')
             begindate.set_needed(True)
             begindate.set_value(season.date_ref)
@@ -272,7 +271,7 @@ class SubscriptionEditor(LucteriosEditor):
         xfer.change_to_readonly("adherent")
         cmp_status = xfer.get_components('status')
         if autocreate:
-            if Params.getvalue("member-subscription-mode") == 2:
+            if Params.getvalue("member-subscription-mode") == Subscription.MODE_AUTOMATIQUE:
                 status = 1
             else:
                 status = 0
@@ -307,7 +306,7 @@ class SubscriptionEditor(LucteriosEditor):
         cmp_subscriptiontype.set_action(xfer.request, xfer.return_action(), close=CLOSE_NO, modal=FORMTYPE_REFRESH)
         row = xfer.get_max_row() + 1
         self._add_season_comp(xfer, row)
-        if Params.getvalue("member-team-enable") and (len(Prestation.objects.all()) > 0) and ((self.item.id is None) or (self.item.status in (0, 1))):
+        if Params.getvalue("member-team-enable") and (len(Prestation.objects.all()) > 0) and ((self.item.id is None) or (self.item.status in (Subscription.STATUS_WAITING, Subscription.STATUS_BUILDING))):
             xfer.filltab_from_model(1, row + 1, False, ['prestations'])
         elif self.item.id is None:
             xfer.item = License()
@@ -325,7 +324,7 @@ class SubscriptionEditor(LucteriosEditor):
                 activity.set_needed(True)
 
     def show(self, xfer):
-        if Params.getvalue("member-team-enable") and (len(Prestation.objects.all()) > 0) and (self.item.status in (0, 1)):
+        if Params.getvalue("member-team-enable") and (len(Prestation.objects.all()) > 0) and (self.item.status in (Subscription.STATUS_WAITING, Subscription.STATUS_BUILDING)):
             xfer.remove_component('license')
             xfer.filltab_from_model(1, xfer.get_max_row() + 1, True, ['prestations'])
 

@@ -421,10 +421,8 @@ class Document(LucteriosModel):
 
 
 class Period(LucteriosModel):
-    season = models.ForeignKey(
-        Season, verbose_name=_('season'), null=False, default=None, db_index=True, on_delete=models.CASCADE)
-    num = models.IntegerField(
-        verbose_name=_('numeros'), null=True, default=None,)
+    season = models.ForeignKey(Season, verbose_name=_('season'), null=False, default=None, db_index=True, on_delete=models.CASCADE)
+    num = models.IntegerField(verbose_name=_('numeros'), null=True, default=None,)
     begin_date = models.DateField(verbose_name=_('begin date'), null=False)
     end_date = models.DateField(verbose_name=_('end date'), null=False)
 
@@ -473,9 +471,15 @@ class Period(LucteriosModel):
 
 
 class SubscriptionType(LucteriosModel):
+    DURATION_ANNUALLY = 0
+    DURATION_PERIODIC = 1
+    DURATION_MONTLY = 2
+    DURATION_CALENDAR = 3
+    LIST_DURATIONS = ((DURATION_ANNUALLY, _('annually')), (DURATION_PERIODIC, _('periodic')), (DURATION_MONTLY, _('monthly')), (DURATION_CALENDAR, _('calendar')))
+
     name = models.CharField(_('name'), max_length=50)
     description = models.TextField(_('description'), null=True, default="")
-    duration = models.IntegerField(verbose_name=_('duration'), choices=((0, _('annually')), (1, _('periodic')), (2, _('monthly')), (3, _('calendar'))), null=False, default=0, db_index=True)
+    duration = models.IntegerField(verbose_name=_('duration'), choices=LIST_DURATIONS, null=False, default=DURATION_ANNUALLY, db_index=True)
     unactive = models.BooleanField(verbose_name=_('unactive'), default=False)
     articles = models.ManyToManyField(Article, verbose_name=_('articles'), blank=True)
     order_key = models.IntegerField(verbose_name=_('order key'), null=True, default=None)
@@ -652,6 +656,10 @@ class Age(LucteriosModel):
 
 
 class Adherent(Individual):
+    CONNECTION_NO = 0
+    CONNECTION_BYADHERENT = 1
+    CONNECTION_BYASKING = 2
+
     num = models.IntegerField(verbose_name=_('numeros'), null=False, default=0,)
     birthday = models.DateField(verbose_name=_('birthday'), default=date.today, null=True)
     birthplace = models.CharField(_('birthplace'), max_length=50, blank=True)
@@ -1154,18 +1162,24 @@ class Prestation(LucteriosModel):
 
 
 class Subscription(LucteriosModel):
-    adherent = models.ForeignKey(
-        Adherent, verbose_name=_('adherent'), null=False, default=None, db_index=True, on_delete=models.CASCADE)
-    season = models.ForeignKey(
-        Season, verbose_name=_('season'), null=False, default=None, db_index=True, on_delete=models.PROTECT)
-    subscriptiontype = models.ForeignKey(
-        SubscriptionType, verbose_name=_('subscription type'), null=False, default=None, db_index=True, on_delete=models.PROTECT)
-    bill = models.ForeignKey(
-        Bill, verbose_name=_('bill'), null=True, default=None, db_index=True, on_delete=models.SET_NULL)
+    MODE_NOHIMSELF = 0
+    MODE_WITHMODERATE = 1
+    MODE_AUTOMATIQUE = 1
+
+    STATUS_WAITING = 0
+    STATUS_BUILDING = 1
+    STATUS_VALID = 2
+    STATUS_CANCEL = 3
+    STATUS_DISBARRED = 4
+    LIST_STATUS = ((STATUS_WAITING, _('waiting')), (STATUS_BUILDING, _('building')), (STATUS_VALID, _('valid')), (STATUS_CANCEL, _('cancel')), (STATUS_DISBARRED, _('disbarred')))
+
+    adherent = models.ForeignKey(Adherent, verbose_name=_('adherent'), null=False, default=None, db_index=True, on_delete=models.CASCADE)
+    season = models.ForeignKey(Season, verbose_name=_('season'), null=False, default=None, db_index=True, on_delete=models.PROTECT)
+    subscriptiontype = models.ForeignKey(SubscriptionType, verbose_name=_('subscription type'), null=False, default=None, db_index=True, on_delete=models.PROTECT)
+    bill = models.ForeignKey(Bill, verbose_name=_('bill'), null=True, default=None, db_index=True, on_delete=models.SET_NULL)
     begin_date = models.DateField(verbose_name=_('begin date'), null=False)
     end_date = models.DateField(verbose_name=_('end date'), null=False)
-    status = FSMIntegerField(verbose_name=_('status'),
-                             choices=((0, _('waiting')), (1, _('building')), (2, _('valid')), (3, _('cancel')), (4, _('disbarred'))), null=False, default=2, db_index=True)
+    status = FSMIntegerField(verbose_name=_('status'), choices=LIST_STATUS, null=False, default=STATUS_VALID, db_index=True)
     prestations = models.ManyToManyField(Prestation, verbose_name=_('prestations'), blank=True)
 
     involvement = LucteriosVirtualField(verbose_name=_('involvement'), compute_from='get_involvement')
@@ -1228,17 +1242,17 @@ class Subscription(LucteriosModel):
     def set_periode(self, dateref):
         self.dateref = dateref
         self.season = Season.get_from_date(dateref)
-        if self.subscriptiontype.duration == 0:  # periodic
+        if self.subscriptiontype.duration == SubscriptionType.DURATION_ANNUALLY:
             self.begin_date = self.season.begin_date
             self.end_date = self.season.end_date
-        elif self.subscriptiontype.duration == 1:  # periodic
+        elif self.subscriptiontype.duration == SubscriptionType.DURATION_PERIODIC:
             period = self.season.get_period_from_date(dateref)
             self.begin_date = period.begin_date
             self.end_date = period.end_date
-        elif self.subscriptiontype.duration == 2:  # monthly
+        elif self.subscriptiontype.duration == SubscriptionType.DURATION_MONTLY:
             self.begin_date = convert_date('%4d-%02d-01' % (dateref.year, dateref.month))
             self.end_date = same_day_months_after(self.begin_date, 1) - timedelta(days=1)
-        elif self.subscriptiontype.duration == 3:  # calendar
+        elif self.subscriptiontype.duration == SubscriptionType.DURATION_CALENDAR:
             self.begin_date = dateref
             self.end_date = same_day_months_after(self.begin_date, 12) - timedelta(days=1)
 
@@ -1258,7 +1272,7 @@ class Subscription(LucteriosModel):
     def _search_or_create_bill(self, bill_type, parentbill=None):
         new_third = get_or_create_customer(self.adherent.get_ref_contact().id)
         bill_list = Bill.objects.filter(third=new_third, bill_type=bill_type, status=0).annotate(subscription_count=Count('subscription')).filter(subscription_count__gte=1).order_by('-date')
-        if bill_type == 0:
+        if bill_type == Bill.BILLTYPE_QUOTATION:
             date_ref = timezone.now()
         else:
             date_ref = self.season.date_ref
@@ -1270,7 +1284,7 @@ class Subscription(LucteriosModel):
 
     def _regenerate_bill(self, bill_type):
         self.bill.bill_type = bill_type
-        if bill_type == 1:
+        if bill_type == Bill.BILLTYPE_BILL:
             if hasattr(self, 'xfer'):
                 self.bill.date = convert_date(self.xfer.getparam('dateref'), self.season.date_ref)
             elif hasattr(self, 'dateref'):
@@ -1303,22 +1317,22 @@ class Subscription(LucteriosModel):
         if (len(self.subscriptiontype.articles.all()) == 0) and (len(self.prestations.all()) == 0):
             return False
         modify = False
-        if self.status in (1, 2):
-            if (self.status == 2) and (self.bill is not None) and (self.bill.bill_type == 0) and (self.bill.status == 1):
+        if self.status in (self.STATUS_BUILDING, self.STATUS_VALID):
+            if (self.status == self.STATUS_VALID) and (self.bill is not None) and (self.bill.bill_type == Bill.BILLTYPE_QUOTATION) and (self.bill.status == Bill.STATUS_VALID):
                 self.bill = self.bill.convert_to_bill()
                 modify = True
                 convert_bill = True
             else:
                 convert_bill = False
             create_bill = (self.bill is None)
-            if self.status == 1:
-                bill_type = 0
+            if self.status == self.STATUS_BUILDING:
+                bill_type = Bill.BILLTYPE_QUOTATION
             else:
-                bill_type = 1
+                bill_type = Bill.BILLTYPE_BILL
             if create_bill:
                 self._search_or_create_bill(bill_type)
                 modify = True
-            if (self.bill.status == 1):
+            if (self.bill.status == Bill.STATUS_VALID):
                 old_bill = self.bill
                 old_bill.cancel()
                 old_bill.save()
@@ -1328,14 +1342,14 @@ class Subscription(LucteriosModel):
                     subscription_item.bill = self.bill
                     subscription_item.save(with_bill=False)
                 modify = True
-            if (self.bill.status == 0) and not convert_bill:
+            if (self.bill.status == Bill.STATUS_BUILDING) and not convert_bill:
                 self._regenerate_bill(bill_type)
-        if (self.status == 3) and (self.bill is not None):
-            if self.bill.status == 0:
+        if (self.status == self.STATUS_CANCEL) and (self.bill is not None):
+            if self.bill.status == Bill.STATUS_BUILDING:
                 self.bill.delete()
                 self.bill = None
                 modify = True
-            elif self.bill.status == 1:
+            elif self.bill.status == Bill.STATUS_VALID:
                 new_assetid = self.bill.cancel()
                 if new_assetid is not None:
                     self.bill = Bill.objects.get(id=new_assetid)
@@ -1378,17 +1392,17 @@ class Subscription(LucteriosModel):
 
     def convert_prestations(self):
         if self.prestations.all().count() > 0:
-            if self.status <= 2:
+            if self.status in (self.STATUS_WAITING, self.STATUS_BUILDING, self.STATUS_VALID):
                 self.license_set.all().delete()
                 for presta in self.prestations.all():
                     License.objects.create(subscription=self, activity_id=presta.activity_id, team_id=presta.team_id)
-            if self.status >= 2:
+            if self.status in (self.STATUS_VALID, self.STATUS_CANCEL, self.STATUS_DISBARRED):
                 self.prestations.set([])
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None, with_bill=True):
         is_new = self.id is None
         query_dates = (Q(begin_date__lte=self.end_date) & Q(end_date__gte=self.end_date)) | (Q(begin_date__lte=self.begin_date) & Q(end_date__gte=self.begin_date))
-        if is_new and (len(self.adherent.subscription_set.filter((Q(subscriptiontype__duration=0) & Q(season=self.season)) | (Q(subscriptiontype__duration__gt=0) & query_dates))) > 0):
+        if is_new and (len(self.adherent.subscription_set.filter((Q(subscriptiontype__duration=SubscriptionType.DURATION_ANNUALLY) & Q(season=self.season)) | (~Q(subscriptiontype__duration=SubscriptionType.DURATION_ANNUALLY) & query_dates))) > 0):
             raise LucteriosException(IMPORTANT, _("dates always used!"))
         self.status = int(self.status)
         LucteriosModel.save(self, force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
@@ -1401,17 +1415,15 @@ class Subscription(LucteriosModel):
 
     transitionname__moderate = _("Moderate")
 
-    @transition(field=status, source=0, target=1)
+    @transition(field=status, source=STATUS_WAITING, target=STATUS_BUILDING)
     def moderate(self):
         pass
 
     transitionname__validate = _("Validate")
 
-    @transition(field=status, source=1, target=2)
+    @transition(field=status, source=STATUS_BUILDING, target=STATUS_VALID)
     def validate(self):
         pass
-
-    transitionname__cancel = _("Cancel")
 
     def create_other_bill(self):
         other_subscription = self.bill.subscription_set.exclude(id=self.id)
@@ -1427,7 +1439,9 @@ class Subscription(LucteriosModel):
             other_item.change_bill()
             self.bill = old_bill
 
-    @transition(field=status, source=1, target=3)
+    transitionname__cancel = _("Cancel")
+
+    @transition(field=status, source=STATUS_BUILDING, target=STATUS_CANCEL)
     def cancel(self):
         if self.bill is not None:
             self.create_other_bill()
@@ -1439,36 +1453,36 @@ class Subscription(LucteriosModel):
 
     transitionname__disbar = _("Disbar")
 
-    @transition(field=status, source=2, target=4)
+    @transition(field=status, source=STATUS_VALID, target=STATUS_DISBARRED)
     def disbar(self):
         pass
 
     transitionname__reopen3 = _("Re-open")
 
-    @transition(field=status, source=3, target=1)
+    @transition(field=status, source=STATUS_CANCEL, target=STATUS_BUILDING)
     def reopen3(self):
         pass
 
     transitionname__reopen4 = _("Re-open")
 
-    @transition(field=status, source=4, target=1)
+    @transition(field=status, source=STATUS_DISBARRED, target=STATUS_BUILDING)
     def reopen4(self):
         pass
 
     def can_delete(self):
-        if self.status not in (0, 1):
+        if self.status not in (self.STATUS_WAITING, self.STATUS_BUILDING):
             return _('You cannot delete this subscription!')
         return ""
 
     def delete(self, using=None):
         old_bill = self.bill
         LucteriosModel.delete(self, using=using)
-        if (old_bill is not None) and (old_bill.bill_type == 0):
+        if (old_bill is not None) and (old_bill.bill_type == Bill.BILLTYPE_QUOTATION):
             self.create_other_bill()
-            if old_bill.status == 0:
+            if old_bill.status == Bill.STATUS_BUILDING:
                 old_bill.delete()
-            elif old_bill.status == 1:
-                old_bill.status = 2
+            elif old_bill.status == Bill.STATUS_VALID:
+                old_bill.status = Bill.STATUS_CANCEL
                 old_bill.save()
 
     def sendemail(self, sendemail):

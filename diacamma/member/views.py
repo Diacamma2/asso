@@ -103,7 +103,7 @@ class AdherentFilter(object):
         if genre != 0:
             current_filter &= Q(genre=genre)
         if status == -1:
-            current_filter &= Q(subscription__status__in=(1, 2))
+            current_filter &= Q(subscription__status__in=(Subscription.STATUS_BUILDING, Subscription.STATUS_VALID))
         else:
             current_filter &= Q(subscription__status=status)
         return (current_filter, exclude_filter)
@@ -274,7 +274,7 @@ class AdherentActiveList(AdherentAbstractList):
         if Params.getvalue("member-licence-enabled"):
             self.get_components(self.field_id).add_action(self.request, AdherentLicense.get_action(_("License"), ""),
                                                           unique=SELECT_SINGLE, close=CLOSE_NO)
-        if Params.getvalue("member-subscription-mode") == 1:
+        if Params.getvalue("member-subscription-mode") == Subscription.MODE_WITHMODERATE:
             self.add_action(SubscriptionModerate.get_action(_("Moderation"), "images/up.png"), pos_act=0, close=CLOSE_NO)
 
 
@@ -327,8 +327,8 @@ class AdherentContactList(XferListEditor):
         season = Season.get_from_date(dateref)
         self.params['season_id'] = season.id
         self.fieldnames = ["ident", "address", "city", "tel1", "tel2", "emails", "adherents"]
-        indiv_filter = Q(individual__adherent__subscription__season=season) & Q(individual__adherent__subscription__status__in=(1, 2)) & Q(individual__responsability__isnull=True)
-        legal_filter = Q(legalentity__responsability__individual__adherent__subscription__season=season) & Q(legalentity__responsability__individual__adherent__subscription__status__in=(1, 2)) & Q(legalentity__structure_type=family_type)
+        indiv_filter = Q(individual__adherent__subscription__season=season) & Q(individual__adherent__subscription__status__in=(Subscription.STATUS_BUILDING, Subscription.STATUS_VALID)) & Q(individual__responsability__isnull=True)
+        legal_filter = Q(legalentity__responsability__individual__adherent__subscription__season=season) & Q(legalentity__responsability__individual__adherent__subscription__status__in=(Subscription.STATUS_BUILDING, Subscription.STATUS_VALID)) & Q(legalentity__structure_type=family_type)
         self.filter = Q()
         if contact_filter != "":
             q_legalentity = Q(legalentity__name__icontains=contact_filter)
@@ -340,7 +340,7 @@ class AdherentContactList(XferListEditor):
         XferListEditor.fillresponse(self)
         grid = self.get_components(self.field_id)
         grid.colspan = 3
-        grid.add_action(self.request, ActionsManage.get_action_url(AbstractContact.get_long_name(), "Show", self), modal=FORMTYPE_MODAL, unique=SELECT_SINGLE, close=CLOSE_NO)
+        grid.add_action(self.request, ActionsManage.get_action_url(AbstractContact.get_long_name(), "Show", self), modal=FORMTYPE_MODAL, unique=SELECT_SINGLE, close=CLOSE_NO, params={'SubscriptionBefore': 'YES'})
 
 
 @MenuManage.describ('member.change_adherent', FORMTYPE_NOMODAL, 'member.actions', _('To find an adherent following a set of criteria.'))
@@ -369,7 +369,7 @@ class AdherentRenewList(AdherentAbstractList):
         self.item.editor.add_email_selector(self, 0, self.get_max_row() + 1, 10)
         self.get_components('title').colspan = 10
         self.get_components(self.field_id).colspan = 10
-        if Params.getvalue("member-subscription-mode") == 1:
+        if Params.getvalue("member-subscription-mode") == Subscription.MODE_WITHMODERATE:
             self.add_action(SubscriptionModerate.get_action(_("Moderation"), "images/up.png"), pos_act=0, close=CLOSE_NO)
 
 
@@ -419,8 +419,7 @@ class AdherentLicense(XferContainerCustom):
         self.item = self.item.current_subscription
         if self.item is None:
             raise LucteriosException(IMPORTANT, _("no subscription!"))
-        self.fill_from_model(
-            1, 0, True, ['adherent', 'season', 'subscriptiontype'])
+        self.fill_from_model(1, 0, True, ['adherent', 'season', 'subscriptiontype'])
         row = self.get_max_row() + 1
         for lic in self.item.license_set.all():
             lbl = XferCompLabelForm('lbl_sep_%d' % lic.id)
@@ -488,8 +487,7 @@ class AdherentRenew(XferContainerAcknowledge):
     caption = _("re-new")
 
     def fillresponse(self):
-        text = _(
-            "{[b]}Do you want that those %d old selected adherent(s) has been renew?{[/b]}{[br/]}Same subscription(s) will be applicated.{[br/]}No validated bill will be created for each subscritpion.") % len(self.items)
+        text = _("{[b]}Do you want that those %d old selected adherent(s) has been renew?{[/b]}{[br/]}Same subscription(s) will be applicated.{[br/]}No validated bill will be created for each subscritpion.") % len(self.items)
         if self.confirme(text):
             dateref = convert_date(self.getparam("dateref", ""), Season.current_season().date_ref)
             for item in self.items:
@@ -712,7 +710,7 @@ class AdherentListing(XferPrintListing, AdherentFilter):
 
 def right_adherentconnection(request):
     if AdherentLicense.get_action().check_permission(request) and (signal_and_lock.Signal.call_signal("send_connection", None, None, None) != 0):
-        return Params.getvalue("member-connection") == 1
+        return Params.getvalue("member-connection") == Adherent.CONNECTION_BYADHERENT
     else:
         return False
 
@@ -915,12 +913,12 @@ class SubscriptionTransition(XferTransition):
     field_id = 'subscription'
 
     def fillresponse(self):
-        if self.item.status == 0:
+        if self.item.status == Subscription.STATUS_WAITING:
             self.item.send_email_param = (self.request.META.get('HTTP_REFERER', self.request.build_absolute_uri()), self.language)
         XferTransition.fillresponse(self)
 
 
-@ActionsManage.affect_grid(_('Bill'), 'images/ok.png', unique=SELECT_SINGLE, close=CLOSE_NO, condition=lambda xfer, gridname='': (xfer.getparam('status_filter') is None) or (xfer.getparam('status_filter', -1) > 1))
+@ActionsManage.affect_grid(_('Bill'), 'images/ok.png', unique=SELECT_SINGLE, close=CLOSE_NO, condition=lambda xfer, gridname='': (xfer.getparam('status_filter') is None) or (xfer.getparam('status_filter', -1) not in (-1, Subscription.STATUS_WAITING, Subscription.STATUS_BUILDING)))
 @ActionsManage.affect_show(_('Bill'), 'images/ok.png', close=CLOSE_NO)
 @MenuManage.describ('invoice.change_bill')
 class SubscriptionShowBill(XferContainerAcknowledge):
@@ -1077,7 +1075,7 @@ def right_adherentaccess(request):
         return False
     if (signal_and_lock.Signal.call_signal("send_connection", None, None, None) == 0):
         return False
-    if Params.getvalue("member-connection") != 2:
+    if Params.getvalue("member-connection") in (Adherent.CONNECTION_NO, Adherent.CONNECTION_BYADHERENT):
         return False
     return not request.user.is_authenticated
 
@@ -1123,7 +1121,7 @@ def auth_action_member(actions_basic):
 
 
 @ActionsManage.affect_list(_('Disable access'), "images/passwd.png")
-@MenuManage.describ(lambda request: Params.getvalue("member-connection") == 2)
+@MenuManage.describ(lambda request: Params.getvalue("member-connection") == Adherent.CONNECTION_BYASKING)
 class AdherentDisableConnection(XferContainerAcknowledge):
     icon = "adherent.png"
     model = Adherent
@@ -1146,11 +1144,11 @@ def post_merge_member(item):
             adh_third = Third.objects.filter(contact_id=item.id).first()
             if adh_third is not None:
                 family_third = get_or_create_customer(item.family.id)
-                for bill in Bill.objects.filter(third=adh_third, status=0):
+                for bill in Bill.objects.filter(third=adh_third, status=Bill.STATUS_BUILDING):
                     bill.third = family_third
                     bill.save()
                     subscription = bill.subscription_set.first()
-                    if (subscription is not None) and (subscription.status in (0, 1)):
+                    if (subscription is not None) and (subscription.status in (Subscription.STATUS_WAITING, Subscription.STATUS_BUILDING)):
                         subscription.change_bill()
 
 
@@ -1209,27 +1207,27 @@ def summary_member(xfer):
                 lab.set_value_as_headername(str(current_season))
                 lab.set_location(0, row + 1, 4)
                 xfer.add_component(lab)
-                nb_adh = Adherent.objects.filter(Q(subscription__begin_date__lte=dateref) & Q(subscription__end_date__gte=dateref) & Q(subscription__status=2)).distinct().count()
+                nb_adh = Adherent.objects.filter(Q(subscription__begin_date__lte=dateref) & Q(subscription__end_date__gte=dateref) & Q(subscription__status=Subscription.STATUS_VALID)).distinct().count()
                 lab = XferCompLabelForm('membernb')
                 lab.set_value_as_header(_("Active adherents: %d") % nb_adh)
                 lab.set_location(0, row + 2, 4)
                 xfer.add_component(lab)
                 if show_thirdlist(xfer.request):
                     family_type = Params.getobject("member-family-type")
-                    legal_filter = Q(legalentity__responsability__individual__adherent__subscription__season=current_season) & Q(legalentity__responsability__individual__adherent__subscription__status__in=(1, 2)) & Q(legalentity__structure_type=family_type)
-                    indiv_filter = Q(individual__adherent__subscription__season=current_season) & Q(individual__adherent__subscription__status__in=(1, 2)) & Q(individual__responsability__isnull=True)
+                    legal_filter = Q(legalentity__responsability__individual__adherent__subscription__season=current_season) & Q(legalentity__responsability__individual__adherent__subscription__status__in=(Subscription.STATUS_BUILDING, Subscription.STATUS_VALID)) & Q(legalentity__structure_type=family_type)
+                    indiv_filter = Q(individual__adherent__subscription__season=current_season) & Q(individual__adherent__subscription__status__in=(Subscription.STATUS_BUILDING, Subscription.STATUS_VALID)) & Q(individual__responsability__isnull=True)
                     nb_family = ContactAdherent.objects.filter(legal_filter | indiv_filter).distinct().count()
                     lab = XferCompLabelForm('familynb')
                     lab.set_value_as_header(_("Active families: %d") % nb_family)
                     lab.set_location(0, row + 3, 4)
                     xfer.add_component(lab)
-                nb_adhcreat = Adherent.objects.filter(Q(subscription__begin_date__lte=dateref) & Q(subscription__end_date__gte=dateref) & Q(subscription__status=1)).distinct().count()
+                nb_adhcreat = Adherent.objects.filter(Q(subscription__begin_date__lte=dateref) & Q(subscription__end_date__gte=dateref) & Q(subscription__status=Subscription.STATUS_BUILDING)).distinct().count()
                 if nb_adhcreat > 0:
                     lab = XferCompLabelForm('memberadhcreat')
                     lab.set_value_as_header(_("No validated adherents: %d") % nb_adhcreat)
                     lab.set_location(0, row + 4, 4)
                     xfer.add_component(lab)
-                nb_adhwait = Adherent.objects.filter(Q(subscription__begin_date__lte=dateref) & Q(subscription__end_date__gte=dateref) & Q(subscription__status=0)).distinct().count()
+                nb_adhwait = Adherent.objects.filter(Q(subscription__begin_date__lte=dateref) & Q(subscription__end_date__gte=dateref) & Q(subscription__status=Subscription.STATUS_WAITING)).distinct().count()
                 if nb_adhwait > 0:
                     lab = XferCompLabelForm('memberadhwait')
                     lab.set_value_as_header(_("Adherents waiting moderation: %d") % nb_adhwait)
@@ -1260,8 +1258,8 @@ def change_bill_member(action, old_bill, new_bill):
     if action == 'convert':
         for sub in Subscription.objects.filter(bill=old_bill):
             sub.bill = new_bill
-            if sub.status == 1:
-                sub.status = 2
+            if sub.status == Subscription.STATUS_BUILDING:
+                sub.status = Subscription.STATUS_VALID
             sub.save(with_bill=False)
 
 
@@ -1295,7 +1293,7 @@ def add_account_subscription(current_contact, xfer):
         grid.add_action(xfer.request, SubscriptionEditAdherent.get_action(TITLE_EDIT, "images/edit.png"), modal=FORMTYPE_MODAL, close=CLOSE_NO, unique=SELECT_SINGLE)
         xfer.add_component(grid)
         xfer.actions = []
-    if (Params.getvalue("member-subscription-mode") > 0) and (Subscription.objects.filter(Q(adherent_id=current_contact.id) & Q(season=Season.current_season())).count() == 0):
+    if (Params.getvalue("member-subscription-mode") in (Subscription.MODE_WITHMODERATE, Subscription.MODE_AUTOMATIQUE)) and (Subscription.objects.filter(Q(adherent_id=current_contact.id) & Q(season=Season.current_season())).count() == 0):
         xfer.new_tab(_('002@Subscription'))
         row = xfer.get_max_row() + 1
         btn = XferCompButton('btnnewsubscript')
@@ -1304,12 +1302,35 @@ def add_account_subscription(current_contact, xfer):
         xfer.add_component(btn)
 
 
+def _add_subscription(xfer, contact_filter, before):
+    season = Season.current_season()
+    if xfer.getparam("dateref") is None:
+        season = Season.get_from_date(convert_date(xfer.getparam("dateref", ""), season.date_ref))
+    subscriptions = Subscription.objects.filter(Q(season=season) & contact_filter)
+    if len(subscriptions) > 0:
+        if before:
+            xfer.new_tab(_('002@Subscription'), num=1)
+        else:
+            xfer.new_tab(_('002@Subscription'))
+        row = xfer.get_max_row() + 1
+        grid = XferCompGrid('subscription')
+        grid.set_model(subscriptions, Subscription.get_other_fields(), xfer)
+        grid.set_location(0, row + 1, 2)
+        grid.add_action_notified(xfer, model=Subscription)
+        grid.set_size(350, 500)
+        xfer.add_component(grid)
+
+
+@signal_and_lock.Signal.decorate('show_contact')
+def shoxcontact_member(item, xfer):
+    if isinstance(item, LegalEntity):
+        contact_filter = Q(adherent__responsability__legal_entity=item)
+        _add_subscription(xfer, contact_filter, xfer.getparam('SubscriptionBefore') == 'YES')
+
+
 @signal_and_lock.Signal.decorate('third_addon')
 def thirdaddon_member(item, xfer):
     if WrapAction.is_permission(xfer.request, 'member.change_subscription'):
-        season = Season.current_season()
-        if xfer.getparam("dateref") is None:
-            season = Season.get_from_date(convert_date(xfer.getparam("dateref", ""), season.date_ref))
         contact = item.contact.get_final_child()
         contact_filter = None
         if isinstance(contact, LegalEntity):
@@ -1318,16 +1339,4 @@ def thirdaddon_member(item, xfer):
             contact_filter = Q(adherent=contact)
         if contact_filter is None:
             return
-        subscriptions = Subscription.objects.filter(Q(season=season) & contact_filter)
-        if len(subscriptions) > 0:
-            if xfer.getparam("dateref") is not None:
-                xfer.new_tab(_('002@Subscription'), num=1)
-            else:
-                xfer.new_tab(_('002@Subscription'))
-            row = xfer.get_max_row() + 1
-            grid = XferCompGrid('subscription')
-            grid.set_model(subscriptions, Subscription.get_other_fields(), xfer)
-            grid.set_location(0, row + 1, 2)
-            grid.add_action_notified(xfer, model=Subscription)
-            grid.set_size(350, 500)
-            xfer.add_component(grid)
+        _add_subscription(xfer, contact_filter, False)
