@@ -27,6 +27,7 @@ from datetime import date
 
 from django.db import models
 from django.db.models import Q
+from django.db.models.aggregates import Count
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.utils.translation import ugettext_lazy as _
 from django_fsm import transition, FSMIntegerField
@@ -36,6 +37,7 @@ from lucterios.framework.model_fields import get_value_if_choices, LucteriosVirt
 from lucterios.framework.tools import get_date_formating
 from lucterios.framework.error import LucteriosException, IMPORTANT
 from lucterios.framework.signal_and_lock import Signal
+from lucterios.framework.auditlog import auditlog
 from lucterios.CORE.models import Parameter
 from lucterios.CORE.parameters import Params
 from lucterios.contacts.models import Individual
@@ -44,16 +46,13 @@ from diacamma.invoice.models import Article, Bill, Detail, get_or_create_custome
 from diacamma.accounting.models import CostAccounting
 from diacamma.member.models import Activity, Adherent, Subscription, Season
 from diacamma.accounting.tools import get_amount_from_format_devise
-from django.db.models.aggregates import Count
-from lucterios.framework.auditlog import auditlog
 
 
 class DegreeType(LucteriosModel):
     name = models.CharField(verbose_name=_('name'), max_length=100)
-    level = models.IntegerField(verbose_name=_('level'), null=False, default=1, validators=[
-                                MinValueValidator(1), MaxValueValidator(100)])
-    activity = models.ForeignKey(
-        Activity, verbose_name=_('activity'), null=False, default=None, db_index=True, on_delete=models.PROTECT)
+    level = models.IntegerField(verbose_name=_('level'), null=False, default=1,
+                                validators=[MinValueValidator(1), MaxValueValidator(100)])
+    activity = models.ForeignKey(Activity, verbose_name=_('activity'), null=False, default=None, db_index=True, on_delete=models.PROTECT)
 
     def __str__(self):
         if Params.getvalue("member-activite-enable"):
@@ -93,8 +92,8 @@ class DegreeType(LucteriosModel):
 
 class SubDegreeType(LucteriosModel):
     name = models.CharField(verbose_name=_('name'), max_length=100)
-    level = models.IntegerField(verbose_name=_('level'), null=False, default=1, validators=[
-                                MinValueValidator(1), MaxValueValidator(100)])
+    level = models.IntegerField(verbose_name=_('level'), null=False, default=1,
+                                validators=[MinValueValidator(1), MaxValueValidator(100)])
 
     def __str__(self):
         return self.name
@@ -119,14 +118,19 @@ class SubDegreeType(LucteriosModel):
 
 
 class Event(LucteriosModel):
-    activity = models.ForeignKey(Activity, verbose_name=_(
-        'activity'), null=False, default=None, db_index=True, on_delete=models.PROTECT)
+    EVENTTYPE_EXAMINATION = 0
+    EVENTTYPE_TRAINING = 1
+    LIST_EVENTTYPES = ((EVENTTYPE_EXAMINATION, _('examination')), (EVENTTYPE_TRAINING, _('trainning/outing')))
+
+    STATUS_BUILDING = 0
+    STATUS_VALID = 1
+    LIST_STATUS = ((STATUS_BUILDING, _('building')), (STATUS_VALID, _('valid')))
+
+    activity = models.ForeignKey(Activity, verbose_name=_('activity'), null=False, default=None, db_index=True, on_delete=models.PROTECT)
     date = models.DateField(verbose_name=_('date'), null=False)
     comment = models.TextField(_('comment'), blank=False)
-    status = FSMIntegerField(verbose_name=_('status'), choices=(
-        (0, _('building')), (1, _('valid'))), null=False, default=0, db_index=True)
-    event_type = models.IntegerField(verbose_name=_('event type'), choices=(
-        (0, _('examination')), (1, _('trainning/outing'))), null=False, default=0, db_index=True)
+    status = FSMIntegerField(verbose_name=_('status'), choices=LIST_STATUS, null=False, default=STATUS_BUILDING, db_index=True)
+    event_type = models.IntegerField(verbose_name=_('event type'), choices=LIST_EVENTTYPES, null=False, default=EVENTTYPE_EXAMINATION, db_index=True)
     date_end = models.DateField(verbose_name=_('end date'), null=True)
     default_article = models.ForeignKey(Article, verbose_name=_('default article (member)'), related_name="event", null=True, default=None, on_delete=models.PROTECT)
     default_article_nomember = models.ForeignKey(Article, verbose_name=_('default article (no member)'), related_name="eventnomember", null=True, default=None, on_delete=models.PROTECT)
@@ -174,18 +178,18 @@ class Event(LucteriosModel):
         return get_value_if_choices(self.event_type, self._meta.get_field('event_type'))
 
     def get_date_txt(self):
-        if self.event_type == 0:
+        if self.event_type == self.EVENTTYPE_EXAMINATION:
             return get_date_formating(self.date)
         else:
             return "%s -> %s" % (get_date_formating(self.date), get_date_formating(self.date_end))
 
     def can_delete(self):
-        if self.status > 0:
+        if self.status != self.STATUS_BUILDING:
             return _('%s validated!') % self.event_type_txt
         return ''
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
-        if self.event_type == 0:
+        if self.event_type == self.EVENTTYPE_EXAMINATION:
             self.date_end = None
         elif (self.date_end is None) or (self.date_end < self.date):
             self.date_end = self.date
@@ -193,9 +197,8 @@ class Event(LucteriosModel):
 
     def chech_validity(self):
         msg = ''
-        if self.status > 0:
-            msg = _('%s validated!') % get_value_if_choices(
-                self.event_type, self._meta.get_field('event_type'))
+        if self.status != self.STATUS_BUILDING:
+            msg = _('%s validated!') % get_value_if_choices(self.event_type, self._meta.get_field('event_type'))
         elif len(self.organizer_set.filter(isresponsible=True)) == 0:
             msg = _('no responsible!')
         elif len(self.participant_set.all()) == 0:
@@ -209,7 +212,7 @@ class Event(LucteriosModel):
 
     transitionname__validate = _("Validation")
 
-    @transition(field=status, source=0, target=1, conditions=[lambda item:item.chech_validity() == ''])
+    @transition(field=status, source=STATUS_BUILDING, target=STATUS_VALID, conditions=[lambda item:item.chech_validity() == ''])
     def validate(self):
         for participant in self.participant_set.all():
             participant.give_result(self.xfer.getparam('degree_%d' % participant.id, 0),
@@ -255,7 +258,7 @@ class Organizer(LucteriosModel):
         return ["contact", 'isresponsible']
 
     def can_delete(self):
-        if self.event.status > 0:
+        if self.event.status != Event.STATUS_BUILDING:
             return _('examination validated!')
         return ''
 
@@ -446,7 +449,7 @@ class Participant(LucteriosModel):
     def _search_or_create_bill(self):
         high_contact = self.contact.get_final_child()
         new_third = get_or_create_customer(high_contact.get_ref_contact().id)
-        bill_list = Bill.objects.filter(third=new_third, bill_type=1, status=0).annotate(participant_count=Count('participant')).filter(participant_count__gte=1).order_by('-date')
+        bill_list = Bill.objects.filter(third=new_third, bill_type=Bill.BILLTYPE_BILL, status=Bill.STATUS_BUILDING).annotate(participant_count=Count('participant')).filter(participant_count__gte=1).order_by('-date')
         if len(bill_list) > 0:
             self.bill = bill_list[0]
         if self.bill is None:
@@ -458,7 +461,7 @@ class Participant(LucteriosModel):
             high_contact = self._search_or_create_bill()
             bill_comment = ["{[b]}%s{[/b]}: %s" % (self.event.event_type_txt, self.event.date_txt)]
             bill_comment.append("{[i]}%s{[/i]}" % self.event.comment)
-            if (self.bill.third.contact.id == high_contact.id) and (self.event.event_type == 1) and (self.comment is not None) and (self.comment != ''):
+            if (self.bill.third.contact.id == high_contact.id) and (self.event.event_type == Event.EVENTTYPE_TRAINING) and (self.comment is not None) and (self.comment != ''):
                 bill_comment.append(self.comment)
             self.bill.comment = "{[br/]}".join(bill_comment)
             self.bill.save()
@@ -476,7 +479,7 @@ class Participant(LucteriosModel):
             self.save()
 
     def can_delete(self):
-        if self.event.status > 0:
+        if self.event.status != Event.STATUS_BUILDING:
             return _('%s validated!') % self.event.event_type_txt
         if self.bill is not None:
             return self.bill.can_delete()
@@ -489,7 +492,7 @@ class Participant(LucteriosModel):
 
     def save(self, force_insert=False, force_update=False, using=None,
              update_fields=None):
-        if (self.id is None) and (self.event.event_type == 0) and ((self.comment is None) or (self.comment == '')):
+        if (self.id is None) and (self.event.event_type == Event.EVENTTYPE_EXAMINATION) and ((self.comment is None) or (self.comment == '')):
             self.comment = Params.getvalue("event-comment-text")
         if (self.id is None) and self.is_subscripter and (self.event.default_article is not None):
             self.article = self.event.default_article

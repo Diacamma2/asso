@@ -33,11 +33,11 @@ from lucterios.framework.xferadvance import XferDelete
 from lucterios.framework.xfercomponents import XferCompButton
 from lucterios.framework.tools import ActionsManage, MenuManage,\
     SELECT_SINGLE, SELECT_MULTI, CLOSE_NO, FORMTYPE_MODAL
+from lucterios.framework import signal_and_lock
 from lucterios.CORE.parameters import Params
 from lucterios.CORE.views import ParamEdit
 
 from diacamma.event.models import DegreeType, SubDegreeType
-from lucterios.framework import signal_and_lock
 
 
 def fill_params(xfer):

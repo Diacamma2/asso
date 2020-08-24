@@ -121,7 +121,7 @@ class Season(LucteriosModel):
 
     def stats_by_criteria(self, duration_id, only_valid, field, name, with_total):
         val_by_criteria = {}
-        query = Q(subscription__status=2) if only_valid else Q(subscription__status__in=(1, 2))
+        query = Q(subscription__status=Subscription.STATUS_VALID) if only_valid else Q(subscription__status__in=(Subscription.STATUS_BUILDING, Subscription.STATUS_VALID))
         query &= Q(subscription__begin_date__lte=self.date_ref) & Q(subscription__end_date__gte=self.date_ref)
         query &= Q(subscription__subscriptiontype__duration=duration_id)
         birthday = date(self.date_ref.year - 18, self.date_ref.month, self.date_ref.day)
@@ -179,7 +179,7 @@ class Season(LucteriosModel):
 
     def stats_by_seniority(self, only_valid):
         val_by_seniority = {}
-        query = Q(subscription__status=2) if only_valid else Q(subscription__status__in=(1, 2))
+        query = Q(subscription__status=Subscription.STATUS_VALID) if only_valid else Q(subscription__status__in=(Subscription.STATUS_BUILDING, Subscription.STATUS_VALID))
         query &= Q(subscription__begin_date__lte=self.date_ref) & Q(subscription__end_date__gte=self.date_ref)
         query &= Q(subscription__subscriptiontype__duration=0)
         birthday = date(self.date_ref.year - 18, self.date_ref.month, self.date_ref.day)
@@ -236,7 +236,7 @@ class Season(LucteriosModel):
         adherent = None
         usernamebase = None
         ask_filter = Q(email__contains=email) | Q(responsability__legal_entity__email__contains=email)
-        ask_filter &= Q(subscription__status__in=(1, 2)) & Q(subscription__season=self)
+        ask_filter &= Q(subscription__status__in=(Subscription.STATUS_BUILDING, Subscription.STATUS_VALID)) & Q(subscription__season=self)
         adherents = Adherent.objects.filter(ask_filter).distinct()
         if adherents.count() == 1:
             adherent = adherents[0]
@@ -260,7 +260,7 @@ class Season(LucteriosModel):
     def disabled_old_connection(self):
         nb_del = 0
         for adherent in Adherent.objects.filter(Q(user__is_active=True)).exclude(Q(responsability__legal_entity_id=1)):
-            if len(adherent.subscription_set.filter(Q(season=self) & Q(status__in=(1, 2)))) == 0:
+            if len(adherent.subscription_set.filter(Q(season=self) & Q(status__in=(Subscription.STATUS_BUILDING, Subscription.STATUS_VALID)))) == 0:
                 adherent.user.is_active = False
                 adherent.user.save()
                 nb_del += 1
@@ -311,7 +311,7 @@ class Season(LucteriosModel):
         nb_add = 0
         nb_update = 0
         error_sending = []
-        for adherent in Adherent.objects.filter(Q(subscription__status__in=(1, 2)) & Q(subscription__season=self)).distinct():
+        for adherent in Adherent.objects.filter(Q(subscription__status__in=(Subscription.STATUS_BUILDING, Subscription.STATUS_VALID)) & Q(subscription__season=self)).distinct():
             try:
                 act_ret = self.activate_adherent(adherent)
                 if act_ret == 1:
@@ -873,7 +873,7 @@ class Adherent(Individual):
                 except ObjectDoesNotExist:
                     working_subscription = Subscription()
                     if is_building:
-                        working_subscription.status = 1
+                        working_subscription.status = Subscription.STATUS_BUILDING
                     working_subscription.adherent = self
                     working_subscription.season = current_season
                     working_subscription.subscriptiontype = type_obj
@@ -1445,10 +1445,10 @@ class Subscription(LucteriosModel):
     def cancel(self):
         if self.bill is not None:
             self.create_other_bill()
-            if self.bill.status == 0:
+            if self.bill.status == Bill.STATUS_BUILDING:
                 self.bill.delete()
-            elif (self.bill.status == 1) and (self.bill.bill_type == 0):
-                self.bill.status = 2
+            elif (self.bill.status == Bill.STATUS_VALID) and (self.bill.bill_type == Bill.BILLTYPE_QUOTATION):
+                self.bill.status = Bill.STATUS_CANCEL
                 self.bill.save()
 
     transitionname__disbar = _("Disbar")

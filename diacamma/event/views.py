@@ -77,14 +77,14 @@ def rigth_examination(request):
 class EventListExamination(GenericEventList):
     icon = "degree.png"
     caption = _("Examination")
-    event_type = 0
+    event_type = Event.EVENTTYPE_EXAMINATION
 
 
 @MenuManage.describ('event.change_event', FORMTYPE_NOMODAL, 'event.actions', _('Event manage'))
 class EventListOuting(GenericEventList):
     icon = "outing.png"
     caption = _("Training or outing")
-    event_type = 1
+    event_type = Event.EVENTTYPE_TRAINING
 
 
 @MenuManage.describ('event.change_event', FORMTYPE_NOMODAL, 'event.actions', _('To find an event'))
@@ -97,7 +97,7 @@ class EventSearch(XferSearchEditor):
 
 @ActionsManage.affect_grid(TITLE_CREATE, "images/new.png")
 @ActionsManage.affect_grid(TITLE_MODIFY, "images/edit.png", unique=SELECT_SINGLE)
-@ActionsManage.affect_show(TITLE_MODIFY, "images/edit.png", close=CLOSE_YES, condition=lambda xfer: xfer.item.status == 0)
+@ActionsManage.affect_show(TITLE_MODIFY, "images/edit.png", close=CLOSE_YES, condition=lambda xfer: xfer.item.status == Event.STATUS_BUILDING)
 @MenuManage.describ('event.add_event')
 class EventAddModify(XferAddEditor):
     icon = "event.png"
@@ -170,7 +170,7 @@ class EventTransition(XferTransition):
         dlg.add_action(WrapAction(TITLE_CANCEL, 'images/cancel.png'))
 
     def fill_confirm(self, transition, trans):
-        if (transition == 'validate') and (self.item.event_type == 0) and (self.getparam('CONFIRME') is None):
+        if (transition == 'validate') and (self.item.event_type == Event.EVENTTYPE_EXAMINATION) and (self.getparam('CONFIRME') is None):
             self.fill_dlg()
         else:
             XferTransition.fill_confirm(self, transition, trans)
@@ -209,7 +209,7 @@ class OrganizerSave(XferContainerAcknowledge):
                 event_id=event, contact_id=contact_id)
 
 
-@ActionsManage.affect_grid(TITLE_ADD, "images/add.png", condition=lambda xfer, gridname='': xfer.item.status == 0)
+@ActionsManage.affect_grid(TITLE_ADD, "images/add.png", condition=lambda xfer, gridname='': xfer.item.status == Event.STATUS_BUILDING)
 @MenuManage.describ('event.add_event')
 class OrganizerAddModify(ContactSelection):
     icon = "degree.png"
@@ -222,7 +222,7 @@ class OrganizerAddModify(ContactSelection):
     methods_allowed = ('POST', 'PUT')
 
 
-@ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", unique=SELECT_MULTI, condition=lambda xfer, gridname='': xfer.item.status == 0)
+@ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", unique=SELECT_MULTI, condition=lambda xfer, gridname='': xfer.item.status == Event.STATUS_BUILDING)
 @MenuManage.describ('event.add_event')
 class OrganizerDel(XferDelete):
     icon = "degree.png"
@@ -231,7 +231,7 @@ class OrganizerDel(XferDelete):
     caption = _("Delete organizer")
 
 
-@ActionsManage.affect_grid(_("Responsible"), "images/ok.png", unique=SELECT_SINGLE, intop=True, condition=lambda xfer, gridname='': xfer.item.status == 0)
+@ActionsManage.affect_grid(_("Responsible"), "images/ok.png", unique=SELECT_SINGLE, intop=True, condition=lambda xfer, gridname='': xfer.item.status == Event.STATUS_BUILDING)
 @MenuManage.describ('event.add_event')
 class OrganizerResponsible(XferContainerAcknowledge):
     icon = "degree.png"
@@ -277,7 +277,7 @@ class ParticipantOpen(XferContainerAcknowledge):
                              close=CLOSE_NO, params={field_id: str(current_contact.id)})
 
 
-@ActionsManage.affect_grid(TITLE_ADD, "images/add.png", condition=lambda xfer, gridname='': hasattr(xfer.item, 'status') and (xfer.item.status == 0))
+@ActionsManage.affect_grid(TITLE_ADD, "images/add.png", condition=lambda xfer, gridname='': hasattr(xfer.item, 'status') and (xfer.item.status == Event.STATUS_BUILDING))
 @MenuManage.describ('event.add_event')
 class ParticipantAdd(AdherentSelection):
     icon = "degree.png"
@@ -289,7 +289,7 @@ class ParticipantAdd(AdherentSelection):
     methods_allowed = ('POST', 'PUT')
 
 
-@ActionsManage.affect_grid(_("Add contact"), "images/add.png", condition=lambda xfer, gridname='': xfer.item.status == 0)
+@ActionsManage.affect_grid(_("Add contact"), "images/add.png", condition=lambda xfer, gridname='': xfer.item.status == Event.STATUS_BUILDING)
 @MenuManage.describ('event.add_event')
 class ParticipantAddContact(ContactSelection):
     icon = "degree.png"
@@ -302,7 +302,7 @@ class ParticipantAddContact(ContactSelection):
     methods_allowed = ('POST', 'PUT')
 
 
-@ActionsManage.affect_grid(TITLE_MODIFY, "images/edit.png", unique=SELECT_SINGLE, condition=lambda xfer, gridname='': (xfer.item.status == 0))
+@ActionsManage.affect_grid(TITLE_MODIFY, "images/edit.png", unique=SELECT_SINGLE, condition=lambda xfer, gridname='': (xfer.item.status == Event.STATUS_BUILDING))
 @MenuManage.describ('event.add_event')
 class ParticipantModify(XferAddEditor):
     icon = "degree.png"
@@ -313,7 +313,7 @@ class ParticipantModify(XferAddEditor):
     redirect_to_show = None
 
 
-@ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", unique=SELECT_MULTI, condition=lambda xfer, gridname='': xfer.item.status == 0)
+@ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", unique=SELECT_MULTI, condition=lambda xfer, gridname='': xfer.item.status == Event.STATUS_BUILDING)
 @MenuManage.describ('event.add_event')
 class ParticipantDel(XferDelete):
     icon = "degree.png"

@@ -25,14 +25,13 @@ from __future__ import unicode_literals
 from datetime import date
 
 from django.utils.translation import ugettext_lazy as _
-from django.db.models import Q
 
 from lucterios.framework.editors import LucteriosEditor
 from lucterios.framework.error import LucteriosException, IMPORTANT
 from lucterios.framework.tools import FORMTYPE_REFRESH, CLOSE_NO
 
-from diacamma.accounting.models import CostAccounting, FiscalYear
 from diacamma.member.models import Activity
+from diacamma.event.models import Event
 
 
 class DegreeEditor(LucteriosEditor):
@@ -48,7 +47,7 @@ class ParticipantEditor(LucteriosEditor):
         xfer.get_components('article').set_action(xfer.request, xfer.return_action('', ''), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
         if xfer.item.article_id is None:
             xfer.remove_component('reduce')
-        if xfer.item.event.event_type == 0:
+        if xfer.item.event.event_type == Event.EVENTTYPE_EXAMINATION:
             xfer.remove_component('comment')
 
 
@@ -77,12 +76,12 @@ class EventEditor(LucteriosEditor):
         if self.item.status == 0:
             participant.delete_header('degree_result_simple')
             participant.delete_header('subdegree_result')
-            if self.item.event_type == 0:
+            if self.item.event_type == Event.EVENTTYPE_EXAMINATION:
                 participant.delete_header('comment')
         else:
             participant.delete_header('current_degree')
         img = xfer.get_components('img')
-        if self.item.event_type == 1:
+        if self.item.event_type == Event.EVENTTYPE_TRAINING:
             participant.delete_header('degree_result_simple')
             participant.delete_header('subdegree_result')
             participant.delete_header('current_degree')
