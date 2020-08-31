@@ -24,6 +24,6 @@ class Migration(migrations.Migration):
             model_name='subscription',
             name='status',
             field=django_fsm.FSMIntegerField(
-                choices=[(0, 'waiting'), (1, 'building'), (2, 'valid'), (3, 'cancel'), (4, 'disbarred')], db_index=True, default=2, verbose_name='status'),
+                choices=[(0, 'waiting'), (1, 'building'), (2, 'valid'), (3, 'cancel'), (4, 'disbarred')], db_index=True, default=1, verbose_name='status'),
         ),
     ]

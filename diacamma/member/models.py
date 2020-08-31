@@ -872,8 +872,7 @@ class Adherent(Individual):
                                                                     begin_date=begin_date, end_date=end_date)
                 except ObjectDoesNotExist:
                     working_subscription = Subscription()
-                    if is_building:
-                        working_subscription.status = Subscription.STATUS_BUILDING
+                    working_subscription.status = Subscription.STATUS_BUILDING if is_building else Subscription.STATUS_VALID
                     working_subscription.adherent = self
                     working_subscription.season = current_season
                     working_subscription.subscriptiontype = type_obj
@@ -960,7 +959,7 @@ class Adherent(Individual):
     def renew(self, dateref):
         last_subscription = self.last_subscription
         if last_subscription is not None:
-            new_subscription = Subscription(adherent=self, subscriptiontype=last_subscription.subscriptiontype)
+            new_subscription = Subscription(adherent=self, subscriptiontype=last_subscription.subscriptiontype, status=Subscription.STATUS_VALID)
             new_subscription.set_periode(dateref)
             if Params.getvalue("member-team-enable") and (len(Prestation.objects.all()) > 0):
                 prestation_list = []
@@ -1179,7 +1178,7 @@ class Subscription(LucteriosModel):
     bill = models.ForeignKey(Bill, verbose_name=_('bill'), null=True, default=None, db_index=True, on_delete=models.SET_NULL)
     begin_date = models.DateField(verbose_name=_('begin date'), null=False)
     end_date = models.DateField(verbose_name=_('end date'), null=False)
-    status = FSMIntegerField(verbose_name=_('status'), choices=LIST_STATUS, null=False, default=STATUS_VALID, db_index=True)
+    status = FSMIntegerField(verbose_name=_('status'), choices=LIST_STATUS, null=False, default=STATUS_BUILDING, db_index=True)
     prestations = models.ManyToManyField(Prestation, verbose_name=_('prestations'), blank=True)
 
     involvement = LucteriosVirtualField(verbose_name=_('involvement'), compute_from='get_involvement')
@@ -1912,7 +1911,7 @@ class CommandManager(object):
         nb_bill = 0
         bill_list = []
         for content_item in self.commands:
-            new_subscription = Subscription(adherent_id=content_item["adherent"], subscriptiontype_id=content_item["type"], status=1)
+            new_subscription = Subscription(adherent_id=content_item["adherent"], subscriptiontype_id=content_item["type"], status=Subscription.STATUS_BUILDING)
             new_subscription.set_periode(dateref)
             if Params.getvalue("member-team-enable") and (len(Prestation.objects.all()) > 0):
                 new_subscription.save(with_bill=False)

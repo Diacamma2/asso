@@ -272,9 +272,9 @@ class SubscriptionEditor(LucteriosEditor):
         cmp_status = xfer.get_components('status')
         if autocreate:
             if Params.getvalue("member-subscription-mode") == Subscription.MODE_AUTOMATIQUE:
-                status = 1
+                status = Subscription.STATUS_BUILDING
             else:
-                status = 0
+                status = Subscription.STATUS_WAITING
             cmp_status.set_value(status)
             xfer.change_to_readonly("status")
             xfer.params['status'] = status
@@ -282,6 +282,7 @@ class SubscriptionEditor(LucteriosEditor):
             del cmp_status.select_list[0]
             del cmp_status.select_list[-2]
             del cmp_status.select_list[-1]
+            cmp_status.set_value(Subscription.STATUS_BUILDING)
         else:
             xfer.change_to_readonly("status")
         last_subscription = self.item.adherent.last_subscription
