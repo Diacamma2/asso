@@ -62,6 +62,7 @@ from diacamma.accounting.models import Third
 from diacamma.accounting.tools import format_with_devise
 from diacamma.invoice.models import get_or_create_customer, Bill
 from diacamma.member.models import Adherent, Subscription, Season, Age, Team, Activity, License, DocAdherent, SubscriptionType, CommandManager, Prestation, ContactAdherent
+from lucterios.CORE.models import Preference
 
 
 MenuManage.add_sub("association", None, "diacamma.member/images/association.png", _("Association"), _("Association tools"), 30)
@@ -73,11 +74,11 @@ MenuManage.add_sub("member.actions", "association", "diacamma.member/images/memb
 class AdherentFilter(object):
 
     def get_filter(self):
-        team = self.getparam("team", ())
-        activity = self.getparam("activity", ())
-        genre = self.getparam("genre", 0)
-        age = self.getparam("age", ())
-        status = self.getparam("status", -1)
+        team = self.getparam("team", Preference.get_value('adherent-team', self.request.user))
+        activity = self.getparam("activity", Preference.get_value('adherent-activity', self.request.user))
+        genre = self.getparam("genre", Preference.get_value('adherent-genre', self.request.user))
+        age = self.getparam("age", Preference.get_value('adherent-age', self.request.user))
+        status = self.getparam("status", Preference.get_value('adherent-status', self.request.user))
         dateref = convert_date(self.getparam("dateref", ""), Season.current_season().date_ref)
         if self.getparam('is_renew', False):
             date_one_year = same_day_months_after(dateref, -12)
@@ -91,18 +92,22 @@ class AdherentFilter(object):
         else:
             current_filter = Q(subscription__begin_date__lte=dateref) & Q(subscription__end_date__gte=dateref)
             exclude_filter = Q()
-        if len(team) > 0:
-            current_filter &= Q(subscription__license__team__in=team) | Q(subscription__prestations__team__in=team)
-        if len(activity) > 0:
-            current_filter &= Q(subscription__license__activity__in=activity) | Q(subscription__prestations__activity__in=activity)
-        if len(age) > 0:
-            age_filter = Q()
-            for age_item in Age.objects.filter(id__in=age):
-                age_filter |= Q(birthday__gte="%d-01-01" % (dateref.year - age_item.maximum)) & Q(birthday__lte="%d-12-31" % (dateref.year - age_item.minimum))
-            current_filter &= age_filter
-        if genre != 0:
-            current_filter &= Q(genre=genre)
-        if status == -1:
+        if Params.getvalue("member-team-enable"):
+            if len(team) > 0:
+                current_filter &= Q(subscription__license__team__in=team) | Q(subscription__prestations__team__in=team)
+        if Params.getvalue("member-activite-enable"):
+            if len(activity) > 0:
+                current_filter &= Q(subscription__license__activity__in=activity) | Q(subscription__prestations__activity__in=activity)
+        if Params.getvalue("member-age-enable"):
+            if len(age) > 0:
+                age_filter = Q()
+                for age_item in Age.objects.filter(id__in=age):
+                    age_filter |= Q(birthday__gte="%d-01-01" % (dateref.year - age_item.maximum)) & Q(birthday__lte="%d-12-31" % (dateref.year - age_item.minimum))
+                current_filter &= age_filter
+        if Params.getvalue("member-filter-genre"):
+            if genre != Adherent.GENRE_ALL:
+                current_filter &= Q(genre=genre)
+        if status == Subscription.STATUS_WAITING_BUILDING:
             current_filter &= Q(subscription__status__in=(Subscription.STATUS_BUILDING, Subscription.STATUS_VALID))
         else:
             current_filter &= Q(subscription__status=status)
@@ -135,11 +140,11 @@ class AdherentAbstractList(XferListEditor, AdherentFilter):
 
     def fillresponse_header(self):
         row = self.get_max_row() + 1
-        team = self.getparam("team", ())
-        activity = self.getparam("activity", ())
-        genre = self.getparam("genre", 0)
-        age = self.getparam("age", ())
-        status = self.getparam("status", -1)
+        team = self.getparam("team", Preference.get_value('adherent-team', self.request.user))
+        activity = self.getparam("activity", Preference.get_value('adherent-activity', self.request.user))
+        genre = self.getparam("genre", Preference.get_value('adherent-genre', self.request.user))
+        age = self.getparam("age", Preference.get_value('adherent-age', self.request.user))
+        status = self.getparam("status", Preference.get_value('adherent-status', self.request.user))
         dateref = convert_date(self.getparam("dateref", ""), Season.current_season().date_ref)
 
         col1 = 0
@@ -171,12 +176,7 @@ class AdherentAbstractList(XferListEditor, AdherentFilter):
             col1 += 1
 
         sel = XferCompSelect('status')
-        list_status = list(Subscription.get_field_by_name('status').choices)
-        del list_status[0]
-        del list_status[-2]
-        del list_status[-1]
-        list_status.insert(0, (-1, '%s & %s' % (_('building'), _('valid'))))
-        sel.set_select(list_status)
+        sel.set_select(Subscription.SELECT_STATUS)
         sel.set_location(0, row + 1)
         sel.set_value(status)
         sel.description = _("status")
@@ -185,9 +185,7 @@ class AdherentAbstractList(XferListEditor, AdherentFilter):
 
         if Params.getvalue("member-filter-genre"):
             sel = XferCompSelect('genre')
-            list_genre = list(self.item.get_field_by_name('genre').choices)
-            list_genre.insert(0, (0, '---'))
-            sel.set_select(list_genre)
+            sel.set_select(Adherent.SELECT_GENRE)
             sel.set_location(col2, row + 1)
             sel.set_value(genre)
             sel.description = _("genre")
@@ -209,7 +207,7 @@ class AdherentAbstractList(XferListEditor, AdherentFilter):
 
         info_list = []
         self.params['TITLE'] = "%s - %s : %s" % (self.caption, _("reference date"), formats.date_format(dateref, "DATE_FORMAT"))
-        info_list.append("{[b]}{[u]}%s{[/u]}{[/b]} : %s" % (_("status"), dict(list_status)[status]))
+        info_list.append("{[b]}{[u]}%s{[/u]}{[/b]} : %s" % (_("status"), dict(Subscription.SELECT_STATUS)[status]))
         info_list.append("")
         if Params.getvalue("member-activite-enable") and (len(activity) > 0):
             info_list.append("{[b]}{[u]}%s{[/u]}{[/b]} : %s" % (Params.getvalue("member-activite-text"),
@@ -232,8 +230,8 @@ class AdherentAbstractList(XferListEditor, AdherentFilter):
                                                                 ", ".join([str(age_item) for age_item in Age.objects.filter(id__in=age)])))
             info_list.append("")
 
-        if Params.getvalue("member-filter-genre") and (genre != 0):
-            info_list.append("{[b]}{[u]}%s{[/u]}{[/b]} : %s" % (_("genre"), dict(list_genre)[genre]))
+        if Params.getvalue("member-filter-genre") and (genre != Adherent.GENRE_ALL):
+            info_list.append("{[b]}{[u]}%s{[/u]}{[/b]} : %s" % (_("genre"), dict(Adherent.SELECT_GENRE)[genre]))
             info_list.append("")
         self.params['INFO'] = '{[br]}'.join(info_list)
 
@@ -857,8 +855,8 @@ class SubscriptionModerate(XferListEditor):
 
     def fillresponse_header(self):
         self.fieldnames = ["adherent", "season", "subscriptiontype", "begin_date", "end_date"]
-        self.filter = Q(status=0)
-        self.params['status_filter'] = 0
+        self.filter = Q(status=Subscription.STATUS_WAITING)
+        self.params['status_filter'] = Subscription.STATUS_WAITING
 
 
 @ActionsManage.affect_grid(_("Show adherent"), "images/open.png", intop=True, unique=SELECT_SINGLE, condition=lambda xfer, gridname='': (xfer.getparam('adherent') is None) and (xfer.getparam('individual') is None))

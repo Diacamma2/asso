@@ -50,7 +50,7 @@ from lucterios.framework.filetools import get_tmp_dir
 from lucterios.framework.auditlog import auditlog
 
 from lucterios.CORE.models import Parameter, PrintModel, LucteriosUser,\
-    LucteriosGroup
+    LucteriosGroup, Preference
 from lucterios.CORE.parameters import Params
 from lucterios.contacts.models import Individual, LegalEntity, Responsability,\
     AbstractContact
@@ -1165,12 +1165,14 @@ class Subscription(LucteriosModel):
     MODE_WITHMODERATE = 1
     MODE_AUTOMATIQUE = 1
 
+    STATUS_WAITING_BUILDING = -1
     STATUS_WAITING = 0
     STATUS_BUILDING = 1
     STATUS_VALID = 2
     STATUS_CANCEL = 3
     STATUS_DISBARRED = 4
     LIST_STATUS = ((STATUS_WAITING, _('waiting')), (STATUS_BUILDING, _('building')), (STATUS_VALID, _('valid')), (STATUS_CANCEL, _('cancel')), (STATUS_DISBARRED, _('disbarred')))
+    SELECT_STATUS = ((STATUS_WAITING_BUILDING, '%s & %s' % (_('building'), _('valid'))), (STATUS_BUILDING, _('building')), (STATUS_VALID, _('valid')))
 
     adherent = models.ForeignKey(Adherent, verbose_name=_('adherent'), null=False, default=None, db_index=True, on_delete=models.CASCADE)
     season = models.ForeignKey(Season, verbose_name=_('season'), null=False, default=None, db_index=True, on_delete=models.PROTECT)
@@ -2016,6 +2018,17 @@ def member_checkparam():
                                     Subscription.get_permission(True, True, False), TaxReceipt.get_permission(True, True, False))
     LucteriosGroup.redefine_generic(_("# member (shower)"), Adherent.get_permission(True, False, False),
                                     Subscription.get_permission(True, False, False), TaxReceipt.get_permission(True, False, False))
+
+    Preference.check_and_create(name="adherent-team", typeparam=Preference.TYPE_INTEGER, title=_("adherent-team"),
+                                args="{'Multi':True}", value="", meta='("member","Team","django.db.models.Q(unactive=False)","id",False)')
+    Preference.check_and_create(name="adherent-activity", typeparam=Preference.TYPE_INTEGER, title=_("adherent-activity"),
+                                args="{'Multi':True}", value="", meta='("member","Activity","django.db.models.Q()","id",False)')
+    Preference.check_and_create(name="adherent-age", typeparam=Preference.TYPE_INTEGER, title=_("adherent-age"),
+                                args="{'Multi':True}", value="", meta='("member","Age","django.db.models.Q()","id",False)')
+    Preference.check_and_create(name="adherent-genre", typeparam=Preference.TYPE_INTEGER, title=_("adherent-genre"),
+                                args="{'Multi':False}", value=Adherent.GENRE_ALL, meta='("","","%s","",False)' % (Adherent.SELECT_GENRE,))
+    Preference.check_and_create(name="adherent-status", typeparam=Preference.TYPE_INTEGER, title=_("adherent-status"),
+                                args="{'Multi':False}", value=Subscription.STATUS_WAITING_BUILDING, meta='("","","%s","",False)' % (Subscription.SELECT_STATUS,))
 
 
 @Signal.decorate('auditlog_register')
