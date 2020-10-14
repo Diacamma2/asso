@@ -1733,6 +1733,9 @@ class TaxReceipt(Supporting):
     def payoff_is_revenu(self):
         return False
 
+    def payoff_have_payment(self):
+        return False
+
     def generate_accountlink(self):
         return
 
