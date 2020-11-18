@@ -699,7 +699,7 @@ class AdherentTest(BaseAdherentTest):
         content_csv = csv_value.split('\n')
         self.assertEqual(len(content_csv), 10, str(content_csv))
         self.assertEqual(content_csv[1].strip(), '"Adhérents cotisants - date de référence : 1 octobre 2009"')
-        self.assertEqual(content_csv[3].strip(), '"statut : en création & validé,,passion : activity2,,group : team2, team3,,Âge : Minimes, Benjamins, Poussins,,genre : Femme"')
+        self.assertEqual(content_csv[3].strip(), '"statut : en création & validé,,passion : activity2,,group : team2,team3,,Âge : Minimes,Benjamins,Poussins,,genre : Femme"')
         self.assertEqual(content_csv[4].strip(), '"nom";"adresse";"ville";"tel";"courriel";')
 
     def test_statistic(self):
