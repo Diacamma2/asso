@@ -1335,7 +1335,10 @@ class Subscription(LucteriosModel):
                 modify = True
             if (self.bill.status == Bill.STATUS_VALID):
                 old_bill = self.bill
-                old_bill.cancel()
+                if old_bill.bill_type == Bill.BILLTYPE_QUOTATION:
+                    old_bill.cancel()
+                else:
+                    old_bill.undo()
                 old_bill.save()
                 self.bill = None
                 self._search_or_create_bill(bill_type, parentbill=old_bill)
