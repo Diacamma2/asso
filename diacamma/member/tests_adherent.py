@@ -59,7 +59,8 @@ from diacamma.member.views import AdherentActiveList, AdherentAddModify, Adheren
     AdherentCommandDelete, AdherentCommandModify, AdherentFamilyAdd,\
     AdherentFamilySelect, AdherentFamilyCreate, FamilyAdherentAdd,\
     FamilyAdherentCreate, FamilyAdherentAdded, AdherentListing,\
-    AdherentContactList, AdherentConnection, SubscriptionDel, AdherentDisableConnection
+    AdherentContactList, AdherentConnection, SubscriptionDel, AdherentDisableConnection,\
+    AdherentPrint
 from diacamma.member.test_tools import default_season, default_financial, default_params,\
     default_adherents, default_subscription, set_parameters, default_prestation, create_adherent
 from diacamma.member.views_conf import TaxReceiptList, TaxReceiptCheck, TaxReceiptShow, TaxReceiptPrint
@@ -388,6 +389,24 @@ class AdherentTest(BaseAdherentTest):
         self.assert_json_equal('', 'subscription/@0/subscriptiontype', "Calendar")
         self.assert_json_equal('', 'subscription/@0/begin_date', "2009-10-01")
         self.assert_json_equal('', 'subscription/@0/end_date', "2010-09-30")
+
+    def test_adherent_print_pdf(self):
+        default_adherents()
+        default_subscription()
+
+        self.factory.xfer = AdherentPrint()
+        self.calljson('/diacamma.member/adherentPrint', {'adherent': 2, 'dateref': '2014-10-01', "PRINT_MODE": 3}, False)
+        self.assert_observer('core.print', 'diacamma.member', 'adherentPrint')
+        self.save_pdf()
+
+    def test_adherent_print_ods(self):
+        default_adherents()
+        default_subscription()
+
+        self.factory.xfer = AdherentPrint()
+        self.calljson('/diacamma.member/adherentPrint', {'adherent': 2, 'dateref': '2014-10-01', "PRINT_MODE": 2}, False)
+        self.assert_observer('core.print', 'diacamma.member', 'adherentPrint')
+        self.save_ods()
 
     def test_show_subscription(self):
         default_adherents()
