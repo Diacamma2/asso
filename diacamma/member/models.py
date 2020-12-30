@@ -1861,7 +1861,7 @@ class CommandManager(object):
         self.file_name = join(get_tmp_dir(), 'list-%s.cmd' % self.username)
         if isfile(self.file_name):
             unlink(self.file_name)
-        with open(self.file_name, 'w') as f:
+        with open(self.file_name, 'w', encoding="utf-8") as f:
             json.dump(self.commands, f, ensure_ascii=False)
 
     def get_content_txt(self):
