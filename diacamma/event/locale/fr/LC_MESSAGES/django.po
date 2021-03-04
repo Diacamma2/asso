@@ -3,20 +3,20 @@
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-09-25 09:56+0000\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
+"POT-Creation-Date: 2021-03-04 09:04+0000\n"
+"PO-Revision-Date: 2021-03-04 10:02+0100\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: fr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Generator: Poedit 2.3\n"
 
 #: __init__.py:43 views_conf.py:118
 msgid "Diacamma event"
@@ -71,11 +71,11 @@ msgid "trainning/outing"
 msgstr "stage/sortie"
 
 #: models.py:127
-msgid "building"
-msgstr "en construction"
+msgid "building event"
+msgstr "en création"
 
 #: models.py:127
-msgid "valid"
+msgid "valid event"
 msgstr "validé"
 
 #: models.py:130 models.py:139 models.py:275
@@ -397,3 +397,6 @@ msgstr "Modifier un diplôme"
 #: views_degree.py:72
 msgid "Delete degree"
 msgstr "Supprimer un diplôme"
+
+#~ msgid "valid"
+#~ msgstr "validé"

@@ -1171,8 +1171,8 @@ class Subscription(LucteriosModel):
     STATUS_VALID = 2
     STATUS_CANCEL = 3
     STATUS_DISBARRED = 4
-    LIST_STATUS = ((STATUS_WAITING, _('waiting')), (STATUS_BUILDING, _('building')), (STATUS_VALID, _('valid')), (STATUS_CANCEL, _('cancel')), (STATUS_DISBARRED, _('disbarred')))
-    SELECT_STATUS = ((STATUS_WAITING_BUILDING, '%s & %s' % (_('building'), _('valid'))), (STATUS_BUILDING, _('building')), (STATUS_VALID, _('valid')))
+    LIST_STATUS = ((STATUS_WAITING, _('waiting subscription')), (STATUS_BUILDING, _('building subscription')), (STATUS_VALID, _('valid subscription')), (STATUS_CANCEL, _('cancel subscription')), (STATUS_DISBARRED, _('disbarred subscription')))
+    SELECT_STATUS = ((STATUS_WAITING_BUILDING, '%s & %s' % (_('building subscription'), _('valid subscription'))), (STATUS_BUILDING, _('building')), (STATUS_VALID, _('valid')))
 
     adherent = models.ForeignKey(Adherent, verbose_name=_('adherent'), null=False, default=None, db_index=True, on_delete=models.CASCADE)
     season = models.ForeignKey(Season, verbose_name=_('season'), null=False, default=None, db_index=True, on_delete=models.PROTECT)

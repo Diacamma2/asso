@@ -124,7 +124,7 @@ class Event(LucteriosModel):
 
     STATUS_BUILDING = 0
     STATUS_VALID = 1
-    LIST_STATUS = ((STATUS_BUILDING, _('building')), (STATUS_VALID, _('valid')))
+    LIST_STATUS = ((STATUS_BUILDING, _('building event')), (STATUS_VALID, _('valid event')))
 
     activity = models.ForeignKey(Activity, verbose_name=_('activity'), null=False, default=None, db_index=True, on_delete=models.PROTECT)
     date = models.DateField(verbose_name=_('date'), null=False)
