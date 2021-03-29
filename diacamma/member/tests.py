@@ -34,9 +34,8 @@ from lucterios.CORE.parameters import Params
 from diacamma.member.views_season import SeasonAddModify, SeasonShow, SeasonSubscription,\
     SeasonActive, DocummentAddModify, DocummentDel, SeasonDocummentClone,\
     PeriodDel, PeriodAddModify, SubscriptionTypeAddModify, SubscriptionTypeShow,\
-    SubscriptionTypeDel, PrestationDel, PrestationAddModify, SubscriptionTypeUp
-from diacamma.member.test_tools import default_season, default_financial,\
-    set_parameters, default_params
+    SubscriptionTypeDel, SubscriptionTypeUp
+from diacamma.member.test_tools import default_season, default_financial, set_parameters
 from diacamma.member.views_conf import CategoryConf, ActivityAddModify,\
     ActivityDel, TeamAddModify, TeamDel, AgeAddModify, AgeDel, CategoryParamEdit
 
@@ -112,12 +111,11 @@ class SeasonTest(LucteriosTest):
         self.factory.xfer = SeasonSubscription()
         self.calljson('/diacamma.member/seasonSubscription', {}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'seasonSubscription')
-        self.assert_count_equal('', 9)
+        self.assert_count_equal('', 7)
         self.assert_grid_equal('season', {'designation': "désignation", 'period_set': "période", 'iscurrent': "courant"}, 5)
         self.assert_json_equal('TAB', '__tab_1', 'Saison')
         self.assert_json_equal('TAB', '__tab_2', 'Les cotisations')
-        self.assert_json_equal('TAB', '__tab_3', 'Les prestations')
-        self.assertFalse('__tab_4' in self.json_data.keys(), self.json_data.keys())
+        self.assertFalse('__tab_3' in self.json_data.keys(), self.json_data.keys())
 
         self.factory.xfer = SeasonSubscription()
         self.calljson('/diacamma.member/seasonSubscription', {'show_filter': 1}, False)
@@ -378,53 +376,6 @@ class SeasonTest(LucteriosTest):
         self.calljson('/diacamma.member/seasonSubscription', {}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'seasonSubscription')
         self.assert_count_equal('subscriptiontype', 1)
-
-    def test_prestation(self):
-        default_financial()
-        default_season()
-        default_params()
-
-        self.factory.xfer = SeasonSubscription()
-        self.calljson('/diacamma.member/seasonSubscription', {}, False)
-        self.assert_observer('core.custom', 'diacamma.member', 'seasonSubscription')
-        self.assert_count_equal('', 9)
-        self.assert_json_equal('TAB', '__tab_1', 'Saison')
-        self.assert_json_equal('TAB', '__tab_2', 'Les cotisations')
-        self.assert_json_equal('TAB', '__tab_3', 'Les prestations')
-        self.assertFalse('__tab_4' in self.json_data.keys(), self.json_data.keys())
-        self.assert_grid_equal('prestation', {'name': "nom", 'description': "description", 'team': "group", 'activity': "passion", 'article.price': "prix"}, 0)
-
-        self.factory.xfer = PrestationAddModify()
-        self.calljson('/diacamma.member/prestationAddModify', {}, False)
-        self.assert_observer('core.custom', 'diacamma.member', 'prestationAddModify')
-        self.assert_count_equal('', 6)
-        self.assert_select_equal("team", {1: 'team1', 2: 'team2', 3: 'team3'})
-        self.assert_select_equal("activity", {1: 'activity1', 2: 'activity2'})
-        self.assert_select_equal('article', {1: 'ABC1 | Article 01 ', 2: 'ABC2 | Article 02 ', 3: 'ABC3 | Article 03 ', 4: 'ABC4 | Article 04 '})
-
-        self.factory.xfer = PrestationAddModify()
-        self.calljson('/diacamma.member/prestationAddModify',
-                      {'SAVE': 'YES', 'name': 'abc123', 'description': 'blablabla', 'team': 3, 'activity': 2, 'article': 1}, False)
-        self.assert_observer('core.acknowledge', 'diacamma.member', 'prestationAddModify')
-
-        self.factory.xfer = SeasonSubscription()
-        self.calljson('/diacamma.member/seasonSubscription', {}, False)
-        self.assert_observer('core.custom', 'diacamma.member', 'seasonSubscription')
-        self.assert_count_equal('prestation', 1)
-        self.assert_json_equal('', 'prestation/@0/name', "abc123")
-        self.assert_json_equal('', 'prestation/@0/description', "blablabla")
-        self.assert_json_equal('', 'prestation/@0/team', "team3")
-        self.assert_json_equal('', 'prestation/@0/activity', "activity2")
-        self.assert_json_equal('', 'prestation/@0/article.price', 12.34)
-
-        self.factory.xfer = PrestationDel()
-        self.calljson('/diacamma.member/prestationDel', {"prestation": 1, 'CONFIRME': 'YES'}, False)
-        self.assert_observer('core.acknowledge', 'diacamma.member', 'prestationDel')
-
-        self.factory.xfer = SeasonSubscription()
-        self.calljson('/diacamma.member/seasonSubscription', {}, False)
-        self.assert_observer('core.custom', 'diacamma.member', 'seasonSubscription')
-        self.assert_count_equal('prestation', 0)
 
 
 class CategoriesTest(LucteriosTest):

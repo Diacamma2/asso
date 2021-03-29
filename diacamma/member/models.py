@@ -213,7 +213,7 @@ class Season(LucteriosModel):
             res_type = self.stats_by_criteria(duration_id, only_valid, 'subscription__subscriptiontype', 'type', True)
             if duration_id == 0:
                 res_older = self.stats_by_seniority(only_valid)
-                if Params.getvalue("member-team-enable"):
+                if (Params.getvalue("member-team-enable") != 0):
                     res_team = self.stats_by_criteria(duration_id, only_valid, 'subscription__license__team', 'team', False)
                 else:
                     res_team = None
@@ -792,7 +792,7 @@ class Adherent(Individual):
         ident_field.extend(['subscription_set.status', 'subscription_set.season'])
         ident_field.extend(cls._get_search_doc_fields())
         ident_field.extend(['subscription_set.subscriptiontype', 'subscription_set.begin_date', 'subscription_set.end_date'])
-        if Params.getvalue("member-team-enable"):
+        if (Params.getvalue("member-team-enable") != 0):
             ident_field.append('subscription_set.license_set.team')
         if Params.getvalue("member-activite-enable"):
             ident_field.append('subscription_set.license_set.activity')
@@ -808,7 +808,7 @@ class Adherent(Individual):
         if Params.getobject("member-family-type") is not None:
             fields.append(('family', _('family')))
         fields.append(('subscriptiontype', _('subscription type')))
-        if Params.getvalue("member-team-enable"):
+        if (Params.getvalue("member-team-enable") != 0):
             fields.append(('team', Params.getvalue("member-team-text")))
             if len(Prestation.objects.all()) > 0:
                 fields.append(('prestations', _('prestations')))
@@ -961,7 +961,7 @@ class Adherent(Individual):
         if last_subscription is not None:
             new_subscription = Subscription(adherent=self, subscriptiontype=last_subscription.subscriptiontype, status=Subscription.STATUS_VALID)
             new_subscription.set_periode(dateref)
-            if Params.getvalue("member-team-enable") and (len(Prestation.objects.all()) > 0):
+            if Params.getvalue("member-team-enable") == 2:
                 prestation_list = []
                 for license_item in last_subscription.license_set.all():
                     pesta = Prestation.objects.filter(team_id=license_item.team_id,
@@ -1028,6 +1028,24 @@ class Adherent(Individual):
             except ObjectDoesNotExist:
                 pass
             return current_family
+
+    def add_prestation(self, prestation_id):
+        subscription = self.current_subscription
+        if (subscription is None) or (subscription.status != Subscription.STATUS_BUILDING):
+            raise LucteriosException(IMPORTANT, _("no subscription editable"))
+        last_prestationsid = [prest.id for prest in subscription.prestations.all()]
+        last_prestationsid.append(prestation_id)
+        subscription.prestations.set(Prestation.objects.filter(id__in=last_prestationsid))
+        subscription.save()
+
+    def del_prestation(self, prestation_id):
+        subscription = self.current_subscription
+        if (subscription is None) or (subscription.status != Subscription.STATUS_BUILDING):
+            raise LucteriosException(IMPORTANT, _("no subscription editable"))
+        last_prestations = subscription.prestations.all()
+        last_prestations = last_prestations.exclude(id=prestation_id)
+        subscription.prestations.set(last_prestations)
+        subscription.save()
 
     def save(self, force_insert=False, force_update=False, using=None,
              update_fields=None, new_num=True):
@@ -1103,6 +1121,8 @@ class Prestation(LucteriosModel):
     activity = models.ForeignKey(Activity, verbose_name=_('activity'), null=False, on_delete=models.PROTECT)
     article = models.ForeignKey(Article, verbose_name=_('article'), null=False, on_delete=models.CASCADE)
 
+    nb_adherent = LucteriosVirtualField(verbose_name=_('nb adherent'), compute_from='get_nb_adherent')
+
     def __str__(self):
         if Params.getvalue("member-activite-enable"):
             return "%s [%s]" % (self.team, self.activity)
@@ -1122,17 +1142,16 @@ class Prestation(LucteriosModel):
 
     @classmethod
     def get_default_fields(cls):
-        fields = ["name", "description"]
-        fields.append((Params.getvalue("member-team-text"), "team"))
+        fields = ["team.name", "team.description"]
         if Params.getvalue("member-activite-enable"):
             fields.append((Params.getvalue("member-activite-text"), "activity"))
+        fields.append("nb_adherent")
         fields.append("article.price")
         return fields
 
     @classmethod
     def get_edit_fields(cls):
-        fields = ["name", "description"]
-        fields.append(((Params.getvalue("member-team-text"), "team"),))
+        fields = ["team"]
         if Params.getvalue("member-activite-enable"):
             fields.append(((Params.getvalue("member-activite-text"), "activity"),))
         fields.append('article')
@@ -1140,13 +1159,31 @@ class Prestation(LucteriosModel):
 
     @classmethod
     def get_show_fields(cls):
-        fields = ["name", "description"]
-        fields.append(((Params.getvalue("member-team-text"), "team"),))
+        fields = []
         if Params.getvalue("member-activite-enable"):
-            fields.append(((Params.getvalue("member-activite-text"), "activity"),))
-        fields.append('article')
-        fields.append("article.price")
+            fields.append(("team.name", (Params.getvalue("member-activite-text"), "activity")))
+        else:
+            fields.append("team.name")
+        fields.append("team.description")
+        fields.append(('article', "article.price"))
+        fields.append("adherent_set")
         return fields
+
+    @property
+    def adherent_set(self):
+        return Adherent.objects.filter(subscription__season__iscurrent=True, subscription__status__in=(Subscription.STATUS_BUILDING, Subscription.STATUS_VALID), subscription__license__team=self.team, subscription__license__activity=self.activity).distinct()
+
+    def get_nb_adherent(self):
+        return self.adherent_set.count()
+
+    def delete(self, using=None, group_mode=0):
+        team = self.team
+        LucteriosModel.delete(self, using=using)
+        if group_mode == 0:
+            team.unactive = True
+            team.save()
+        elif group_mode == 1:
+            team.delete()
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         if (self.id is None) and (self.activity_id is None):
@@ -1194,7 +1231,7 @@ class Subscription(LucteriosModel):
     @classmethod
     def get_default_fields(cls):
         fields = ["season", "subscriptiontype", "status", "begin_date", "end_date"]
-        if Params.getvalue("member-licence-enabled") or Params.getvalue("member-team-enable") or Params.getvalue("member-activite-enable"):
+        if Params.getvalue("member-licence-enabled") or (Params.getvalue("member-team-enable") != 0) or Params.getvalue("member-activite-enable"):
             fields.append("involvement")
         return fields
 
@@ -1213,7 +1250,7 @@ class Subscription(LucteriosModel):
     @classmethod
     def get_show_fields(cls):
         fields = ["adherent", "season", "subscriptiontype", "status", "begin_date", "end_date"]
-        if Params.getvalue("member-licence-enabled") or Params.getvalue("member-team-enable") or Params.getvalue("member-activite-enable"):
+        if Params.getvalue("member-licence-enabled") or (Params.getvalue("member-team-enable") != 0) or Params.getvalue("member-activite-enable"):
             fields.append("license_set")
         return fields
 
@@ -1395,8 +1432,8 @@ class Subscription(LucteriosModel):
         return import_logs
 
     def convert_prestations(self):
-        if self.prestations.all().count() > 0:
-            if self.status in (self.STATUS_WAITING, self.STATUS_BUILDING, self.STATUS_VALID):
+        if (Params.getvalue("member-team-enable") == 2):
+            if (self.status in (self.STATUS_WAITING, self.STATUS_BUILDING)) or (self.prestations.all().count() > 0):
                 self.license_set.all().delete()
                 for presta in self.prestations.all():
                     License.objects.create(subscription=self, activity_id=presta.activity_id, team_id=presta.team_id)
@@ -1543,7 +1580,7 @@ class License(LucteriosModel):
 
     def __str__(self):
         val = []
-        if Params.getvalue("member-team-enable") and (self.team is not None):
+        if (Params.getvalue("member-team-enable") != 0) and (self.team is not None):
             val.append(str(self.team))
         if Params.getvalue("member-activite-enable") and (self.activity is not None):
             val.append("[%s]" % str(self.activity))
@@ -1557,7 +1594,7 @@ class License(LucteriosModel):
     @classmethod
     def get_default_fields(cls):
         fields = []
-        if Params.getvalue("member-team-enable"):
+        if (Params.getvalue("member-team-enable") != 0):
             fields.append((Params.getvalue("member-team-text"), "team"))
         if Params.getvalue("member-activite-enable"):
             fields.append((Params.getvalue("member-activite-text"), "activity"))
@@ -1568,7 +1605,7 @@ class License(LucteriosModel):
     @classmethod
     def get_edit_fields(cls):
         fields = []
-        if Params.getvalue("member-team-enable"):
+        if (Params.getvalue("member-team-enable") != 0):
             fields.append(((Params.getvalue("member-team-text"), "team"),))
         if Params.getvalue("member-activite-enable"):
             fields.append(((Params.getvalue("member-activite-text"), "activity"),))
@@ -1579,7 +1616,7 @@ class License(LucteriosModel):
     @classmethod
     def get_show_fields(cls):
         fields = []
-        if Params.getvalue("member-team-enable"):
+        if (Params.getvalue("member-team-enable") != 0):
             fields.append(((Params.getvalue("member-team-text"), "team"),))
         if Params.getvalue("member-activite-enable"):
             fields.append(
@@ -1812,10 +1849,10 @@ class CommandManager(object):
         fields.append(("type", _('subscription type')))
         if Params.getvalue("member-age-enable"):
             fields.append(("age", _("age category")))
-        if Params.getvalue("member-team-enable") and (len(Prestation.objects.all()) > 0):
+        if (Params.getvalue("member-team-enable") == 2):
             fields.append(("prestations", _('prestations')))
         else:
-            if Params.getvalue("member-team-enable"):
+            if (Params.getvalue("member-team-enable") != 0):
                 fields.append(("team", Params.getvalue("member-team-text")))
             if Params.getvalue("member-activite-enable"):
                 fields.append(("activity", Params.getvalue("member-activite-text")))
@@ -1839,7 +1876,7 @@ class CommandManager(object):
                 licence = []
                 prestations = []
                 for lic in item.last_subscription.license_set.all():
-                    if Params.getvalue("member-team-enable") and (len(Prestation.objects.all()) > 0):
+                    if (Params.getvalue("member-team-enable") == 2):
                         pesta = Prestation.objects.filter(team_id=lic.team_id,
                                                           activity_id=lic.activity_id).order_by('-article__price')
                         if pesta.count() > 0:
@@ -1921,7 +1958,7 @@ class CommandManager(object):
         for content_item in self.commands:
             new_subscription = Subscription(adherent_id=content_item["adherent"], subscriptiontype_id=content_item["type"], status=Subscription.STATUS_BUILDING)
             new_subscription.set_periode(dateref)
-            if Params.getvalue("member-team-enable") and (len(Prestation.objects.all()) > 0):
+            if (Params.getvalue("member-team-enable") == 2):
                 new_subscription.save(with_bill=False)
                 new_subscription.prestations.set(Prestation.objects.filter(id__in=content_item["prestations"]))
                 new_subscription.save(with_bill=True)
@@ -1993,12 +2030,23 @@ def check_report_member(year):
 def member_convertdata():
     for subtype in SubscriptionType.objects.filter(order_key__isnull=True).order_by('id'):
         subtype.save()
+    param_team = Parameter.objects.get(name="member-team-enable")
+    if param_team.value == 'False':
+        param_team.value = '0'
+        param_team.save()
+    elif param_team.value == 'True':
+        if Prestation.objects.all().count() == 0:
+            param_team.value = '1'
+        else:
+            param_team.value = '2'
+        param_team.save()
 
 
 @Signal.decorate('checkparam')
 def member_checkparam():
     Parameter.check_and_create(name="member-age-enable", typeparam=3, title=_("member-age-enable"), args="{}", value='True')
-    Parameter.check_and_create(name="member-team-enable", typeparam=3, title=_("member-team-enable"), args="{}", value='True')
+    Parameter.check_and_create(name="member-team-enable", typeparam=4, title=_("member-team-enable"), args="{'Enum':3}", value='1',
+                               param_titles=(_("member-team-enable.0"), _("member-team-enable.1"), _("member-team-enable.2")))
     Parameter.check_and_create(name="member-team-text", typeparam=0, title=_("member-team-text"), args="{'Multi':False}", value=_('Team'))
     Parameter.check_and_create(name="member-activite-enable", typeparam=3, title=_("member-activite-enable"), args="{}", value="True")
     Parameter.check_and_create(name="member-activite-text", typeparam=0, title=_("member-activite-text"), args="{'Multi':False}", value=_('Activity'))

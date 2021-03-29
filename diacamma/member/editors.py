@@ -41,7 +41,8 @@ from lucterios.CORE.parameters import Params
 from lucterios.contacts.models import Individual
 from lucterios.contacts.editors import IndividualEditor
 
-from diacamma.member.models import Period, Season, SubscriptionType, License, convert_date, same_day_months_after, Activity, Adherent, Prestation, Subscription
+from diacamma.member.models import Period, Season, Subscription, Team, License, convert_date, same_day_months_after, Activity, Adherent,\
+    SubscriptionType
 
 
 class SeasonEditor(LucteriosEditor):
@@ -228,7 +229,7 @@ class SubscriptionEditor(LucteriosEditor):
                 self.item.begin_date, 12) - timedelta(days=1)
 
     def saving(self, xfer):
-        if xfer.is_new and not (Params.getvalue("member-team-enable") and (len(Prestation.objects.all()) > 0)):
+        if xfer.is_new and (Params.getvalue("member-team-enable") != 2):
             activity_id = xfer.getparam('activity')
             team_id = xfer.getparam('team')
             value = xfer.getparam('value')
@@ -307,7 +308,7 @@ class SubscriptionEditor(LucteriosEditor):
         cmp_subscriptiontype.set_action(xfer.request, xfer.return_action(), close=CLOSE_NO, modal=FORMTYPE_REFRESH)
         row = xfer.get_max_row() + 1
         self._add_season_comp(xfer, row)
-        if Params.getvalue("member-team-enable") and (len(Prestation.objects.all()) > 0) and ((self.item.id is None) or (self.item.status in (Subscription.STATUS_WAITING, Subscription.STATUS_BUILDING))):
+        if (Params.getvalue("member-team-enable") == 2) and ((self.item.id is None) or (self.item.status in (Subscription.STATUS_WAITING, Subscription.STATUS_BUILDING))):
             xfer.filltab_from_model(1, row + 1, False, ['prestations'])
         elif self.item.id is None:
             xfer.item = License()
@@ -325,7 +326,7 @@ class SubscriptionEditor(LucteriosEditor):
                 activity.set_needed(True)
 
     def show(self, xfer):
-        if Params.getvalue("member-team-enable") and (len(Prestation.objects.all()) > 0) and (self.item.status in (Subscription.STATUS_WAITING, Subscription.STATUS_BUILDING)):
+        if (Params.getvalue("member-team-enable") == 2) and (self.item.status in (Subscription.STATUS_WAITING, Subscription.STATUS_BUILDING)):
             xfer.remove_component('license')
             xfer.filltab_from_model(1, xfer.get_max_row() + 1, True, ['prestations'])
 
@@ -343,6 +344,46 @@ class LicenseEditor(LucteriosEditor):
         else:
             default_act = Activity.objects.all()[0]
             xfer.params['activity'] = default_act.id
+
+
+class PrestationEditor(LucteriosEditor):
+
+    def before_save(self, xfer):
+        if ('name' in xfer.params) and ('description' in xfer.params):
+            group_name = xfer.getparam('name', '')
+            group_description = xfer.getparam('description', '')
+            if self.item.id is None:
+                self.item.team = Team.objects.create(name=group_name, description=group_description, unactive=False)
+            else:
+                self.item.team.name = group_name
+                self.item.team.description = group_description
+                self.item.team.save()
+            if 'team' in xfer.params:
+                del xfer.params['team']
+        return
+
+    def edit(self, xfer):
+        xfer.move(0, 0, 3)
+        if self.item.id is None:
+            new_group = xfer.getparam('new_group', 0)
+            sel = XferCompSelect('new_group')
+            sel.set_needed(True)
+            sel.set_select([(0, _('new %s') % Params.getvalue("member-team-text").lower()),
+                            (1, _('select old %s') % Params.getvalue("member-team-text").lower())])
+            sel.set_location(1, 0)
+            sel.set_value(new_group)
+            sel.description = _('addon mode')
+            sel.set_action(xfer.request, xfer.return_action(), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
+            xfer.add_component(sel)
+        else:
+            new_group = 0
+        if new_group == 0:
+            xfer.remove_component('team')
+            xfer.model = Team
+            xfer.item = self.item.team if self.item.id is not None else Team()
+            xfer.filltab_from_model(1, 2, False, ['name', 'description'])
+            xfer.model = self.item.__class__
+            xfer.item = self.item
 
 
 class TaxReceiptEditor(LucteriosEditor):

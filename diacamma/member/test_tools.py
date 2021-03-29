@@ -148,7 +148,11 @@ def set_parameters(values):
             param_name = "member-%s-enable" % param_item
             if param_item == "licence":
                 param_name += 'd'
-        Parameter.change_value(param_name, param_item in values)
+        if param_item == 'team':
+            value = 1 if param_item in values else 0
+        else:
+            value = param_item in values
+        Parameter.change_value(param_name, value)
     Params.clear()
 
 
@@ -156,3 +160,4 @@ def default_prestation():
     Prestation.objects.create(name="Presta 1", description="Prestation N°1", team_id=3, activity_id=2, article_id=1)
     Prestation.objects.create(name="Presta 2", description="Prestation N°2", team_id=2, activity_id=2, article_id=2)
     Prestation.objects.create(name="Presta 3", description="Prestation N°3", team_id=1, activity_id=1, article_id=3)
+    Parameter.change_value('member-team-enable', 2)

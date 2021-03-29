@@ -60,7 +60,9 @@ from diacamma.member.views import AdherentActiveList, AdherentAddModify, Adheren
     AdherentFamilySelect, AdherentFamilyCreate, FamilyAdherentAdd,\
     FamilyAdherentCreate, FamilyAdherentAdded, AdherentListing,\
     AdherentContactList, AdherentConnection, SubscriptionDel, AdherentDisableConnection,\
-    AdherentPrint
+    AdherentPrint, PrestationList, PrestationDel, PrestationAddModify,\
+    PrestationShow, AdherentPrestationAdd, AdherentPrestationSave,\
+    AdherentPrestationDel
 from diacamma.member.test_tools import default_season, default_financial, default_params,\
     default_adherents, default_subscription, set_parameters, default_prestation, create_adherent
 from diacamma.member.views_conf import TaxReceiptList, TaxReceiptCheck, TaxReceiptShow, TaxReceiptPrint
@@ -84,28 +86,28 @@ class BaseAdherentTest(LucteriosTest):
         default_season()
         default_params()
 
-    def add_subscriptions(self, year=2009, season_id=10):
+    def add_subscriptions(self, year=2009, season_id=10, status=2):
         default_adherents()
         default_subscription()
         self.factory.xfer = SubscriptionAddModify()
         self.calljson('/diacamma.member/subscriptionAddModify',
-                      {'SAVE': 'YES', 'adherent': 2, 'status': 2, 'dateref': '%s-10-01' % year, 'subscriptiontype': 1, 'season': season_id, 'team': 2, 'activity': 1, 'value': '132'}, False)
+                      {'SAVE': 'YES', 'adherent': 2, 'status': status, 'dateref': '%s-10-01' % year, 'subscriptiontype': 1, 'season': season_id, 'team': 2, 'activity': 1, 'value': '132'}, False)
         self.assert_observer('core.acknowledge', 'diacamma.member', 'subscriptionAddModify')
         self.factory.xfer = SubscriptionAddModify()
-        self.calljson('/diacamma.member/subscriptionAddModify', {'SAVE': 'YES', 'adherent': 3, 'status': 2, 'dateref': '%s-10-01' % year,
+        self.calljson('/diacamma.member/subscriptionAddModify', {'SAVE': 'YES', 'adherent': 3, 'status': status, 'dateref': '%s-10-01' % year,
                                                                  'subscriptiontype': 2, 'period': 37 + (year - 2009) * 4, 'season': season_id, 'team': 1, 'activity': 1, 'value': '645'}, False)
         self.assert_observer('core.acknowledge', 'diacamma.member', 'subscriptionAddModify')
         self.factory.xfer = SubscriptionAddModify()
-        self.calljson('/diacamma.member/subscriptionAddModify', {'SAVE': 'YES', 'adherent': 4, 'status': 2, 'dateref': '%s-10-01' % year,
+        self.calljson('/diacamma.member/subscriptionAddModify', {'SAVE': 'YES', 'adherent': 4, 'status': status, 'dateref': '%s-10-01' % year,
                                                                  'subscriptiontype': 3, 'month': '%s-10' % year, 'season': season_id, 'team': 3, 'activity': 1, 'value': '489'}, False)
         self.assert_observer('core.acknowledge', 'diacamma.member', 'subscriptionAddModify')
         self.factory.xfer = SubscriptionAddModify()
-        self.calljson('/diacamma.member/subscriptionAddModify', {'SAVE': 'YES', 'adherent': 5, 'status': 2, 'dateref': '%s-10-01' % year,
+        self.calljson('/diacamma.member/subscriptionAddModify', {'SAVE': 'YES', 'adherent': 5, 'status': status, 'dateref': '%s-10-01' % year,
                                                                  'subscriptiontype': 4, 'begin_date': '%s-09-15' % year, 'season': season_id, 'team': 3, 'activity': 2, 'value': '470'}, False)
         self.assert_observer('core.acknowledge', 'diacamma.member', 'subscriptionAddModify')
         self.factory.xfer = SubscriptionAddModify()
         self.calljson('/diacamma.member/subscriptionAddModify',
-                      {'SAVE': 'YES', 'adherent': 6, 'status': 2, 'dateref': '%s-10-01' % year, 'subscriptiontype': 1, 'season': season_id, 'team': 1, 'activity': 2, 'value': '159'}, False)
+                      {'SAVE': 'YES', 'adherent': 6, 'status': status, 'dateref': '%s-10-01' % year, 'subscriptiontype': 1, 'season': season_id, 'team': 1, 'activity': 2, 'value': '159'}, False)
         self.assert_observer('core.acknowledge', 'diacamma.member', 'subscriptionAddModify')
 
     def add_family(self):
@@ -1767,6 +1769,124 @@ class AdherentTest(BaseAdherentTest):
         self.assertEqual(True, user.is_active)
         self.assertEqual([], list(user.groups.all()))
 
+    def test_prestation_manage(self):
+        default_prestation()
+
+        self.factory.xfer = PrestationList()
+        self.calljson('/diacamma.member/prestationList', {}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'prestationList')
+        self.assert_count_equal('', 4)
+        self.assert_select_equal('activity', 3)
+        self.assert_grid_equal('prestation', {'team.name': "nom", 'team.description': "description", 'activity': "passion", "nb_adherent": "nombre d'adhérents", 'article.price': "prix"}, 3)
+        self.assert_count_equal('#prestation/actions', 4)
+        self.assert_json_equal('', '#prestation/actions/@0/action', "prestationShow")
+        self.assert_json_equal('', '#prestation/actions/@1/action', "prestationAddModify")
+        self.assert_json_equal('', '#prestation/actions/@2/action', "prestationDel")
+        self.assert_json_equal('', '#prestation/actions/@3/action', "prestationAddModify")
+
+        self.factory.xfer = PrestationAddModify()
+        self.calljson('/diacamma.member/prestationAddModify', {'new_group': 1}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'prestationAddModify')
+        self.assert_count_equal('', 5)
+        self.assert_select_equal("new_group", {0: 'nouveau group', 1: 'sélectionner ancien group'})
+        self.assert_select_equal("team", {1: 'team1', 2: 'team2', 3: 'team3'})
+        self.assert_select_equal("activity", {1: 'activity1', 2: 'activity2'})
+        self.assert_select_equal('article', {1: 'ABC1 | Article 01 ', 2: 'ABC2 | Article 02 ', 3: 'ABC3 | Article 03 ', 4: 'ABC4 | Article 04 '})
+
+        self.factory.xfer = PrestationAddModify()
+        self.calljson('/diacamma.member/prestationAddModify',
+                      {'SAVE': 'YES', 'team': 3, 'activity': 2, 'article': 1, 'new_group': 1}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.member', 'prestationAddModify')
+
+        self.factory.xfer = PrestationList()
+        self.calljson('/diacamma.member/prestationList', {}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'prestationList')
+        self.assert_count_equal('prestation', 4)
+        self.assert_json_equal('', 'prestation/@3/id', 4)
+        self.assert_json_equal('', 'prestation/@3/team.name', "team3")
+        self.assert_json_equal('', 'prestation/@3/team.description', "team N°3{[br/]}The newbies")
+        self.assert_json_equal('', 'prestation/@3/activity', "activity2")
+        self.assert_json_equal('', 'prestation/@3/article.price', 12.34)
+
+        self.factory.xfer = PrestationAddModify()
+        self.calljson('/diacamma.member/prestationAddModify', {'new_group': 0, 'prestation': 4}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'prestationAddModify')
+        self.assert_count_equal('', 5)
+        self.assert_json_equal('EDIT', 'name', "team3")
+        self.assert_json_equal('MEMO', 'description', "team N°3{[br/]}The newbies")
+        self.assert_json_equal('SELECT', 'activity', 2)
+        self.assert_json_equal('SELECT', 'article', 1)
+
+        self.factory.xfer = PrestationAddModify()
+        self.calljson('/diacamma.member/prestationAddModify',
+                      {'SAVE': 'YES', "name": "team #3", "description": "The team number 3", 'activity': 1, 'article': 2, 'new_group': 0, 'prestation': 4}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.member', 'prestationAddModify')
+
+        self.factory.xfer = PrestationList()
+        self.calljson('/diacamma.member/prestationList', {}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'prestationList')
+        self.assert_count_equal('prestation', 4)
+        self.assert_json_equal('', 'prestation/@0/id', 4)
+        self.assert_json_equal('', 'prestation/@0/team.name', "team #3")
+        self.assert_json_equal('', 'prestation/@0/team.description', "The team number 3")
+        self.assert_json_equal('', 'prestation/@0/activity', "activity1")
+        self.assert_json_equal('', 'prestation/@0/article.price', 56.78)
+
+        self.factory.xfer = PrestationDel()
+        self.calljson('/diacamma.member/prestationDel', {"prestation": 4, 'CONFIRME': 'YES'}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.member', 'prestationDel')
+
+        self.factory.xfer = PrestationList()
+        self.calljson('/diacamma.member/prestationList', {}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'prestationList')
+        self.assert_count_equal('prestation', 3)
+
+    def test_prestation_show(self):
+        default_prestation()
+        self.add_subscriptions(status=1)
+
+        self.factory.xfer = PrestationList()
+        self.calljson('/diacamma.member/prestationList', {}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'prestationList')
+        self.assert_count_equal('', 4)
+        self.assert_select_equal('activity', 3)
+        self.assert_count_equal('prestation', 3)
+
+        self.factory.xfer = PrestationShow()
+        self.calljson('/diacamma.member/prestationShow', {'prestation': 1}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'prestationShow')
+        self.assert_count_equal('', 7)
+        self.assert_json_equal('LABELFORM', 'team.name', 'team3')
+        self.assert_json_equal('LABELFORM', 'activity', "activity2")
+        self.assert_json_equal('LABELFORM', 'article', 'ABC1')
+        self.assert_count_equal('adherent', 0)
+        self.assert_count_equal('#adherent/actions', 3)
+        self.assert_json_equal('', '#adherent/actions/@0/action', "adherentShow")
+        self.assert_json_equal('', '#adherent/actions/@1/action', "adherentPrestationDel")
+        self.assert_json_equal('', '#adherent/actions/@2/action', "adherentPrestationAdd")
+
+        self.factory.xfer = AdherentPrestationAdd()
+        self.calljson('/diacamma.member/adherentPrestationAdd', {'prestation': 1}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentPrestationAdd')
+
+        self.factory.xfer = AdherentPrestationSave()
+        self.calljson('/diacamma.member/adherentPrestationSave', {'prestation': 1, 'adherent': '2;6'}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.member', 'adherentPrestationSave')
+
+        self.factory.xfer = PrestationShow()
+        self.calljson('/diacamma.member/prestationShow', {'prestation': 1}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'prestationShow')
+        self.assert_count_equal('adherent', 2)
+
+        self.factory.xfer = AdherentPrestationDel()
+        self.calljson('/diacamma.member/adherentPrestationDel', {'prestation': 1, 'adherent': '2', 'CONFIRME': 'YES'}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.member', 'adherentPrestationDel')
+
+        self.factory.xfer = PrestationShow()
+        self.calljson('/diacamma.member/prestationShow', {'prestation': 1}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'prestationShow')
+        self.assert_count_equal('adherent', 1)
+
 
 class AdherentFamilyTest(BaseAdherentTest):
 
@@ -2448,8 +2568,8 @@ class AdherentFamilyTest(BaseAdherentTest):
 
     def test_with_prestation_valid_subscription(self):
         self.prep_family()
-        default_prestation()
         set_parameters(["team"])
+        default_prestation()
         self.factory.xfer = SubscriptionAddModify()
         self.calljson('/diacamma.member/subscriptionAddModify', {'SAVE': 'YES', 'adherent': 2, 'status': 1, 'dateref': '2014-10-01',
                                                                  'subscriptiontype': 1, 'season': 10, 'prestations': '1;2'}, False)
@@ -2527,8 +2647,8 @@ class AdherentFamilyTest(BaseAdherentTest):
 
     def test_with_prestation_convert_bill(self):
         self.prep_family()
-        default_prestation()
         set_parameters(["team"])
+        default_prestation()
         self.factory.xfer = SubscriptionAddModify()
         self.calljson('/diacamma.member/subscriptionAddModify', {'SAVE': 'YES', 'adherent': 2, 'status': 1, 'dateref': '2014-10-01',
                                                                  'subscriptiontype': 1, 'season': 10, 'prestations': '1;2'}, False)

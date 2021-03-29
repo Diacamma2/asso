@@ -101,7 +101,7 @@ class CategoryConf(XferListEditor):
         if Params.getvalue("member-age-enable") == 1:
             self.new_tab(_('Age'))
             self.fill_grid(0, Age, "age", Age.objects.all())
-        if Params.getvalue("member-team-enable") == 1:
+        if Params.getvalue("member-team-enable") != 0:
             team_filter = self.getparam('team_filter', 0)
             self.new_tab(Params.getvalue("member-team-text"))
             check = XferCompSelect('team_filter')
@@ -344,7 +344,7 @@ def conf_wizard_member(wizard_ident, xfer):
         if Params.getvalue("member-age-enable") == 1:
             xfer.new_tab(_('Age'))
             xfer.fill_grid(1, Age, "age", Age.objects.all())
-        if Params.getvalue("member-team-enable") == 1:
+        if Params.getvalue("member-team-enable") != 0:
             xfer.new_tab(Params.getvalue("member-team-text"))
             xfer.fill_grid(1, Team, "team", Team.objects.all())
         if Params.getvalue("member-activite-enable") == 1:

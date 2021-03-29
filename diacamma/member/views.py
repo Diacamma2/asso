@@ -39,7 +39,7 @@ from lucterios.framework.xferadvance import XferShowEditor
 from lucterios.framework.xferadvance import XferDelete
 from lucterios.framework.tools import FORMTYPE_NOMODAL, ActionsManage, MenuManage, \
     FORMTYPE_REFRESH, CLOSE_NO, SELECT_SINGLE, WrapAction, FORMTYPE_MODAL, \
-    SELECT_MULTI, CLOSE_YES, SELECT_NONE
+    SELECT_MULTI, CLOSE_YES, SELECT_NONE, ifplural
 from lucterios.framework.xfercomponents import XferCompLabelForm, \
     XferCompCheckList, XferCompButton, XferCompSelect, XferCompDate, \
     XferCompImage, XferCompEdit, XferCompGrid, XferCompFloat, XferCompCheck
@@ -92,7 +92,7 @@ class AdherentFilter(object):
         else:
             current_filter = Q(subscription__begin_date__lte=dateref) & Q(subscription__end_date__gte=dateref)
             exclude_filter = Q()
-        if Params.getvalue("member-team-enable"):
+        if Params.getvalue("member-team-enable") != 0:
             if len(team) > 0:
                 current_filter &= Q(subscription__license__team__in=team) | Q(subscription__prestations__team__in=team)
         if Params.getvalue("member-activite-enable"):
@@ -157,7 +157,7 @@ class AdherentAbstractList(XferListEditor, AdherentFilter):
             self.add_component(sel)
             col1 += 1
 
-        if Params.getvalue("member-team-enable"):
+        if Params.getvalue("member-team-enable") != 0:
             sel = XferCompCheckList('team')
             sel.set_select_query(Team.objects.filter(unactive=False))
             sel.set_value(team)
@@ -213,7 +213,7 @@ class AdherentAbstractList(XferListEditor, AdherentFilter):
             info_list.append("{[b]}{[u]}%s{[/u]}{[/b]} : %s" % (Params.getvalue("member-activite-text"),
                                                                 ", ".join([str(activity_item) for activity_item in Activity.objects.filter(id__in=activity)])))
             info_list.append("")
-        if Params.getvalue("member-team-enable"):
+        if Params.getvalue("member-team-enable") != 0:
             if len(team) == 1:
                 first_team = Team.objects.get(id=team[0])
                 self.params['TITLE'] = "%s - %s - %s : %s" % (self.caption, first_team, _("reference date"), formats.date_format(dateref, "DATE_FORMAT"))
@@ -341,12 +341,161 @@ class AdherentContactList(XferListEditor):
         grid.add_action(self.request, ActionsManage.get_action_url(AbstractContact.get_long_name(), "Show", self), modal=FORMTYPE_MODAL, unique=SELECT_SINGLE, close=CLOSE_NO, params={'SubscriptionBefore': 'YES'})
 
 
+def show_prestationlist(request):
+    if SubscriptionShow.get_action().check_permission(request):
+        return Params.getvalue("member-team-enable") == 2
+    else:
+        return False
+
+
+@MenuManage.describ(show_prestationlist, FORMTYPE_NOMODAL, 'member.actions', _('List of prestations and manage subscribtions associated.'))
+class PrestationList(XferListEditor):
+    icon = "adherent.png"
+    model = Prestation
+    field_id = 'prestation'
+    caption = _("List prestations")
+
+    def fillresponse_header(self):
+        self.filter = Q()
+        if Params.getvalue("member-activite-enable"):
+            activity = self.getparam("activity", 0)
+            sel = XferCompSelect('activity')
+            sel.set_select_query(Activity.get_all())
+            sel.set_value(activity)
+            sel.set_needed(False)
+            sel.set_location(1, 1)
+            sel.description = Params.getvalue("member-activite-text")
+            sel.set_action(self.request, self.return_action(), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
+            self.add_component(sel)
+            if activity != 0:
+                self.filter &= Q(activity_id=activity)
+
+
+@ActionsManage.affect_grid(TITLE_CREATE, "images/new.png")
+@ActionsManage.affect_grid(TITLE_MODIFY, "images/edit.png", unique=SELECT_SINGLE)
+@MenuManage.describ('member.add_subscription')
+class PrestationAddModify(XferAddEditor):
+    icon = "adherent.png"
+    model = Prestation
+    field_id = 'prestation'
+    caption_add = _("Add prestation")
+    caption_modify = _("Modify prestation")
+
+
+@ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", unique=SELECT_MULTI)
+@MenuManage.describ('member.delete_subscription')
+class PrestationDel(XferDelete):
+    icon = "adherent.png"
+    model = Prestation
+    field_id = 'prestation'
+    caption = _("Delete prestation")
+
+    def fillresponse(self):
+        if self.getparam("CONFIRME") == 'YES':
+            group_mode = self.getparam('group_mode', 0)
+            for item in self.items:
+                item.delete(group_mode=group_mode)
+        else:
+            dlg = self.create_custom(self.model)
+            img = XferCompImage('img')
+            img.set_value(self.icon_path())
+            img.set_location(0, 0, 1, 4)
+            dlg.add_component(img)
+            lab = XferCompLabelForm('lbl_title')
+            lab.set_value_as_title(self.caption)
+            lab.set_location(1, 0, 2)
+            dlg.add_component(lab)
+            sel = XferCompSelect('group_mode')
+            sel.set_select([(0, _('disable %s') % Params.getvalue("member-team-text").lower()),
+                            (1, _('delete %s') % Params.getvalue("member-team-text").lower()),
+                            (2, _('let %s') % Params.getvalue("member-team-text").lower())])
+            sel.set_location(1, 0)
+            sel.set_value(0)
+            sel.description = _('%s action') % Params.getvalue("member-team-text").lower()
+            dlg.add_component(sel)
+            dlg.add_action(self.return_action(TITLE_OK, "images/ok.png"), close=CLOSE_YES, params={'CONFIRME': 'YES'})
+            dlg.add_action(WrapAction(TITLE_CANCEL, 'images/cancel.png'))
+
+
+@ActionsManage.affect_grid(TITLE_EDIT, "images/show.png", unique=SELECT_SINGLE)
+@MenuManage.describ('member.change_subscription')
+class PrestationShow(XferShowEditor):
+    icon = "adherent.png"
+    model = Prestation
+    field_id = 'prestation'
+    caption = _("Show prestation")
+
+    def _add_listing(self):
+        self.params['TITLE'] = self.caption
+        info_list = []
+        info_list.append("{[b]}{[u]}%s{[/u]}{[/b]} : %s" % (Params.getvalue("member-team-text"), self.item.team))
+        info_list.append(self.item.team.description.replace("{[br/]}", "{[br]}"))
+        if Params.getvalue("member-activite-enable"):
+            info_list.append("{[b]}{[u]}%s{[/u]}{[/b]} : %s" % (Params.getvalue("member-activite-text"), self.item.activity))
+        self.params['INFO'] = '{[br]}'.join(info_list)
+        self.add_action(AdherentListing.get_action(TITLE_LISTING, "images/print.png"), pos_act=0, close=CLOSE_NO, params={"team": self.item.team_id, "activity": self.item.activity_id})
+
+    def fillresponse(self):
+        XferShowEditor.fillresponse(self)
+        adherent = self.get_components('adherent')
+        adherent.size_by_page = Params.getvalue("member-size-page")
+        adherent.actions = []
+        adherent.add_action(self.request, AdherentShow.get_action(TITLE_EDIT, "images/show.png"), unique=SELECT_SINGLE)
+        adherent.add_action(self.request, AdherentPrestationDel.get_action(TITLE_DELETE, "images/delete.png"), unique=SELECT_MULTI, close=CLOSE_NO)
+        adherent.add_action(self.request, AdherentPrestationAdd.get_action(TITLE_ADD, "images/add.png"), unique=SELECT_NONE, close=CLOSE_NO)
+        self._add_listing()
+
+
+@MenuManage.describ('member.add_subscription')
+class AdherentPrestationDel(XferDelete):
+    icon = "adherent.png"
+    model = Adherent
+    field_id = 'adherent'
+    caption = _("Delete prestation")
+
+    def fillresponse(self, prestation=0):
+        self.model = Prestation
+        if self.confirme(ifplural(len(self.items), _("Do you want delete this %(name)s ?") % {'name': self.model._meta.verbose_name},
+                                  _("Do you want delete those %(nb)s %(name)s ?") % {'nb': len(self.items), 'name': self.model._meta.verbose_name_plural})):
+            for item in self.items:
+                item.del_prestation(prestation)
+
+
+@MenuManage.describ('member.add_subscription')
+class AdherentPrestationSave(XferContainerAcknowledge):
+    icon = "adherent.png"
+    model = Adherent
+    field_id = 'adherent'
+    caption = _("Add prestation")
+
+    def fillresponse(self, prestation=0):
+        for item in self.items:
+            item.add_prestation(prestation)
+
+
+@MenuManage.describ('member.add_subscription')
+class AdherentPrestationAdd(AdherentSelection):
+    icon = "adherent.png"
+    model = Adherent
+    mode_select = SELECT_MULTI
+    select_class = AdherentPrestationSave
+    readonly = False
+    methods_allowed = ('POST', 'PUT')
+    field_id = 'adherent'
+    caption = _("Add prestation")
+
+    def fillresponse(self):
+        AdherentSelection.fillresponse(self)
+        self.actions = []
+        self.add_action(WrapAction(TITLE_CLOSE, 'images/close.png'))
+
+
 @MenuManage.describ('member.change_adherent', FORMTYPE_NOMODAL, 'member.actions', _('To find an adherent following a set of criteria.'))
 class AdherentSearch(XferSavedCriteriaSearchEditor):
     icon = "adherent.png"
     model = Adherent
     field_id = 'adherent'
-    caption = _("Search adherent")
+    caption = _("Delete prestation")
 
     def __init__(self, **kwargs):
         XferSavedCriteriaSearchEditor.__init__(self, **kwargs)
@@ -425,7 +574,7 @@ class AdherentLicense(XferContainerCustom):
             lbl.set_value("{[hr/]}")
             self.add_component(lbl)
             row += 1
-            if Params.getvalue("member-team-enable"):
+            if Params.getvalue("member-team-enable") != 0:
                 lbl = XferCompLabelForm('team_%d' % lic.id)
                 lbl.set_value(str(lic.team))
                 lbl.set_location(1, row)
