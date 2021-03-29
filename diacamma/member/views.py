@@ -495,7 +495,7 @@ class AdherentSearch(XferSavedCriteriaSearchEditor):
     icon = "adherent.png"
     model = Adherent
     field_id = 'adherent'
-    caption = _("Delete prestation")
+    caption = _("Search adherent")
 
     def __init__(self, **kwargs):
         XferSavedCriteriaSearchEditor.__init__(self, **kwargs)

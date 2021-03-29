@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-03-29 12:01+0000\n"
+"POT-Creation-Date: 2021-03-29 16:40+0000\n"
 "PO-Revision-Date: 2021-03-29 13:42+0200\n"
 "Last-Translator: Laurent Gay <l.gay@sd-libre.fr>\n"
 "Language-Team: français <>\n"
@@ -809,7 +809,7 @@ msgstr "Add prestation"
 msgid "Modify prestation"
 msgstr "Modify prestation"
 
-#: views.py:391 views.py:454 views.py:498
+#: views.py:391 views.py:454
 msgid "Delete prestation"
 msgstr "Delete prestation"
 
@@ -850,6 +850,10 @@ msgstr "Do you want delete those %(nb)s %(name)s ?"
 #: views.py:493
 msgid "To find an adherent following a set of criteria."
 msgstr "To find an adherent following a set of criteria."
+
+#: views.py:498
+msgid "Search adherent"
+msgstr "Search adherent"
 
 #: views.py:505
 msgid "List of adherents with old subscribtion not renew yet"
@@ -1380,9 +1384,6 @@ msgstr "Up"
 #: views_season.py:198
 msgid "Up subscription"
 msgstr "Up subscription"
-
-#~ msgid "Search adherent"
-#~ msgstr "Search adherent"
 
 #~ msgid "Prestations"
 #~ msgstr "Prestations"
