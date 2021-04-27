@@ -291,7 +291,7 @@ class AdherentTest(BaseAdherentTest):
         self.assert_select_equal('status', 2)  # nb=2
         self.assert_json_equal('SELECT', 'status', '1')
         self.assert_json_equal('SELECT', 'subscriptiontype', '1')
-        self.assert_json_equal('LABELFORM', 'seasondates', "1 sep. 2009 => 31 août 2010")
+        self.assert_json_equal('LABELFORM', 'seasondates', "1 sept. 2009 => 31 août 2010")
 
         self.factory.xfer = SubscriptionAddModify()
         self.calljson('/diacamma.member/subscriptionAddModify',
