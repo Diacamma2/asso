@@ -1029,24 +1029,6 @@ class Adherent(Individual):
                 pass
             return current_family
 
-    def add_prestation(self, prestation_id):
-        subscription = self.current_subscription
-        if (subscription is None) or (subscription.status != Subscription.STATUS_BUILDING):
-            raise LucteriosException(IMPORTANT, _("no subscription editable"))
-        last_prestationsid = [prest.id for prest in subscription.prestations.all()]
-        last_prestationsid.append(prestation_id)
-        subscription.prestations.set(Prestation.objects.filter(id__in=last_prestationsid))
-        subscription.save()
-
-    def del_prestation(self, prestation_id):
-        subscription = self.current_subscription
-        if (subscription is None) or (subscription.status != Subscription.STATUS_BUILDING):
-            raise LucteriosException(IMPORTANT, _("no subscription editable"))
-        last_prestations = subscription.prestations.all()
-        last_prestations = last_prestations.exclude(id=prestation_id)
-        subscription.prestations.set(last_prestations)
-        subscription.save()
-
     def save(self, force_insert=False, force_update=False, using=None,
              update_fields=None, new_num=True):
         if (self.id is None) and new_num:
@@ -1175,6 +1157,17 @@ class Prestation(LucteriosModel):
 
     def get_nb_adherent(self):
         return self.adherent_set.count()
+
+    def merge_objects(self, alias_objects=[]):
+        LucteriosModel.merge_objects(self, alias_objects=alias_objects)
+        for alias_object in alias_objects:
+            for license_obj in License.objects.filter(team=alias_object.team):
+                new_license, is_new = License.objects.get_or_create(subscription=license_obj.subscription, team=self.team, activity=self.activity)
+                if is_new:
+                    new_license.value = license_obj.value
+                    new_license.save()
+                license_obj.delete()
+            alias_object.team.delete()
 
     def delete(self, using=None, group_mode=0):
         team = self.team
@@ -1317,7 +1310,7 @@ class Subscription(LucteriosModel):
         if len(bill_list) > 0:
             self.bill = bill_list[0]
             self.bill.date = date_ref
-        if self.bill is None:
+        if (self.bill is None) or (self.bill.bill_type != bill_type):
             self.bill = Bill.objects.create(bill_type=bill_type, date=date_ref, third=new_third, parentbill=parentbill)
 
     def _regenerate_bill(self, bill_type):
@@ -1350,6 +1343,33 @@ class Subscription(LucteriosModel):
             subscription._add_detail_bill()
         if hasattr(self, 'send_email_param'):
             self.sendemail(self.send_email_param)
+
+    def _save_presta_in_bill(self, bill_type, prestation_id):
+        if self.status == self.STATUS_VALID:
+            self._search_or_create_bill(bill_type)
+            cmt = []
+            if self.bill.third.contact.id != self.adherent.id:
+                cmt.append(_("Subscription of '%s'") % str(self.adherent))
+            presta = Prestation.objects.get(id=prestation_id)
+            new_cmt = [presta.description]
+            new_cmt.extend(cmt)
+            Detail.create_for_bill(self.bill, presta.article, designation="{[br/]}".join(new_cmt))
+        self.save(with_bill=(self.status != self.STATUS_VALID))
+
+    def add_prestation(self, prestation_id):
+        new_prestationsid = [prest.id for prest in self.prestations.all()] + [prestation_id]
+        self.prestations.set(Prestation.objects.filter(id__in=new_prestationsid))
+        self._save_presta_in_bill(Bill.BILLTYPE_BILL, prestation_id)
+
+    def del_prestation(self, prestation_id):
+        if self.status != self.STATUS_VALID:
+            new_prestations = self.prestations.all().exclude(id=prestation_id)
+            self.prestations.set(new_prestations)
+        else:
+            presta = Prestation.objects.get(id=prestation_id)
+            for licence in self.license_set.filter(team=presta.team, activity=presta.activity):
+                licence.delete()
+        self._save_presta_in_bill(Bill.BILLTYPE_ASSET, prestation_id)
 
     def change_bill(self):
         if (len(self.subscriptiontype.articles.all()) == 0) and (len(self.prestations.all()) == 0):

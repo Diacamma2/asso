@@ -53,6 +53,8 @@ from lucterios.CORE.xferprint import XferPrintLabel
 from lucterios.CORE.xferprint import XferPrintListing
 from lucterios.CORE.editors import XferSavedCriteriaSearchEditor
 from lucterios.CORE.parameters import Params, notfree_mode_connect
+from lucterios.CORE.models import Preference
+from lucterios.CORE.views import ObjectMerge
 
 from lucterios.contacts.models import Individual, LegalEntity, Responsability,\
     AbstractContact
@@ -62,7 +64,7 @@ from diacamma.accounting.models import Third
 from diacamma.accounting.tools import format_with_devise
 from diacamma.invoice.models import get_or_create_customer, Bill
 from diacamma.member.models import Adherent, Subscription, Season, Age, Team, Activity, License, DocAdherent, SubscriptionType, CommandManager, Prestation, ContactAdherent
-from lucterios.CORE.models import Preference
+from diacamma.member.editors import SubscriptionEditor
 
 
 MenuManage.add_sub("association", None, "diacamma.member/images/association.png", _("Association"), _("Association tools"), 30)
@@ -370,6 +372,12 @@ class PrestationList(XferListEditor):
             if activity != 0:
                 self.filter &= Q(activity_id=activity)
 
+    def fillresponse(self):
+        XferListEditor.fillresponse(self)
+        if WrapAction.is_permission(self.request, 'member.add_subscription'):
+            self.get_components(self.field_id).add_action(self.request, ObjectMerge.get_action(_("Merge"), "images/clone.png"),
+                                                          close=CLOSE_NO, unique=SELECT_MULTI, params={'modelname': self.model.get_long_name(), 'field_id': self.field_id})
+
 
 @ActionsManage.affect_grid(TITLE_CREATE, "images/new.png")
 @ActionsManage.affect_grid(TITLE_MODIFY, "images/edit.png", unique=SELECT_SINGLE)
@@ -458,7 +466,10 @@ class AdherentPrestationDel(XferDelete):
         if self.confirme(ifplural(len(self.items), _("Do you want delete this %(name)s ?") % {'name': self.model._meta.verbose_name},
                                   _("Do you want delete those %(nb)s %(name)s ?") % {'nb': len(self.items), 'name': self.model._meta.verbose_name_plural})):
             for item in self.items:
-                item.del_prestation(prestation)
+                subscription = item.current_subscription
+                if subscription is None:
+                    raise LucteriosException(IMPORTANT, _("no subscription editable"))
+                subscription.del_prestation(prestation)
 
 
 @MenuManage.describ('member.add_subscription')
@@ -468,9 +479,60 @@ class AdherentPrestationSave(XferContainerAcknowledge):
     field_id = 'adherent'
     caption = _("Add prestation")
 
-    def fillresponse(self, prestation=0):
+    def _get_no_subscriptors(self):
+        no_sub_list = []
         for item in self.items:
-            item.add_prestation(prestation)
+            item.date_ref = None
+            if item.current_subscription is None:
+                no_sub_list.append(str(item))
+        return no_sub_list
+
+    def _select_new_subscription(self, no_sub_list):
+        dlg = self.create_custom(Subscription)
+        dlg.item.adherent = self.items[0]
+        img = XferCompImage('img')
+        img.set_value(self.icon_path())
+        img.set_location(0, 0, 1, 4)
+        dlg.add_component(img)
+        lab = XferCompLabelForm('lbl_title')
+        lab.set_value_as_title(self.caption)
+        lab.set_location(1, 0, 2)
+        dlg.add_component(lab)
+        lab = XferCompLabelForm('no_subscription')
+        lab.set_value(no_sub_list)
+        lab.set_location(1, 1)
+        lab.description = _('Adherent without subscription')
+        dlg.add_component(lab)
+        dlg.fill_from_model(1, 2, False)
+        dlg.remove_component("adherent")
+        dlg.change_to_readonly('season')
+        dlg.remove_component("prestations")
+        dlg.add_action(self.return_action(TITLE_OK, "images/ok.png"), close=CLOSE_YES, params={'NEW_SUB': 'YES'})
+        dlg.add_action(WrapAction(TITLE_CANCEL, 'images/cancel.png'))
+
+    def _create_subscription(self, adherent):
+        editor = SubscriptionEditor(Subscription(adherent=adherent, season=Season.current_season(), subscriptiontype_id=self.getparam('subscriptiontype', 0), status=self.getparam('status', 0)))
+        editor.before_save(self)
+        editor.item.save()
+
+    def _add_prestations(self, prestation):
+        for item in self.items:
+            subscription = item.current_subscription
+            if subscription is None:
+                raise LucteriosException(IMPORTANT, _("no subscription editable"))
+            subscription.add_prestation(prestation)
+
+    def fillresponse(self, prestation=0):
+        if self.getparam("NEW_SUB") == 'YES':
+            for item in self.items:
+                item.date_ref = None
+                if item.current_subscription is None:
+                    self._create_subscription(item)
+        no_sub_list = self._get_no_subscriptors()
+        if len(no_sub_list) == 0:
+            self._add_prestations(prestation)
+        else:
+            self._select_new_subscription(no_sub_list)
 
 
 @MenuManage.describ('member.add_subscription')
