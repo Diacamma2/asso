@@ -363,6 +363,8 @@ class PrestationEditor(LucteriosEditor):
         return
 
     def edit(self, xfer):
+        team_row = xfer.get_components('team').row
+        team_col = xfer.get_components('team').col
         xfer.move(0, 0, 3)
         if self.item.id is None:
             new_group = xfer.getparam('new_group', 0)
@@ -370,7 +372,7 @@ class PrestationEditor(LucteriosEditor):
             sel.set_needed(True)
             sel.set_select([(0, _('new %s') % Params.getvalue("member-team-text").lower()),
                             (1, _('select old %s') % Params.getvalue("member-team-text").lower())])
-            sel.set_location(1, 0)
+            sel.set_location(team_col, team_row)
             sel.set_value(new_group)
             sel.description = _('addon mode')
             sel.set_action(xfer.request, xfer.return_action(), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
@@ -381,7 +383,7 @@ class PrestationEditor(LucteriosEditor):
             xfer.remove_component('team')
             xfer.model = Team
             xfer.item = self.item.team if self.item.id is not None else Team()
-            xfer.filltab_from_model(1, 2, False, ['name', 'description'])
+            xfer.filltab_from_model(team_col, team_row + 1, False, ['name', 'description'])
             xfer.model = self.item.__class__
             xfer.item = self.item
 

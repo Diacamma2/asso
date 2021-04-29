@@ -33,7 +33,8 @@ from django.conf import settings
 
 from lucterios.framework.xferadvance import XferListEditor, TITLE_OK, TITLE_ADD,\
     TITLE_MODIFY, TITLE_EDIT, TITLE_CANCEL, TITLE_LABEL, TITLE_LISTING,\
-    TITLE_DELETE, TITLE_CLOSE, TITLE_PRINT, XferTransition, TITLE_CREATE
+    TITLE_DELETE, TITLE_CLOSE, TITLE_PRINT, XferTransition, TITLE_CREATE,\
+    TITLE_SAVE
 from lucterios.framework.xferadvance import XferAddEditor
 from lucterios.framework.xferadvance import XferShowEditor
 from lucterios.framework.xferadvance import XferDelete
@@ -360,7 +361,8 @@ class PrestationList(XferListEditor):
     def fillresponse_header(self):
         self.filter = Q()
         if Params.getvalue("member-activite-enable"):
-            activity = self.getparam("activity", 0)
+            pref_activity = Preference.get_value('adherent-activity', self.request.user)
+            activity = self.getparam("activity", pref_activity[0] if (len(pref_activity) > 0) and (pref_activity[0] != '') else 0)
             sel = XferCompSelect('activity')
             sel.set_select_query(Activity.get_all())
             sel.set_value(activity)
@@ -452,6 +454,103 @@ class PrestationShow(XferShowEditor):
         adherent.add_action(self.request, AdherentPrestationDel.get_action(TITLE_DELETE, "images/delete.png"), unique=SELECT_MULTI, close=CLOSE_NO)
         adherent.add_action(self.request, AdherentPrestationAdd.get_action(TITLE_ADD, "images/add.png"), unique=SELECT_NONE, close=CLOSE_NO)
         self._add_listing()
+
+
+@ActionsManage.affect_grid(_('Swap'), "images/right.png", unique=SELECT_MULTI)
+@MenuManage.describ('member.add_subscription')
+class PrestationSwap(XferContainerAcknowledge):
+    icon = "adherent.png"
+    model = Prestation
+    field_id = 'prestation'
+    caption = _("Swap prestation")
+
+    def _swap_gui(self):
+        dlg = self.create_custom(self.model)
+        lab = XferCompLabelForm('lbl_title')
+        lab.set_value_as_title(self.caption)
+        lab.set_location(0, 0, 2)
+        dlg.add_component(lab)
+        lab = XferCompLabelForm('lbl_left')
+        lab.set_bold()
+        lab.set_value(' ' * 10 + str(self.left_prestation).ljust(50, ' '))
+        lab.set_location(0, 1)
+        dlg.add_component(lab)
+        lab = XferCompLabelForm('lbl_right')
+        lab.set_bold()
+        lab.set_value(' ' * 10 + str(self.right_prestation).ljust(50, ' '))
+        lab.set_location(1, 1)
+        dlg.add_component(lab)
+        swap = XferCompCheckList('swaps')
+        swap.simple = 2
+        swap.set_select(self.left_adherents + self.right_adherents)
+        swap.set_value([item[0] for item in self.right_adherents])
+        swap.set_location(0, 2, 2)
+        dlg.add_component(swap)
+        dlg.add_action(self.return_action(TITLE_OK, "images/ok.png"), close=CLOSE_YES, params={'CONFIRME': 'YES'})
+        dlg.add_action(WrapAction(TITLE_CANCEL, 'images/cancel.png'))
+
+    def _swap_adherent(self, swap_list):
+        right_adherentids = [str(item[0]) for item in self.right_adherents]
+        for swap in swap_list:
+            if swap not in right_adherentids:
+                adherent = Adherent.objects.get(id=swap)
+                adherent.current_subscription.swap_prestation(self.left_prestation.id, self.right_prestation.id)
+        for adhid in right_adherentids:
+            if adhid not in swap_list:
+                adherent = Adherent.objects.get(id=adhid)
+                adherent.current_subscription.swap_prestation(self.right_prestation.id, self.left_prestation.id)
+
+    def fillresponse(self, swaps=[]):
+        if len(self.items) != 2:
+            raise LucteriosException(IMPORTANT, _('Select exactly 2 prestations !'))
+        self.left_prestation = self.items[0]
+        self.left_adherents = [(item.id, str(item)) for item in self.left_prestation.adherent_set]
+        self.right_prestation = self.items[1]
+        self.right_adherents = [(item.id, str(item)) for item in self.right_prestation.adherent_set]
+        if self.getparam("CONFIRME") == 'YES':
+            self._swap_adherent(swaps)
+        else:
+            self._swap_gui()
+
+
+@ActionsManage.affect_grid(_('Split'), "images/add.png", unique=SELECT_SINGLE)
+@MenuManage.describ('member.add_subscription')
+class PrestationSplit(XferContainerAcknowledge):
+    icon = "adherent.png"
+    model = Prestation
+    field_id = 'prestation'
+    caption_add = _("Split prestation")
+
+    def _split_prestation(self):
+        group_name = self.getparam('name', '')
+        group_description = self.getparam('description', '')
+        activity = self.getparam('activity', 0)
+        article = self.getparam('article', 0)
+        new_prestation = Prestation.objects.create(team=Team.objects.create(name=group_name, description=group_description, unactive=False),
+                                                   activity_id=activity, article_id=article)
+        self.redirect_action(PrestationSwap.get_action(), modal=FORMTYPE_MODAL, close=CLOSE_YES, params={'prestation': "%d;%d" % (self.item.id, new_prestation.id)})
+
+    def _split_gui(self):
+        dlg = self.create_custom(self.model)
+        dlg.item = self.item
+        dlg.fill_from_model(1, 0, False)
+        dlg.move(0, 0, 1)
+        img = XferCompImage('img')
+        img.set_value(self.icon_path())
+        img.set_location(0, 0, 1, 6)
+        dlg.add_component(img)
+        lab = XferCompLabelForm('info')
+        lab.set_value_as_header(_('Precise information about new %s associated.') % Params.getvalue("member-team-text").lower())
+        lab.set_location(1, 0, 2)
+        dlg.add_component(lab)
+        dlg.add_action(self.return_action(TITLE_SAVE, "images/ok.png"), close=CLOSE_YES, params={'CONFIRME': 'YES'})
+        dlg.add_action(WrapAction(TITLE_CANCEL, 'images/cancel.png'))
+
+    def fillresponse(self):
+        if self.getparam("CONFIRME") == 'YES':
+            self._split_prestation()
+        else:
+            self._split_gui()
 
 
 @MenuManage.describ('member.add_subscription')

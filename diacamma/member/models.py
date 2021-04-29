@@ -1159,15 +1159,19 @@ class Prestation(LucteriosModel):
         return self.adherent_set.count()
 
     def merge_objects(self, alias_objects=[]):
+        for alias_object in alias_objects:
+            for adherent in alias_object.adherent_set:
+                adherent.current_subscription.swap_prestation(alias_object.id, self.id)
         LucteriosModel.merge_objects(self, alias_objects=alias_objects)
         for alias_object in alias_objects:
-            for license_obj in License.objects.filter(team=alias_object.team):
-                new_license, is_new = License.objects.get_or_create(subscription=license_obj.subscription, team=self.team, activity=self.activity)
-                if is_new:
-                    new_license.value = license_obj.value
-                    new_license.save()
-                license_obj.delete()
-            alias_object.team.delete()
+            self.team.merge_objects(alias_object.team)
+#             for license_obj in License.objects.filter(team=alias_object.team):
+#                 new_license, is_new = License.objects.get_or_create(subscription=license_obj.subscription, team=self.team, activity=self.activity)
+#                 if is_new:
+#                     new_license.value = license_obj.value
+#                     new_license.save()
+#                 license_obj.delete()
+#             alias_object.team.delete()
 
     def delete(self, using=None, group_mode=0):
         team = self.team
@@ -1357,19 +1361,30 @@ class Subscription(LucteriosModel):
         self.save(with_bill=(self.status != self.STATUS_VALID))
 
     def add_prestation(self, prestation_id):
-        new_prestationsid = [prest.id for prest in self.prestations.all()] + [prestation_id]
-        self.prestations.set(Prestation.objects.filter(id__in=new_prestationsid))
-        self._save_presta_in_bill(Bill.BILLTYPE_BILL, prestation_id)
+        old_prestationsid = [prest.id for prest in self.prestations.all()]
+        if prestation_id not in old_prestationsid:
+            new_prestationsid = old_prestationsid + [prestation_id]
+            self.prestations.set(Prestation.objects.filter(id__in=new_prestationsid))
+            self._save_presta_in_bill(Bill.BILLTYPE_BILL, prestation_id)
 
     def del_prestation(self, prestation_id):
+        changed = False
         if self.status != self.STATUS_VALID:
-            new_prestations = self.prestations.all().exclude(id=prestation_id)
-            self.prestations.set(new_prestations)
+            if prestation_id in [prest.id for prest in self.prestations.all()]:
+                new_prestations = self.prestations.all().exclude(id=prestation_id)
+                self.prestations.set(new_prestations)
+                changed = True
         else:
             presta = Prestation.objects.get(id=prestation_id)
             for licence in self.license_set.filter(team=presta.team, activity=presta.activity):
                 licence.delete()
-        self._save_presta_in_bill(Bill.BILLTYPE_ASSET, prestation_id)
+                changed = True
+        if changed:
+            self._save_presta_in_bill(Bill.BILLTYPE_ASSET, prestation_id)
+
+    def swap_prestation(self, old_prestation_id, new_prestation_id):
+        self.del_prestation(old_prestation_id)
+        self.add_prestation(new_prestation_id)
 
     def change_bill(self):
         if (len(self.subscriptiontype.articles.all()) == 0) and (len(self.prestations.all()) == 0):
