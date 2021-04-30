@@ -524,7 +524,7 @@ class PrestationSplit(XferContainerAcknowledge):
     def _split_prestation(self):
         group_name = self.getparam('name', '')
         group_description = self.getparam('description', '')
-        activity = self.getparam('activity', 0)
+        activity = self.getparam('activity', Activity.objects.all().first().id)
         article = self.getparam('article', 0)
         new_prestation = Prestation.objects.create(team=Team.objects.create(name=group_name, description=group_description, unactive=False),
                                                    activity_id=activity, article_id=article)
