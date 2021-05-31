@@ -3,8 +3,8 @@
 	<property name="contact.path" value="${basedir}/../lct-contacts" />
         <property name="document.path" value="${basedir}/../lct-documents" />
 	<property name="financial.path" value="${basedir}/../financial" />
-	<property name="project.packagepath" value="diacamma/asso,diacamma/member,diacamma/event" />
-	<property name="project.packagename" value="diacamma.asso diacamma.member diacamma.event" />
+	<property name="project.packagepath" value="diacamma/member,diacamma/event,diacamma/asso" />
+	<property name="project.packagename" value="diacamma.member diacamma.event diacamma.asso" />
 	<property name="project.name" value="diacamma" />
 	<property name="project.packname" value="diacamma_asso.egg-info" />
 	<property name="project.pythonpath" value="${core.path}:${contact.path}:${document.path}:${financial.path}:${env.PYTHONPATH}" />

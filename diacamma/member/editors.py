@@ -386,6 +386,10 @@ class PrestationEditor(LucteriosEditor):
             xfer.filltab_from_model(team_col, team_row + 1, False, ['name', 'description'])
             xfer.model = self.item.__class__
             xfer.item = self.item
+        else:
+            for field_to_del in ['name', 'description']:
+                if field_to_del in xfer.params:
+                    del xfer.params[field_to_del]
 
 
 class TaxReceiptEditor(LucteriosEditor):
