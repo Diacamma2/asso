@@ -21,7 +21,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with Lucterios.  If not, see <http://www.gnu.org/licenses/>.
 '''
-# -*- coding: utf-8 -*-
+
 from __future__ import unicode_literals
 from importlib import import_module
 
@@ -57,8 +57,7 @@ from lucterios.CORE.parameters import Params, notfree_mode_connect
 from lucterios.CORE.models import Preference
 from lucterios.CORE.views import ObjectMerge
 
-from lucterios.contacts.models import Individual, LegalEntity, Responsability,\
-    AbstractContact
+from lucterios.contacts.models import Individual, LegalEntity, Responsability, AbstractContact
 from lucterios.contacts.views_contacts import LegalEntityAddModify
 
 from diacamma.accounting.models import Third
@@ -1270,6 +1269,7 @@ class AdherentStatistic(XferContainerCustom):
     methods_allowed = ('GET', )
 
     def add_static_grid(self, grid_title, grid_name, stat_city, main_id, main_name):
+        age_statistic = Params.getvalue("member-age-statistic")
         row = self.get_max_row()
         lab = XferCompLabelForm("lbl%s" % grid_name)
         lab.set_underlined()
@@ -1278,10 +1278,10 @@ class AdherentStatistic(XferContainerCustom):
         self.add_component(lab)
         grid = XferCompGrid(grid_name)
         grid.add_header(main_id, main_name)
-        grid.add_header("MajW", _("women major"))
-        grid.add_header("MajM", _("men major"))
-        grid.add_header("MinW", _("women minor"))
-        grid.add_header("MinM", _("men minor"))
+        grid.add_header("MajW", _("women senior"))
+        grid.add_header("MajM", _("men senior"))
+        grid.add_header("MinW", _("women young (<%d)") % age_statistic)
+        grid.add_header("MinM", _("men young (<%d)") % age_statistic)
         grid.add_header("ratio", _("total (%)"))
         cmp = 0
         for stat_val in stat_city:

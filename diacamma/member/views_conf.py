@@ -51,8 +51,8 @@ def config_member(setting_list):
 def fill_params(xfer, param_lists=None, smallbtn=False):
     if param_lists is None:
         param_lists = ["member-team-enable", "member-team-text", "member-activite-enable", "member-activite-text", "member-age-enable",
-                       "member-licence-enabled", "member-filter-genre", "member-numero", "member-birth",
-                       "member-fields", "member-subscription-message"]
+                       "member-licence-enabled", "member-filter-genre", "member-numero", "member-birth", "member-age-statistic",
+                       "member-subscription-message", "member-fields"]
     if len(param_lists) >= 3:
         nb_col = 2
     else:

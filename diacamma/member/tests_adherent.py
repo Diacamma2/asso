@@ -722,7 +722,7 @@ class AdherentTest(BaseAdherentTest):
         self.assertEqual(content_csv[4].strip(), '"statut : en création & validé,,passion : activity2,,group : team2,team3,,Âge : Minimes,Benjamins,Poussins,,genre : Femme"', str(content_csv))
         self.assertEqual(content_csv[6].strip(), '"nom";"adresse";"ville";"tel";"courriel";', str(content_csv))
 
-    def test_statistic(self):
+    def test_statistic_18(self):
         self.add_subscriptions()
 
         self.factory.xfer = AdherentStatistic()
@@ -735,9 +735,9 @@ class AdherentTest(BaseAdherentTest):
         self.assert_observer('core.custom', 'diacamma.member', 'adherentStatistic')
 
         self.assertEqual(0, (len(self.json_data) - 3 - 6) % 5, "size of COMPONENTS/* = %d" % len(self.json_data))
-        self.assert_count_equal('town_1', 2)
+        self.assert_grid_equal('town_1', {'city': 'ville', 'MajW': 'femme adulte', 'MajM': 'homme adulte', 'MinW': 'jeune femme (<18)', 'MinM': 'jeune homme (<18)', 'ratio': 'total (%)'}, 2)
         self.assert_json_equal('', 'town_1/@1/ratio', '{[b]}2{[/b]}')
-        self.assert_count_equal('town_2', 2)
+        self.assert_grid_equal('town_2', {'city': 'ville', 'MajW': 'femme adulte', 'MajM': 'homme adulte', 'MinW': 'jeune femme (<18)', 'MinM': 'jeune homme (<18)', 'ratio': 'total (%)'}, 2)
         self.assert_json_equal('', 'town_2/@1/ratio', '{[b]}1{[/b]}')
         self.assert_count_equal('seniority_1', 1)
         self.assert_count_equal('team_1', 2)
@@ -748,13 +748,55 @@ class AdherentTest(BaseAdherentTest):
         self.assert_observer('core.custom', 'diacamma.member', 'adherentStatistic')
 
         self.assertEqual(0, (len(self.json_data) - 3 - 6) % 5, "size of COMPONENTS/* = %d" % len(self.json_data))
-        self.assert_count_equal('town_1', 2)
+        self.assert_grid_equal('town_1', {'city': 'ville', 'MajW': 'femme adulte', 'MajM': 'homme adulte', 'MinW': 'jeune femme (<18)', 'MinM': 'jeune homme (<18)', 'ratio': 'total (%)'}, 2)
         self.assert_json_equal('', 'town_1/@1/ratio', '{[b]}2{[/b]}')
-        self.assert_count_equal('town_2', 2)
+        self.assert_grid_equal('town_2', {'city': 'ville', 'MajW': 'femme adulte', 'MajM': 'homme adulte', 'MinW': 'jeune femme (<18)', 'MinM': 'jeune homme (<18)', 'ratio': 'total (%)'}, 2)
         self.assert_json_equal('', 'town_2/@1/ratio', '{[b]}1{[/b]}')
         self.assert_count_equal('seniority_1', 1)
         self.assert_count_equal('team_1', 2)
         self.assert_count_equal('activity_1', 2)
+
+    def test_statistic_05(self):
+        self.add_subscriptions()
+        Params.setvalue("member-age-statistic", 5)
+
+        self.factory.xfer = AdherentStatistic()
+        self.calljson('/diacamma.member/adherentStatistic', {'season': 1}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentStatistic')
+        self.assert_count_equal('', 4)
+
+        self.factory.xfer = AdherentStatistic()
+        self.calljson('/diacamma.member/adherentStatistic', {'dateref': '2009-10-01'}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentStatistic')
+
+        self.assertEqual(0, (len(self.json_data) - 3 - 6) % 5, "size of COMPONENTS/* = %d" % len(self.json_data))
+        self.assert_grid_equal('town_1', {'city': 'ville', 'MajW': 'femme adulte', 'MajM': 'homme adulte', 'MinW': 'jeune femme (<5)', 'MinM': 'jeune homme (<5)', 'ratio': 'total (%)'}, 2)
+        self.assert_json_equal('', 'town_1/@1/MajW', '{[b]}0{[/b]}')
+        self.assert_json_equal('', 'town_1/@1/MajM', '{[b]}2{[/b]}')
+        self.assert_json_equal('', 'town_1/@1/MinW', '{[b]}0{[/b]}')
+        self.assert_json_equal('', 'town_1/@1/MinM', '{[b]}0{[/b]}')
+        self.assert_json_equal('', 'town_1/@1/ratio', '{[b]}2{[/b]}')
+
+    def test_statistic_50(self):
+        self.add_subscriptions()
+        Params.setvalue("member-age-statistic", 50)
+
+        self.factory.xfer = AdherentStatistic()
+        self.calljson('/diacamma.member/adherentStatistic', {'season': 1}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentStatistic')
+        self.assert_count_equal('', 4)
+
+        self.factory.xfer = AdherentStatistic()
+        self.calljson('/diacamma.member/adherentStatistic', {'dateref': '2009-10-01'}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentStatistic')
+
+        self.assertEqual(0, (len(self.json_data) - 3 - 6) % 5, "size of COMPONENTS/* = %d" % len(self.json_data))
+        self.assert_grid_equal('town_1', {'city': 'ville', 'MajW': 'femme adulte', 'MajM': 'homme adulte', 'MinW': 'jeune femme (<50)', 'MinM': 'jeune homme (<50)', 'ratio': 'total (%)'}, 2)
+        self.assert_json_equal('', 'town_1/@1/MajW', '{[b]}0{[/b]}')
+        self.assert_json_equal('', 'town_1/@1/MajM', '{[b]}0{[/b]}')
+        self.assert_json_equal('', 'town_1/@1/MinW', '{[b]}0{[/b]}')
+        self.assert_json_equal('', 'town_1/@1/MinM', '{[b]}2{[/b]}')
+        self.assert_json_equal('', 'town_1/@1/ratio', '{[b]}2{[/b]}')
 
     def test_renew(self):
         self.add_subscriptions()
@@ -2407,7 +2449,6 @@ class AdherentTest(BaseAdherentTest):
         self.calljson('/diacamma.invoice/billList', {'status_filter': -2}, False)
         self.assert_observer('core.custom', 'diacamma.invoice', 'billList')
         self.assert_count_equal('bill', 5)
-        self.print_json('bill')
         self.assert_json_equal('', 'bill/@0/third', 'Dalton Avrel')
         self.assert_json_equal('', 'bill/@0/bill_type', 0)
         self.assert_json_equal('', 'bill/@0/status', 0)
@@ -2502,7 +2543,6 @@ class AdherentTest(BaseAdherentTest):
         self.calljson('/diacamma.invoice/billList', {'status_filter': -2}, False)
         self.assert_observer('core.custom', 'diacamma.invoice', 'billList')
         self.assert_count_equal('bill', 5)
-        self.print_json('bill')
         self.assert_json_equal('', 'bill/@0/third', 'Dalton Avrel')
         self.assert_json_equal('', 'bill/@0/bill_type', 0)
         self.assert_json_equal('', 'bill/@0/status', 0)

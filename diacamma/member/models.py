@@ -120,11 +120,12 @@ class Season(LucteriosModel):
             raise LucteriosException(IMPORTANT, _('No period find!'))
 
     def stats_by_criteria(self, duration_id, only_valid, field, name, with_total):
+        age_statistic = Params.getvalue("member-age-statistic")
         val_by_criteria = {}
         query = Q(subscription__status=Subscription.STATUS_VALID) if only_valid else Q(subscription__status__in=(Subscription.STATUS_BUILDING, Subscription.STATUS_VALID))
         query &= Q(subscription__begin_date__lte=self.date_ref) & Q(subscription__end_date__gte=self.date_ref)
         query &= Q(subscription__subscriptiontype__duration=duration_id)
-        birthday = date(self.date_ref.year - 18, self.date_ref.month, self.date_ref.day)
+        birthday = date(self.date_ref.year - age_statistic, self.date_ref.month, self.date_ref.day)
         total = 0
         for age in range(2):
             if age == 0:
@@ -178,11 +179,12 @@ class Season(LucteriosModel):
         return values_by_criteria
 
     def stats_by_seniority(self, only_valid):
+        age_statistic = Params.getvalue("member-age-statistic")
         val_by_seniority = {}
         query = Q(subscription__status=Subscription.STATUS_VALID) if only_valid else Q(subscription__status__in=(Subscription.STATUS_BUILDING, Subscription.STATUS_VALID))
         query &= Q(subscription__begin_date__lte=self.date_ref) & Q(subscription__end_date__gte=self.date_ref)
         query &= Q(subscription__subscriptiontype__duration=0)
-        birthday = date(self.date_ref.year - 18, self.date_ref.month, self.date_ref.day)
+        birthday = date(self.date_ref.year - age_statistic, self.date_ref.month, self.date_ref.day)
         total = 0
         for adh in Adherent.objects.filter(query).distinct():
             nb_sub = adh.subscription_set.filter(Q(subscriptiontype__duration=0) & Q(begin_date__lte=self.date_ref)).count()
@@ -668,6 +670,7 @@ class Adherent(Individual):
     age_category = LucteriosVirtualField(verbose_name=_("age category"), compute_from="get_age_category")
     license = LucteriosVirtualField(verbose_name=_('involvement'), compute_from='get_license')
     documents = LucteriosVirtualField(verbose_name=_('documents needs'), compute_from='get_documents')
+    age_from_ref = LucteriosVirtualField(verbose_name=_("age"), compute_from="get_age_from_ref")
 
     dateref = LucteriosVirtualField(verbose_name=_("reference date"), compute_from='get_dateref', format_string='D')
 
@@ -698,7 +701,7 @@ class Adherent(Individual):
         if Params.getobject("member-family-type") is not None:
             allowed_fields.append('family')
         if Params.getvalue("member-birth"):
-            allowed_fields.extend(["birthday", "birthplace", "age_category"])
+            allowed_fields.extend(["birthday", "birthplace", "age_category", "age_from_ref"])
         if Params.getvalue("member-licence-enabled"):
             allowed_fields.append('license')
         allowed_fields.extend(['comment', 'user', 'documents'])
@@ -942,6 +945,15 @@ class Adherent(Individual):
         except Exception:
             val = None
         return val
+
+    def get_age_from_ref(self):
+        if self.id is None:
+            return None
+        try:
+            age_val = int((self.dateref - self.birthday).days / 365)
+        except Exception:
+            age_val = None
+        return age_val
 
     def get_license(self):
         if self.id is None:
@@ -1387,7 +1399,7 @@ class Subscription(LucteriosModel):
         self.add_prestation(new_prestation_id)
 
     def change_bill(self):
-        if (len(self.subscriptiontype.articles.all()) == 0) and (len(self.prestations.all()) == 0):
+        if (self.subscriptiontype.articles.count() == 0) and (self.prestations.count() == 0) and ((self.bill is None) or (self.bill.detail_set.count() == 0)):
             return False
         modify = False
         if self.status in (self.STATUS_BUILDING, self.STATUS_VALID):
@@ -2079,27 +2091,28 @@ def member_convertdata():
 
 @Signal.decorate('checkparam')
 def member_checkparam():
-    Parameter.check_and_create(name="member-age-enable", typeparam=3, title=_("member-age-enable"), args="{}", value='True')
-    Parameter.check_and_create(name="member-team-enable", typeparam=4, title=_("member-team-enable"), args="{'Enum':3}", value='1',
+    Parameter.check_and_create(name="member-age-enable", typeparam=Parameter.TYPE_BOOL, title=_("member-age-enable"), args="{}", value='True')
+    Parameter.check_and_create(name="member-team-enable", typeparam=Parameter.TYPE_SELECT, title=_("member-team-enable"), args="{'Enum':3}", value='1',
                                param_titles=(_("member-team-enable.0"), _("member-team-enable.1"), _("member-team-enable.2")))
-    Parameter.check_and_create(name="member-team-text", typeparam=0, title=_("member-team-text"), args="{'Multi':False}", value=_('Team'))
-    Parameter.check_and_create(name="member-activite-enable", typeparam=3, title=_("member-activite-enable"), args="{}", value="True")
-    Parameter.check_and_create(name="member-activite-text", typeparam=0, title=_("member-activite-text"), args="{'Multi':False}", value=_('Activity'))
-    Parameter.check_and_create(name="member-connection", typeparam=4, title=_("member-connection"), args="{'Enum':3}", value='0',
+    Parameter.check_and_create(name="member-team-text", typeparam=Parameter.TYPE_STRING, title=_("member-team-text"), args="{'Multi':False}", value=_('Team'))
+    Parameter.check_and_create(name="member-activite-enable", typeparam=Parameter.TYPE_BOOL, title=_("member-activite-enable"), args="{}", value="True")
+    Parameter.check_and_create(name="member-activite-text", typeparam=Parameter.TYPE_STRING, title=_("member-activite-text"), args="{'Multi':False}", value=_('Activity'))
+    Parameter.check_and_create(name="member-connection", typeparam=Parameter.TYPE_SELECT, title=_("member-connection"), args="{'Enum':3}", value='0',
                                param_titles=(_("member-connection.0"), _("member-connection.1"), _("member-connection.2")))
-    Parameter.check_and_create(name="member-birth", typeparam=3, title=_("member-birth"), args="{}", value='True')
-    Parameter.check_and_create(name="member-filter-genre", typeparam=3, title=_("member-filter-genre"), args="{}", value='True')
-    Parameter.check_and_create(name="member-numero", typeparam=3, title=_("member-numero"), args="{}", value='True')
-    Parameter.check_and_create(name="member-licence-enabled", typeparam=3, title=_("member-licence-enabled"), args="{}", value='True')
-    Parameter.check_and_create(name="member-subscription-message", typeparam=0, title=_("member-subscription-message"),
+    Parameter.check_and_create(name="member-birth", typeparam=Parameter.TYPE_BOOL, title=_("member-birth"), args="{}", value='True')
+    Parameter.check_and_create(name="member-filter-genre", typeparam=Parameter.TYPE_BOOL, title=_("member-filter-genre"), args="{}", value='True')
+    Parameter.check_and_create(name="member-numero", typeparam=Parameter.TYPE_BOOL, title=_("member-numero"), args="{}", value='True')
+    Parameter.check_and_create(name="member-licence-enabled", typeparam=Parameter.TYPE_BOOL, title=_("member-licence-enabled"), args="{}", value='True')
+    Parameter.check_and_create(name="member-subscription-message", typeparam=Parameter.TYPE_STRING, title=_("member-subscription-message"),
                                args="{'Multi':True, 'HyperText': True}", value=_('Welcome,{[br/]}{[br/]}You have a new subscription.Joint, the quotation relative.{[br/]}{[br/]}Regards,'))
-    Parameter.check_and_create(name="member-subscription-mode", typeparam=4, title=_("member-subscription-mode"), args="{'Enum':3}", value='0',
+    Parameter.check_and_create(name="member-subscription-mode", typeparam=Parameter.TYPE_SELECT, title=_("member-subscription-mode"), args="{'Enum':3}", value='0',
                                param_titles=(_("member-subscription-mode.0"), _("member-subscription-mode.1"), _("member-subscription-mode.2")))
-    Parameter.check_and_create(name="member-family-type", typeparam=1, title=_("member-family-type"), args="{}", value='0', meta='("contacts","StructureType", Q(), "id", False)')
-    Parameter.check_and_create(name="member-size-page", typeparam=1, title=_("member-size-page"), args="{}", value='25', meta='("","", "[(25,\'25\'),(50,\'50\'),(100,\'100\'),(250,\'250\'),(500,\'500\'),]", "", True)')
-    Parameter.check_and_create(name="member-fields", typeparam=0, title=_("member-fields"), args="{'Multi':False}", value='')
-    Parameter.check_and_create(name="member-tax-receipt", typeparam=0, title=_("member-tax-receipt"), args="{'Multi':True}", value='',
+    Parameter.check_and_create(name="member-family-type", typeparam=Parameter.TYPE_INTEGER, title=_("member-family-type"), args="{}", value='0', meta='("contacts","StructureType", Q(), "id", False)')
+    Parameter.check_and_create(name="member-size-page", typeparam=Parameter.TYPE_INTEGER, title=_("member-size-page"), args="{}", value='25', meta='("","", "[(25,\'25\'),(50,\'50\'),(100,\'100\'),(250,\'250\'),(500,\'500\'),]", "", True)')
+    Parameter.check_and_create(name="member-fields", typeparam=Parameter.TYPE_STRING, title=_("member-fields"), args="{'Multi':False}", value='')
+    Parameter.check_and_create(name="member-tax-receipt", typeparam=Parameter.TYPE_STRING, title=_("member-tax-receipt"), args="{'Multi':True}", value='',
                                meta='("accounting","ChartsAccount","import diacamma.accounting.tools;django.db.models.Q(code__regex=diacamma.accounting.tools.current_system_account().get_revenue_mask()) & django.db.models.Q(year__is_actif=True)", "code", False)')
+    Parameter.check_and_create(name="member-age-statistic", typeparam=Parameter.TYPE_INTEGER, title=_("member-age-statistic"), args="{'Min': 1, 'Max': 100}", value='18')
 
     LucteriosGroup.redefine_generic(_("# member (administrator)"), Season.get_permission(True, True, True), Adherent.get_permission(True, True, True),
                                     Subscription.get_permission(True, True, True), TaxReceipt.get_permission(True, True, True))
