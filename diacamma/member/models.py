@@ -1312,7 +1312,7 @@ class Subscription(LucteriosModel):
             new_cmt.extend(cmt)
             Detail.create_for_bill(self.bill, art, designation="{[br/]}".join(new_cmt))
         for presta in self.prestations.all():
-            new_cmt = [presta.description]
+            new_cmt = [presta.team.description]
             new_cmt.extend(cmt)
             Detail.create_for_bill(self.bill, presta.article, designation="{[br/]}".join(new_cmt))
 
