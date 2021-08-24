@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-06-29 13:31+0000\n"
-"PO-Revision-Date: 2021-06-29 15:31+0200\n"
+"POT-Creation-Date: 2021-08-24 16:12+0000\n"
+"PO-Revision-Date: 2021-08-24 18:12+0200\n"
 "Last-Translator: Laurent Gay <l.gay@sd-libre.fr>\n"
 "Language-Team: français <>\n"
 "Language: fr\n"
@@ -983,7 +983,7 @@ msgstr "Suppression d'adhérent(s)"
 msgid "Modify"
 msgstr "Modifier"
 
-#: views.py:966 views_season.py:118
+#: views.py:966 views_season.py:123
 msgid "Modify document"
 msgstr "Modification d'un document"
 
@@ -1044,19 +1044,19 @@ msgstr "Filtrer par nom"
 msgid "Subscriptions to moderate"
 msgstr "Cotisations à modérer"
 
-#: views.py:1192 views_season.py:170
+#: views.py:1192 views_season.py:175
 msgid "Add subscription"
 msgstr "Ajout d'une cotisation"
 
-#: views.py:1193 views_season.py:171
+#: views.py:1193 views_season.py:176
 msgid "Modify subscription"
 msgstr "Modification d'une cotisation"
 
-#: views.py:1203 views_season.py:180
+#: views.py:1203 views_season.py:185
 msgid "Show subscription"
 msgstr "Visualisation d'une cotisation"
 
-#: views.py:1212 views_season.py:189
+#: views.py:1212 views_season.py:194
 msgid "Delete subscription"
 msgstr "Suppression de cotisation(s)"
 
@@ -1378,61 +1378,86 @@ msgstr "Proche de l'activité"
 msgid "All"
 msgstr "Tous"
 
-#: views_season.py:58 views_season.py:107
+#: views_season.py:58 views_season.py:112
 msgid "Show season"
 msgstr "Afficher une saison"
 
-#: views_season.py:79
+#: views_season.py:80
+msgid "Regenerate"
+msgstr "Régénérer"
+
+#: views_season.py:84
 msgid "Active"
 msgstr "Activer"
 
-#: views_season.py:85
+#: views_season.py:90
 msgid "Activate"
 msgstr "Activation"
 
-#: views_season.py:97
+#: views_season.py:102
 msgid "Add season"
 msgstr "Ajout d'une saison"
 
-#: views_season.py:98
+#: views_season.py:103
 msgid "Modify season"
 msgstr "Modification d'une saison"
 
-#: views_season.py:117
+#: views_season.py:122
 msgid "Add document"
 msgstr "Ajout d'un document"
 
-#: views_season.py:127
+#: views_season.py:132
 msgid "Delete document"
 msgstr "Suppression de document(s)"
 
-#: views_season.py:130
+#: views_season.py:135
 msgid "Import doc."
 msgstr "Importer doc."
 
-#: views_season.py:136
+#: views_season.py:141
 msgid "Clone document"
 msgstr "Cloner un document"
 
-#: views_season.py:149
+#: views_season.py:154
 msgid "Add period"
 msgstr "Ajout d'une période"
 
-#: views_season.py:150
+#: views_season.py:155
 msgid "Modify period"
 msgstr "Modification d'une période"
 
-#: views_season.py:159
+#: views_season.py:164
 msgid "Delete period"
 msgstr "Suppression de période(s)"
 
-#: views_season.py:192
+#: views_season.py:197
 msgid "Up"
 msgstr "Monter"
 
-#: views_season.py:198
+#: views_season.py:203
 msgid "Up subscription"
 msgstr "Monter la cotisation"
+
+#: views_season.py:212
+msgid "Quotation regeneration"
+msgstr "régénération des devis"
+
+#: views_season.py:226
+msgid "Active fiscal year different of current season !"
+msgstr "L'exercice fiscal actif est incohérent avec la saison courante !"
+
+#: views_season.py:227
+msgid "Do you want regenerate quotations of building subscriptions ?"
+msgstr "Voulez-vous régénérer les devis des cotisations en création ?"
+
+#: views_season.py:228
+msgid "Please, waiting a minutes ..."
+msgstr "Merci de patienter quelques minutes ..."
+
+#: views_season.py:229
+#, python-format
+msgid "%s subscriptions were regenerated."
+msgstr "%s cotisations ont été régénérés."
 
 #~ msgid "women major"
 #~ msgstr "femme majeure"

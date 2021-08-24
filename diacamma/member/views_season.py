@@ -27,16 +27,16 @@ from __future__ import unicode_literals
 from django.utils.translation import ugettext_lazy as _
 from django.db.models import Q
 
-from lucterios.framework.xferadvance import XferListEditor, TITLE_DELETE, TITLE_MODIFY, TITLE_ADD, TITLE_EDIT,\
-    TITLE_CREATE
+from lucterios.framework.xferadvance import XferListEditor, TITLE_DELETE, TITLE_MODIFY, TITLE_ADD, TITLE_EDIT, TITLE_CREATE
 from lucterios.framework.xferadvance import XferAddEditor
 from lucterios.framework.xferadvance import XferShowEditor
 from lucterios.framework.xferadvance import XferDelete
-from lucterios.framework.tools import FORMTYPE_NOMODAL, ActionsManage, MenuManage, SELECT_SINGLE, FORMTYPE_REFRESH, CLOSE_NO, SELECT_MULTI, CLOSE_YES
+from lucterios.framework.tools import FORMTYPE_NOMODAL, ActionsManage, MenuManage, SELECT_SINGLE, FORMTYPE_REFRESH, CLOSE_NO, SELECT_MULTI, CLOSE_YES, FORMTYPE_MODAL
 from lucterios.framework.xfergraphic import XferContainerAcknowledge
-from lucterios.framework.xfercomponents import XferCompSelect
-from diacamma.member.models import Season, Period, SubscriptionType, Document, Prestation
-from lucterios.CORE.parameters import Params
+from lucterios.framework.xfercomponents import XferCompSelect, XferCompButton
+from lucterios.framework.error import LucteriosException, IMPORTANT
+
+from diacamma.member.models import Season, Period, SubscriptionType, Document
 
 MenuManage.add_sub("member.conf", "core.extensions", "", _("Member"), "", 5)
 
@@ -73,7 +73,12 @@ class SeasonSubscription(XferListEditor):
     def fillresponse(self):
         XferListEditor.fillresponse(self)
         self.new_tab(_('Subscriptions'))
-        self.fill_grid(self.get_max_row(), SubscriptionType, "subscriptiontype", SubscriptionType.objects.all())
+        row_max = self.get_max_row()
+        self.fill_grid(row_max, SubscriptionType, "subscriptiontype", SubscriptionType.objects.all())
+        btn = XferCompButton('reloadBill')
+        btn.set_location(0, row_max + 5, 2)
+        btn.set_action(self.request, SubscriptionReloadBill.get_action(_('Regenerate'), "/static/diacamma.invoice/images/bill.png"), modal=FORMTYPE_MODAL, close=CLOSE_NO)
+        self.add_component(btn)
 
 
 @ActionsManage.affect_grid(_("Active"), "images/ok.png", unique=SELECT_SINGLE)
@@ -190,7 +195,7 @@ class SubscriptionTypeDel(XferDelete):
 
 
 @ActionsManage.affect_grid(_('Up'), "images/up.png", unique=SELECT_SINGLE)
-@MenuManage.describ('payoff.add_subscription')
+@MenuManage.describ('member.add_subscription')
 class SubscriptionTypeUp(XferContainerAcknowledge):
     icon = "season.png"
     model = SubscriptionType
@@ -199,3 +204,26 @@ class SubscriptionTypeUp(XferContainerAcknowledge):
 
     def fillresponse(self):
         self.item.up_order()
+
+
+@MenuManage.describ('member.add_subscription')
+class SubscriptionReloadBill(XferContainerAcknowledge):
+    icon = "/static/diacamma.invoice/images/bill.png"
+    caption = _("Quotation regeneration")
+
+    def run_regenerate(self):
+        from diacamma.member.models import Subscription
+        nb_subscriptions = 0
+        for sub in Subscription.objects.filter(season=self.season, status=Subscription.STATUS_BUILDING):
+            sub.change_bill()
+            nb_subscriptions += 1
+        return nb_subscriptions
+
+    def fillresponse(self, nb_quotations=None):
+        from diacamma.accounting.models import FiscalYear
+        self.season = Season.current_season()
+        if FiscalYear.get_current() != FiscalYear.get_current(self.season.date_ref):
+            raise LucteriosException(IMPORTANT, _('Active fiscal year different of current season !'))
+        if self.confirme(_('Do you want regenerate quotations of building subscriptions ?')):
+            if self.traitment(self.icon, _('Please, waiting a minutes ...'), ''):
+                self.traitment_data[2] = _('%s subscriptions were regenerated.') % self.run_regenerate()

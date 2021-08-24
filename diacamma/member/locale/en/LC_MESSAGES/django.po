@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-06-29 13:31+0000\n"
-"PO-Revision-Date: 2021-06-29 15:30+0200\n"
+"POT-Creation-Date: 2021-08-24 16:12+0000\n"
+"PO-Revision-Date: 2021-08-24 18:12+0200\n"
 "Last-Translator: Laurent Gay <l.gay@sd-libre.fr>\n"
 "Language-Team: français <>\n"
 "Language: en\n"
@@ -973,7 +973,7 @@ msgstr "Delete adherent"
 msgid "Modify"
 msgstr "Modify"
 
-#: views.py:966 views_season.py:118
+#: views.py:966 views_season.py:123
 msgid "Modify document"
 msgstr "Modify document"
 
@@ -1034,19 +1034,19 @@ msgstr "Filtrer by name"
 msgid "Subscriptions to moderate"
 msgstr "Subscriptions to moderate"
 
-#: views.py:1192 views_season.py:170
+#: views.py:1192 views_season.py:175
 msgid "Add subscription"
 msgstr "Add subscription"
 
-#: views.py:1193 views_season.py:171
+#: views.py:1193 views_season.py:176
 msgid "Modify subscription"
 msgstr "Modify subscription"
 
-#: views.py:1203 views_season.py:180
+#: views.py:1203 views_season.py:185
 msgid "Show subscription"
 msgstr "Show subscription"
 
-#: views.py:1212 views_season.py:189
+#: views.py:1212 views_season.py:194
 msgid "Delete subscription"
 msgstr "Delete subscription"
 
@@ -1364,61 +1364,86 @@ msgstr "Near active"
 msgid "All"
 msgstr "All"
 
-#: views_season.py:58 views_season.py:107
+#: views_season.py:58 views_season.py:112
 msgid "Show season"
 msgstr "Show season"
 
-#: views_season.py:79
+#: views_season.py:80
+msgid "Regenerate"
+msgstr "Regenerate"
+
+#: views_season.py:84
 msgid "Active"
 msgstr "Active"
 
-#: views_season.py:85
+#: views_season.py:90
 msgid "Activate"
 msgstr "Activate"
 
-#: views_season.py:97
+#: views_season.py:102
 msgid "Add season"
 msgstr "Add season"
 
-#: views_season.py:98
+#: views_season.py:103
 msgid "Modify season"
 msgstr "Modify season"
 
-#: views_season.py:117
+#: views_season.py:122
 msgid "Add document"
 msgstr "Add document"
 
-#: views_season.py:127
+#: views_season.py:132
 msgid "Delete document"
 msgstr "Delete document"
 
-#: views_season.py:130
+#: views_season.py:135
 msgid "Import doc."
 msgstr "Import doc."
 
-#: views_season.py:136
+#: views_season.py:141
 msgid "Clone document"
 msgstr "Clone document"
 
-#: views_season.py:149
+#: views_season.py:154
 msgid "Add period"
 msgstr "Add period"
 
-#: views_season.py:150
+#: views_season.py:155
 msgid "Modify period"
 msgstr "Modify period"
 
-#: views_season.py:159
+#: views_season.py:164
 msgid "Delete period"
 msgstr "Delete period"
 
-#: views_season.py:192
+#: views_season.py:197
 msgid "Up"
 msgstr "Up"
 
-#: views_season.py:198
+#: views_season.py:203
 msgid "Up subscription"
 msgstr "Up subscription"
+
+#: views_season.py:212
+msgid "Quotation regeneration"
+msgstr "Quotation regeneration"
+
+#: views_season.py:226
+msgid "Active fiscal year different of current season !"
+msgstr "Active fiscal year different of current season !"
+
+#: views_season.py:227
+msgid "Do you want regenerate quotations of building subscriptions ?"
+msgstr "Do you want regenerate quotations of building subscriptions ?"
+
+#: views_season.py:228
+msgid "Please, waiting a minutes ..."
+msgstr "Please, waiting a minutes ..."
+
+#: views_season.py:229
+#, python-format
+msgid "%s subscriptions were regenerated."
+msgstr "%s subscriptions were regenerated."
 
 #~ msgid "women major"
 #~ msgstr "women major"
