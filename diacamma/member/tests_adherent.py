@@ -1321,7 +1321,7 @@ class AdherentTest(BaseAdherentTest):
             self.assertEqual(['Joe.Dalton@worldcompany.com', 'mr-sylvestre@worldcompany.com'], server.get(0)[2])
             self.assertEqual('mr-sylvestre@worldcompany.com', server.get(1)[1])
             self.assertEqual(['Lucky.Luke@worldcompany.com', 'mr-sylvestre@worldcompany.com'], server.get(1)[2])
-            msg, msg_txt, msg_file = server.check_first_message('Nouvelle cotisation', 3, {'To': 'Joe.Dalton@worldcompany.com'})
+            msg_txt, msg, msg_file = server.check_first_message('Nouvelle cotisation', 3, {'To': 'Joe.Dalton@worldcompany.com'})
             self.assertEqual('text/plain', msg_txt.get_content_type())
             self.assertEqual('text/html', msg.get_content_type())
             self.assertEqual('base64', msg.get('Content-Transfer-Encoding', ''))
@@ -3078,7 +3078,7 @@ class AdherentFamilyTest(BaseAdherentTest):
             self.assertEqual(1, server.count())
             self.assertEqual('mr-sylvestre@worldcompany.com', server.get(0)[1])
             self.assertEqual(['dalton@worldcompany.com', 'Avrel.Dalton@worldcompany.com', 'Joe.Dalton@worldcompany.com', 'mr-sylvestre@worldcompany.com'], server.get(0)[2])
-            msg, msg_txt, msg_file = server.check_first_message('Nouvelle cotisation', 3, {'To': 'dalton@worldcompany.com'})
+            msg_txt, msg, msg_file = server.check_first_message('Nouvelle cotisation', 3, {'To': 'dalton@worldcompany.com'})
             self.assertEqual('text/plain', msg_txt.get_content_type())
             self.assertEqual('text/html', msg.get_content_type())
             self.assertEqual('base64', msg.get('Content-Transfer-Encoding', ''))
@@ -4003,7 +4003,7 @@ class AdherentConnectionTest(BaseAdherentTest):
             self.assert_json_equal('', 'text', 'Les paramètres de connexion ont été envoyé.')
 
             self.assertEqual(2, server.count())
-            msg, _msg = server.check_first_message('Mot de passe de connexion', 2)
+            _msg, msg = server.check_first_message('Mot de passe de connexion', 2)
             self.assertEqual('text/html', msg.get_content_type())
             self.assertEqual('base64', msg.get('Content-Transfer-Encoding', ''))
             message = decode_b64(msg.get_payload())
@@ -4049,7 +4049,7 @@ class AdherentConnectionTest(BaseAdherentTest):
 
             self.assertEqual('mr-sylvestre@worldcompany.com', server.get(0)[1])
             self.assertEqual(['dalton@worldcompany.com'], server.get(0)[2])
-            msg1, _msg = server.check_first_message('Mot de passe de connexion', 2)
+            _msg, msg1 = server.check_first_message('Mot de passe de connexion', 2)
             self.assertEqual('text/html', msg1.get_content_type())
             self.assertEqual('base64', msg1.get('Content-Transfer-Encoding', ''))
             message = decode_b64(msg1.get_payload())
@@ -4059,7 +4059,7 @@ class AdherentConnectionTest(BaseAdherentTest):
 
             self.assertEqual('mr-sylvestre@worldcompany.com', server.get(1)[1])
             self.assertEqual(['Joe.Dalton@worldcompany.com'], server.get(1)[2])
-            msg2, _msg = server.get_msg_index(1, 'Mot de passe de connexion')
+            _msg, msg2 = server.get_msg_index(1, 'Mot de passe de connexion')
             message = decode_b64(msg2.get_payload())
             self.assertEqual('<html>Bienvenue<br/><br/>Confirmation de connexion à votre application :'
                              '<br/> - Alias : LES DALTONS<br/> - Mot de passe : ', message[:122])
