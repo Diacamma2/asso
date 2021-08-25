@@ -4067,7 +4067,7 @@ class AdherentConnectionTest(BaseAdherentTest):
 
             self.assertEqual('mr-sylvestre@worldcompany.com', server.get(2)[1])
             self.assertEqual(['Avrel.Dalton@worldcompany.com'], server.get(2)[2])
-            msg3, _msg = server.get_msg_index(2, 'Mot de passe de connexion')
+            _msg, msg3 = server.get_msg_index(2, 'Mot de passe de connexion')
             message = decode_b64(msg3.get_payload())
             self.assertEqual('<html>Bienvenue<br/><br/>Confirmation de connexion à votre application :'
                              '<br/> - Alias : LES DALTONS<br/> - Mot de passe : ', message[:122])
