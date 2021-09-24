@@ -1318,7 +1318,7 @@ class Subscription(LucteriosModel):
 
     def _search_or_create_bill(self, bill_type, parentbill=None):
         new_third = get_or_create_customer(self.adherent.get_ref_contact().id)
-        bill_list = Bill.objects.filter(third=new_third, bill_type=bill_type, status=0).annotate(subscription_count=Count('subscription')).filter(subscription_count__gte=1).order_by('-date')
+        bill_list = Bill.objects.filter(third=new_third, bill_type=bill_type, status=Bill.STATUS_BUILDING).annotate(subscription_count=Count('subscription')).filter(subscription_count__gte=1).order_by('-date')
         if bill_type == Bill.BILLTYPE_QUOTATION:
             date_ref = timezone.now()
         else:
@@ -1772,7 +1772,7 @@ class TaxReceiptPayoffSet(QuerySet):
 
 class TaxReceipt(Supporting):
     num = models.IntegerField(verbose_name=_('numeros'), null=False)
-    fiscal_year = models.ForeignKey(FiscalYear, verbose_name=_('fiscal year'), null=False, db_index=True, on_delete=models.PROTECT)
+    fiscal_year = models.ForeignKey(FiscalYear, verbose_name=_('fiscal year'), null=False, db_index=True, on_delete=models.CASCADE)
     year = models.IntegerField(verbose_name=_('year'), null=False, unique_for_year=True)
     entries = models.ManyToManyField(EntryAccount, verbose_name=_('entries'))
     date = models.DateField(verbose_name=_('date'), null=False)
