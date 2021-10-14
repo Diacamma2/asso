@@ -496,15 +496,15 @@ class SubscriptionType(LucteriosModel):
 
     @classmethod
     def get_default_fields(cls):
-        return ["order_key", "name", "description", 'duration', "unactive", 'price']
+        return ["order_key", "name", "description", 'duration', 'price', "unactive"]
 
     @classmethod
     def get_edit_fields(cls):
-        return ["name", "description", 'duration', "unactive", ('articles', None)]
+        return ["name", "description", 'duration', ('articles', None), "unactive"]
 
     @classmethod
     def get_show_fields(cls):
-        return ["name", "description", 'duration', 'unactive', 'price', 'articles']
+        return ["name", "description", 'duration', 'price', 'articles', 'unactive']
 
     def get_price(self):
         total_price = 0

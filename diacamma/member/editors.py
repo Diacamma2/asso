@@ -38,11 +38,13 @@ from lucterios.framework.tools import CLOSE_NO, FORMTYPE_REFRESH, ActionsManage,
 from lucterios.framework.xferadvance import TITLE_EDIT
 
 from lucterios.CORE.parameters import Params
+from lucterios.framework.xferbasic import NULL_VALUE
 from lucterios.contacts.models import Individual
 from lucterios.contacts.editors import IndividualEditor
 
 from diacamma.member.models import Period, Season, Subscription, Team, License, convert_date, same_day_months_after, Activity, Adherent,\
     SubscriptionType
+from diacamma.invoice.models import Article
 
 
 class SeasonEditor(LucteriosEditor):
@@ -90,10 +92,11 @@ class SubscriptionTypeEditor(LucteriosEditor):
 
     def edit(self, xfer):
         from diacamma.invoice.views import ArticleList
-        row_init = xfer.get_max_row() + 3
+        articles_comp = xfer.get_components('articles')
         btn = XferCompButton("btn_article")
-        btn.set_location(3, row_init, 2)
+        btn.set_location(articles_comp.col + articles_comp.colspan, articles_comp.row)
         btn.set_action(xfer.request, ArticleList.get_action(_('Articles'), 'diacamma.invoice/images/article.png'), close=CLOSE_NO)
+        btn.set_is_mini(True)
         xfer.add_component(btn)
 
 
@@ -372,7 +375,7 @@ class PrestationEditor(LucteriosEditor):
             sel.set_needed(True)
             sel.set_select([(0, _('new %s') % Params.getvalue("member-team-text").lower()),
                             (1, _('select old %s') % Params.getvalue("member-team-text").lower())])
-            sel.set_location(team_col, team_row)
+            sel.set_location(team_col, team_row, 2)
             sel.set_value(new_group)
             sel.description = _('addon mode')
             sel.set_action(xfer.request, xfer.return_action(), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
@@ -386,10 +389,23 @@ class PrestationEditor(LucteriosEditor):
             xfer.filltab_from_model(team_col, team_row + 1, False, ['name', 'description'])
             xfer.model = self.item.__class__
             xfer.item = self.item
+            for field_name in ['name', 'description']:
+                xfer.get_components(field_name).colspan = 2
         else:
+            xfer.get_components('team').colspan = 2
             for field_to_del in ['name', 'description']:
                 if field_to_del in xfer.params:
                     del xfer.params[field_to_del]
+        article_comp = xfer.get_components('article')
+        if Params.getvalue("member-activite-enable"):
+            xfer.get_components('activity').colspan = 2
+        btn = XferCompButton("addarticle")
+        btn.set_location(article_comp.col + article_comp.colspan, article_comp.row)
+        btn.set_is_mini(True)
+        btn.set_action(xfer.request, ActionsManage.get_action_url(Article.get_long_name(), 'AddModify', xfer), modal=FORMTYPE_MODAL, close=CLOSE_NO, params={'article': NULL_VALUE})
+        xfer.add_component(btn)
+        if btn.action is None:
+            article_comp.colspan = 2
 
 
 class TaxReceiptEditor(LucteriosEditor):
