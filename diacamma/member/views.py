@@ -1268,6 +1268,27 @@ class AdherentStatistic(XferContainerCustom):
     readonly = True
     methods_allowed = ('GET', )
 
+    def convert_stat_values(self, old_stat_values):
+        def remove_b(value):
+            if isinstance(value, str) and value.startswith('{[b]}'):
+                return int(value[5:-6])
+            else:
+                return int(value)
+        if not Params.getvalue("member-birth"):
+            maj_woman = old_stat_values["MajW"]
+            maj_man = old_stat_values["MajM"]
+            min_woman = old_stat_values["MinW"]
+            min_man = old_stat_values["MinM"]
+            if isinstance(maj_woman, str) and maj_woman.startswith('{[b]}'):
+                old_stat_values["Woman"] = "{[b]}%d{[/b]}" % (remove_b(maj_woman) + remove_b(min_woman))
+            else:
+                old_stat_values["Woman"] = maj_woman + min_woman
+            if isinstance(maj_man, str) and maj_man.startswith('{[b]}'):
+                old_stat_values["Man"] = "{[b]}%d{[/b]}" % (remove_b(maj_man) + remove_b(min_man))
+            else:
+                old_stat_values["Man"] = maj_man + min_man
+        return old_stat_values.items()
+
     def add_static_grid(self, grid_title, grid_name, stat_city, main_id, main_name):
         age_statistic = Params.getvalue("member-age-statistic")
         row = self.get_max_row()
@@ -1278,16 +1299,19 @@ class AdherentStatistic(XferContainerCustom):
         self.add_component(lab)
         grid = XferCompGrid(grid_name)
         grid.add_header(main_id, main_name)
-        grid.add_header("MajW", _("women senior"))
-        grid.add_header("MajM", _("men senior"))
-        grid.add_header("MinW", _("women young (<%d)") % age_statistic)
-        grid.add_header("MinM", _("men young (<%d)") % age_statistic)
+        if Params.getvalue("member-birth"):
+            grid.add_header("MajW", _("women senior"))
+            grid.add_header("MajM", _("men senior"))
+            grid.add_header("MinW", _("women young (<%d)") % age_statistic)
+            grid.add_header("MinM", _("men young (<%d)") % age_statistic)
+        else:
+            grid.add_header("Woman", _("women"))
+            grid.add_header("Man", _("men"))
         grid.add_header("ratio", _("total (%)"))
         cmp = 0
-        for stat_val in stat_city:
-            for stat_key in stat_val.keys():
-                grid.set_value(cmp, stat_key, stat_val[stat_key])
-
+        for stat_values in stat_city:
+            for stat_key, stat_val in self.convert_stat_values(stat_values):
+                grid.set_value(cmp, stat_key, stat_val)
             cmp += 1
         grid.set_location(0, row + 2)
         self.add_component(grid)
