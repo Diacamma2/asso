@@ -157,7 +157,7 @@ def set_parameters(values):
 
 
 def default_prestation():
-    Prestation.objects.create(name="Presta 1", description="Prestation N°1", team_id=3, activity_id=2, article_id=1) # 'team3 [activity2]' - 12.34 
-    Prestation.objects.create(name="Presta 2", description="Prestation N°2", team_id=2, activity_id=2, article_id=2) # 'team2 [activity2]' - 56.78
-    Prestation.objects.create(name="Presta 3", description="Prestation N°3", team_id=1, activity_id=1, article_id=3) # 'team1 [activity1]' - 324.97
+    Prestation.objects.create(name="Presta 1", description="Prestation N°1", team_id=3, activity_id=2, article_id=1)  # 'team3 [activity2]' - 12.34
+    Prestation.objects.create(name="Presta 2", description="Prestation N°2", team_id=2, activity_id=2, article_id=2)  # 'team2 [activity2]' - 56.78
+    Prestation.objects.create(name="Presta 3", description="Prestation N°3", team_id=1, activity_id=1, article_id=3)  # 'team1 [activity1]' - 324.97
     Parameter.change_value('member-team-enable', 2)
