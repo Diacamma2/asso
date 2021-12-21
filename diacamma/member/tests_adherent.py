@@ -45,7 +45,7 @@ from diacamma.accounting.views import ThirdShow
 from diacamma.accounting.models import FiscalYear
 from diacamma.accounting.test_tools import fill_accounts_fr, create_account, add_entry
 from diacamma.accounting.views_entries import EntryAccountList, EntryAccountClose, EntryAccountLink
-from diacamma.invoice.views import BillList, BillTransition, BillFromQuotation, BillAddModify, BillShow, DetailAddModify
+from diacamma.invoice.views import BillList, BillTransition, BillToBill, BillAddModify, BillShow, DetailAddModify
 from diacamma.invoice.models import get_or_create_customer
 from diacamma.invoice.test_tools import InvoiceTest
 from diacamma.payoff.views import PayoffAddModify
@@ -1207,10 +1207,10 @@ class AdherentTest(BaseAdherentTest):
                       {'CONFIRME': 'YES', 'bill': 1, 'withpayoff': False, 'TRANSITION': 'valid'}, False)
         self.assert_observer('core.acknowledge', 'diacamma.invoice', 'billTransition')
 
-        self.factory.xfer = BillFromQuotation()
-        self.calljson('/diacamma.invoice/billFromQuotation',
+        self.factory.xfer = BillToBill()
+        self.calljson('/diacamma.invoice/billToBill',
                       {'CONFIRME': 'YES', 'bill': 1}, False)
-        self.assert_observer('core.acknowledge', 'diacamma.invoice', 'billFromQuotation')
+        self.assert_observer('core.acknowledge', 'diacamma.invoice', 'billToBill')
         self.assertEqual(self.response_json['action']['id'], "diacamma.invoice/billShow")
         self.assertEqual(len(self.response_json['action']['params']), 1)
         self.assertEqual(self.response_json['action']['params']['bill'], 2)
@@ -3527,9 +3527,9 @@ class AdherentFamilyTest(BaseAdherentTest):
         self.assert_json_equal('', 'bill/@0/status', 1)
         self.assert_json_equal('', 'bill/@0/total', 278.78)  # Subscription: art1:12.34 + art5:64.10 / Prestations: art1:12.34 + art2:56.78 + Subscription: art1:12.34 + art5:64.10 / Prestations: art2:56.78
 
-        self.factory.xfer = BillFromQuotation()
-        self.calljson('/diacamma.invoice/billFromQuotation', {'CONFIRME': 'YES', 'bill': 1}, False)
-        self.assert_observer('core.acknowledge', 'diacamma.invoice', 'billFromQuotation')
+        self.factory.xfer = BillToBill()
+        self.calljson('/diacamma.invoice/billToBill', {'CONFIRME': 'YES', 'bill': 1}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.invoice', 'billToBill')
 
         self.factory.xfer = SubscriptionShow()
         self.calljson('/diacamma.member/subscriptionShow', {'adherent': 2, 'dateref': '2014-10-01', 'subscription': 1}, False)
