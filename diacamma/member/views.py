@@ -794,7 +794,7 @@ class AdherentRenew(XferContainerAcknowledge):
     caption = _("re-new")
 
     def fillresponse(self):
-        text = _("{[b]}Do you want that those %d old selected adherent(s) has been renew?{[/b]}{[br/]}Same subscription(s) will be applicated.{[br/]}No validated bill will be created for each subscritpion.") % len(self.items)
+        text = _("{[b]}Do you want that those %d old selected adherent(s) has been renew?{[/b]}{[br/]}Same subscription(s) will be applicated (or the first subscription type valid if old is unvalid).{[br/]}No validated bill will be created for each subscritpion.") % len(self.items)
         if self.confirme(text):
             dateref = convert_date(self.getparam("dateref", ""), Season.current_season().date_ref)
             for item in self.items:

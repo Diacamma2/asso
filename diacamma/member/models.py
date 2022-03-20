@@ -971,7 +971,14 @@ class Adherent(Individual):
     def renew(self, dateref):
         last_subscription = self.last_subscription
         if last_subscription is not None:
-            new_subscription = Subscription(adherent=self, subscriptiontype=last_subscription.subscriptiontype, status=Subscription.STATUS_VALID)
+            if not last_subscription.subscriptiontype.unactive:
+                new_subscriptiontype = last_subscription.subscriptiontype
+            else:
+                subtypes = SubscriptionType.objects.filter(unactive=False, duration=last_subscription.subscriptiontype.duration)
+                if subtypes.count() == 0:
+                    raise LucteriosException(IMPORTANT, _('No subscription type active !'))
+                new_subscriptiontype = subtypes.first()
+            new_subscription = Subscription(adherent=self, subscriptiontype=new_subscriptiontype, status=Subscription.STATUS_VALID)
             new_subscription.set_periode(dateref)
             if Params.getvalue("member-team-enable") == 2:
                 prestation_list = []
@@ -1917,7 +1924,13 @@ class CommandManager(object):
             for item in self.items:
                 cmd_value = {}
                 cmd_value["adherent"] = item.id
-                cmd_value["type"] = item.last_subscription.subscriptiontype.id
+                if not item.last_subscription.subscriptiontype.unactive:
+                    cmd_value["type"] = item.last_subscription.subscriptiontype.id
+                else:
+                    subtypes = SubscriptionType.objects.filter(unactive=False, duration=item.last_subscription.subscriptiontype.duration)
+                    if subtypes.count() == 0:
+                        raise LucteriosException(IMPORTANT, _('No subscription type active !'))
+                    cmd_value["type"] = subtypes.first().id
                 team = []
                 activity = []
                 licence = []

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-21 13:57+0000\n"
+"POT-Creation-Date: 2022-03-20 20:26+0000\n"
 "PO-Revision-Date: 2021-03-04 10:02+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Poedit 2.3\n"
 
-#: __init__.py:43 views_conf.py:118
+#: __init__.py:43 views_conf.py:124
 msgid "Diacamma event"
 msgstr "Diacamma event"
 
@@ -338,47 +338,47 @@ msgstr "no degree!"
 msgid "Total"
 msgstr "Total"
 
-#: views_conf.py:55
+#: views_conf.py:56
 msgid "Management of degrees"
 msgstr "Management of degrees"
 
-#: views_conf.py:58
+#: views_conf.py:59
 msgid "Configuration of degrees"
 msgstr "Configuration of degrees"
 
-#: views_conf.py:61 views_conf.py:119
+#: views_conf.py:62 views_conf.py:125
 msgid "Parameters"
 msgstr "Parameters"
 
-#: views_conf.py:80
+#: views_conf.py:81
 msgid "Add degree type"
 msgstr "Add degree type"
 
-#: views_conf.py:81
+#: views_conf.py:82
 msgid "Modify degree type"
 msgstr "Modify degree type"
 
-#: views_conf.py:90
+#: views_conf.py:96
 msgid "Delete degree type"
 msgstr "Delete degree type"
 
-#: views_conf.py:100
+#: views_conf.py:106
 msgid "Add sub degree type"
 msgstr "Add sub degree type"
 
-#: views_conf.py:101
+#: views_conf.py:107
 msgid "Modify sub degree type"
 msgstr "Modify sub degree type"
 
-#: views_conf.py:110
+#: views_conf.py:116
 msgid "Delete sub degree type"
 msgstr "Delete sub degree type"
 
-#: views_conf.py:118
+#: views_conf.py:124
 msgid "Degrees"
 msgstr "Degrees"
 
-#: views_conf.py:118
+#: views_conf.py:124
 msgid "Configuration of degree parameters"
 msgstr "Define the configuration of your degrees and add them."
 

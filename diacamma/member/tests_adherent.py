@@ -46,12 +46,12 @@ from diacamma.accounting.models import FiscalYear
 from diacamma.accounting.test_tools import fill_accounts_fr, create_account, add_entry
 from diacamma.accounting.views_entries import EntryAccountList, EntryAccountClose, EntryAccountLink
 from diacamma.invoice.views import BillList, BillTransition, BillToBill, BillAddModify, BillShow, DetailAddModify
-from diacamma.invoice.models import get_or_create_customer
+from diacamma.invoice.models import get_or_create_customer, Article
 from diacamma.invoice.test_tools import InvoiceTest
 from diacamma.payoff.views import PayoffAddModify
 from diacamma.payoff.test_tools import check_pdfreport
 
-from diacamma.member.models import Season, Adherent
+from diacamma.member.models import Season, Adherent, SubscriptionType
 from diacamma.member.views import AdherentActiveList, AdherentAddModify, AdherentShow,\
     SubscriptionAddModify, SubscriptionShow, LicenseAddModify, LicenseDel,\
     AdherentDoc, AdherentLicense, AdherentLicenseSave, AdherentStatistic,\
@@ -913,6 +913,55 @@ class AdherentTest(BaseAdherentTest):
         self.assert_json_equal('', 'subscription/@1/end_date', "2010-09-14")
         self.assert_json_equal('', 'subscription/@1/involvement', ["team3 [activity2] 470"])
 
+    def test_renew_disabled(self):
+        self.add_subscriptions()
+        sub1 = SubscriptionType.objects.get(name="Annually")
+        sub1.unactive = True
+        sub1.save()
+
+        self.factory.xfer = AdherentRenewList()
+        self.calljson('/diacamma.member/adherentRenewList', {'dateref': '2010-10-01'}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentRenewList')
+        self.assert_count_equal('adherent', 3)
+        self.assert_json_equal('', 'adherent/@0/id', "2")
+        self.assert_json_equal('', 'adherent/@1/id', "5")
+        self.assert_json_equal('', 'adherent/@2/id', "6")
+
+        self.factory.xfer = AdherentRenew()
+        self.calljson('/diacamma.member/adherentRenew', {'dateref': '2010-10-23', 'CONFIRME': 'YES', 'adherent': '2'}, False)
+        self.assert_observer('core.exception', 'diacamma.member', 'adherentRenew')
+        self.assert_json_equal('', "message", "Aucun type de cotisation actif !")
+
+        sub_new = SubscriptionType.objects.create(name="New Annually", description="AAA+", duration=0, order_key=7)
+        sub_new.articles.set(Article.objects.filter(id__in=(1, 5)))
+        sub_new.save()
+
+        self.factory.xfer = AdherentRenew()
+        self.calljson('/diacamma.member/adherentRenew', {'dateref': '2010-10-23', 'CONFIRME': 'YES', 'adherent': '2'}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.member', 'adherentRenew')
+
+        self.factory.xfer = AdherentRenewList()
+        self.calljson('/diacamma.member/adherentRenewList', {'dateref': '2010-10-01'}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentRenewList')
+        self.assert_count_equal('adherent', 2)
+        self.assert_json_equal('', 'adherent/@0/id', "5")
+        self.assert_json_equal('', 'adherent/@1/id', "6")
+
+        self.factory.xfer = AdherentShow()
+        self.calljson('/diacamma.member/adherentShow', {'adherent': 2}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentShow')
+        self.assert_count_equal('subscription', 2)
+        self.assert_json_equal('', 'subscription/@0/season', "2010/2011")
+        self.assert_json_equal('', 'subscription/@0/subscriptiontype', "New Annually")
+        self.assert_json_equal('', 'subscription/@0/begin_date', "2010-09-01")
+        self.assert_json_equal('', 'subscription/@0/end_date', "2011-08-31")
+        self.assert_json_equal('', 'subscription/@0/involvement', ["team2 [activity1] 132"])
+        self.assert_json_equal('', 'subscription/@1/season', "2009/2010")
+        self.assert_json_equal('', 'subscription/@1/subscriptiontype', "Annually")
+        self.assert_json_equal('', 'subscription/@1/begin_date', "2009-09-01")
+        self.assert_json_equal('', 'subscription/@1/end_date', "2010-08-31")
+        self.assert_json_equal('', 'subscription/@1/involvement', ["team2 [activity1] 132"])
+
     def test_import(self):
         csv_content = """'nom','prenom','sexe','adresse','codePostal','ville','fixe','portable','mail','DateNaissance','LieuNaissance','Type','NumLicence','Equipe','Activite'
 'USIF','Pierre','Homme','37 avenue de la plage','99673','TOUINTOUIN','0502851031','0439423854','pierre572@free.fr','12/09/1961','BIDON SUR MER','Annually','1000029-00099','team1','activity1'
@@ -1350,6 +1399,40 @@ class AdherentTest(BaseAdherentTest):
             self.save_pdf(base64_content=msg_file.get_payload())
         finally:
             server.stop()
+
+    def test_command_disabled(self):
+        Season.objects.get(id=16).set_has_actif()
+        self.add_subscriptions(year=2014, season_id=15)
+        sub1 = SubscriptionType.objects.get(name="Annually")
+        sub1.unactive = True
+        sub1.save()
+
+        self.factory.xfer = AdherentRenewList()
+        self.calljson('/diacamma.member/adherentRenewList', {'dateref': '2015-10-01'}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentRenewList')
+        self.assert_count_equal('adherent', 3)
+        self.assert_json_equal('', 'adherent/@0/id', "2")
+        self.assert_json_equal('', 'adherent/@1/id', "5")
+        self.assert_json_equal('', 'adherent/@2/id', "6")
+
+        self.factory.xfer = AdherentCommand()
+        self.calljson('/diacamma.member/adherentCommand', {'dateref': '2015-10-01', 'adherent': '2'}, False)
+        self.assert_observer('core.exception', 'diacamma.member', 'adherentCommand')
+        self.assert_json_equal('', "message", "Aucun type de cotisation actif !")
+
+        sub_new = SubscriptionType.objects.create(name="New Annually", description="AAA+", duration=0, order_key=7)
+        sub_new.articles.set(Article.objects.filter(id__in=(1, 5)))
+        sub_new.save()
+
+        self.factory.xfer = AdherentCommand()
+        self.calljson('/diacamma.member/adherentCommand', {'dateref': '2015-10-01', 'adherent': '2'}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentCommand')
+        self.assert_count_equal('AdhCmd', 1)
+        self.assert_json_equal('', 'AdhCmd/@0/adherent', "Dalton Avrel")
+        self.assert_json_equal('', 'AdhCmd/@0/type', "New Annually [76,44 €]")
+        self.assert_json_equal('', 'AdhCmd/@0/team', "team2")
+        self.assert_json_equal('', 'AdhCmd/@0/activity', "activity1")
+        self.assert_json_equal('', 'AdhCmd/@0/reduce', 0.00)
 
     def test_subscription_with_prestation(self):
         default_adherents()
