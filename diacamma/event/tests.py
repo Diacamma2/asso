@@ -130,6 +130,7 @@ class ConfigurationTest(LucteriosTest):
         self.calljson('/diacamma.event/degreeTypeAddModify', {}, False)
         self.assert_observer('core.custom', 'diacamma.event', 'degreeTypeAddModify')
         self.assert_count_equal('', 3)
+        self.assertEqual(self.json_context["activity"], 1)
 
     def test_params(self):
         self.factory.xfer = EventConf()

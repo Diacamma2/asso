@@ -38,6 +38,7 @@ from lucterios.CORE.parameters import Params
 from lucterios.CORE.views import ParamEdit
 
 from diacamma.event.models import DegreeType, SubDegreeType
+from diacamma.member.models import Activity
 
 
 def fill_params(xfer):
@@ -79,6 +80,11 @@ class DegreeTypeAddModify(XferAddEditor):
     field_id = 'degreetype'
     caption_add = _("Add degree type")
     caption_modify = _("Modify degree type")
+
+    def fillresponse(self):
+        if not Params.getvalue("member-activite-enable"):
+            self.params['activity'] = Activity.objects.all().first().id
+        XferAddEditor.fillresponse(self)
 
 
 @ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", unique=SELECT_MULTI)
