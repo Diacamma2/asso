@@ -918,6 +918,10 @@ class AdherentTest(BaseAdherentTest):
         sub1 = SubscriptionType.objects.get(name="Annually")
         sub1.unactive = True
         sub1.save()
+        self.factory.xfer = BillList()
+        self.calljson('/diacamma.invoice/billList', {'status_filter': -2, 'type_filter': -1}, False)
+        self.assert_observer('core.custom', 'diacamma.invoice', 'billList')
+        self.assert_count_equal('bill', 5)
 
         self.factory.xfer = AdherentRenewList()
         self.calljson('/diacamma.member/adherentRenewList', {'dateref': '2010-10-01'}, False)
@@ -941,7 +945,7 @@ class AdherentTest(BaseAdherentTest):
         self.assert_observer('core.acknowledge', 'diacamma.member', 'adherentRenew')
 
         self.factory.xfer = AdherentRenewList()
-        self.calljson('/diacamma.member/adherentRenewList', {'dateref': '2010-10-01'}, False)
+        self.calljson('/diacamma.member/adherentRenewList', {'dateref': '2010-10-23'}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'adherentRenewList')
         self.assert_count_equal('adherent', 2)
         self.assert_json_equal('', 'adherent/@0/id', "5")
@@ -956,11 +960,25 @@ class AdherentTest(BaseAdherentTest):
         self.assert_json_equal('', 'subscription/@0/begin_date', "2010-09-01")
         self.assert_json_equal('', 'subscription/@0/end_date', "2011-08-31")
         self.assert_json_equal('', 'subscription/@0/involvement', ["team2 [activity1] 132"])
+        self.assert_json_equal('', 'subscription/@0/status', 2)
         self.assert_json_equal('', 'subscription/@1/season', "2009/2010")
         self.assert_json_equal('', 'subscription/@1/subscriptiontype', "Annually")
         self.assert_json_equal('', 'subscription/@1/begin_date', "2009-09-01")
         self.assert_json_equal('', 'subscription/@1/end_date', "2010-08-31")
         self.assert_json_equal('', 'subscription/@1/involvement', ["team2 [activity1] 132"])
+        self.assert_json_equal('', 'subscription/@1/status', 2)
+
+        self.factory.xfer = BillList()
+        self.calljson('/diacamma.invoice/billList', {'status_filter': -2, 'type_filter': -1}, False)
+        self.assert_observer('core.custom', 'diacamma.invoice', 'billList')
+        self.print_json('bill')
+        self.assert_count_equal('bill', 5)
+        self.assert_json_equal('', 'bill/@0/status', 0)
+        self.assert_json_equal('', 'bill/@0/bill_type', 1)
+        self.assert_json_equal('', 'bill/@0/third', 'Dalton Avrel')
+        self.assert_json_equal('', 'bill/@0/comment', "{[b]}cotisation{[/b]}{[br/]}Cotisation de 'Dalton Avrel'")
+        self.assert_json_equal('', 'bill/@0/date', '2010-10-23')
+        self.assert_json_equal('', 'bill/@0/total', 152.88)
 
     def test_import(self):
         csv_content = """'nom','prenom','sexe','adresse','codePostal','ville','fixe','portable','mail','DateNaissance','LieuNaissance','Type','NumLicence','Equipe','Activite'

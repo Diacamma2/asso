@@ -4,5 +4,5 @@ include:
     file: '/utils/gitlab-ci_template.yml'
 
 variables:
-  APPLICATION_TARGET: diacamma
+  APPLICATION_TARGET: diacamma_asso
   MANUAL_PATH: diacamma/asso/pdf/build_fr/latex/DiacammaAsso.pdf
