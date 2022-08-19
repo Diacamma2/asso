@@ -30,10 +30,10 @@ from django.utils.translation import ugettext_lazy as _
 from django.utils import formats
 
 from lucterios.framework.editors import LucteriosEditor
-from lucterios.framework.xfercomponents import XferCompLabelForm, XferCompDate, XferCompFloat,\
+from lucterios.framework.xfercomponents import XferCompLabelForm, XferCompDate, XferCompFloat, \
     XferCompSelect, XferCompCheck, XferCompButton
 from lucterios.framework.error import LucteriosException, IMPORTANT
-from lucterios.framework.tools import CLOSE_NO, FORMTYPE_REFRESH, ActionsManage, get_icon_path,\
+from lucterios.framework.tools import CLOSE_NO, FORMTYPE_REFRESH, ActionsManage, get_icon_path, \
     FORMTYPE_MODAL, CLOSE_YES, SELECT_SINGLE
 from lucterios.framework.xferadvance import TITLE_EDIT
 
@@ -42,8 +42,8 @@ from lucterios.framework.xferbasic import NULL_VALUE
 from lucterios.contacts.models import Individual
 from lucterios.contacts.editors import IndividualEditor
 
-from diacamma.member.models import Period, Season, Subscription, Team, License, convert_date, same_day_months_after, Activity, Adherent,\
-    SubscriptionType
+from diacamma.member.models import Period, Season, Subscription, Team, License, convert_date, same_day_months_after, Activity, Adherent, \
+    SubscriptionType, Prestation
 from diacamma.invoice.models import Article
 
 
@@ -349,7 +349,7 @@ class LicenseEditor(LucteriosEditor):
             xfer.params['activity'] = default_act.id
 
 
-class PrestationEditor(LucteriosEditor):
+class TeamPrestationEditor(LucteriosEditor):
 
     def before_save(self, xfer):
         if ('name' in xfer.params) and ('description' in xfer.params):
@@ -364,6 +364,16 @@ class PrestationEditor(LucteriosEditor):
             if 'team' in xfer.params:
                 del xfer.params['team']
         return
+    
+    def saving(self, xfer):
+        articleid = xfer.getparam('article', 0)
+        if articleid != 0:
+            prest = self.item.prestation_set.first()
+            if prest is None:
+                Prestation.objects.create(team_prestation=self.item, article_id=articleid)
+            else:
+                prest.article_id = articleid
+                prest.save()
 
     def edit(self, xfer):
         team_row = xfer.get_components('team').row
@@ -396,6 +406,10 @@ class PrestationEditor(LucteriosEditor):
             for field_to_del in ['name', 'description']:
                 if field_to_del in xfer.params:
                     del xfer.params[field_to_del]
+          
+        xfer.model = Prestation      
+        xfer.item = xfer.item.prestation_set.first() if xfer.item.id is not None else Prestation()
+        xfer.fill_from_model(1, 10, False, desc_fields=['article'])
         article_comp = xfer.get_components('article')
         if Params.getvalue("member-activite-enable"):
             xfer.get_components('activity').colspan = 2

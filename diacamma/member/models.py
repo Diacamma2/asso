@@ -22,7 +22,6 @@ You should have received a copy of the GNU General Public License
 along with Lucterios.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-
 from __future__ import unicode_literals
 from datetime import date, datetime, timedelta
 from os.path import isfile, join
@@ -49,10 +48,10 @@ from lucterios.framework.signal_and_lock import Signal
 from lucterios.framework.filetools import get_tmp_dir
 from lucterios.framework.auditlog import auditlog
 
-from lucterios.CORE.models import Parameter, PrintModel, LucteriosUser,\
+from lucterios.CORE.models import Parameter, PrintModel, LucteriosUser, \
     LucteriosGroup, Preference
 from lucterios.CORE.parameters import Params
-from lucterios.contacts.models import Individual, LegalEntity, Responsability,\
+from lucterios.contacts.models import Individual, LegalEntity, Responsability, \
     AbstractContact
 from lucterios.documents.models import FolderContainer
 from lucterios.mailing.email_functions import EmailException
@@ -62,6 +61,7 @@ from diacamma.accounting.tools import get_amount_from_format_devise, format_with
 from diacamma.accounting.models import Third, FiscalYear, EntryAccount, EntryLineAccount, ChartsAccount, Journal
 from diacamma.payoff.views import get_html_payment
 from diacamma.payoff.models import PaymentMethod, Supporting, Payoff
+from dns.rdataclass import NONE
 
 
 class Season(LucteriosModel):
@@ -168,7 +168,7 @@ class Season(LucteriosModel):
                                        "ratio": "%d (%.1f%%)" % (criteria_sum, 100 * criteria_sum / total) if with_total else "%d" % criteria_sum})
             for idx in range(4):
                 total_by_criteria[idx] += val_by_criteria[criteria][idx]
-        values_by_criteria.sort(key=lambda val: -1 * val['sum'])
+        values_by_criteria.sort(key=lambda val:-1 * val['sum'])
         if with_total and (len(values_by_criteria) > 0):
             values_by_criteria.append({name: "{[b]}%s{[/b]}" % _('total'),
                                        "MajM": "{[b]}%d{[/b]}" % total_by_criteria[0],
@@ -709,6 +709,7 @@ class Adherent(Individual):
 
     @classmethod
     def get_default_fields(cls):
+
         def fill_default():
             fields = Individual.get_default_fields()
             if Params.getvalue("member-numero"):
@@ -716,6 +717,7 @@ class Adherent(Individual):
             if Params.getvalue("member-licence-enabled"):
                 fields.append('license')
             return fields
+
         wanted_fields_text = Params.getvalue("member-fields")
         fields = []
         if wanted_fields_text != '':
@@ -983,8 +985,8 @@ class Adherent(Individual):
             if Params.getvalue("member-team-enable") == 2:
                 prestation_list = []
                 for license_item in last_subscription.license_set.all():
-                    pesta = Prestation.objects.filter(team_id=license_item.team_id,
-                                                      activity_id=license_item.activity_id).order_by('-article__price')
+                    pesta = Prestation.objects.filter(team_prestation__team_id=license_item.team_id,
+                                                      team_prestation__activity_id=license_item.activity_id).order_by('-article__price')
                     if pesta.count() > 0:
                         prestation_list.append(pesta[0])
                 new_subscription.save(with_bill=False)
@@ -1115,14 +1117,13 @@ class ContactAdherent(AbstractContact):
         proxy = True
 
 
-class Prestation(LucteriosModel):
-    name = models.CharField(_('name'), max_length=50)
-    description = models.TextField(_('description'), null=True, default="")
+class TeamPrestation(LucteriosModel):
     team = models.ForeignKey(Team, verbose_name=_('team'), null=False, on_delete=models.PROTECT)
     activity = models.ForeignKey(Activity, verbose_name=_('activity'), null=False, on_delete=models.PROTECT)
-    article = models.ForeignKey(Article, verbose_name=_('article'), null=False, on_delete=models.CASCADE)
-
     nb_adherent = LucteriosVirtualField(verbose_name=_('nb adherent'), compute_from='get_nb_adherent')
+    article = LucteriosVirtualField(verbose_name=_('article'), compute_from='get_first_article')
+    price = LucteriosVirtualField(verbose_name=_('price'), compute_from='get_first_prices', format_string=lambda: format_with_devise(5))
+    prices = LucteriosVirtualField(verbose_name=_('price'), compute_from='get_prices', format_string=lambda: format_with_devise(5))
 
     def __str__(self):
         if Params.getvalue("member-activite-enable"):
@@ -1130,16 +1131,15 @@ class Prestation(LucteriosModel):
         else:
             return str(self.team)
 
-    def get_text(self):
-        return "%s %s" % (self.__str__(), get_amount_from_format_devise(self.article.price, 7))
-
-    @property
-    def article_query(self):
-        return Article.objects.filter(isdisabled=False, stockable=0)
-
     @property
     def team_query(self):
         return Team.objects.filter(unactive=False)
+    
+    def get_first_article(self):
+        return self.prestation_set.first().article
+    
+    def get_first_prices(self):
+        return self.get_first_article().price
 
     @classmethod
     def get_default_fields(cls):
@@ -1147,7 +1147,7 @@ class Prestation(LucteriosModel):
         if Params.getvalue("member-activite-enable"):
             fields.append((Params.getvalue("member-activite-text"), "activity"))
         fields.append("nb_adherent")
-        fields.append("article.price")
+        fields.append("prices")
         return fields
 
     @classmethod
@@ -1155,7 +1155,6 @@ class Prestation(LucteriosModel):
         fields = ["team"]
         if Params.getvalue("member-activite-enable"):
             fields.append(((Params.getvalue("member-activite-text"), "activity"),))
-        fields.append('article')
         return fields
 
     @classmethod
@@ -1166,7 +1165,7 @@ class Prestation(LucteriosModel):
         else:
             fields.append("team.name")
         fields.append("team.description")
-        fields.append(('article', "article.price"))
+        fields.append(('article', "price"))
         fields.append("adherent_set")
         return fields
 
@@ -1176,7 +1175,10 @@ class Prestation(LucteriosModel):
 
     def get_nb_adherent(self):
         return self.adherent_set.count()
-
+    
+    def get_prices(self):
+        return [prest.article.price for prest in self.prestation_set.all()]
+    
     def merge_objects(self, alias_objects=[]):
         for alias_object in alias_objects:
             for adherent in alias_object.adherent_set:
@@ -1184,13 +1186,6 @@ class Prestation(LucteriosModel):
         LucteriosModel.merge_objects(self, alias_objects=alias_objects)
         for alias_object in alias_objects:
             self.team.merge_objects(alias_object.team)
-#             for license_obj in License.objects.filter(team=alias_object.team):
-#                 new_license, is_new = License.objects.get_or_create(subscription=license_obj.subscription, team=self.team, activity=self.activity)
-#                 if is_new:
-#                     new_license.value = license_obj.value
-#                     new_license.save()
-#                 license_obj.delete()
-#             alias_object.team.delete()
 
     def delete(self, using=None, group_mode=0):
         team = self.team
@@ -1205,11 +1200,57 @@ class Prestation(LucteriosModel):
         if (self.id is None) and (self.activity_id is None):
             self.activity = Activity.objects.all().first()
         return LucteriosModel.save(self, force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
-
+    
     class Meta(object):
         verbose_name = _('prestation')
         verbose_name_plural = _('prestations')
         ordering = ['team__name', 'activity__name']
+        default_permissions = []
+
+    
+class Prestation(LucteriosModel):
+    name = models.CharField(_('name'), default=_("default"), max_length=50)
+    description = models.TextField(_('description'), null=True, default="")  # legacy / not use
+    team = models.ForeignKey(Team, verbose_name=_('team'), null=True, default=None, on_delete=models.PROTECT)  # legacy / not use
+    activity = models.ForeignKey(Activity, verbose_name=_('activity'), null=True, default=None, on_delete=models.PROTECT)  # legacy / not use
+    article = models.ForeignKey(Article, verbose_name=_('article'), null=False, on_delete=models.CASCADE)
+
+    team_prestation = models.ForeignKey(TeamPrestation, verbose_name=_('team prestation'), null=True, default=None, on_delete=models.CASCADE)
+
+    nb_adherent = LucteriosVirtualField(verbose_name=_('nb adherent'), compute_from='get_nb_adherent')
+
+    def __str__(self):
+        text = ''
+        if Params.getvalue("member-activite-enable"):
+            text = "%s [%s]" % (self.team_prestation.team, self.team_prestation.activity)
+        else:
+            text = str(self.team_prestation.team)
+
+        return "%s (%s)" % (text, get_amount_from_format_devise(self.article.price, 7))
+
+    @property
+    def article_query(self):
+        return Article.objects.filter(isdisabled=False, stockable=0)
+
+    @classmethod
+    def get_default_fields(cls):
+        fields = ["name", "article.price"]
+        return fields
+
+    @classmethod
+    def get_edit_fields(cls):
+        fields = ["name", "article.price"]
+        return fields
+
+    @classmethod
+    def get_show_fields(cls):
+        fields = ["name", "article.price"]
+        return fields
+
+    class Meta(object):
+        verbose_name = _('prestation price')
+        verbose_name_plural = _('prestation prices')
+        ordering = ['id']
         default_permissions = []
 
 
@@ -1280,6 +1321,7 @@ class Subscription(LucteriosModel):
         else:
             for presta in self.prestations.all():
                 res.append(str(presta))
+        res.sort()
         return res
 
     @property
@@ -1289,7 +1331,7 @@ class Subscription(LucteriosModel):
     @property
     def prestations_query(self):
         select_list = []
-        for item in Prestation.objects.filter(team__unactive=False):
+        for item in Prestation.objects.filter(team_prestation__team__unactive=False):
             select_list.append((item.id, str(item)))
         return select_list
 
@@ -1319,7 +1361,7 @@ class Subscription(LucteriosModel):
             new_cmt.extend(cmt)
             Detail.create_for_bill(self.bill, art, designation="{[br/]}".join(new_cmt))
         for presta in self.prestations.all():
-            new_cmt = [presta.team.description]
+            new_cmt = [presta.team_prestation.team.description]
             new_cmt.extend(cmt)
             Detail.create_for_bill(self.bill, presta.article, designation="{[br/]}".join(new_cmt))
 
@@ -1374,7 +1416,7 @@ class Subscription(LucteriosModel):
             if self.bill.third.contact.id != self.adherent.id:
                 cmt.append(_("Subscription of '%s'") % str(self.adherent))
             presta = Prestation.objects.get(id=prestation_id)
-            new_cmt = [presta.description]
+            new_cmt = [presta.team_prestation.team.description]
             new_cmt.extend(cmt)
             Detail.create_for_bill(self.bill, presta.article, designation="{[br/]}".join(new_cmt))
         self.save(with_bill=(self.status != self.STATUS_VALID))
@@ -1386,24 +1428,29 @@ class Subscription(LucteriosModel):
             self.prestations.set(Prestation.objects.filter(id__in=new_prestationsid))
             self._save_presta_in_bill(Bill.BILLTYPE_BILL, prestation_id)
 
-    def del_prestation(self, prestation_id):
-        changed = False
+    def del_team_prestation(self, team_prestation_id):
         if self.status != self.STATUS_VALID:
-            if prestation_id in [prest.id for prest in self.prestations.all()]:
+            for prestation_id in [prest.id for prest in self.prestations.all() if prest.team_prestation_id == team_prestation_id]:
                 new_prestations = self.prestations.all().exclude(id=prestation_id)
                 self.prestations.set(new_prestations)
-                changed = True
+                self._save_presta_in_bill(Bill.BILLTYPE_ASSET, prestation_id)
         else:
-            presta = Prestation.objects.get(id=prestation_id)
-            for licence in self.license_set.filter(team=presta.team, activity=presta.activity):
+            teampresta = TeamPrestation.objects.get(id=team_prestation_id)
+            for licence in self.license_set.filter(team=teampresta.team, activity=teampresta.activity):
                 licence.delete()
-                changed = True
-        if changed:
+            prestation_id = teampresta.prestation_set.first().id
             self._save_presta_in_bill(Bill.BILLTYPE_ASSET, prestation_id)
+        return prestation_id
 
-    def swap_prestation(self, old_prestation_id, new_prestation_id):
-        self.del_prestation(old_prestation_id)
-        self.add_prestation(new_prestation_id)
+    def swap_prestation(self, old_teamprestation_id, new_teamprestation_id):
+        old_prestation_id = self.del_team_prestation(old_teamprestation_id)
+        old_prestation = Prestation.objects.get(id=old_prestation_id)
+        new_prestation = Prestation.objects.filter(team_prestation_id=new_teamprestation_id, name=old_prestation.name).first()
+        if new_prestation is None:
+            new_prestation = Prestation.objects.filter(team_prestation_id=new_teamprestation_id, article=old_prestation.article).first()
+        if new_prestation is None:
+            new_prestation = Prestation.objects.filter(team_prestation_id=new_teamprestation_id).first()
+        self.add_prestation(new_prestation.id)
 
     def change_bill(self):
         if (self.subscriptiontype.articles.count() == 0) and (self.prestations.count() == 0) and ((self.bill is None) or (self.bill.detail_set.count() == 0)):
@@ -1457,7 +1504,13 @@ class Subscription(LucteriosModel):
             prestation_list = []
             for prestation_name in rowdata['prestations'].replace(',', ';').split(';'):
                 try:
-                    new_prestation = Prestation.objects.get(name__iexact=prestation_name.strip())
+                    if '|' in prestation_name:
+                        prestation_name, price_name = prestation_name.split('|')
+                        new_prestation = Prestation.objects.filter(team_prestation__team__name__iexact=prestation_name.strip(), name__iexact=price_name.strip()).first()
+                    else:
+                        new_prestation = Prestation.objects.filter(team_prestation__team__name__iexact=prestation_name.strip()).first()
+                    if new_prestation is None:
+                        raise Prestation.DoesNotExist()
                     prestation_list.append(new_prestation)
                 except Prestation.DoesNotExist:
                     if prestation_name.strip() != '':
@@ -1490,7 +1543,7 @@ class Subscription(LucteriosModel):
             if (self.status in (self.STATUS_WAITING, self.STATUS_BUILDING)) or (self.prestations.all().count() > 0):
                 self.license_set.all().delete()
                 for presta in self.prestations.all():
-                    License.objects.create(subscription=self, activity_id=presta.activity_id, team_id=presta.team_id)
+                    License.objects.create(subscription=self, activity_id=presta.team_prestation.activity_id, team_id=presta.team_prestation.team_id)
             if self.status in (self.STATUS_VALID, self.STATUS_CANCEL, self.STATUS_DISBARRED):
                 self.prestations.set([])
 
@@ -1839,6 +1892,7 @@ class TaxReceipt(Supporting):
         return self.payoff_set.last_date_payoff
 
     def get_mode_payoff(self):
+
         def get_mode_text(mode):
             if mode == TaxReceiptPayoffSet.PAYOFF_MODE_FEE:
                 return str(_('waiver of fee'))
@@ -1846,6 +1900,7 @@ class TaxReceipt(Supporting):
                 return str(_('waiver of revenue or produce'))
             else:
                 return get_value_if_choices(mode, field)
+
         if self.id is None:
             return None
         field = Payoff.get_field_by_name('mode')
@@ -1937,8 +1992,10 @@ class CommandManager(object):
                 prestations = []
                 for lic in item.last_subscription.license_set.all():
                     if (Params.getvalue("member-team-enable") == 2):
-                        pesta = Prestation.objects.filter(team_id=lic.team_id,
-                                                          activity_id=lic.activity_id).order_by('-article__price')
+                        if lic.team.unactive:
+                            continue
+                        pesta = Prestation.objects.filter(team_prestation__team_id=lic.team_id,
+                                                          team_prestation__activity_id=lic.activity_id).order_by('-article__price')
                         if pesta.count() > 0:
                             prestations.append(pesta[0].id)
                     else:
@@ -1985,7 +2042,8 @@ class CommandManager(object):
         cmd_value["reduce"] = content_item["reduce"]
         prestations = []
         for presta in Prestation.objects.filter(id__in=content_item["prestations"]):
-            prestations.append(presta.get_text())
+            prestations.append(str(presta))
+        prestations.sort()
         cmd_value["prestations"] = '{[br/]}'.join(prestations)
         return cmd_value
 
@@ -2086,10 +2144,7 @@ def check_report_member(year):
         taxreceipt.get_saved_pdfreport()
 
 
-@Signal.decorate('convertdata')
-def member_convertdata():
-    for subtype in SubscriptionType.objects.filter(order_key__isnull=True).order_by('id'):
-        subtype.save()
+def convert_parameter_team():
     param_team = Parameter.objects.get(name="member-team-enable")
     if param_team.value == 'False':
         param_team.value = '0'
@@ -2100,6 +2155,24 @@ def member_convertdata():
         else:
             param_team.value = '2'
         param_team.save()
+
+        
+def convert_prestation():
+    for prest in Prestation.objects.filter(team_prestation__isnull=True):
+        print("convert_prestation", prest.team, prest.activity, prest.article)
+        prest.team_prestation = TeamPrestation.objects.create(team=prest.team, activity=prest.activity)
+        prest.team_id = None 
+        prest.activity_id = None
+        prest.name = _("default")
+        prest.save()
+
+
+@Signal.decorate('convertdata')
+def member_convertdata():
+    for subtype in SubscriptionType.objects.filter(order_key__isnull=True).order_by('id'):
+        subtype.save()
+    convert_parameter_team()
+    convert_prestation()
 
 
 @Signal.decorate('checkparam')

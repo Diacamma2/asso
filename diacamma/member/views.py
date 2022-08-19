@@ -23,49 +23,46 @@ along with Lucterios.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 from __future__ import unicode_literals
+
 from importlib import import_module
 
-from django.utils.translation import ugettext_lazy as _
-from django.utils import formats
-from django.db.models.functions import Concat, Trim
-from django.db.models import Q, Value
 from django.conf import settings
-
-from lucterios.framework.xferadvance import XferListEditor, TITLE_OK, TITLE_ADD,\
-    TITLE_MODIFY, TITLE_EDIT, TITLE_CANCEL, TITLE_LABEL, TITLE_LISTING,\
-    TITLE_DELETE, TITLE_CLOSE, TITLE_PRINT, XferTransition, TITLE_CREATE,\
-    TITLE_SAVE
-from lucterios.framework.xferadvance import XferAddEditor
-from lucterios.framework.xferadvance import XferShowEditor
-from lucterios.framework.xferadvance import XferDelete
-from lucterios.framework.tools import FORMTYPE_NOMODAL, ActionsManage, MenuManage, \
-    FORMTYPE_REFRESH, CLOSE_NO, SELECT_SINGLE, WrapAction, FORMTYPE_MODAL, \
-    SELECT_MULTI, CLOSE_YES, SELECT_NONE, ifplural
-from lucterios.framework.xfercomponents import XferCompLabelForm, \
-    XferCompCheckList, XferCompButton, XferCompSelect, XferCompDate, \
-    XferCompImage, XferCompEdit, XferCompGrid, XferCompFloat, XferCompCheck
-from lucterios.framework.xfergraphic import XferContainerAcknowledge, XferContainerCustom
-from lucterios.framework.tools import convert_date, same_day_months_after
-from lucterios.framework.error import LucteriosException, IMPORTANT
-from lucterios.framework import signal_and_lock
-
-from lucterios.CORE.xferprint import XferPrintAction
-from lucterios.CORE.xferprint import XferPrintLabel
-from lucterios.CORE.xferprint import XferPrintListing
-from lucterios.CORE.editors import XferSavedCriteriaSearchEditor
-from lucterios.CORE.parameters import Params, notfree_mode_connect
-from lucterios.CORE.models import Preference
-from lucterios.CORE.views import ObjectMerge
-
-from lucterios.contacts.models import Individual, LegalEntity, Responsability, AbstractContact
-from lucterios.contacts.views_contacts import LegalEntityAddModify
+from django.db.models import Q, Value
+from django.db.models.functions import Concat, Trim
+from django.utils import formats
+from django.utils.translation import ugettext_lazy as _
 
 from diacamma.accounting.models import Third
 from diacamma.accounting.tools import format_with_devise
 from diacamma.invoice.models import get_or_create_customer, Bill
-from diacamma.member.models import Adherent, Subscription, Season, Age, Team, Activity, License, DocAdherent, SubscriptionType, CommandManager, Prestation, ContactAdherent
 from diacamma.member.editors import SubscriptionEditor
-
+from diacamma.member.models import Adherent, Subscription, Season, Age, Team, Activity, License, DocAdherent, SubscriptionType, CommandManager, Prestation, TeamPrestation, ContactAdherent
+from lucterios.CORE.editors import XferSavedCriteriaSearchEditor
+from lucterios.CORE.models import Preference
+from lucterios.CORE.parameters import Params, notfree_mode_connect
+from lucterios.CORE.views import ObjectMerge
+from lucterios.CORE.xferprint import XferPrintAction
+from lucterios.CORE.xferprint import XferPrintLabel
+from lucterios.CORE.xferprint import XferPrintListing
+from lucterios.contacts.models import Individual, LegalEntity, Responsability, AbstractContact
+from lucterios.contacts.views_contacts import LegalEntityAddModify
+from lucterios.framework import signal_and_lock
+from lucterios.framework.error import LucteriosException, IMPORTANT
+from lucterios.framework.tools import FORMTYPE_NOMODAL, ActionsManage, MenuManage, \
+    FORMTYPE_REFRESH, CLOSE_NO, SELECT_SINGLE, WrapAction, FORMTYPE_MODAL, \
+    SELECT_MULTI, CLOSE_YES, SELECT_NONE, ifplural
+from lucterios.framework.tools import convert_date, same_day_months_after
+from lucterios.framework.xferadvance import XferAddEditor
+from lucterios.framework.xferadvance import XferDelete
+from lucterios.framework.xferadvance import XferListEditor, TITLE_OK, TITLE_ADD, \
+    TITLE_MODIFY, TITLE_EDIT, TITLE_CANCEL, TITLE_LABEL, TITLE_LISTING, \
+    TITLE_DELETE, TITLE_CLOSE, TITLE_PRINT, XferTransition, TITLE_CREATE, \
+    TITLE_SAVE
+from lucterios.framework.xferadvance import XferShowEditor
+from lucterios.framework.xfercomponents import XferCompLabelForm, \
+    XferCompCheckList, XferCompButton, XferCompSelect, XferCompDate, \
+    XferCompImage, XferCompEdit, XferCompGrid, XferCompFloat, XferCompCheck
+from lucterios.framework.xfergraphic import XferContainerAcknowledge, XferContainerCustom
 
 MenuManage.add_sub("association", None, "diacamma.member/images/association.png", _("Association"), _("Association tools"), 30)
 
@@ -353,8 +350,8 @@ def show_prestationlist(request):
 @MenuManage.describ(show_prestationlist, FORMTYPE_NOMODAL, 'member.actions', _('List of prestations and manage subscribtions associated.'))
 class PrestationList(XferListEditor):
     icon = "adherent.png"
-    model = Prestation
-    field_id = 'prestation'
+    model = TeamPrestation
+    field_id = 'team_prestation'
     caption = _("List prestations")
 
     def fillresponse_header(self):
@@ -385,8 +382,8 @@ class PrestationList(XferListEditor):
 @MenuManage.describ('member.add_subscription')
 class PrestationAddModify(XferAddEditor):
     icon = "adherent.png"
-    model = Prestation
-    field_id = 'prestation'
+    model = TeamPrestation
+    field_id = 'team_prestation'
     caption_add = _("Add prestation")
     caption_modify = _("Modify prestation")
 
@@ -395,8 +392,8 @@ class PrestationAddModify(XferAddEditor):
 @MenuManage.describ('member.delete_subscription')
 class PrestationDel(XferDelete):
     icon = "adherent.png"
-    model = Prestation
-    field_id = 'prestation'
+    model = TeamPrestation
+    field_id = 'team_prestation'
     caption = _("Delete prestation")
 
     def fillresponse(self):
@@ -418,7 +415,7 @@ class PrestationDel(XferDelete):
             sel.set_select([(0, _('disable %s') % Params.getvalue("member-team-text").lower()),
                             (1, _('delete %s') % Params.getvalue("member-team-text").lower()),
                             (2, _('let %s') % Params.getvalue("member-team-text").lower())])
-            sel.set_location(1, 0)
+            sel.set_location(1, 1)
             sel.set_value(0)
             sel.description = _('%s action') % Params.getvalue("member-team-text").lower()
             dlg.add_component(sel)
@@ -430,8 +427,8 @@ class PrestationDel(XferDelete):
 @MenuManage.describ('member.change_subscription')
 class PrestationShow(XferShowEditor):
     icon = "adherent.png"
-    model = Prestation
-    field_id = 'prestation'
+    model = TeamPrestation
+    field_id = 'team_prestation'
     caption = _("Show prestation")
 
     def _add_listing(self):
@@ -459,8 +456,8 @@ class PrestationShow(XferShowEditor):
 @MenuManage.describ('member.add_subscription')
 class PrestationSwap(XferContainerAcknowledge):
     icon = "adherent.png"
-    model = Prestation
-    field_id = 'prestation'
+    model = TeamPrestation
+    field_id = 'team_prestation'
     caption = _("Swap prestation")
 
     def _swap_gui(self):
@@ -516,8 +513,8 @@ class PrestationSwap(XferContainerAcknowledge):
 @MenuManage.describ('member.add_subscription')
 class PrestationSplit(XferContainerAcknowledge):
     icon = "adherent.png"
-    model = Prestation
-    field_id = 'prestation'
+    model = TeamPrestation
+    field_id = 'team_prestation'
     caption_add = _("Split prestation")
 
     def _split_prestation(self):
@@ -525,9 +522,10 @@ class PrestationSplit(XferContainerAcknowledge):
         group_description = self.getparam('description', '')
         activity = self.getparam('activity', Activity.objects.all().first().id)
         article = self.getparam('article', 0)
-        new_prestation = Prestation.objects.create(team=Team.objects.create(name=group_name, description=group_description, unactive=False),
-                                                   activity_id=activity, article_id=article)
-        self.redirect_action(PrestationSwap.get_action(), modal=FORMTYPE_MODAL, close=CLOSE_YES, params={'prestation': "%d;%d" % (self.item.id, new_prestation.id)})
+        new_prestation = TeamPrestation.objects.create(team=Team.objects.create(name=group_name, description=group_description, unactive=False),
+                                                   activity_id=activity)
+        Prestation.objects.create(team_prestation=new_prestation, article_id=article)
+        self.redirect_action(PrestationSwap.get_action(), modal=FORMTYPE_MODAL, close=CLOSE_YES, params={'team_prestation': "%d;%d" % (self.item.id, new_prestation.id)})
 
     def _split_gui(self):
         dlg = self.create_custom(self.model)
@@ -559,15 +557,15 @@ class AdherentPrestationDel(XferDelete):
     field_id = 'adherent'
     caption = _("Delete prestation")
 
-    def fillresponse(self, prestation=0):
-        self.model = Prestation
+    def fillresponse(self, team_prestation=0):
+        self.model = TeamPrestation
         if self.confirme(ifplural(len(self.items), _("Do you want delete this %(name)s ?") % {'name': self.model._meta.verbose_name},
                                   _("Do you want delete those %(nb)s %(name)s ?") % {'nb': len(self.items), 'name': self.model._meta.verbose_name_plural})):
             for item in self.items:
                 subscription = item.current_subscription
                 if subscription is None:
                     raise LucteriosException(IMPORTANT, _("no subscription editable"))
-                subscription.del_prestation(prestation)
+                subscription.del_team_prestation(team_prestation)
 
 
 @MenuManage.describ('member.add_subscription')
@@ -620,13 +618,16 @@ class AdherentPrestationSave(XferContainerAcknowledge):
                 raise LucteriosException(IMPORTANT, _("no subscription editable"))
             subscription.add_prestation(prestation)
 
-    def fillresponse(self, prestation=0):
+    def fillresponse(self, team_prestation=0, prestation=0):
+        teampresta = TeamPrestation.objects.get(id=team_prestation)
         if self.getparam("NEW_SUB") == 'YES':
             for item in self.items:
                 item.date_ref = None
                 if item.current_subscription is None:
                     self._create_subscription(item)
         no_sub_list = self._get_no_subscriptors()
+        if prestation == 0: 
+            prestation = teampresta.prestation_set.first().id
         if len(no_sub_list) == 0:
             self._add_prestations(prestation)
         else:
@@ -924,7 +925,7 @@ class AdherentCommandModify(XferContainerAcknowledge):
                 elif fname == "prestations":
                     sel = XferCompCheckList(fname)
                     sel.simple = 2
-                    sel.set_select_query(Prestation.objects.filter(team__unactive=False))
+                    sel.set_select_query(Prestation.objects.filter(team_prestation__team__unactive=False))
                     sel.set_value(cmd_item[fname])
                     sel.set_location(1, row)
                     sel.description = ftitle
@@ -1266,14 +1267,16 @@ class AdherentStatistic(XferContainerCustom):
     field_id = 'adherent'
     caption = _("Statistic")
     readonly = True
-    methods_allowed = ('GET', )
+    methods_allowed = ('GET',)
 
     def convert_stat_values(self, old_stat_values):
+
         def remove_b(value):
             if isinstance(value, str) and value.startswith('{[b]}'):
                 return int(value[5:-6])
             else:
                 return int(value)
+
         if not Params.getvalue("member-birth"):
             maj_woman = old_stat_values["MajW"]
             maj_man = old_stat_values["MajM"]
