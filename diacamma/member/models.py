@@ -1231,6 +1231,9 @@ class Prestation(LucteriosModel):
     def get_article_price(self):
         return "%s (%s)" % (self.article, get_amount_from_format_devise(self.article.price, 7))
 
+    def get_name_price(self):
+        return "%s (%s)" % (self.name, get_amount_from_format_devise(self.article.price, 7))
+
     @property
     def article_query(self):
         return Article.objects.filter(isdisabled=False, stockable=0)

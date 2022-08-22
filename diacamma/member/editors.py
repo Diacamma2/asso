@@ -349,6 +349,20 @@ class LicenseEditor(LucteriosEditor):
             xfer.params['activity'] = default_act.id
 
 
+class PrestationEditor(LucteriosEditor):
+
+    def edit(self, xfer):
+        article_comp = xfer.get_components('article')
+        btn = XferCompButton("addarticle")
+        btn.set_location(article_comp.col + article_comp.colspan, article_comp.row)
+        btn.set_is_mini(True)
+        btn.set_action(xfer.request, ActionsManage.get_action_url(Article.get_long_name(), 'AddModify', xfer), modal=FORMTYPE_MODAL, close=CLOSE_NO, params={'article': NULL_VALUE})
+        xfer.add_component(btn)
+        if btn.action is not None:
+            name_comp = xfer.get_components('name')
+            name_comp.colspan = 2
+
+
 class TeamPrestationEditor(LucteriosEditor):
 
     def before_save(self, xfer):
@@ -408,7 +422,7 @@ class TeamPrestationEditor(LucteriosEditor):
                     del xfer.params[field_to_del]
       
         multiprice = xfer.getparam('multiprice', False)
-        if (self.item.id is not None) and ((self.item.prestation_set.count() > 1) or (multiprice is True)):    
+        if (self.item.id is not None) and ((self.item.prestation_set.count() > 1) or (multiprice is True)): 
             xfer.fill_from_model(1, 10, True, desc_fields=['prestation_set'])
             grid = xfer.get_components('prestation')
             grid.no_pager = True
@@ -445,6 +459,7 @@ class TeamPrestationEditor(LucteriosEditor):
             lbl_title = XferCompLabelForm('prices_title')
             lbl_title.set_location(article_comp.col, row)
             lbl_title.set_value(_('prices'))
+            lbl_title.set_bold()
             xfer.add_component(lbl_title)            
             row += 1
             for prestation in self.item.prestation_set.all():
@@ -459,6 +474,7 @@ class TeamPrestationEditor(LucteriosEditor):
                 lbl_price.description = '     '
                 xfer.add_component(lbl_price)
                 row += 1
+
 
 class TaxReceiptEditor(LucteriosEditor):
 

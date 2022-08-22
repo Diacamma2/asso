@@ -604,7 +604,7 @@ class AdherentPrestationSave(XferContainerAcknowledge):
                 no_sub_list.append(str(item))
         return no_sub_list
 
-    def _select_new_subscription(self, no_sub_list):
+    def _select_new_subscription(self, no_sub_list, teampresta):
         dlg = self.create_custom(Subscription)
         dlg.item.adherent = self.items[0]
         img = XferCompImage('img')
@@ -615,15 +615,23 @@ class AdherentPrestationSave(XferContainerAcknowledge):
         lab.set_value_as_title(self.caption)
         lab.set_location(1, 0, 2)
         dlg.add_component(lab)
-        lab = XferCompLabelForm('no_subscription')
-        lab.set_value(no_sub_list)
-        lab.set_location(1, 1)
-        lab.description = _('Adherent without subscription')
-        dlg.add_component(lab)
-        dlg.fill_from_model(1, 2, False)
-        dlg.remove_component("adherent")
-        dlg.change_to_readonly('season')
-        dlg.remove_component("prestations")
+        if len(no_sub_list) > 0:
+            lab = XferCompLabelForm('no_subscription')
+            lab.set_value(no_sub_list)
+            lab.set_location(1, 1)
+            lab.description = _('Adherent without subscription')
+            dlg.add_component(lab)
+            dlg.fill_from_model(1, 2, False)
+            dlg.remove_component("adherent")
+            dlg.change_to_readonly('season')
+            dlg.remove_component("prestations")
+        if teampresta.prestation_set.count() > 1:
+            presta = XferCompSelect('prestation')
+            presta.set_location(1, 1)
+            presta.description = _('prestation price')
+            presta.set_needed(True)
+            presta.set_select([(prestation.id, prestation.get_name_price()) for prestation in teampresta.prestation_set.all()])
+            dlg.add_component(presta)
         dlg.add_action(self.return_action(TITLE_OK, "images/ok.png"), close=CLOSE_YES, params={'NEW_SUB': 'YES'})
         dlg.add_action(WrapAction(TITLE_CANCEL, 'images/cancel.png'))
 
@@ -647,12 +655,12 @@ class AdherentPrestationSave(XferContainerAcknowledge):
                 if item.current_subscription is None:
                     self._create_subscription(item)
         no_sub_list = self._get_no_subscriptors()
-        if prestation == 0: 
-            prestation = teampresta.prestation_set.first().id
-        if len(no_sub_list) == 0:
+        if (len(no_sub_list) == 0) and ((prestation != 0) or (teampresta.prestation_set.count() == 1)):
+            if prestation == 0: 
+                prestation = teampresta.prestation_set.first().id
             self._add_prestations(prestation)
         else:
-            self._select_new_subscription(no_sub_list)
+            self._select_new_subscription(no_sub_list, teampresta)
 
 
 @MenuManage.describ('member.add_subscription')
