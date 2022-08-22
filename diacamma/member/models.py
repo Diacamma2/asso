@@ -1189,6 +1189,8 @@ class TeamPrestation(LucteriosModel):
 
     def delete(self, using=None, group_mode=0):
         team = self.team
+        for prestation in self.prestation_set.all():
+            prestation.delete(using=using)
         LucteriosModel.delete(self, using=using)
         if group_mode == 0:
             team.unactive = True
@@ -1216,8 +1218,6 @@ class Prestation(LucteriosModel):
     article = models.ForeignKey(Article, verbose_name=_('article'), null=False, on_delete=models.CASCADE)
 
     team_prestation = models.ForeignKey(TeamPrestation, verbose_name=_('team prestation'), null=True, default=None, on_delete=models.CASCADE)
-
-    nb_adherent = LucteriosVirtualField(verbose_name=_('nb adherent'), compute_from='get_nb_adherent')
 
     def __str__(self):
         text = ''
