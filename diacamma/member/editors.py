@@ -31,7 +31,7 @@ from django.utils import formats
 
 from lucterios.framework.editors import LucteriosEditor
 from lucterios.framework.xfercomponents import XferCompLabelForm, XferCompDate, XferCompFloat, \
-    XferCompSelect, XferCompCheck, XferCompButton
+    XferCompSelect, XferCompCheck, XferCompButton, XferCompGrid
 from lucterios.framework.error import LucteriosException, IMPORTANT
 from lucterios.framework.tools import CLOSE_NO, FORMTYPE_REFRESH, ActionsManage, get_icon_path, \
     FORMTYPE_MODAL, CLOSE_YES, SELECT_SINGLE
@@ -406,21 +406,59 @@ class TeamPrestationEditor(LucteriosEditor):
             for field_to_del in ['name', 'description']:
                 if field_to_del in xfer.params:
                     del xfer.params[field_to_del]
-          
-        xfer.model = Prestation      
-        xfer.item = xfer.item.prestation_set.first() if xfer.item.id is not None else Prestation()
-        xfer.fill_from_model(1, 10, False, desc_fields=['article'])
-        article_comp = xfer.get_components('article')
-        if Params.getvalue("member-activite-enable"):
-            xfer.get_components('activity').colspan = 2
-        btn = XferCompButton("addarticle")
-        btn.set_location(article_comp.col + article_comp.colspan, article_comp.row)
-        btn.set_is_mini(True)
-        btn.set_action(xfer.request, ActionsManage.get_action_url(Article.get_long_name(), 'AddModify', xfer), modal=FORMTYPE_MODAL, close=CLOSE_NO, params={'article': NULL_VALUE})
-        xfer.add_component(btn)
-        if btn.action is None:
-            article_comp.colspan = 2
+      
+        multiprice = xfer.getparam('multiprice', False)
+        if (self.item.id is not None) and ((self.item.prestation_set.count() > 1) or (multiprice is True)):    
+            xfer.fill_from_model(1, 10, True, desc_fields=['prestation_set'])
+            grid = xfer.get_components('prestation')
+            grid.no_pager = True
+        else:
+            xfer.model = Prestation      
+            xfer.item = xfer.item.prestation_set.first() if xfer.item.id is not None else Prestation()
+            xfer.fill_from_model(1, 10, False, desc_fields=['article'])
+            article_comp = xfer.get_components('article')
+            if Params.getvalue("member-activite-enable"):
+                xfer.get_components('activity').colspan = 2
+            btn = XferCompButton("addarticle")
+            btn.set_location(article_comp.col + article_comp.colspan, article_comp.row)
+            btn.set_is_mini(True)
+            btn.set_action(xfer.request, ActionsManage.get_action_url(Article.get_long_name(), 'AddModify', xfer), modal=FORMTYPE_MODAL, close=CLOSE_NO, params={'article': NULL_VALUE})
+            xfer.add_component(btn)
+            if btn.action is None:
+                article_comp.colspan = 2
+            if self.item.id is not None:
+                check = XferCompCheck('multiprice')
+                check.set_location(article_comp.col, article_comp.row + 1, 2)
+                check.set_value(multiprice)
+                check.description = _('Use multi-prices')
+                check.set_action(xfer.request, xfer.return_action(), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
+                xfer.add_component(check)
 
+    def show(self, xfer):
+        nb_prestations = self.item.prestation_set.count()
+        if nb_prestations > 1:
+            article_comp = xfer.get_components('article')
+            xfer.move_components('adherent', 0, nb_prestations + 5)
+            xfer.remove_component('article')
+            xfer.remove_component('price')
+            row = article_comp.row + 1
+            lbl_title = XferCompLabelForm('prices_title')
+            lbl_title.set_location(article_comp.col, row)
+            lbl_title.set_value(_('prices'))
+            xfer.add_component(lbl_title)            
+            row += 1
+            for prestation in self.item.prestation_set.all():
+                lbl_name = XferCompLabelForm('name_%d' % prestation.id)
+                lbl_name.set_location(article_comp.col, row)
+                lbl_name.set_value(prestation.name)
+                lbl_name.description = '     '
+                xfer.add_component(lbl_name)
+                lbl_price = XferCompLabelForm('price_%d' % prestation.id)
+                lbl_price.set_location(article_comp.col + 1, row)
+                lbl_price.set_value(prestation.get_article_price())
+                lbl_price.description = '     '
+                xfer.add_component(lbl_price)
+                row += 1
 
 class TaxReceiptEditor(LucteriosEditor):
 

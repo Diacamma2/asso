@@ -63,6 +63,7 @@ from lucterios.framework.xfercomponents import XferCompLabelForm, \
     XferCompCheckList, XferCompButton, XferCompSelect, XferCompDate, \
     XferCompImage, XferCompEdit, XferCompGrid, XferCompFloat, XferCompCheck
 from lucterios.framework.xfergraphic import XferContainerAcknowledge, XferContainerCustom
+from django.views.decorators.http import condition
 
 MenuManage.add_sub("association", None, "diacamma.member/images/association.png", _("Association"), _("Association tools"), 30)
 
@@ -421,6 +422,26 @@ class PrestationDel(XferDelete):
             dlg.add_component(sel)
             dlg.add_action(self.return_action(TITLE_OK, "images/ok.png"), close=CLOSE_YES, params={'CONFIRME': 'YES'})
             dlg.add_action(WrapAction(TITLE_CANCEL, 'images/cancel.png'))
+
+
+@ActionsManage.affect_grid(TITLE_CREATE, "images/new.png")
+@ActionsManage.affect_grid(TITLE_MODIFY, "images/edit.png", unique=SELECT_SINGLE)
+@MenuManage.describ('member.add_subscription')
+class PrestationPriceAddModify(XferAddEditor):
+    icon = "adherent.png"
+    model = Prestation
+    field_id = 'prestation'
+    caption_add = _("Add price prestation")
+    caption_modify = _("Modify price prestation")
+
+
+@ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", unique=SELECT_MULTI, condition=lambda xfer, gridname='': xfer.item.prestation_set.count() > 1)
+@MenuManage.describ('member.delete_subscription')
+class PrestationPriceDel(XferDelete):
+    icon = "adherent.png"
+    model = Prestation
+    field_id = 'prestation'
+    caption = _("Delete price prestation")
 
 
 @ActionsManage.affect_grid(TITLE_EDIT, "images/show.png", unique=SELECT_SINGLE)

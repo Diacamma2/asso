@@ -1228,23 +1228,26 @@ class Prestation(LucteriosModel):
 
         return "%s (%s)" % (text, get_amount_from_format_devise(self.article.price, 7))
 
+    def get_article_price(self):
+        return "%s (%s)" % (self.article, get_amount_from_format_devise(self.article.price, 7))
+
     @property
     def article_query(self):
         return Article.objects.filter(isdisabled=False, stockable=0)
 
     @classmethod
     def get_default_fields(cls):
-        fields = ["name", "article.price"]
+        fields = ["name", "article", "article.price"]
         return fields
 
     @classmethod
     def get_edit_fields(cls):
-        fields = ["name", "article.price"]
+        fields = ["name", "article"]
         return fields
 
     @classmethod
     def get_show_fields(cls):
-        fields = ["name", "article.price"]
+        fields = ["name", "article", "article.price"]
         return fields
 
     class Meta(object):
