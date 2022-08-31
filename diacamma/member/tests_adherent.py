@@ -3111,7 +3111,7 @@ class AdherentTest(BaseAdherentTest):
         self.factory.xfer = PrestationSplit()
         self.calljson('/diacamma.member/prestationSplit', {'team_prestation': '1'}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'prestationSplit')
-        self.assert_count_equal('', 9)
+        self.assert_count_equal('', 8)
         self.assert_json_equal('EDIT', 'team_name', "team3")
         self.assert_json_equal('MEMO', 'team_description', "team N°3{[br/]}The newbies")
         self.assert_json_equal('SELECT', 'activity', 2)
