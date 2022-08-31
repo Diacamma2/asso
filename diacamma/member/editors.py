@@ -349,26 +349,40 @@ class LicenseEditor(LucteriosEditor):
             xfer.params['activity'] = default_act.id
 
 
+def append_articles_button(xfer):
+    article_comp = xfer.get_components('article')
+    article_comp.set_action(xfer.request, xfer.return_action(), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
+    if xfer.getparam("article"):
+        article_comp.value = xfer.getparam("article", 0)
+    btn = XferCompButton("showarticle")
+    btn.set_location(article_comp.col + article_comp.colspan, article_comp.row)
+    btn.set_is_mini(True)
+    btn.set_action(xfer.request, ActionsManage.get_action_url(Article.get_long_name(), 'Show', xfer), modal=FORMTYPE_MODAL, close=CLOSE_NO, params={'article': article_comp.value})
+    xfer.add_component(btn)
+    btn = XferCompButton("addarticle")
+    btn.set_location(article_comp.col + article_comp.colspan + 1, article_comp.row)
+    btn.set_is_mini(True)
+    btn.set_action(xfer.request, ActionsManage.get_action_url(Article.get_long_name(), 'AddModify', xfer), modal=FORMTYPE_MODAL, close=CLOSE_NO, params={'article': NULL_VALUE})
+    xfer.add_component(btn)
+    if btn.action is None:
+        article_comp.colspan = 3
+    return article_comp
+
+
 class PrestationEditor(LucteriosEditor):
 
     def edit(self, xfer):
-        article_comp = xfer.get_components('article')
-        btn = XferCompButton("addarticle")
-        btn.set_location(article_comp.col + article_comp.colspan, article_comp.row)
-        btn.set_is_mini(True)
-        btn.set_action(xfer.request, ActionsManage.get_action_url(Article.get_long_name(), 'AddModify', xfer), modal=FORMTYPE_MODAL, close=CLOSE_NO, params={'article': NULL_VALUE})
-        xfer.add_component(btn)
-        if btn.action is not None:
-            name_comp = xfer.get_components('name')
-            name_comp.colspan = 2
+        append_articles_button(xfer)
+        name_comp = xfer.get_components('name')
+        name_comp.colspan = 3
 
 
 class TeamPrestationEditor(LucteriosEditor):
 
     def before_save(self, xfer):
-        if ('name' in xfer.params) and ('description' in xfer.params):
-            group_name = xfer.getparam('name', '')
-            group_description = xfer.getparam('description', '')
+        if ('team_name' in xfer.params) and ('team_description' in xfer.params):
+            group_name = xfer.getparam('team_name', '')
+            group_description = xfer.getparam('team_description', '')
             if self.item.id is None:
                 self.item.team = Team.objects.create(name=group_name, description=group_description, unactive=False)
             else:
@@ -378,7 +392,7 @@ class TeamPrestationEditor(LucteriosEditor):
             if 'team' in xfer.params:
                 del xfer.params['team']
         return
-    
+
     def saving(self, xfer):
         articleid = xfer.getparam('article', 0)
         if articleid != 0:
@@ -399,7 +413,7 @@ class TeamPrestationEditor(LucteriosEditor):
             sel.set_needed(True)
             sel.set_select([(0, _('new %s') % Params.getvalue("member-team-text").lower()),
                             (1, _('select old %s') % Params.getvalue("member-team-text").lower())])
-            sel.set_location(team_col, team_row, 2)
+            sel.set_location(team_col, team_row, 3)
             sel.set_value(new_group)
             sel.description = _('addon mode')
             sel.set_action(xfer.request, xfer.return_action(), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
@@ -410,39 +424,32 @@ class TeamPrestationEditor(LucteriosEditor):
             xfer.remove_component('team')
             xfer.model = Team
             xfer.item = self.item.team if self.item.id is not None else Team()
-            xfer.filltab_from_model(team_col, team_row + 1, False, ['name', 'description'])
+            xfer.filltab_from_model(team_col, team_row + 1, False, ['name', 'description'], prefix='team_')
             xfer.model = self.item.__class__
             xfer.item = self.item
-            for field_name in ['name', 'description']:
-                xfer.get_components(field_name).colspan = 2
+            for field_name in ['team_name', 'team_description']:
+                xfer.get_components(field_name).colspan = 3
         else:
-            xfer.get_components('team').colspan = 2
-            for field_to_del in ['name', 'description']:
+            xfer.get_components('team').colspan = 3
+            for field_to_del in ['team_name', 'team_description']:
                 if field_to_del in xfer.params:
                     del xfer.params[field_to_del]
-      
+
         multiprice = xfer.getparam('multiprice', False)
-        if (self.item.id is not None) and ((self.item.prestation_set.count() > 1) or (multiprice is True)): 
+        if (self.item.id is not None) and ((self.item.prestation_set.count() > 1) or (multiprice is True)):
             xfer.fill_from_model(1, 10, True, desc_fields=['prestation_set'])
             grid = xfer.get_components('prestation')
             grid.no_pager = True
         else:
-            xfer.model = Prestation      
+            xfer.model = Prestation
             xfer.item = xfer.item.prestation_set.first() if xfer.item.id is not None else Prestation()
             xfer.fill_from_model(1, 10, False, desc_fields=['article'])
-            article_comp = xfer.get_components('article')
+            article_comp = append_articles_button(xfer)
             if Params.getvalue("member-activite-enable"):
-                xfer.get_components('activity').colspan = 2
-            btn = XferCompButton("addarticle")
-            btn.set_location(article_comp.col + article_comp.colspan, article_comp.row)
-            btn.set_is_mini(True)
-            btn.set_action(xfer.request, ActionsManage.get_action_url(Article.get_long_name(), 'AddModify', xfer), modal=FORMTYPE_MODAL, close=CLOSE_NO, params={'article': NULL_VALUE})
-            xfer.add_component(btn)
-            if btn.action is None:
-                article_comp.colspan = 2
+                xfer.get_components('activity').colspan = article_comp.colspan
             if self.item.id is not None:
                 check = XferCompCheck('multiprice')
-                check.set_location(article_comp.col, article_comp.row + 1, 2)
+                check.set_location(article_comp.col, article_comp.row + 1, 3)
                 check.set_value(multiprice)
                 check.description = _('Use multi-prices')
                 check.set_action(xfer.request, xfer.return_action(), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
@@ -460,7 +467,7 @@ class TeamPrestationEditor(LucteriosEditor):
             lbl_title.set_location(article_comp.col, row)
             lbl_title.set_value(_('prices'))
             lbl_title.set_bold()
-            xfer.add_component(lbl_title)            
+            xfer.add_component(lbl_title)
             row += 1
             for prestation in self.item.prestation_set.all():
                 lbl_name = XferCompLabelForm('name_%d' % prestation.id)

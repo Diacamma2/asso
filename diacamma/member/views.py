@@ -539,13 +539,17 @@ class PrestationSplit(XferContainerAcknowledge):
     caption_add = _("Split prestation")
 
     def _split_prestation(self):
-        group_name = self.getparam('name', '')
-        group_description = self.getparam('description', '')
+        group_name = self.getparam('team_name', '')
+        group_description = self.getparam('team_description', '')
         activity = self.getparam('activity', Activity.objects.all().first().id)
         article = self.getparam('article', 0)
         new_prestation = TeamPrestation.objects.create(team=Team.objects.create(name=group_name, description=group_description, unactive=False),
                                                        activity_id=activity)
-        Prestation.objects.create(team_prestation=new_prestation, article_id=article)
+        if article != 0:
+            Prestation.objects.create(team_prestation=new_prestation, article_id=article)
+        else:
+            for old_presta in self.item.prestation_set.all():
+                Prestation.objects.create(team_prestation=new_prestation, article_id=old_presta.article_id)
         self.redirect_action(PrestationSwap.get_action(), modal=FORMTYPE_MODAL, close=CLOSE_YES, params={'team_prestation': "%d;%d" % (self.item.id, new_prestation.id)})
 
     def _split_gui(self):
@@ -553,6 +557,10 @@ class PrestationSplit(XferContainerAcknowledge):
         dlg.item = self.item
         dlg.fill_from_model(1, 0, False)
         dlg.move(0, 0, 1)
+        grid = dlg.get_components('prestation')
+        if grid is not None:
+            grid.actions = []
+        dlg.remove_component('multiprice')
         img = XferCompImage('img')
         img.set_value(self.icon_path())
         img.set_location(0, 0, 1, 6)
