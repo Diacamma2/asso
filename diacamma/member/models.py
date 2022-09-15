@@ -167,7 +167,7 @@ class Season(LucteriosModel):
                                        "ratio": "%d (%.1f%%)" % (criteria_sum, 100 * criteria_sum / total) if with_total else "%d" % criteria_sum})
             for idx in range(4):
                 total_by_criteria[idx] += val_by_criteria[criteria][idx]
-        values_by_criteria.sort(key=lambda val:-1 * val['sum'])
+        values_by_criteria.sort(key=lambda val: -1 * val['sum'])
         if with_total and (len(values_by_criteria) > 0):
             values_by_criteria.append({name: "{[b]}%s{[/b]}" % _('total'),
                                        "MajM": "{[b]}%d{[/b]}" % total_by_criteria[0],
@@ -1133,18 +1133,20 @@ class TeamPrestation(LucteriosModel):
     @property
     def team_query(self):
         return Team.objects.filter(unactive=False)
-    
+
     def get_first_article(self):
         return self.prestation_set.first().article
-    
+
     def get_first_prices(self):
         return self.get_first_article().price
 
     @classmethod
     def get_default_fields(cls):
-        fields = ["team.name", "team.description"]
+        fields = []
         if Params.getvalue("member-activite-enable"):
             fields.append((Params.getvalue("member-activite-text"), "activity"))
+        fields.append("team.name")
+        fields.append("team.description")
         fields.append("nb_adherent")
         fields.append("prices")
         return fields
@@ -1174,10 +1176,10 @@ class TeamPrestation(LucteriosModel):
 
     def get_nb_adherent(self):
         return self.adherent_set.count()
-    
+
     def get_prices(self):
         return [prest.article.price for prest in self.prestation_set.all()]
-    
+
     def merge_objects(self, alias_objects=[]):
         for alias_object in alias_objects:
             for adherent in alias_object.adherent_set:
@@ -1201,14 +1203,14 @@ class TeamPrestation(LucteriosModel):
         if (self.id is None) and (self.activity_id is None):
             self.activity = Activity.objects.all().first()
         return LucteriosModel.save(self, force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
-    
+
     class Meta(object):
         verbose_name = _('prestation')
         verbose_name_plural = _('prestations')
         ordering = ['team__name', 'activity__name']
         default_permissions = []
 
-    
+
 class Prestation(LucteriosModel):
     name = models.CharField(_('name'), default=_("default"), max_length=50)
     description = models.TextField(_('description'), null=True, default="")  # legacy / not use
@@ -2161,12 +2163,12 @@ def convert_parameter_team():
             param_team.value = '2'
         param_team.save()
 
-        
+
 def convert_prestation():
     for prest in Prestation.objects.filter(team_prestation__isnull=True):
         print("convert_prestation", prest.team, prest.activity, prest.article)
         prest.team_prestation = TeamPrestation.objects.create(team=prest.team, activity=prest.activity)
-        prest.team_id = None 
+        prest.team_id = None
         prest.activity_id = None
         prest.name = _("default")
         prest.save()

@@ -539,13 +539,17 @@ class PrestationSplit(XferContainerAcknowledge):
     caption_add = _("Split prestation")
 
     def _split_prestation(self):
-        group_name = self.getparam('name', '')
-        group_description = self.getparam('description', '')
+        group_name = self.getparam('team_name', '')
+        group_description = self.getparam('team_description', '')
         activity = self.getparam('activity', Activity.objects.all().first().id)
         article = self.getparam('article', 0)
         new_prestation = TeamPrestation.objects.create(team=Team.objects.create(name=group_name, description=group_description, unactive=False),
-                                                   activity_id=activity)
-        Prestation.objects.create(team_prestation=new_prestation, article_id=article)
+                                                       activity_id=activity)
+        if article != 0:
+            Prestation.objects.create(team_prestation=new_prestation, article_id=article)
+        else:
+            for old_presta in self.item.prestation_set.all():
+                Prestation.objects.create(team_prestation=new_prestation, article_id=old_presta.article_id)
         self.redirect_action(PrestationSwap.get_action(), modal=FORMTYPE_MODAL, close=CLOSE_YES, params={'team_prestation': "%d;%d" % (self.item.id, new_prestation.id)})
 
     def _split_gui(self):
@@ -553,6 +557,10 @@ class PrestationSplit(XferContainerAcknowledge):
         dlg.item = self.item
         dlg.fill_from_model(1, 0, False)
         dlg.move(0, 0, 1)
+        grid = dlg.get_components('prestation')
+        if grid is not None:
+            grid.actions = []
+        dlg.remove_component('multiprice')
         img = XferCompImage('img')
         img.set_value(self.icon_path())
         img.set_location(0, 0, 1, 6)
@@ -627,10 +635,17 @@ class AdherentPrestationSave(XferContainerAcknowledge):
             dlg.remove_component("prestations")
         if teampresta.prestation_set.count() > 1:
             presta = XferCompSelect('prestation')
-            presta.set_location(1, 1)
+            presta.set_location(1, 10)
             presta.description = _('prestation price')
             presta.set_needed(True)
             presta.set_select([(prestation.id, prestation.get_name_price()) for prestation in teampresta.prestation_set.all()])
+            dlg.add_component(presta)
+        else:
+            prestation = teampresta.prestation_set.first()
+            presta = XferCompLabelForm('prestation_lbl')
+            presta.set_location(1, 10)
+            presta.description = _('prestation price')
+            presta.set_value(prestation.get_name_price())
             dlg.add_component(presta)
         dlg.add_action(self.return_action(TITLE_OK, "images/ok.png"), close=CLOSE_YES, params={'NEW_SUB': 'YES'})
         dlg.add_action(WrapAction(TITLE_CANCEL, 'images/cancel.png'))
@@ -656,7 +671,7 @@ class AdherentPrestationSave(XferContainerAcknowledge):
                     self._create_subscription(item)
         no_sub_list = self._get_no_subscriptors()
         if (len(no_sub_list) == 0) and ((prestation != 0) or (teampresta.prestation_set.count() == 1)):
-            if prestation == 0: 
+            if prestation == 0:
                 prestation = teampresta.prestation_set.first().id
             self._add_prestations(prestation)
         else:
