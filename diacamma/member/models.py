@@ -61,7 +61,6 @@ from diacamma.accounting.tools import get_amount_from_format_devise, format_with
 from diacamma.accounting.models import Third, FiscalYear, EntryAccount, EntryLineAccount, ChartsAccount, Journal
 from diacamma.payoff.views import get_html_payment
 from diacamma.payoff.models import PaymentMethod, Supporting, Payoff
-from dns.rdataclass import NONE
 
 
 class Season(LucteriosModel):
@@ -1658,7 +1657,7 @@ class Subscription(LucteriosModel):
 
 class DocAdherent(LucteriosModel):
     subscription = models.ForeignKey(Subscription, verbose_name=_('subscription'), null=False, default=None, db_index=True, on_delete=models.CASCADE)
-    document = models.ForeignKey(Document, verbose_name=_('document'), null=False, default=None, db_index=True, on_delete=models.PROTECT)
+    document = models.ForeignKey(Document, verbose_name=_('document'), null=False, default=None, db_index=True, on_delete=models.CASCADE)
     value = models.BooleanField(verbose_name=_('value'), default=False)
 
     def __str__(self):
