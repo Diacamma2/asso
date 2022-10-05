@@ -50,7 +50,7 @@ from lucterios.framework import signal_and_lock
 from lucterios.framework.error import LucteriosException, IMPORTANT
 from lucterios.framework.tools import FORMTYPE_NOMODAL, ActionsManage, MenuManage, \
     FORMTYPE_REFRESH, CLOSE_NO, SELECT_SINGLE, WrapAction, FORMTYPE_MODAL, \
-    SELECT_MULTI, CLOSE_YES, SELECT_NONE, ifplural
+    SELECT_MULTI, CLOSE_YES, SELECT_NONE, ifplural, get_url_from_request
 from lucterios.framework.tools import convert_date, same_day_months_after
 from lucterios.framework.xferadvance import XferAddEditor
 from lucterios.framework.xferadvance import XferDelete
@@ -894,7 +894,7 @@ class AdherentCommand(XferContainerAcknowledge):
         else:
             dateref = convert_date(self.getparam("dateref", ""), Season.current_season().date_ref)
             if send_email:
-                param_email = self.request.META.get('HTTP_REFERER', self.request.build_absolute_uri()), self.language
+                param_email = get_url_from_request(self.request), self.language
             else:
                 param_email = None
             nb_sub, nb_bill = cmd_manager.create_subscription(dateref, param_email)
@@ -1266,7 +1266,7 @@ class SubscriptionTransition(XferTransition):
 
     def fillresponse(self):
         if self.item.status == Subscription.STATUS_WAITING:
-            self.item.send_email_param = (self.request.META.get('HTTP_REFERER', self.request.build_absolute_uri()), self.language)
+            self.item.send_email_param = (get_url_from_request(self.request), self.language)
         XferTransition.fillresponse(self)
 
 

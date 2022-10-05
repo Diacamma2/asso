@@ -34,7 +34,7 @@ from lucterios.framework.xfercomponents import XferCompLabelForm, XferCompDate, 
     XferCompSelect, XferCompCheck, XferCompButton, XferCompGrid
 from lucterios.framework.error import LucteriosException, IMPORTANT
 from lucterios.framework.tools import CLOSE_NO, FORMTYPE_REFRESH, ActionsManage, get_icon_path, \
-    FORMTYPE_MODAL, CLOSE_YES, SELECT_SINGLE
+    FORMTYPE_MODAL, CLOSE_YES, SELECT_SINGLE, get_url_from_request
 from lucterios.framework.xferadvance import TITLE_EDIT
 
 from lucterios.CORE.parameters import Params
@@ -201,7 +201,7 @@ class SubscriptionEditor(LucteriosEditor):
     def before_save(self, xfer):
         xfer.is_new = (self.item.id is None)
         if xfer.getparam('autocreate', 0) == 1:
-            self.item.send_email_param = (xfer.request.META.get('HTTP_REFERER', xfer.request.build_absolute_uri()), xfer.language)
+            self.item.send_email_param = (get_url_from_request(xfer.request), xfer.language)
             self.item.season = Season.current_season()
             if self.item.adherent_id is None:
                 current_contact = Individual.objects.get(user=xfer.request.user)
