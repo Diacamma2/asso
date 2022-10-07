@@ -1441,8 +1441,13 @@ class SubscriptionAddForCurrent(SubscriptionAddModify):
         if isinstance(current_contact, Adherent):
             self.item.adherent = current_contact
             self.params['adherent'] = current_contact.id
+        elif isinstance(current_contact, Individual):
+            self.item.adherent = Adherent(individual_ptr_id=current_contact.pk)
+            self.item.adherent.save()
+            self.item.adherent.__dict__.update(current_contact.__dict__)
+            self.item.adherent.save()
         else:
-            self.item.adherent = Adherent()
+            raise LucteriosException(IMPORTANT, _('Subscription forbidden !'))
         self.item.season = Season.current_season()
         SubscriptionAddModify.fillresponse(self)
 
@@ -1540,14 +1545,14 @@ def situation_member(xfer):
         except Exception:
             return False
     else:
+        row = xfer.get_max_row() + 1
         try:
             current_adherent = Adherent.objects.get(user=xfer.request.user)
-            row = xfer.get_max_row() + 1
             lab = XferCompLabelForm('membertitle')
             lab.set_value_as_infocenter(_("Adherents"))
             lab.set_location(0, row, 4)
             xfer.add_component(lab)
-            ident = []
+            ident = [str(current_adherent.current_subscription)] if current_adherent.current_subscription is not None else []
             if Params.getvalue("member-numero"):
                 ident.append("%s %s" % (_('numeros'), current_adherent.num))
             if Params.getvalue("member-licence-enabled"):
@@ -1558,14 +1563,29 @@ def situation_member(xfer):
             lab.set_value_as_header("{[br/]}".join(ident))
             lab.set_location(0, row + 1, 4)
             xfer.add_component(lab)
-            lab = XferCompLabelForm('member')
-            lab.set_value_as_infocenter("{[hr/]}")
-            lab.set_location(0, row + 2, 4)
-            xfer.add_component(lab)
-            return True
         except Exception:
-            pass
-        return False
+            ident = []
+            current_adherent = Individual.objects.filter(user=xfer.request.user).first()
+        if (current_adherent is not None) and (len(ident) == 0):
+            lab = XferCompLabelForm('membercurrent')
+            lab.set_value_as_header(_("No-adhesion found !"))
+            lab.set_location(0, row + 1, 4)
+            xfer.add_component(lab)
+            if (current_adherent.postal_code != '---') and (Params.getvalue("member-subscription-mode") in (Subscription.MODE_WITHMODERATE, Subscription.MODE_AUTOMATIQUE)):
+                btn = XferCompButton('btnnewsubscript')
+                btn.set_location(0, row + 2, 4)
+                btn.set_action(xfer.request, SubscriptionAddForCurrent.get_action(_('Subscription'), 'diacamma.member/images/adherent.png'), close=CLOSE_NO)
+                btn.java_script = """if (typeof Singleton().hide_subscription === 'undefined') {
+    current.actionPerformed();
+    Singleton().hide_subscription = 1;
+}
+"""
+                xfer.add_component(btn)
+        lab = XferCompLabelForm('member')
+        lab.set_value_as_infocenter("{[hr/]}")
+        lab.set_location(0, row + 3, 4)
+        xfer.add_component(lab)
+        return True
 
 
 @signal_and_lock.Signal.decorate('summary')
@@ -1676,7 +1696,7 @@ def add_account_subscription(current_contact, xfer):
         xfer.new_tab(_('002@Subscription'))
         row = xfer.get_max_row() + 1
         btn = XferCompButton('btnnewsubscript')
-        btn.set_location(1, row)
+        btn.set_location(0, row)
         btn.set_action(xfer.request, SubscriptionAddForCurrent.get_action(_('Subscription'), 'diacamma.member/images/adherent.png'), close=CLOSE_NO)
         xfer.add_component(btn)
 

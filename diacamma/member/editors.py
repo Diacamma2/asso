@@ -275,7 +275,7 @@ class SubscriptionEditor(LucteriosEditor):
         xfer.change_to_readonly("adherent")
         cmp_status = xfer.get_components('status')
         if autocreate:
-            if Params.getvalue("member-subscription-mode") == Subscription.MODE_AUTOMATIQUE:
+            if Params.getvalue("member-subscription-mode") != Subscription.MODE_AUTOMATIQUE:
                 status = Subscription.STATUS_BUILDING
             else:
                 status = Subscription.STATUS_WAITING

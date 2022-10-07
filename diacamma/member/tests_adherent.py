@@ -38,7 +38,7 @@ from lucterios.CORE.views import ObjectMerge
 from lucterios.contacts.views_contacts import LegalEntityShow
 from lucterios.contacts.models import LegalEntity, Responsability
 from lucterios.contacts.views import ContactImport
-from lucterios.contacts.tests_contacts import change_ourdetail
+from lucterios.contacts.test_tools import change_ourdetail
 from lucterios.mailing.test_tools import configSMTP, TestReceiver, decode_b64
 
 from diacamma.accounting.views import ThirdShow
