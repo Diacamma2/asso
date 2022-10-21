@@ -167,7 +167,7 @@ class Season(LucteriosModel):
                                        "ratio": "%d (%.1f%%)" % (criteria_sum, 100 * criteria_sum / total) if with_total else "%d" % criteria_sum})
             for idx in range(4):
                 total_by_criteria[idx] += val_by_criteria[criteria][idx]
-        values_by_criteria.sort(key=lambda val: -1 * val['sum'])
+        values_by_criteria.sort(key=lambda val:-1 * val['sum'])
         if with_total and (len(values_by_criteria) > 0):
             values_by_criteria.append({name: "{[b]}%s{[/b]}" % _('total'),
                                        "MajM": "{[b]}%d{[/b]}" % total_by_criteria[0],
@@ -1135,10 +1135,18 @@ class TeamPrestation(LucteriosModel):
         return Team.objects.filter(unactive=False)
 
     def get_first_article(self):
-        return self.prestation_set.first().article
+        first_presta = self.prestation_set.first()
+        if first_presta is not None:
+            return first_presta.article
+        else:
+            return None
 
     def get_first_prices(self):
-        return self.get_first_article().price
+        first_article = self.get_first_article()
+        if first_article is not None:
+            return first_article.price
+        else:
+            return 0.0
 
     @classmethod
     def get_default_fields(cls):
@@ -1382,7 +1390,7 @@ class Subscription(LucteriosModel):
         if len(bill_list) > 0:
             self.bill = bill_list[0]
             self.bill.date = date_ref
-        if (self.bill is None) or (self.bill.bill_type != bill_type):
+        if (self.bill is None) or (self.bill.bill_type != bill_type) or (self.bill.status != Bill.STATUS_BUILDING):
             self.bill = Bill.objects.create(bill_type=bill_type, date=date_ref, third=new_third, parentbill=parentbill)
 
     def _regenerate_bill(self, bill_type):
@@ -1545,10 +1553,25 @@ class Subscription(LucteriosModel):
                 License.objects.create(subscription=self, team=team, activity=activity, value=value)
         return import_logs
 
+
+    def _licenses_must_be_deleted(self):
+        must_delete = True
+        if self.status == self.STATUS_VALID:
+            if self.prestations.all().count() == 1:
+                if self.license_set.count() != 1:
+                    must_delete = False
+                else:
+                    first_presat = self.prestations.all().first()
+                    first_licence = self.license_set.first()
+                    if (first_licence.activity_id != first_presat.team_prestation.activity_id) and (first_licence.team_id != first_presat.team_prestation.team_id):
+                        must_delete = False
+        return must_delete
+
     def convert_prestations(self):
         if (Params.getvalue("member-team-enable") == 2):
             if (self.status in (self.STATUS_WAITING, self.STATUS_BUILDING)) or (self.prestations.all().count() > 0):
-                self.license_set.all().delete()
+                if self._licenses_must_be_deleted():
+                    self.license_set.all().delete()
                 for presta in self.prestations.all():
                     License.objects.create(subscription=self, activity_id=presta.team_prestation.activity_id, team_id=presta.team_prestation.team_id)
             if self.status in (self.STATUS_VALID, self.STATUS_CANCEL, self.STATUS_DISBARRED):
