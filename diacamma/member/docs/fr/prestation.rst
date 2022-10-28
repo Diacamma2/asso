@@ -27,6 +27,11 @@ De plus, vous devez également définir un article de facturation à cette prest
 
 Vous pouvez bien entendu, ensuite modifier cette prestation: nom et description de son équipe/cours, son activité et son article.
 
+Si vous le voulez alors, vous pouvez également lui associé d'autres articles afin que celle-ci comporte plusieurs tarif.
+Cochez "Utiliser le multi-prix" pour que l'interface vous propose l'ajout, la modification ou la suppression d'un article de prix.
+
+	.. image:: modifprestation.png
+
 Si vous souhaitez supprimer une prestation, il vous sera demandé ce que vous souhaitez faire de l'équipe/cours associée: la désactiver, la supprimer ou la laisser.
 
 Associer des pratiquants
@@ -39,6 +44,7 @@ A chacune de ces prestations, vous pouvez bien sur ajouter des pratiquants.
 Via le bouton "Ajouter", rechercher une (ou plusieurs) fiche adhérent qui sera alors associé à cette prestation.
 Vous pouvez de là également créer une nouvelle fiche.
 Si cet adhérent n'est pas encore cotisant à votre structure, il vous sera demandé un type de cotisation. 
+Si la cotisation a plusieurs prix possible, il vous sera demandé quelle tarification utiliser.
 
 Dans le cas où un adhérent a sa cotisation "en création", les articles de la prestations choisis serons alors automatiquement ajouter au devis associé à cette cotisation.
 Si sa cotisation est "validée", une facture est alors généré afin de prendre en compte cette nouvelle prestation.
