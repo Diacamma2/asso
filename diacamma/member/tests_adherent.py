@@ -30,6 +30,8 @@ from _io import StringIO
 from os.path import isfile
 from base64 import b64decode
 
+from django.conf import settings
+
 from lucterios.framework.test import LucteriosTest
 from lucterios.framework.filetools import get_user_dir
 from lucterios.CORE.models import Parameter, LucteriosUser, LucteriosGroup
@@ -83,6 +85,7 @@ class BaseAdherentTest(LucteriosTest):
 
     def setUp(self):
         LucteriosTest.setUp(self)
+        settings.LOGIN_FIELD = 'username'
         rmtree(get_user_dir(), True)
         default_financial()
         default_season()
@@ -4492,7 +4495,7 @@ class AdherentConnectionTest(BaseAdherentTest):
         finally:
             server.stop()
 
-        self.calljson('/CORE/authentification', {'username': 'joeD', 'password': password})
+        self.calljson('/CORE/authentification', {'login': 'joeD', 'password': password})
         self.assert_observer('core.auth', 'CORE', 'authentification')
         self.assert_json_equal('', '', 'OK')
 
@@ -4554,15 +4557,15 @@ class AdherentConnectionTest(BaseAdherentTest):
         finally:
             server.stop()
 
-        self.calljson('/CORE/authentification', {'username': 'LES DALTONS', 'password': password1})
+        self.calljson('/CORE/authentification', {'login': 'LES DALTONS', 'password': password1})
         self.assert_observer('core.auth', 'CORE', 'authentification')
         self.assert_json_equal('', '', 'BADAUTH')
 
-        self.calljson('/CORE/authentification', {'username': 'LES DALTONS', 'password': password2})
+        self.calljson('/CORE/authentification', {'login': 'LES DALTONS', 'password': password2})
         self.assert_observer('core.auth', 'CORE', 'authentification')
         self.assert_json_equal('', '', 'BADAUTH')
 
-        self.calljson('/CORE/authentification', {'username': 'LES DALTONS', 'password': password3})
+        self.calljson('/CORE/authentification', {'login': 'LES DALTONS', 'password': password3})
         self.assert_observer('core.auth', 'CORE', 'authentification')
         self.assert_json_equal('', '', 'OK')
 

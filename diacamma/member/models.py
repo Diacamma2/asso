@@ -27,7 +27,6 @@ from datetime import date, datetime, timedelta
 from os.path import isfile, join
 import logging
 from os import unlink
-from unicodedata import normalize, category
 
 from django.db import models
 from django.db.models.query import QuerySet
@@ -167,7 +166,7 @@ class Season(LucteriosModel):
                                        "ratio": "%d (%.1f%%)" % (criteria_sum, 100 * criteria_sum / total) if with_total else "%d" % criteria_sum})
             for idx in range(4):
                 total_by_criteria[idx] += val_by_criteria[criteria][idx]
-        values_by_criteria.sort(key=lambda val:-1 * val['sum'])
+        values_by_criteria.sort(key=lambda val: -1 * val['sum'])
         if with_total and (len(values_by_criteria) > 0):
             values_by_criteria.append({name: "{[b]}%s{[/b]}" % _('total'),
                                        "MajM": "{[b]}%d{[/b]}" % total_by_criteria[0],
@@ -271,28 +270,21 @@ class Season(LucteriosModel):
         defaultgroup = Params.getobject("contacts-defaultgroup")
         if adherent.user_id is None:
             if adherent.email != '':
-                username_temp = adherent.firstname.lower() + adherent.lastname.upper()[0] if usernamebase is None else usernamebase
-                username_temp = ''.join(letter for letter in normalize('NFD', username_temp) if category(letter) != 'Mn')
-                username = ''
-                inc = ''
-                while username == '':
-                    username = "%s%s" % (username_temp, inc)
-                    users = LucteriosUser.objects.filter(username=username)
-                    if len(users) > 0:
-                        username = ''
-                        if (inc == ''):
-                            inc = 1
-                        else:
-                            inc += 1
-                adherent.user = LucteriosUser.objects.create(username=username, first_name=adherent.firstname, last_name=adherent.lastname, email=adherent.email if email is None else email)
-                adherent.save()
-                if defaultgroup is not None:
-                    adherent.user.groups.add(defaultgroup)
-                adherent.user.generate_password()
-                return 1
+                username = adherent.create_username(usernamebase)
+                new_user = LucteriosUser.objects.create(username=username, first_name=adherent.firstname, last_name=adherent.lastname, email=adherent.email if email is None else email)
+                if (settings.LOGIN_FIELD != 'email') or not new_user.is_email_already_exists:
+                    adherent.user = new_user
+                    adherent.save()
+                    if defaultgroup is not None:
+                        adherent.user.groups.add(defaultgroup)
+                    adherent.user.generate_password()
+                    return 1
+                else:
+                    new_user.delete()
+                    return -2
             else:
                 return -1
-        elif not adherent.user.is_active:
+        elif not adherent.user.is_active and ((settings.LOGIN_FIELD != 'email') or not adherent.user.is_email_already_exists):
             adherent.user.email = adherent.email if email is None else email
             adherent.user.is_active = True
             adherent.user.save()
@@ -300,11 +292,9 @@ class Season(LucteriosModel):
                 adherent.user.groups.add(defaultgroup)
             adherent.user.generate_password()
             return 2
-        else:
-            email = adherent.email if email is None else email
-            if adherent.user.email != email:
-                adherent.user.email = email
-                adherent.user.save()
+        elif adherent.user.is_active and (email is not None) and (adherent.user.email != email):
+            adherent.user.email = email
+            adherent.user.save()
         return 0
 
     def check_connection(self):
@@ -1552,7 +1542,6 @@ class Subscription(LucteriosModel):
             if ('subscriptiontype' in rowdata.keys()) or (team is not None) or (value != ''):
                 License.objects.create(subscription=self, team=team, activity=activity, value=value)
         return import_logs
-
 
     def _licenses_must_be_deleted(self):
         must_delete = True

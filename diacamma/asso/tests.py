@@ -24,6 +24,8 @@ along with Lucterios.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import unicode_literals
 
+from django.conf import settings
+
 from lucterios.framework.test import add_user
 from lucterios.contacts.models import Individual
 from lucterios.CORE.views import get_wizard_step_list, Configuration
@@ -49,7 +51,7 @@ class AssoTest(BaseAdherentTest):
         contact.save()
 
     def test_status(self):
-        self.calljson('/CORE/authentification', {'username': 'admin', 'password': 'admin'})
+        self.calljson('/CORE/authentification', {'login': 'admin', 'password': 'admin'})
         self.assert_observer('core.auth', 'CORE', 'authentification')
         self.assert_json_equal('', '', 'OK')
 
@@ -58,7 +60,7 @@ class AssoTest(BaseAdherentTest):
         self.assert_count_equal('', 20)
 
     def test_wizard(self):
-        self.calljson('/CORE/authentification', {'username': 'admin', 'password': 'admin'})
+        self.calljson('/CORE/authentification', {'login': 'admin', 'password': 'admin'})
         self.assert_observer('core.auth', 'CORE', 'authentification')
         self.assert_json_equal('', '', 'OK')
 
@@ -146,7 +148,7 @@ class AssoTest(BaseAdherentTest):
         self.assert_count_equal('', 13)
 
     def test_situation(self):
-        self.calljson('/CORE/authentification', {'username': 'joe', 'password': 'joe'})
+        self.calljson('/CORE/authentification', {'login': 'joe', 'password': 'joe'})
         self.assert_observer('core.auth', 'CORE', 'authentification')
         self.assert_json_equal('', '', 'OK')
 
