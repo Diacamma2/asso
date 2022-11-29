@@ -755,9 +755,11 @@ class Adherent(Individual):
         keys = list(fields.keys())
         if Params.getvalue("member-numero"):
             fields[keys[0]][0] = ("num", fields[keys[0]][0])
+        email_index = fields[keys[0]].index('email')
         if Params.getvalue("member-birth"):
-            fields[keys[0]].insert(-1, ("birthday", "birthplace"))
-            fields[keys[0]].insert(-1, ("age_category",))
+            fields[keys[0]].insert(email_index + 1, ("birthday", "birthplace"))
+        if Params.getvalue("member-age-enable"):
+            fields[keys[0]].insert(email_index + 1, ("age_category",))
         fields[_('002@Subscription')] = ['subscription_set']
         fields[''] = [("dateref",)]
         return fields
