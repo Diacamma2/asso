@@ -6,3 +6,4 @@ include:
 variables:
   APPLICATION_TARGET: diacamma_asso
   MANUAL_PATH: diacamma/asso/pdf/build_fr/latex/DiacammaAsso.pdf
+  CLONE_LIST: lucterios2/lucterios:lct-core lucterios2/contacts:lct-contacts lucterios2/documents:lct-documents diacamma2/financial:financial
