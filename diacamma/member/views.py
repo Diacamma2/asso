@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 '''
 diacamma.member package
 
@@ -25,6 +24,7 @@ along with Lucterios.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import unicode_literals
 
 from importlib import import_module
+from datetime import timedelta
 
 from django.conf import settings
 from django.db.models import Q, Value
@@ -63,7 +63,7 @@ from lucterios.framework.xfercomponents import XferCompLabelForm, \
     XferCompCheckList, XferCompButton, XferCompSelect, XferCompDate, \
     XferCompImage, XferCompEdit, XferCompGrid, XferCompFloat, XferCompCheck
 from lucterios.framework.xfergraphic import XferContainerAcknowledge, XferContainerCustom
-from django.views.decorators.http import condition
+from diacamma.invoice.views import BillPayableEmail, BillPrint
 
 MenuManage.add_sub("association", None, "diacamma.member/images/association.png", _("Association"), _("Association tools"), 30)
 
@@ -80,18 +80,7 @@ class AdherentFilter(object):
         age = self.getparam("age", Preference.get_value('adherent-age', self.request.user))
         status = self.getparam("status", Preference.get_value('adherent-status', self.request.user))
         dateref = convert_date(self.getparam("dateref", ""), Season.current_season().date_ref)
-        if self.getparam('is_renew', False):
-            date_one_year = same_day_months_after(dateref, -12)
-            date_six_month = same_day_months_after(dateref, -6)
-            date_three_month = same_day_months_after(dateref, -3)
-            current_filter = Q(subscription__subscriptiontype__duration=0) & Q(subscription__end_date__gte=date_one_year)
-            current_filter |= Q(subscription__subscriptiontype__duration=1) & Q(subscription__end_date__gte=date_six_month)
-            current_filter |= Q(subscription__subscriptiontype__duration=2) & Q(subscription__end_date__gte=date_three_month)
-            current_filter |= Q(subscription__subscriptiontype__duration=3) & Q(subscription__end_date__gte=date_one_year)
-            exclude_filter = Q(subscription__begin_date__lte=dateref) & Q(subscription__end_date__gte=dateref)
-        else:
-            current_filter = Q(subscription__begin_date__lte=dateref) & Q(subscription__end_date__gte=dateref)
-            exclude_filter = Q()
+        current_filter = Q(subscription__begin_date__lte=dateref) & Q(subscription__end_date__gte=dateref)
         if Params.getvalue("member-team-enable") != 0:
             if len(team) > 0:
                 current_filter &= Q(subscription__license__team__in=team) | Q(subscription__prestations__team__in=team)
@@ -111,7 +100,7 @@ class AdherentFilter(object):
             current_filter &= Q(subscription__status__in=(Subscription.STATUS_BUILDING, Subscription.STATUS_VALID))
         else:
             current_filter &= Q(subscription__status=status)
-        return (current_filter, exclude_filter)
+        return current_filter
 
 
 class AdherentAbstractList(XferListEditor, AdherentFilter):
@@ -124,8 +113,7 @@ class AdherentAbstractList(XferListEditor, AdherentFilter):
         self.size_by_page = Params.getvalue("member-size-page")
 
     def get_items_from_filter(self):
-        current_filter, exclude_filter = self.get_filter()
-        return self.model.objects.filter(current_filter).exclude(exclude_filter).distinct()
+        return self.model.objects.filter(self.get_filter()).distinct()
 
     def fillresponse_body(self):
         lineorder = self.getparam('GRID_ORDER%adherent', ())
@@ -708,16 +696,65 @@ class AdherentSearch(XferSavedCriteriaSearchEditor):
 
 
 @MenuManage.describ('member.change_adherent', FORMTYPE_NOMODAL, 'member.actions', _('List of adherents with old subscribtion not renew yet'))
-class AdherentRenewList(AdherentAbstractList):
+class AdherentRenewList(XferListEditor):
+    icon = "adherent.png"
+    model = Adherent
+    field_id = 'adherent'
     caption = _("Adherents to renew")
 
+    def get_items_from_filter(self):
+        return self.model.objects.filter(self.current_filter).exclude(self.exclude_filter).distinct()
+
     def fillresponse_header(self):
-        self.params['is_renew'] = True
-        AdherentAbstractList.fillresponse_header(self)
+        row = self.get_max_row() + 1
+        dateref = convert_date(self.getparam("dateref", ""), Season.current_season().date_ref)
+        enddate_delay = self.getparam("enddate_delay", 0)
+        reminder = self.getparam("reminder", False)
+
+        ckreminder = XferCompCheck('reminder')
+        ckreminder.set_value(reminder)
+        ckreminder.set_location(1, row)
+        ckreminder.description = _("reminder")
+        ckreminder.set_action(self.request, self.return_action(), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
+
+        self.add_component(ckreminder)
+
+        seldelay = XferCompSelect('enddate_delay')
+        seldelay.set_select([(-90, _('90 days before reference')), (-30, _('30 days before reference')), (-10, _('10 days before reference')), (-3, _('3 days before reference')),
+                             (0, _('end the reference day')),
+                             (3, _('3 days after reference')), (10, _('10 days after reference')), (30, _('30 days after reference')), (90, _('90 days after reference'))])
+        seldelay.set_value(enddate_delay)
+        seldelay.set_location(1, row + 1)
+        seldelay.description = _("delay of end of subscription")
+        seldelay.set_action(self.request, self.return_action(), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
+        self.add_component(seldelay)
+
+        dtref = XferCompDate('dateref')
+        dtref.set_value(dateref)
+        dtref.set_needed(True)
+        dtref.set_location(1, row + 2)
+        dtref.description = _("reference date")
+        dtref.set_action(self.request, self.return_action(), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
+        self.add_component(dtref)
+
+        sub_end_date = dateref + timedelta(days=enddate_delay)
+        if reminder:
+            self.current_filter = Q(subscription__begin_date__lte=sub_end_date) & Q(subscription__end_date__gte=sub_end_date) & Q(subscription__status__in=(Subscription.STATUS_WAITING, Subscription.STATUS_BUILDING))
+            self.exclude_filter = Q()
+        else:
+            if enddate_delay < 0:
+                self.current_filter = Q(subscription__end_date__gte=sub_end_date) & Q(subscription__end_date__lte=dateref)
+                self.exclude_filter = Q(subscription__begin_date__gt=sub_end_date)
+            elif enddate_delay > 0:
+                self.current_filter = Q(subscription__end_date__lte=sub_end_date) & Q(subscription__end_date__gt=dateref)
+                self.exclude_filter = Q(subscription__begin_date__gte=dateref)
+            else:
+                self.current_filter = Q(subscription__end_date=dateref)
+                self.exclude_filter = Q(subscription__begin_date__gt=dateref)
         self.fieldnames = Adherent.get_renew_fields()
 
     def fillresponse(self):
-        AdherentAbstractList.fillresponse(self)
+        XferListEditor.fillresponse(self)
         self.item.editor.add_email_selector(self, 0, self.get_max_row() + 1, 10)
         self.get_components('title').colspan = 10
         self.get_components(self.field_id).colspan = 10
@@ -830,7 +867,52 @@ class AdherentSubscription(XferContainerAcknowledge):
             self.redirect_action(SubscriptionShow.get_action(), modal=FORMTYPE_MODAL, close=CLOSE_YES, params={'subscription': self.item.current_subscription.id})
 
 
-@ActionsManage.affect_grid(_("re-new"), "images/add.png", unique=SELECT_MULTI, condition=lambda xfer, gridname='': xfer.getparam('is_renew', False))
+@ActionsManage.affect_grid(_("Send"), "images/upload.png", unique=SELECT_MULTI, condition=lambda xfer, gridname='': xfer.getparam('reminder', False))
+@MenuManage.describ('member.add_subscription')
+class AdherentSendSubscription(XferContainerAcknowledge):
+    icon = "adherent.png"
+    model = Adherent
+    field_id = 'adherent'
+    caption = _("Send subscription")
+
+    def fillresponse(self, send_mode=0):
+        if send_mode == 0:
+            dlg = self.create_custom(self.model)
+            img = XferCompImage('img')
+            img.set_value(self.icon_path())
+            img.set_location(0, 0, 1, 4)
+            dlg.add_component(img)
+            lab = XferCompLabelForm('lbl_title')
+            lab.set_value_as_title(self.caption)
+            lab.set_location(1, 0, 2)
+            dlg.add_component(lab)
+            sel = XferCompSelect('send_mode')
+            sel.set_select([(1, _('Send by email')),
+                            (2, _('Print quotation in PDF'))])
+            sel.set_location(1, 1)
+            sel.set_value(0)
+            sel.description = _('Sending mode')
+            dlg.add_component(sel)
+            dlg.add_action(self.return_action(TITLE_OK, "images/ok.png"), close=CLOSE_YES)
+            dlg.add_action(WrapAction(TITLE_CANCEL, 'images/cancel.png'))
+        else:
+            dateref = convert_date(self.getparam("dateref", ""), Season.current_season().date_ref)
+            enddate_delay = self.getparam("enddate_delay", 0)
+            sub_end_date = dateref + timedelta(days=enddate_delay)
+            bill_list = []
+            for adh in self.items:
+                ref_subscrip = adh.subscription_set.filter(Q(begin_date__lte=sub_end_date) & Q(end_date__gte=sub_end_date)).first()
+                if (ref_subscrip is not None) and (ref_subscrip.bill_id is not None):
+                    bill_list.append(str(ref_subscrip.bill_id))
+            if len(bill_list) == 0:
+                return
+            if send_mode == 1:
+                self.redirect_action(BillPayableEmail.get_action(), close=CLOSE_NO, params={'bill': ";".join(bill_list)})
+            elif send_mode == 2:
+                self.redirect_action(BillPrint.get_action(), close=CLOSE_NO, params={'bill': ";".join(bill_list)})
+
+
+@ActionsManage.affect_grid(_("re-new"), "images/add.png", unique=SELECT_MULTI, condition=lambda xfer, gridname='': not xfer.getparam('reminder', True))
 @MenuManage.describ('member.add_subscription')
 class AdherentRenew(XferContainerAcknowledge):
     icon = "adherent.png"
@@ -839,14 +921,19 @@ class AdherentRenew(XferContainerAcknowledge):
     caption = _("re-new")
 
     def fillresponse(self):
-        text = _("{[b]}Do you want that those %d old selected adherent(s) has been renew?{[/b]}{[br/]}Same subscription(s) will be applicated (or the first subscription type valid if old is unvalid).{[br/]}No validated bill will be created for each subscritpion.") % len(self.items)
+        text = _("{[b]}Do you want that those %d old selected adherent(s) has been renew?{[/b]}{[br/]}Same subscription(s) will be applicated (or the first subscription type valid if old is unvalid).{[br/]}Validated quotation will be created for each subscritpion.") % len(self.items)
         if self.confirme(text):
             dateref = convert_date(self.getparam("dateref", ""), Season.current_season().date_ref)
+            adh_success = []
             for item in self.items:
-                item.renew(dateref)
+                if item.renew(dateref):
+                    adh_success.append(str(item.id))
+            if len(adh_success) > 0:
+                adh_success.sort()
+                self.redirect_action(AdherentSendSubscription.get_action(), close=CLOSE_NO, params={'adherent': ";".join(adh_success)})
 
 
-@ActionsManage.affect_grid(_("command"), "images/add.png", unique=SELECT_MULTI, condition=lambda xfer, gridname='': xfer.getparam('is_renew', False))
+@ActionsManage.affect_grid(_("command"), "images/add.png", unique=SELECT_MULTI, condition=lambda xfer, gridname='': not xfer.getparam('reminder', True))
 @MenuManage.describ('member.add_subscription')
 class AdherentCommand(XferContainerAcknowledge):
     icon = "adherent.png"
@@ -1036,12 +1123,11 @@ class AdherentLabel(XferPrintLabel, AdherentFilter):
     field_id = 'adherent'
     caption = _("Label adherent")
 
-    def filter_callback(self, items):
+    def get_filter(self):
         if self.getparam('CRITERIA') is None:
-            current_filter, exclude_filter = AdherentFilter.get_filter(self)
-            return items.filter(current_filter).exclude(exclude_filter).distinct()
+            return AdherentFilter.get_filter(self)
         else:
-            return items
+            return XferPrintLabel.get_filter(self)
 
 
 @ActionsManage.affect_list(TITLE_LISTING, "images/print.png")
@@ -1052,12 +1138,11 @@ class AdherentListing(XferPrintListing, AdherentFilter):
     field_id = 'adherent'
     caption = _("Listing adherent")
 
-    def filter_callback(self, items):
+    def get_filter(self):
         if self.getparam('CRITERIA') is None:
-            current_filter, exclude_filter = AdherentFilter.get_filter(self)
-            return items.filter(current_filter).exclude(exclude_filter).distinct()
+            return AdherentFilter.get_filter(self)
         else:
-            return items
+            return XferPrintListing.get_filter(self)
 
 
 def right_adherentconnection(request):

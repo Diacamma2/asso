@@ -112,19 +112,19 @@ def default_adherents(third_must_created=False):
 
 def default_subscription(with_light=False):
     sub1 = SubscriptionType.objects.create(
-        name="Annually", description="AAA", duration=0, order_key=3)
+        name="Annually", description="AAA", duration=SubscriptionType.DURATION_ANNUALLY, order_key=3)
     sub1.articles.set(Article.objects.filter(id__in=(1, 5)))
     sub1.save()
     sub2 = SubscriptionType.objects.create(
-        name="Periodic", description="BBB", duration=1, order_key=2)
+        name="Periodic", description="BBB", duration=SubscriptionType.DURATION_PERIODIC, order_key=2)
     sub2.articles.set(Article.objects.filter(id__in=(1, 5)))
     sub2.save()
     sub3 = SubscriptionType.objects.create(
-        name="Monthly", description="CCC", duration=2, order_key=5)
+        name="Monthly", description="CCC", duration=SubscriptionType.DURATION_MONTLY, order_key=5)
     sub3.articles.set(Article.objects.filter(id__in=(1, 5)))
     sub3.save()
     sub4 = SubscriptionType.objects.create(
-        name="Calendar", description="DDD", duration=3, order_key=4)
+        name="Calendar", description="DDD", duration=SubscriptionType.DURATION_CALENDAR, order_key=4)
     sub4.articles.set(Article.objects.filter(id__in=(1, 5)))
     sub4.save()
 

@@ -971,8 +971,8 @@ class Adherent(Individual):
                 if subtypes.count() == 0:
                     raise LucteriosException(IMPORTANT, _('No subscription type active !'))
                 new_subscriptiontype = subtypes.first()
-            new_subscription = Subscription(adherent=self, subscriptiontype=new_subscriptiontype, status=Subscription.STATUS_VALID)
-            new_subscription.set_periode(dateref)
+            new_subscription = Subscription(adherent=self, subscriptiontype=new_subscriptiontype, status=Subscription.STATUS_BUILDING)
+            new_subscription.set_periode(max(dateref, last_subscription.end_date + timedelta(days=1)))
             if Params.getvalue("member-team-enable") == 2:
                 prestation_list = []
                 for license_item in last_subscription.license_set.all():
@@ -989,6 +989,11 @@ class Adherent(Individual):
                     license_item.id = None
                     license_item.subscription = new_subscription
                     license_item.save()
+            if new_subscription.bill is not None:
+                new_subscription.bill.valid()
+            return True
+        else:
+            return False
 
     @property
     def last_subscription(self):
