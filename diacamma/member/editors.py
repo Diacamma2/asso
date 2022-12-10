@@ -54,7 +54,10 @@ class SeasonEditor(LucteriosEditor):
         if date is None:
             raise LucteriosException(IMPORTANT, _("date invalid!"))
         date = convert_date(date)
-        new_season = "%d/%d" % (date.year, date.year + 1)
+        if (date.month == 1) and (date.day == 1):
+            new_season = "%4d" % date.year
+        else:
+            new_season = "%d/%d" % (date.year, date.year + 1)
         if len(Season.objects.filter(designation=new_season).exclude(id=self.item.id)) > 0:
             raise LucteriosException(IMPORTANT, _("Season exists yet!"))
         self.item.designation = new_season

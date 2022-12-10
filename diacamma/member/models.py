@@ -1364,10 +1364,15 @@ class Subscription(LucteriosModel):
             self.begin_date = dateref
             self.end_date = same_day_months_after(self.begin_date, 12) - timedelta(days=1)
 
-    def _add_detail_bill(self):
+    def _append_subscription_detail(self):
         cmt = []
         if self.bill.third.contact.id != self.adherent.id:
             cmt.append(_("Subscription of '%s'") % str(self.adherent))
+        cmt.append(_("From the period %(begin_date)s -> %(end_date)s") % {"begin_date": self.begin_date.strftime('%d/%m/%Y'), "end_date": self.end_date.strftime('%d/%m/%Y')})
+        return cmt
+
+    def _add_detail_bill(self):
+        cmt = self._append_subscription_detail()
         for art in self.subscriptiontype.articles.all():
             new_cmt = [art.designation]
             new_cmt.extend(cmt)
@@ -1424,9 +1429,7 @@ class Subscription(LucteriosModel):
     def _save_presta_in_bill(self, bill_type, prestation_id):
         if self.status == self.STATUS_VALID:
             self._search_or_create_bill(bill_type)
-            cmt = []
-            if self.bill.third.contact.id != self.adherent.id:
-                cmt.append(_("Subscription of '%s'") % str(self.adherent))
+            cmt = self._append_subscription_detail()
             presta = Prestation.objects.get(id=prestation_id)
             new_cmt = [presta.team_prestation.team.description]
             new_cmt.extend(cmt)

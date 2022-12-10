@@ -709,7 +709,7 @@ class AdherentRenewList(XferListEditor):
         row = self.get_max_row() + 1
         dateref = convert_date(self.getparam("dateref", ""), Season.current_season().date_ref)
         enddate_delay = self.getparam("enddate_delay", 0)
-        reminder = self.getparam("reminder", False)
+        reminder = self.getparam("reminder", True)
 
         ckreminder = XferCompCheck('reminder')
         ckreminder.set_value(reminder)
@@ -719,10 +719,15 @@ class AdherentRenewList(XferListEditor):
 
         self.add_component(ckreminder)
 
+        if reminder:
+            delay_list = []
+        else:
+            delay_list = [(-90, _('90 days before reference')), (-30, _('30 days before reference')), (-10, _('10 days before reference')), (-3, _('3 days before reference'))]
+        delay_list.extend([(0, _('end the reference day')),
+                           (3, _('3 days after reference')), (10, _('10 days after reference')), (30, _('30 days after reference')), (90, _('90 days after reference'))])
+
         seldelay = XferCompSelect('enddate_delay')
-        seldelay.set_select([(-90, _('90 days before reference')), (-30, _('30 days before reference')), (-10, _('10 days before reference')), (-3, _('3 days before reference')),
-                             (0, _('end the reference day')),
-                             (3, _('3 days after reference')), (10, _('10 days after reference')), (30, _('30 days after reference')), (90, _('90 days after reference'))])
+        seldelay.set_select(delay_list)
         seldelay.set_value(enddate_delay)
         seldelay.set_location(1, row + 1)
         seldelay.description = _("delay of end of subscription")
