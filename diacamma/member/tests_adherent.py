@@ -87,6 +87,7 @@ class BaseAdherentTest(LucteriosTest):
     def setUp(self):
         LucteriosTest.setUp(self)
         settings.LOGIN_FIELD = 'username'
+        settings.ASK_LOGIN_EMAIL = False
         rmtree(get_user_dir(), True)
         default_financial()
         default_season()

@@ -272,7 +272,7 @@ class Season(LucteriosModel):
             if adherent.email != '':
                 username = adherent.create_username(usernamebase)
                 new_user = LucteriosUser.objects.create(username=username, first_name=adherent.firstname, last_name=adherent.lastname, email=adherent.email if email is None else email)
-                if (settings.LOGIN_FIELD != 'email') or not new_user.is_email_already_exists:
+                if not settings.ASK_LOGIN_EMAIL or not new_user.is_email_already_exists:
                     adherent.user = new_user
                     adherent.save()
                     if defaultgroup is not None:
@@ -284,7 +284,7 @@ class Season(LucteriosModel):
                     return -2
             else:
                 return -1
-        elif not adherent.user.is_active and ((settings.LOGIN_FIELD != 'email') or not adherent.user.is_email_already_exists):
+        elif not adherent.user.is_active and (not settings.ASK_LOGIN_EMAIL or not adherent.user.is_email_already_exists):
             adherent.user.email = adherent.email if email is None else email
             adherent.user.is_active = True
             adherent.user.save()
