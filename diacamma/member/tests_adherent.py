@@ -840,6 +840,8 @@ class AdherentTest(BaseAdherentTest):
         self.assert_json_equal('', 'town_1/@1/ratio', '{[b]}2{[/b]}')
 
     def test_renew(self):
+        configSMTP('localhost', 1125)
+        change_ourdetail()
         self.add_subscriptions()
 
         self.factory.xfer = AdherentRenewList()
@@ -4599,9 +4601,9 @@ class AdherentConnectionTest(BaseAdherentTest):
             self.assertEqual('text/html', msg.get_content_type())
             self.assertEqual('base64', msg.get('Content-Transfer-Encoding', ''))
             message = decode_b64(msg.get_payload())
-            self.assertEqual('<html>Bienvenue<br/><br/>Confirmation de connexion à votre application :'
-                             '<br/> - Alias : joeD<br/> - Mot de passe : ', message[:115])
-            password = message[115:].split('<br/>')[0]
+            self.assertEqual('<html><p>Bienvenue<br/><br/>Confirmation de connexion à votre application :'
+                             '<br/> - Identifiant : joeD<br/> - Mot de passe : ', message[:124])
+            password = message[124:].split('<br/>')[0]
         finally:
             server.stop()
 
@@ -4645,25 +4647,25 @@ class AdherentConnectionTest(BaseAdherentTest):
             self.assertEqual('text/html', msg1.get_content_type())
             self.assertEqual('base64', msg1.get('Content-Transfer-Encoding', ''))
             message = decode_b64(msg1.get_payload())
-            self.assertEqual('<html>Bienvenue<br/><br/>Confirmation de connexion à votre application :'
-                             '<br/> - Alias : LES DALTONS<br/> - Mot de passe : ', message[:122])
-            password1 = message[122:].split('<br/>')[0]
+            self.assertEqual('<html><p>Bienvenue<br/><br/>Confirmation de connexion à votre application :'
+                             '<br/> - Identifiant : LES DALTONS<br/> - Mot de passe : ', message[:131])
+            password1 = message[131:].split('<br/>')[0]
 
             self.assertEqual('mr-sylvestre@worldcompany.com', server.get(1)[1])
             self.assertEqual(['Joe.Dalton@worldcompany.com'], server.get(1)[2])
             _msg, msg2 = server.get_msg_index(1, 'Mot de passe de connexion')
             message = decode_b64(msg2.get_payload())
-            self.assertEqual('<html>Bienvenue<br/><br/>Confirmation de connexion à votre application :'
-                             '<br/> - Alias : LES DALTONS<br/> - Mot de passe : ', message[:122])
-            password2 = message[122:].split('<br/>')[0]
+            self.assertEqual('<html><p>Bienvenue<br/><br/>Confirmation de connexion à votre application :'
+                             '<br/> - Identifiant : LES DALTONS<br/> - Mot de passe : ', message[:131])
+            password2 = message[131:].split('<br/>')[0]
 
             self.assertEqual('mr-sylvestre@worldcompany.com', server.get(2)[1])
             self.assertEqual(['Avrel.Dalton@worldcompany.com'], server.get(2)[2])
             _msg, msg3 = server.get_msg_index(2, 'Mot de passe de connexion')
             message = decode_b64(msg3.get_payload())
-            self.assertEqual('<html>Bienvenue<br/><br/>Confirmation de connexion à votre application :'
-                             '<br/> - Alias : LES DALTONS<br/> - Mot de passe : ', message[:122])
-            password3 = message[122:].split('<br/>')[0]
+            self.assertEqual('<html><p>Bienvenue<br/><br/>Confirmation de connexion à votre application :'
+                             '<br/> - Identifiant : LES DALTONS<br/> - Mot de passe : ', message[:131])
+            password3 = message[131:].split('<br/>')[0]
         finally:
             server.stop()
 

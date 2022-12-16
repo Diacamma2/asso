@@ -32,20 +32,6 @@ from django.db.models.functions import Concat, Trim
 from django.utils import formats
 from django.utils.translation import ugettext_lazy as _
 
-from diacamma.accounting.models import Third
-from diacamma.accounting.tools import format_with_devise
-from diacamma.invoice.models import get_or_create_customer, Bill
-from diacamma.member.editors import SubscriptionEditor
-from diacamma.member.models import Adherent, Subscription, Season, Age, Team, Activity, License, DocAdherent, SubscriptionType, CommandManager, Prestation, TeamPrestation, ContactAdherent
-from lucterios.CORE.editors import XferSavedCriteriaSearchEditor
-from lucterios.CORE.models import Preference
-from lucterios.CORE.parameters import Params, notfree_mode_connect
-from lucterios.CORE.views import ObjectMerge
-from lucterios.CORE.xferprint import XferPrintAction
-from lucterios.CORE.xferprint import XferPrintLabel
-from lucterios.CORE.xferprint import XferPrintListing
-from lucterios.contacts.models import Individual, LegalEntity, Responsability, AbstractContact
-from lucterios.contacts.views_contacts import LegalEntityAddModify
 from lucterios.framework import signal_and_lock
 from lucterios.framework.error import LucteriosException, IMPORTANT
 from lucterios.framework.tools import FORMTYPE_NOMODAL, ActionsManage, MenuManage, \
@@ -63,7 +49,22 @@ from lucterios.framework.xfercomponents import XferCompLabelForm, \
     XferCompCheckList, XferCompButton, XferCompSelect, XferCompDate, \
     XferCompImage, XferCompEdit, XferCompGrid, XferCompFloat, XferCompCheck
 from lucterios.framework.xfergraphic import XferContainerAcknowledge, XferContainerCustom
+from lucterios.CORE.editors import XferSavedCriteriaSearchEditor
+from lucterios.CORE.models import Preference
+from lucterios.CORE.parameters import Params, notfree_mode_connect
+from lucterios.CORE.views import ObjectMerge
+from lucterios.CORE.xferprint import XferPrintAction
+from lucterios.CORE.xferprint import XferPrintLabel
+from lucterios.CORE.xferprint import XferPrintListing
+from lucterios.contacts.models import Individual, LegalEntity, Responsability, AbstractContact
+from lucterios.contacts.views_contacts import LegalEntityAddModify
+from lucterios.mailing.email_functions import will_mail_send
+from diacamma.accounting.models import Third
+from diacamma.accounting.tools import format_with_devise
+from diacamma.invoice.models import get_or_create_customer, Bill
 from diacamma.invoice.views import BillPayableEmail, BillPrint
+from diacamma.member.editors import SubscriptionEditor
+from diacamma.member.models import Adherent, Subscription, Season, Age, Team, Activity, License, DocAdherent, SubscriptionType, CommandManager, Prestation, TeamPrestation, ContactAdherent
 
 MenuManage.add_sub("association", None, "diacamma.member/images/association.png", _("Association"), _("Association tools"), 30)
 
@@ -710,6 +711,7 @@ class AdherentRenewList(XferListEditor):
         dateref = convert_date(self.getparam("dateref", ""), Season.current_season().date_ref)
         enddate_delay = self.getparam("enddate_delay", 0)
         reminder = self.getparam("reminder", True)
+        self.params["reminder"] = reminder
 
         ckreminder = XferCompCheck('reminder')
         ckreminder.set_value(reminder)
@@ -891,9 +893,12 @@ class AdherentSendSubscription(XferContainerAcknowledge):
             lab.set_value_as_title(self.caption)
             lab.set_location(1, 0, 2)
             dlg.add_component(lab)
+            select_list = []
+            if will_mail_send():
+                select_list.append((1, _('Send by email')))
+            select_list.append((2, _('Print quotation in PDF')))
             sel = XferCompSelect('send_mode')
-            sel.set_select([(1, _('Send by email')),
-                            (2, _('Print quotation in PDF'))])
+            sel.set_select(select_list)
             sel.set_location(1, 1)
             sel.set_value(0)
             sel.description = _('Sending mode')

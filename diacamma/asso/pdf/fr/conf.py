@@ -25,23 +25,34 @@ def create_link(rootpath, packagename):
     os.symlink(os.path.join(rootpath, packagename, 'docs', 'fr'), target_path)
 
 
-asso_path = os.path.abspath('../../..')
+root_path = os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))))
+
+asso_path = os.path.join(root_path, 'diacamma')
 for packname in ('asso', 'member', 'event'):
     create_link(asso_path, packname)
 
-financial_path = os.path.abspath('../../../../../financial/diacamma')
+if os.path.isdir(os.path.join(root_path, 'clone')):
+    clone_path = os.path.join(root_path, 'clone')
+else:
+    clone_path = os.path.dirname(root_path)
+
+financial_path = os.path.join(clone_path, 'financial', 'diacamma')
+print(">> financial_path", financial_path)
 for packname in ('accounting', 'invoice', 'payoff'):
     create_link(financial_path, packname)
 
-contact_path = os.path.abspath('../../../../../lct-contacts/lucterios')
+contact_path = os.path.join(clone_path, 'lct-contacts', 'lucterios')
+print(">> contact_path", contact_path)
 for packname in ('contacts', 'mailing'):
     create_link(contact_path, packname)
 
-doc_path = os.path.abspath('../../../../../lct-documents/lucterios')
+doc_path = os.path.join(clone_path, 'lct-documents', 'lucterios')
+print(">> doc_path", doc_path)
 for packname in ('documents',):
     create_link(doc_path, packname)
 
-core_path = os.path.abspath('../../../../../lct-core/lucterios')
+core_path = os.path.join(clone_path, 'lct-core', 'lucterios')
+print(">> core_path", core_path)
 for packname in ('CORE',):
     create_link(core_path, packname)
 
