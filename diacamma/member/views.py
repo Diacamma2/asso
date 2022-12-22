@@ -37,7 +37,7 @@ from lucterios.framework.error import LucteriosException, IMPORTANT
 from lucterios.framework.tools import FORMTYPE_NOMODAL, ActionsManage, MenuManage, \
     FORMTYPE_REFRESH, CLOSE_NO, SELECT_SINGLE, WrapAction, FORMTYPE_MODAL, \
     SELECT_MULTI, CLOSE_YES, SELECT_NONE, ifplural, get_url_from_request
-from lucterios.framework.tools import convert_date, same_day_months_after
+from lucterios.framework.tools import convert_date
 from lucterios.framework.xferadvance import XferAddEditor
 from lucterios.framework.xferadvance import XferDelete
 from lucterios.framework.xferadvance import XferListEditor, TITLE_OK, TITLE_ADD, \
@@ -1832,3 +1832,14 @@ def thirdaddon_member(item, xfer):
         if contact_filter is None:
             return
         _add_subscription(xfer, contact_filter, False)
+
+
+@signal_and_lock.Signal.decorate('account_created')
+def account_created_member(contact):
+    if Params.getvalue("member-subscription-mode") != Subscription.MODE_NOHIMSELF:
+        indiv = contact.get_final_child()
+        if isinstance(indiv, Individual) and not isinstance(indiv, Adherent):
+            new_adh = Adherent(individual_ptr_id=indiv.pk)
+            new_adh.save()
+            new_adh.__dict__.update(indiv.__dict__)
+            new_adh.save()
