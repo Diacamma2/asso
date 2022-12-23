@@ -1746,6 +1746,11 @@ def summary_member(xfer):
                     lab.set_value_as_header(_("Adherents waiting moderation: %d") % nb_adhwait)
                     lab.set_location(0, row + 5, 4)
                     xfer.add_component(lab)
+                    btn = XferCompButton('memberadhwaitbtn')
+                    btn.set_is_mini(True)
+                    btn.set_action(xfer.request, SubscriptionModerate.get_action(_("Moderation"), "images/up.png"), modal=FORMTYPE_MODAL, close=CLOSE_NO)
+                    lab.set_location(0, row + 6, 4)
+                    xfer.add_component(btn)
             except LucteriosException as lerr:
                 lbl = XferCompLabelForm("member_error")
                 lbl.set_value_center(str(lerr))
@@ -1755,11 +1760,11 @@ def summary_member(xfer):
                 lbl = XferCompLabelForm("limit_activity")
                 lbl.set_value(_('limitation: %d activities allowed') % getattr(settings, "DIACAMMA_MAXACTIVITY"))
                 lbl.set_italic()
-                lbl.set_location(0, row + 6, 4)
+                lbl.set_location(0, row + 7, 4)
                 xfer.add_component(lbl)
             lab = XferCompLabelForm('member')
             lab.set_value_as_infocenter("{[hr/]}")
-            lab.set_location(0, row + 7, 4)
+            lab.set_location(0, row + 8, 4)
             xfer.add_component(lab)
             return True
         else:
