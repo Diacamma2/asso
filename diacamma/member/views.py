@@ -36,7 +36,8 @@ from lucterios.framework import signal_and_lock
 from lucterios.framework.error import LucteriosException, IMPORTANT
 from lucterios.framework.tools import FORMTYPE_NOMODAL, ActionsManage, MenuManage, \
     FORMTYPE_REFRESH, CLOSE_NO, SELECT_SINGLE, WrapAction, FORMTYPE_MODAL, \
-    SELECT_MULTI, CLOSE_YES, SELECT_NONE, ifplural, get_url_from_request
+    SELECT_MULTI, CLOSE_YES, SELECT_NONE, ifplural, get_url_from_request,\
+    get_bool_textual, get_date_formating
 from lucterios.framework.tools import convert_date
 from lucterios.framework.xferadvance import XferAddEditor
 from lucterios.framework.xferadvance import XferDelete
@@ -102,6 +103,28 @@ class AdherentFilter(object):
         else:
             current_filter &= Q(subscription__status=status)
         return current_filter
+
+    def filter_callback(self, items):
+        if self.getparam("reminder") is None:
+            return items
+        else:
+            dateref = convert_date(self.getparam("dateref", ""), Season.current_season().date_ref)
+            enddate_delay = self.getparam("enddate_delay", 0)
+            reminder = self.getparam("reminder", True)
+            sub_end_date = dateref + timedelta(days=enddate_delay)
+            if reminder:
+                self.current_filter = Q(subscription__begin_date__lte=sub_end_date) & Q(subscription__end_date__gte=sub_end_date) & Q(subscription__status__in=(Subscription.STATUS_WAITING, Subscription.STATUS_BUILDING))
+                self.exclude_filter = Q()
+            elif enddate_delay < 0:
+                self.current_filter = Q(subscription__end_date__gte=sub_end_date) & Q(subscription__end_date__lte=dateref)
+                self.exclude_filter = Q(subscription__begin_date__gt=sub_end_date)
+            elif enddate_delay > 0:
+                self.current_filter = Q(subscription__end_date__lte=sub_end_date) & Q(subscription__end_date__gt=dateref)
+                self.exclude_filter = Q(subscription__begin_date__gte=dateref)
+            else:
+                self.current_filter = Q(subscription__end_date=dateref)
+                self.exclude_filter = Q(subscription__begin_date__gt=dateref)
+            return self.model.objects.filter(self.current_filter).exclude(self.exclude_filter).distinct()
 
 
 class AdherentAbstractList(XferListEditor, AdherentFilter):
@@ -697,14 +720,14 @@ class AdherentSearch(XferSavedCriteriaSearchEditor):
 
 
 @MenuManage.describ('member.change_adherent', FORMTYPE_NOMODAL, 'member.actions', _('List of adherents with old subscribtion not renew yet'))
-class AdherentRenewList(XferListEditor):
+class AdherentRenewList(XferListEditor, AdherentFilter):
     icon = "adherent.png"
     model = Adherent
     field_id = 'adherent'
     caption = _("Adherents to renew")
 
     def get_items_from_filter(self):
-        return self.model.objects.filter(self.current_filter).exclude(self.exclude_filter).distinct()
+        return self.filter_callback([])
 
     def fillresponse_header(self):
         row = self.get_max_row() + 1
@@ -743,22 +766,14 @@ class AdherentRenewList(XferListEditor):
         dtref.description = _("reference date")
         dtref.set_action(self.request, self.return_action(), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
         self.add_component(dtref)
-
-        sub_end_date = dateref + timedelta(days=enddate_delay)
-        if reminder:
-            self.current_filter = Q(subscription__begin_date__lte=sub_end_date) & Q(subscription__end_date__gte=sub_end_date) & Q(subscription__status__in=(Subscription.STATUS_WAITING, Subscription.STATUS_BUILDING))
-            self.exclude_filter = Q()
-        else:
-            if enddate_delay < 0:
-                self.current_filter = Q(subscription__end_date__gte=sub_end_date) & Q(subscription__end_date__lte=dateref)
-                self.exclude_filter = Q(subscription__begin_date__gt=sub_end_date)
-            elif enddate_delay > 0:
-                self.current_filter = Q(subscription__end_date__lte=sub_end_date) & Q(subscription__end_date__gt=dateref)
-                self.exclude_filter = Q(subscription__begin_date__gte=dateref)
-            else:
-                self.current_filter = Q(subscription__end_date=dateref)
-                self.exclude_filter = Q(subscription__begin_date__gt=dateref)
         self.fieldnames = Adherent.get_renew_fields()
+
+        self.params['TITLE'] = self.caption
+        info_list = []
+        info_list.append("{[b]}{[u]}%s{[/u]}{[/b]} : %s" % (ckreminder.description, get_bool_textual(bool(ckreminder.value))))
+        info_list.append("{[b]}{[u]}%s{[/u]}{[/b]} : %s" % (seldelay.description, dict(delay_list)[seldelay.value]))
+        info_list.append("{[b]}{[u]}%s{[/u]}{[/b]} : %s" % (dtref.description, get_date_formating(dtref.value)))
+        self.params['INFO'] = '{[br]}'.join(info_list)
 
     def fillresponse(self):
         XferListEditor.fillresponse(self)
@@ -1139,6 +1154,9 @@ class AdherentLabel(XferPrintLabel, AdherentFilter):
         else:
             return XferPrintLabel.get_filter(self)
 
+    def filter_callback(self, items):
+        return AdherentFilter.filter_callback(self, items)
+
 
 @ActionsManage.affect_list(TITLE_LISTING, "images/print.png")
 @MenuManage.describ('contacts.change_abstractcontact')
@@ -1153,6 +1171,9 @@ class AdherentListing(XferPrintListing, AdherentFilter):
             return AdherentFilter.get_filter(self)
         else:
             return XferPrintListing.get_filter(self)
+
+    def filter_callback(self, items):
+        return AdherentFilter.filter_callback(self, items)
 
 
 def right_adherentconnection(request):
@@ -1416,7 +1437,7 @@ class AdherentStatistic(XferContainerCustom):
             else:
                 return int(value)
 
-        if not Params.getvalue("member-birth"):
+        if Params.getvalue("member-birth") == 0:
             maj_woman = old_stat_values["MajW"]
             maj_man = old_stat_values["MajM"]
             min_woman = old_stat_values["MinW"]
@@ -1441,7 +1462,7 @@ class AdherentStatistic(XferContainerCustom):
         self.add_component(lab)
         grid = XferCompGrid(grid_name)
         grid.add_header(main_id, main_name)
-        if Params.getvalue("member-birth"):
+        if Params.getvalue("member-birth") != 0:
             grid.add_header("MajW", _("women senior"))
             grid.add_header("MajM", _("men senior"))
             grid.add_header("MinW", _("women young (<%d)") % age_statistic)

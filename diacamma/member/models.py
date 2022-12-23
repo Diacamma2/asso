@@ -468,12 +468,19 @@ class SubscriptionType(LucteriosModel):
     DURATION_CALENDAR = 3
     LIST_DURATIONS = ((DURATION_ANNUALLY, _('annually')), (DURATION_PERIODIC, _('periodic')), (DURATION_MONTLY, _('monthly')), (DURATION_CALENDAR, _('calendar')))
 
+    STATE_ACTIVATE = 0
+    STATE_UNACTIVATE = 1
+    STATE_RESERVAL = 2
+    LIST_STATE = ((STATE_ACTIVATE, _('active')), (STATE_UNACTIVATE, _('unactive')), (STATE_RESERVAL, _('reserval')))
+
     name = models.CharField(_('name'), max_length=50)
     description = models.TextField(_('description'), null=True, default="")
     duration = models.IntegerField(verbose_name=_('duration'), choices=LIST_DURATIONS, null=False, default=DURATION_ANNUALLY, db_index=True)
-    unactive = models.BooleanField(verbose_name=_('unactive'), default=False)
+    state = models.IntegerField(verbose_name=_('state'), choices=LIST_STATE, null=False, default=STATE_ACTIVATE, db_index=True)
     articles = models.ManyToManyField(Article, verbose_name=_('articles'), blank=True)
     order_key = models.IntegerField(verbose_name=_('order key'), null=True, default=None)
+
+    unactive = models.BooleanField(verbose_name=_('unactive'), default=False, null=True)  # deprecated
 
     price = LucteriosVirtualField(verbose_name=_('price'), compute_from='get_price', format_string=lambda: format_with_devise(5))
 
@@ -485,15 +492,15 @@ class SubscriptionType(LucteriosModel):
 
     @classmethod
     def get_default_fields(cls):
-        return ["order_key", "name", "description", 'duration', 'price', "unactive"]
+        return ["order_key", "name", "description", 'duration', 'price', "state"]
 
     @classmethod
     def get_edit_fields(cls):
-        return ["name", "description", 'duration', ('articles', None), "unactive"]
+        return ["name", "description", 'duration', ('articles', None), "state"]
 
     @classmethod
     def get_show_fields(cls):
-        return ["name", "description", 'duration', 'price', 'articles', 'unactive']
+        return ["name", "description", 'duration', 'price', 'articles', 'state']
 
     def get_price(self):
         total_price = 0
@@ -689,8 +696,12 @@ class Adherent(Individual):
             allowed_fields.extend(fields)
         if Params.getobject("member-family-type") is not None:
             allowed_fields.append('family')
-        if Params.getvalue("member-birth"):
-            allowed_fields.extend(["birthday", "birthplace", "age_category", "age_from_ref"])
+        if Params.getvalue("member-birth") == 1:
+            allowed_fields.extend(["birthday"])
+        elif Params.getvalue("member-birth") == 2:
+            allowed_fields.extend(["birthday", "birthplace"])
+        if Params.getvalue("member-age-enable"):
+            allowed_fields.extend(["age_category", "age_from_ref"])
         if Params.getvalue("member-licence-enabled"):
             allowed_fields.append('license')
         allowed_fields.extend(['comment', 'user', 'documents'])
@@ -745,7 +756,9 @@ class Adherent(Individual):
     @classmethod
     def get_edit_fields(cls):
         fields = Individual.get_edit_fields()
-        if Params.getvalue("member-birth"):
+        if Params.getvalue("member-birth") == 1:
+            fields.insert(-1, ("birthday"))
+        elif Params.getvalue("member-birth") == 2:
             fields.insert(-1, ("birthday", "birthplace"))
         return fields
 
@@ -756,7 +769,9 @@ class Adherent(Individual):
         if Params.getvalue("member-numero"):
             fields[keys[0]][0] = ("num", fields[keys[0]][0])
         email_index = fields[keys[0]].index('email')
-        if Params.getvalue("member-birth"):
+        if Params.getvalue("member-birth") == 1:
+            fields[keys[0]].insert(email_index + 1, ("birthday", ))
+        elif Params.getvalue("member-birth") == 2:
             fields[keys[0]].insert(email_index + 1, ("birthday", "birthplace"))
         if Params.getvalue("member-age-enable"):
             fields[keys[0]].insert(email_index + 1, ("age_category",))
@@ -782,7 +797,9 @@ class Adherent(Individual):
         ident_field.extend(super(Adherent, cls).get_search_fields(with_addon=False))
         if Params.getvalue("member-numero"):
             ident_field.append('num')
-        if Params.getvalue("member-birth"):
+        if Params.getvalue("member-birth") == 1:
+            ident_field.extend(['birthday'])
+        elif Params.getvalue("member-birth") == 2:
             ident_field.extend(['birthday', 'birthplace'])
 
         ident_field.extend(['subscription_set.status', 'subscription_set.season'])
@@ -796,6 +813,27 @@ class Adherent(Individual):
             ident_field.append('subscription_set.license_set.value')
         if with_addon:
             Signal.call_signal("addon_search", cls, ident_field)
+        return ident_field
+
+    @classmethod
+    def get_print_fields(cls):
+        ident_field = ["image"]
+        if Params.getvalue("member-numero"):
+            ident_field.append('num')
+        ident_field.extend(["firstname", "lastname",
+                            'address', 'postal_code', 'city', 'country',
+                            'tel1', 'tel2', 'email'])
+        if Params.getvalue("member-birth"):
+            ident_field.extend(['birthday', 'birthplace'])
+        if (Params.getvalue("member-team-enable") != 0):
+            ident_field.append('subscription_set.license_set.team')
+        if Params.getvalue("member-activite-enable"):
+            ident_field.append('subscription_set.license_set.activity')
+        if Params.getvalue("member-licence-enabled"):
+            ident_field.append('subscription_set.license_set.value')
+        ident_field.extend(['comment', 'user'])
+        ident_field.extend(['subscription_set.season.str', 'subscription_set.subscriptiontype.str'])
+        ident_field.extend(['subscription_set', 'responsability_set', 'documents', 'OUR_DETAIL'])
         return ident_field
 
     @classmethod
@@ -908,11 +946,6 @@ class Adherent(Individual):
             logging.getLogger('diacamma.member').exception("import_data")
             return None
 
-    @classmethod
-    def get_print_fields(cls):
-        return ["image", 'num', "firstname", "lastname", 'address', 'postal_code', 'city', 'country', 'tel1', 'tel2',
-                'email', 'birthday', 'birthplace', 'comment', 'user', 'subscription_set', 'responsability_set', 'documents', 'OUR_DETAIL']
-
     def get_documents(self):
         if self.id is None:
             return None
@@ -964,10 +997,10 @@ class Adherent(Individual):
     def renew(self, dateref):
         last_subscription = self.last_subscription
         if last_subscription is not None:
-            if not last_subscription.subscriptiontype.unactive:
+            if last_subscription.subscriptiontype.state != SubscriptionType.STATE_UNACTIVATE:
                 new_subscriptiontype = last_subscription.subscriptiontype
             else:
-                subtypes = SubscriptionType.objects.filter(unactive=False, duration=last_subscription.subscriptiontype.duration)
+                subtypes = SubscriptionType.objects.filter(duration=last_subscription.subscriptiontype.duration).exclude(state=SubscriptionType.STATE_UNACTIVATE)
                 if subtypes.count() == 0:
                     raise LucteriosException(IMPORTANT, _('No subscription type active !'))
                 new_subscriptiontype = subtypes.first()
@@ -1336,9 +1369,15 @@ class Subscription(LucteriosModel):
         res.sort()
         return res
 
+    def set_context(self, xfer):
+        self.autocreate = xfer.getparam('autocreate', 0)
+
     @property
     def subscriptiontype_query(self):
-        return SubscriptionType.objects.filter(unactive=False)
+        if getattr(self, 'autocreate', 0) == 1:
+            return SubscriptionType.objects.filter(state=SubscriptionType.STATE_ACTIVATE)
+        else:
+            return SubscriptionType.objects.exclude(state=SubscriptionType.STATE_UNACTIVATE)
 
     @property
     def prestations_query(self):
@@ -2008,10 +2047,10 @@ class CommandManager(object):
             for item in self.items:
                 cmd_value = {}
                 cmd_value["adherent"] = item.id
-                if not item.last_subscription.subscriptiontype.unactive:
+                if item.last_subscription.subscriptiontype.state != SubscriptionType.STATE_UNACTIVATE:
                     cmd_value["type"] = item.last_subscription.subscriptiontype.id
                 else:
-                    subtypes = SubscriptionType.objects.filter(unactive=False, duration=item.last_subscription.subscriptiontype.duration)
+                    subtypes = SubscriptionType.objects.filter(duration=item.last_subscription.subscriptiontype.duration).exclude(state=SubscriptionType.STATE_UNACTIVATE)
                     if subtypes.count() == 0:
                         raise LucteriosException(IMPORTANT, _('No subscription type active !'))
                     cmd_value["type"] = subtypes.first().id
@@ -2186,6 +2225,16 @@ def convert_parameter_team():
         param_team.save()
 
 
+def convert_parameter_birth():
+    param_birth = Parameter.objects.get(name="member-birth")
+    if param_birth.value == 'False':
+        param_birth.value = '0'
+        param_birth.save()
+    elif param_birth.value == 'True':
+        param_birth.value = '2'
+        param_birth.save()
+
+
 def convert_prestation():
     for prest in Prestation.objects.filter(team_prestation__isnull=True):
         print("convert_prestation", prest.team, prest.activity, prest.article)
@@ -2200,7 +2249,11 @@ def convert_prestation():
 def member_convertdata():
     for subtype in SubscriptionType.objects.filter(order_key__isnull=True).order_by('id'):
         subtype.save()
+    for subtype in SubscriptionType.objects.filter(unactive__isnull=False):
+        subtype.state = SubscriptionType.STATE_UNACTIVATE if subtype.unactive else SubscriptionType.STATE_ACTIVATE
+        subtype.save()
     convert_parameter_team()
+    convert_parameter_birth()
     convert_prestation()
 
 
@@ -2214,7 +2267,8 @@ def member_checkparam():
     Parameter.check_and_create(name="member-activite-text", typeparam=Parameter.TYPE_STRING, title=_("member-activite-text"), args="{'Multi':False}", value=_('Activity'))
     Parameter.check_and_create(name="member-connection", typeparam=Parameter.TYPE_SELECT, title=_("member-connection"), args="{'Enum':3}", value='0',
                                param_titles=(_("member-connection.0"), _("member-connection.1"), _("member-connection.2")))
-    Parameter.check_and_create(name="member-birth", typeparam=Parameter.TYPE_BOOL, title=_("member-birth"), args="{}", value='True')
+    Parameter.check_and_create(name="member-birth", typeparam=Parameter.TYPE_SELECT, title=_("member-birth"), args="{'Enum':3}", value='2',
+                               param_titles=(_("member-birth.0"), _("member-birth.1"), _("member-birth.2")))
     Parameter.check_and_create(name="member-filter-genre", typeparam=Parameter.TYPE_BOOL, title=_("member-filter-genre"), args="{}", value='True')
     Parameter.check_and_create(name="member-numero", typeparam=Parameter.TYPE_BOOL, title=_("member-numero"), args="{}", value='True')
     Parameter.check_and_create(name="member-licence-enabled", typeparam=Parameter.TYPE_BOOL, title=_("member-licence-enabled"), args="{}", value='True')
@@ -2235,9 +2289,8 @@ def member_checkparam():
                                     Subscription.get_permission(True, True, False), TaxReceipt.get_permission(True, True, False))
     LucteriosGroup.redefine_generic(_("# member (shower)"), Adherent.get_permission(True, False, False),
                                     Subscription.get_permission(True, False, False), TaxReceipt.get_permission(True, False, False))
-
     Preference.check_and_create(name="adherent-team", typeparam=Preference.TYPE_INTEGER, title=_("adherent-team"),
-                                args="{'Multi':True}", value="", meta='("member","Team","django.db.models.Q(unactive=False)","id",False)')
+                                args="{'Multi':True}", value="", meta='("member","Team","~django.db.models.Q(state=%s)","id",False)' % SubscriptionType.STATE_UNACTIVATE)
     Preference.check_and_create(name="adherent-activity", typeparam=Preference.TYPE_INTEGER, title=_("adherent-activity"),
                                 args="{'Multi':True}", value="", meta='("member","Activity","django.db.models.Q()","id",False)')
     Preference.check_and_create(name="adherent-age", typeparam=Preference.TYPE_INTEGER, title=_("adherent-age"),
@@ -2253,7 +2306,7 @@ def member_auditlog_register():
     auditlog.register(Activity, exclude_fields=['ID'])
     auditlog.register(Team, exclude_fields=['ID'])
     auditlog.register(Age, include_fields=["name", "date_min", "date_max"])
-    auditlog.register(SubscriptionType, include_fields=["name", "description", 'duration', 'unactive', 'price', 'articles'])
+    auditlog.register(SubscriptionType, include_fields=["name", "description", 'duration', 'state', 'price', 'articles'])
     auditlog.register(Season, include_fields=["designation", 'iscurrent'])
     auditlog.register(Period, exclude_fields=['ID'])
     auditlog.register(Document, exclude_fields=['ID'])

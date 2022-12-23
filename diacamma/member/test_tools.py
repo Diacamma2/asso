@@ -150,6 +150,8 @@ def set_parameters(values):
                 param_name += 'd'
         if param_item == 'team':
             value = 1 if param_item in values else 0
+        elif param_item == 'birth':
+            value = 2 if param_item in values else 0
         else:
             value = param_item in values
         Parameter.change_value(param_name, value)

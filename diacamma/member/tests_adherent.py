@@ -822,7 +822,7 @@ class AdherentTest(BaseAdherentTest):
 
     def test_statistic_noage(self):
         self.add_subscriptions()
-        Params.setvalue("member-birth", False)
+        Params.setvalue("member-birth", 0)
 
         self.factory.xfer = AdherentStatistic()
         self.calljson('/diacamma.member/adherentStatistic', {'season': 1}, False)
@@ -988,7 +988,7 @@ class AdherentTest(BaseAdherentTest):
     def test_renew_disabled(self):
         self.add_subscriptions()
         sub1 = SubscriptionType.objects.get(name="Annually")
-        sub1.unactive = True
+        sub1.state = SubscriptionType.STATE_UNACTIVATE
         sub1.save()
         self.factory.xfer = BillList()
         self.calljson('/diacamma.invoice/billList', {'status_filter': -2, 'type_filter': -1}, False)
@@ -1535,7 +1535,7 @@ class AdherentTest(BaseAdherentTest):
         Season.objects.get(id=16).set_has_actif()
         self.add_subscriptions(year=2014, season_id=15)
         sub1 = SubscriptionType.objects.get(name="Annually")
-        sub1.unactive = True
+        sub1.state = SubscriptionType.STATE_UNACTIVATE
         sub1.save()
 
         self.factory.xfer = AdherentRenewList()
