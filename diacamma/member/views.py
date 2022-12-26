@@ -1744,12 +1744,12 @@ def summary_member(xfer):
                 if nb_adhwait > 0:
                     lab = XferCompLabelForm('memberadhwait')
                     lab.set_value_as_header(_("Adherents waiting moderation: %d") % nb_adhwait)
-                    lab.set_location(0, row + 5, 4)
+                    lab.set_location(0, row + 5, 3)
                     xfer.add_component(lab)
                     btn = XferCompButton('memberadhwaitbtn')
                     btn.set_is_mini(True)
                     btn.set_action(xfer.request, SubscriptionModerate.get_action(_("Moderation"), "images/up.png"), modal=FORMTYPE_MODAL, close=CLOSE_NO)
-                    lab.set_location(0, row + 6, 4)
+                    btn.set_location(3, row + 5, 1)
                     xfer.add_component(btn)
             except LucteriosException as lerr:
                 lbl = XferCompLabelForm("member_error")
