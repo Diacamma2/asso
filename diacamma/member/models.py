@@ -669,6 +669,7 @@ class Adherent(Individual):
     age_from_ref = LucteriosVirtualField(verbose_name=_("age"), compute_from="get_age_from_ref")
 
     dateref = LucteriosVirtualField(verbose_name=_("reference date"), compute_from='get_dateref', format_string='D')
+    last_subscription = LucteriosVirtualField(verbose_name=_("last subscription"), compute_from='get_last_subscription')
 
     def __init__(self, *args, **kwargs):
         Individual.__init__(self, *args, **kwargs)
@@ -704,7 +705,7 @@ class Adherent(Individual):
             allowed_fields.extend(["age_category", "age_from_ref"])
         if Params.getvalue("member-licence-enabled"):
             allowed_fields.append('license')
-        allowed_fields.extend(['comment', 'user', 'documents'])
+        allowed_fields.extend(['comment', 'user', 'documents', 'last_subscription'])
         return allowed_fields
 
     @classmethod
@@ -831,7 +832,7 @@ class Adherent(Individual):
             ident_field.append('subscription_set.license_set.activity')
         if Params.getvalue("member-licence-enabled"):
             ident_field.append('subscription_set.license_set.value')
-        ident_field.extend(['comment', 'user'])
+        ident_field.extend(['comment', 'user', 'last_subscription'])
         ident_field.extend(['subscription_set.season.str', 'subscription_set.subscriptiontype.str'])
         ident_field.extend(['subscription_set', 'responsability_set', 'documents', 'OUR_DETAIL'])
         return ident_field
@@ -1028,8 +1029,7 @@ class Adherent(Individual):
         else:
             return False
 
-    @property
-    def last_subscription(self):
+    def get_last_subscription(self):
         subscriptions = self.subscription_set.all().order_by('-end_date')
         if len(subscriptions) > 0:
             return subscriptions[0]

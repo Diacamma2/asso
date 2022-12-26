@@ -85,9 +85,9 @@ class BaseAdherentTest(LucteriosTest):
                 2010, date.today().month, date.today().day)
 
     def setUp(self):
-        LucteriosTest.setUp(self)
         settings.LOGIN_FIELD = 'username'
         settings.ASK_LOGIN_EMAIL = False
+        LucteriosTest.setUp(self)
         rmtree(get_user_dir(), True)
         default_financial()
         default_season()
