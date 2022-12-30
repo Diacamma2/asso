@@ -669,7 +669,7 @@ class Adherent(Individual):
     age_from_ref = LucteriosVirtualField(verbose_name=_("age"), compute_from="get_age_from_ref")
 
     dateref = LucteriosVirtualField(verbose_name=_("reference date"), compute_from='get_dateref', format_string='D')
-    last_subscription = LucteriosVirtualField(verbose_name=_("last subscription"), compute_from='get_last_subscription')
+    last_subscription = LucteriosVirtualField(verbose_name=_("current subscription"), compute_from='get_last_subscription')
 
     def __init__(self, *args, **kwargs):
         Individual.__init__(self, *args, **kwargs)

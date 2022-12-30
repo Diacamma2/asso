@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-12-26 13:30+0000\n"
-"PO-Revision-Date: 2022-12-26 14:30+0100\n"
+"POT-Creation-Date: 2022-12-30 13:14+0000\n"
+"PO-Revision-Date: 2022-12-30 14:13+0100\n"
 "Last-Translator: Laurent Gay <l.gay@sd-libre.fr>\n"
 "Language-Team: français <>\n"
 "Language: en\n"
@@ -280,8 +280,8 @@ msgid "reference date"
 msgstr "reference date"
 
 #: models.py:672
-msgid "last subscription"
-msgstr "last subscription"
+msgid "current subscription"
+msgstr "current subscription"
 
 #: models.py:779 views.py:1815 views.py:1830 views.py:1832
 msgid "002@Subscription"
@@ -1590,3 +1590,6 @@ msgstr "Please, waiting a minutes ..."
 #, python-format
 msgid "%s subscriptions were regenerated."
 msgstr "%s subscriptions were regenerated."
+
+#~ msgid "last subscription"
+#~ msgstr "last subscription"
