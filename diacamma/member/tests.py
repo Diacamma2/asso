@@ -605,7 +605,7 @@ class CategoriesTest(LucteriosTest):
         self.assert_json_equal('SELECT', 'member-size-page', '25')
         self.assert_select_equal('member-size-page', 5)
         self.assert_json_equal('CHECKLIST', 'member-fields', ['num', 'firstname', 'lastname', 'tel1', 'tel2', 'email', 'license'])
-        self.assert_select_equal('member-fields', 19, checked=True)
+        self.assert_select_equal('member-fields', 20, checked=True)
 
         Parameter.change_value("member-team-text", 'Cours')
         Parameter.change_value("member-activite-text", 'Sport')

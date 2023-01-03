@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-12-30 13:14+0000\n"
+"POT-Creation-Date: 2023-01-03 10:48+0000\n"
 "PO-Revision-Date: 2022-12-30 14:13+0100\n"
 "Last-Translator: Laurent Gay <l.gay@sd-libre.fr>\n"
 "Language-Team: français <>\n"
@@ -49,11 +49,11 @@ msgstr "date min."
 msgid "date max."
 msgstr "date max."
 
-#: editors.py:161 models.py:665 models.py:844 models.py:2206 views.py:1803
+#: editors.py:161 models.py:665 models.py:845 models.py:2206 views.py:1803
 msgid "family"
 msgstr "family"
 
-#: editors.py:193 models.py:410 models.py:668 models.py:791
+#: editors.py:193 models.py:410 models.py:668 models.py:792
 msgid "documents needs"
 msgstr "documents needs"
 
@@ -206,7 +206,7 @@ msgstr "order"
 msgid "price"
 msgstr "price"
 
-#: models.py:532 models.py:845 models.py:1318 models.py:2029
+#: models.py:532 models.py:846 models.py:1318 models.py:2029
 #: printmodel/Adherent_0003.py:56
 msgid "subscription type"
 msgstr "subscription type"
@@ -280,36 +280,40 @@ msgid "reference date"
 msgstr "reference date"
 
 #: models.py:672
+msgid "last subscription"
+msgstr "last subscription"
+
+#: models.py:673
 msgid "current subscription"
 msgstr "current subscription"
 
-#: models.py:779 views.py:1815 views.py:1830 views.py:1832
+#: models.py:780 views.py:1815 views.py:1830 views.py:1832
 msgid "002@Subscription"
 msgstr "Subscription"
 
-#: models.py:791 models.py:1457 models.py:1719 models.py:1720 models.py:1725
+#: models.py:792 models.py:1457 models.py:1719 models.py:1720 models.py:1725
 #: models.py:1754
 msgid "subscription"
 msgstr "subscription"
 
-#: models.py:849 models.py:1247 models.py:1323 models.py:2033
+#: models.py:850 models.py:1247 models.py:1323 models.py:2033
 msgid "prestations"
 msgstr "prestations"
 
-#: models.py:853 models.py:1755 printmodel/Adherent_0003.py:56
+#: models.py:854 models.py:1755 printmodel/Adherent_0003.py:56
 msgid "license #"
 msgstr "license #"
 
-#: models.py:859 models.py:1053 models.py:1135 views.py:317 views.py:1221
+#: models.py:860 models.py:1053 models.py:1135 views.py:317 views.py:1221
 msgid "No family type!"
 msgstr "No family structure type!"
 
-#: models.py:920
+#: models.py:921
 #, python-format
 msgid "subscription type '%s' unknown !"
 msgstr "subscription type '%s' unknown !"
 
-#: models.py:1006 models.py:2058
+#: models.py:1007 models.py:2058
 msgid "No subscription type active !"
 msgstr "No subscription type active !"
 
@@ -1590,6 +1594,3 @@ msgstr "Please, waiting a minutes ..."
 #, python-format
 msgid "%s subscriptions were regenerated."
 msgstr "%s subscriptions were regenerated."
-
-#~ msgid "last subscription"
-#~ msgstr "last subscription"

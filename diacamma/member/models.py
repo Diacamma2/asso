@@ -669,7 +669,8 @@ class Adherent(Individual):
     age_from_ref = LucteriosVirtualField(verbose_name=_("age"), compute_from="get_age_from_ref")
 
     dateref = LucteriosVirtualField(verbose_name=_("reference date"), compute_from='get_dateref', format_string='D')
-    last_subscription = LucteriosVirtualField(verbose_name=_("current subscription"), compute_from='get_last_subscription')
+    last_subscription = LucteriosVirtualField(verbose_name=_("last subscription"), compute_from='get_last_subscription')
+    current_subscription = LucteriosVirtualField(verbose_name=_("current subscription"), compute_from='get_current_subscription')
 
     def __init__(self, *args, **kwargs):
         Individual.__init__(self, *args, **kwargs)
@@ -705,7 +706,7 @@ class Adherent(Individual):
             allowed_fields.extend(["age_category", "age_from_ref"])
         if Params.getvalue("member-licence-enabled"):
             allowed_fields.append('license')
-        allowed_fields.extend(['comment', 'user', 'documents', 'last_subscription'])
+        allowed_fields.extend(['comment', 'user', 'documents', 'last_subscription', 'current_subscription'])
         return allowed_fields
 
     @classmethod
@@ -1036,8 +1037,7 @@ class Adherent(Individual):
         else:
             return None
 
-    @property
-    def current_subscription(self):
+    def get_current_subscription(self):
         sub = self.subscription_set.filter(
             begin_date__lte=self.dateref, end_date__gte=self.dateref)
         if len(sub) > 0:
@@ -2240,7 +2240,7 @@ def convert_parameter_birth():
 
 def convert_prestation():
     for prest in Prestation.objects.filter(team_prestation__isnull=True):
-        print("convert_prestation", prest.team, prest.activity, prest.article)
+        logging.getLogger('diacamma.member').info("convert_prestation : %s %s %s", prest.team, prest.activity, prest.article)
         prest.team_prestation = TeamPrestation.objects.create(team=prest.team, activity=prest.activity)
         prest.team_id = None
         prest.activity_id = None

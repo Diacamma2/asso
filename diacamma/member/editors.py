@@ -38,6 +38,7 @@ from lucterios.framework.tools import CLOSE_NO, FORMTYPE_REFRESH, ActionsManage,
 from lucterios.framework.xferadvance import TITLE_EDIT
 
 from lucterios.CORE.parameters import Params
+from lucterios.CORE.models import Preference
 from lucterios.framework.xferbasic import NULL_VALUE
 from lucterios.contacts.models import Individual
 from lucterios.contacts.editors import IndividualEditor
@@ -289,7 +290,11 @@ class SubscriptionEditor(LucteriosEditor):
             del cmp_status.select_list[0]
             del cmp_status.select_list[-2]
             del cmp_status.select_list[-1]
-            cmp_status.set_value(Subscription.STATUS_BUILDING)
+            status_pref = Preference.get_value('adherent-status', xfer.request.user)
+            if status_pref == Subscription.STATUS_VALID:
+                cmp_status.set_value(Subscription.STATUS_VALID)
+            else:
+                cmp_status.set_value(Subscription.STATUS_BUILDING)
         else:
             xfer.change_to_readonly("status")
         last_subscription = self.item.adherent.last_subscription
