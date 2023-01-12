@@ -36,7 +36,7 @@ from lucterios.framework import signal_and_lock
 from lucterios.framework.error import LucteriosException, IMPORTANT
 from lucterios.framework.tools import FORMTYPE_NOMODAL, ActionsManage, MenuManage, \
     FORMTYPE_REFRESH, CLOSE_NO, SELECT_SINGLE, WrapAction, FORMTYPE_MODAL, \
-    SELECT_MULTI, CLOSE_YES, SELECT_NONE, ifplural, get_url_from_request,\
+    SELECT_MULTI, CLOSE_YES, SELECT_NONE, ifplural, get_url_from_request, \
     get_bool_textual, get_date_formating
 from lucterios.framework.tools import convert_date
 from lucterios.framework.xferadvance import XferAddEditor
@@ -1549,9 +1549,12 @@ class AdherentStatisticPrint(XferPrintAction):
 @MenuManage.describ(None)
 class SubscriptionAddForCurrent(SubscriptionAddModify):
     redirect_to_show = False
+    
+    def _search_model(self):
+        self.params['autocreate'] = 1
+        SubscriptionAddModify._search_model(self)
 
     def fillresponse(self):
-        self.params['autocreate'] = 1
         current_contact = Individual.objects.get(user=self.request.user)
         current_contact = current_contact.get_final_child()
         if isinstance(current_contact, Adherent):
