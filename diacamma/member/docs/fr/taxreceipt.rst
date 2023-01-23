@@ -23,7 +23,7 @@ Ajoutez dans le *Gestionnaire de documents* le fichier image devant être utilis
      Menu *Administration/Configuration générale* - onglet "Gestion documentaire"
 
 Dans un second temps, mettez à jour le champ "image de cachet ou de signature".
-Cette image, intégrée dans le modèle d'impression par défaut, sera insérée automatiquement dans le reçu au format PDF, zone "signature".
+Cette image, intégrée dans le patron d'impression par défaut, sera insérée automatiquement dans le reçu au format PDF, zone "signature".
  
 
 **Préciser la justification du reçu fiscal**
