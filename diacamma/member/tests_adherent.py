@@ -48,8 +48,9 @@ from diacamma.accounting.models import FiscalYear
 from diacamma.accounting.test_tools import fill_accounts_fr, create_account, add_entry
 from diacamma.accounting.views_entries import EntryAccountList, EntryAccountClose, EntryAccountLink
 from diacamma.invoice.views import BillList, BillTransition, BillToBill, BillAddModify, BillShow, DetailAddModify
-from diacamma.invoice.models import get_or_create_customer, Article, AccountPosting
-from diacamma.invoice.test_tools import InvoiceTest
+from diacamma.invoice.models import get_or_create_customer, Article, AccountPosting,\
+    CategoryBill
+from diacamma.invoice.test_tools import InvoiceTest, default_categorybill
 from diacamma.payoff.views import PayoffAddModify
 from diacamma.payoff.test_tools import check_pdfreport
 
@@ -92,6 +93,7 @@ class BaseAdherentTest(LucteriosTest):
         default_financial()
         default_season()
         default_params()
+        default_categorybill()
 
     def add_subscriptions(self, year=2009, season_id=10, status=2):
         default_adherents()
@@ -497,6 +499,7 @@ class AdherentTest(BaseAdherentTest):
         self.assert_count_equal('bill', 1)
         self.assert_json_equal('', 'bill/@0/third', "Dalton Avrel")
         self.assert_json_equal('', 'bill/@0/bill_type', 1)
+        self.assert_json_equal('', 'bill/@0/billtype', 'facture')
         self.assert_json_equal('', 'bill/@0/total', 76.44)
 
     def test_subscription_bydate(self):
@@ -1046,6 +1049,7 @@ class AdherentTest(BaseAdherentTest):
         self.assert_count_equal('bill', 6)
         self.assert_json_equal('', 'bill/@0/status', 1)
         self.assert_json_equal('', 'bill/@0/bill_type', 0)
+        self.assert_json_equal('', 'bill/@0/billtype', 'devis')
         self.assert_json_equal('', 'bill/@0/third', 'Dalton Avrel')
         self.assert_json_equal('', 'bill/@0/comment', "{[b]}cotisation{[/b]}{[br/]}Cotisation de 'Dalton Avrel'")
         self.assert_json_equal('', 'bill/@0/date', '2011-08-31')
@@ -1332,6 +1336,8 @@ class AdherentTest(BaseAdherentTest):
     def test_valid_bill_of_subscription(self):
         default_adherents()
         default_subscription()
+        cat1 = CategoryBill.objects.get(id=1)
+        cat1.change_has_default()
 
         self.factory.xfer = BillList()
         self.calljson('/diacamma.invoice/billList', {}, False)
@@ -1380,6 +1386,7 @@ class AdherentTest(BaseAdherentTest):
         self.assert_count_equal('bill', 1)
         self.assert_json_equal('', 'bill/@0/status', 0)
         self.assert_json_equal('', 'bill/@0/bill_type', 0)
+        self.assert_json_equal('', 'bill/@0/billtype', 'QQQ')
         self.assert_json_equal('', 'bill/@0/total', 76.44)
 
         self.factory.xfer = BillTransition()
@@ -1422,6 +1429,7 @@ class AdherentTest(BaseAdherentTest):
         self.assert_observer('core.custom', 'diacamma.invoice', 'billList')
         self.assert_count_equal('bill', 1)
         self.assert_json_equal('', 'bill/@0/bill_type', 1)
+        self.assert_json_equal('', 'bill/@0/billtype', 'BBB')
         self.assert_json_equal('', 'bill/@0/total', 76.44)
 
     def test_command(self):
@@ -1569,6 +1577,7 @@ class AdherentTest(BaseAdherentTest):
         default_adherents()
         default_subscription()
         default_prestation()
+        Parameter.change_value('member-default-categorybill', 2)
 
         self.factory.xfer = BillList()
         self.calljson('/diacamma.invoice/billList', {}, False)
@@ -1622,6 +1631,7 @@ class AdherentTest(BaseAdherentTest):
         self.assert_count_equal('bill', 1)
         self.assert_json_equal('', 'bill/@0/status', 0)
         self.assert_json_equal('', 'bill/@0/bill_type', 0)
+        self.assert_json_equal('', 'bill/@0/billtype', 'Type Q')
         self.assert_json_equal('', 'bill/@0/total', 413.75)
 
         self.factory.xfer = SubscriptionTransition()
@@ -1634,6 +1644,7 @@ class AdherentTest(BaseAdherentTest):
         self.assert_count_equal('bill', 1)
         self.assert_json_equal('', 'bill/@0/status', 0)
         self.assert_json_equal('', 'bill/@0/bill_type', 1)
+        self.assert_json_equal('', 'bill/@0/billtype', 'Type B')
         self.assert_json_equal('', 'bill/@0/total', 413.75)
 
         self.factory.xfer = SubscriptionShow()

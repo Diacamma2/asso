@@ -44,7 +44,8 @@ from diacamma.payoff.views import SupportingPrint, can_send_email
 
 @signal_and_lock.Signal.decorate('config')
 def config_member(setting_list):
-    setting_list['20@%s' % _("Adherents")] = ["member-family-type", "member-connection", "member-subscription-mode", "member-size-page", "member-tax-receipt"]
+    setting_list['20@%s' % _("Adherents")] = ["member-family-type", "member-connection", "member-subscription-mode",
+                                              "member-size-page", "member-default-categorybill", "member-tax-receipt"]
     return True
 
 

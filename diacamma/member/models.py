@@ -55,7 +55,8 @@ from lucterios.contacts.models import Individual, LegalEntity, Responsability, \
 from lucterios.documents.models import FolderContainer
 from lucterios.mailing.email_functions import EmailException
 
-from diacamma.invoice.models import Article, Bill, Detail, get_or_create_customer, invoice_addon_for_third
+from diacamma.invoice.models import Article, Bill, Detail, get_or_create_customer, invoice_addon_for_third,\
+    CategoryBill
 from diacamma.accounting.tools import get_amount_from_format_devise, format_with_devise, current_system_account
 from diacamma.accounting.models import Third, FiscalYear, EntryAccount, EntryLineAccount, ChartsAccount, Journal
 from diacamma.payoff.views import get_html_payment
@@ -1435,7 +1436,10 @@ class Subscription(LucteriosModel):
             self.bill = bill_list[0]
             self.bill.date = date_ref
         if (self.bill is None) or (self.bill.bill_type != bill_type) or (self.bill.status != Bill.STATUS_BUILDING):
-            self.bill = Bill.objects.create(bill_type=bill_type, date=date_ref, third=new_third, parentbill=parentbill)
+            categoryBill = Params.getobject("member-default-categorybill")
+            if categoryBill is None:
+                categoryBill = CategoryBill.objects.filter(is_default=True).first()
+            self.bill = Bill.objects.create(bill_type=bill_type, date=date_ref, third=new_third, parentbill=parentbill, categoryBill=categoryBill)
 
     def _regenerate_bill(self, bill_type):
         self.bill.bill_type = bill_type
@@ -2285,6 +2289,7 @@ def member_checkparam():
     Parameter.check_and_create(name="member-tax-receipt", typeparam=Parameter.TYPE_STRING, title=_("member-tax-receipt"), args="{'Multi':True}", value='',
                                meta='("accounting","ChartsAccount","import diacamma.accounting.tools;django.db.models.Q(code__regex=diacamma.accounting.tools.current_system_account().get_revenue_mask()) & django.db.models.Q(year__is_actif=True)", "code", False)')
     Parameter.check_and_create(name="member-age-statistic", typeparam=Parameter.TYPE_INTEGER, title=_("member-age-statistic"), args="{'Min': 1, 'Max': 100}", value='18')
+    Parameter.check_and_create(name="member-default-categorybill", typeparam=Parameter.TYPE_INTEGER, title=_("member-default-categorybill"), args="{}", value='0', meta='("invoice","CategoryBill", Q(), "id", False)')
 
     LucteriosGroup.redefine_generic(_("# member (administrator)"), Season.get_permission(True, True, True), Adherent.get_permission(True, True, True),
                                     Subscription.get_permission(True, True, True), TaxReceipt.get_permission(True, True, True))
