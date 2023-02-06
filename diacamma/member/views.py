@@ -921,14 +921,11 @@ class AdherentSendSubscription(XferContainerAcknowledge):
             dlg.add_action(self.return_action(TITLE_OK, "images/ok.png"), close=CLOSE_YES)
             dlg.add_action(WrapAction(TITLE_CANCEL, 'images/cancel.png'))
         else:
-            dateref = convert_date(self.getparam("dateref", ""), Season.current_season().date_ref)
-            enddate_delay = self.getparam("enddate_delay", 0)
-            sub_end_date = dateref + timedelta(days=enddate_delay)
             bill_list = []
             for adh in self.items:
-                ref_subscrip = adh.subscription_set.filter(Q(begin_date__lte=sub_end_date) & Q(end_date__gte=sub_end_date)).first()
-                if (ref_subscrip is not None) and (ref_subscrip.bill_id is not None):
-                    bill_list.append(str(ref_subscrip.bill_id))
+                ref_subscrip = adh.last_subscription
+                if (ref_subscrip is not None) and (ref_subscrip.bill is not None):
+                    bill_list.append(str(ref_subscrip.bill.id))
             if len(bill_list) == 0:
                 return
             if send_mode == 1:
@@ -1549,7 +1546,7 @@ class AdherentStatisticPrint(XferPrintAction):
 @MenuManage.describ(None)
 class SubscriptionAddForCurrent(SubscriptionAddModify):
     redirect_to_show = False
-    
+
     def _search_model(self):
         self.params['autocreate'] = 1
         SubscriptionAddModify._search_model(self)
