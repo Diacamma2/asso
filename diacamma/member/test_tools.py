@@ -108,6 +108,7 @@ def default_adherents(third_must_created=False):
     adherent_list.append(create_adherent('Lucky', 'Luke', '1979-06-04'))  # adherent 6 - 2009 = 30ans
     if third_must_created:
         create_third([adh.id for adh in adherent_list], ['411'])
+    return adherent_list
 
 
 def default_subscription(with_light=False):

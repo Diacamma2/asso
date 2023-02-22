@@ -35,8 +35,10 @@ from lucterios.framework.tools import FORMTYPE_NOMODAL, ActionsManage, MenuManag
 from lucterios.framework.xfergraphic import XferContainerAcknowledge
 from lucterios.framework.xfercomponents import XferCompSelect, XferCompButton
 from lucterios.framework.error import LucteriosException, IMPORTANT
+from lucterios.CORE.parameters import Params
 
 from diacamma.member.models import Season, Period, SubscriptionType, Document
+from diacamma.member.views_conf import CategoryParamEdit
 
 MenuManage.add_sub("member.conf", "core.extensions", "", _("Member"), "", 5)
 
@@ -75,10 +77,20 @@ class SeasonSubscription(XferListEditor):
         self.new_tab(_('Subscriptions'))
         row_max = self.get_max_row()
         self.fill_grid(row_max, SubscriptionType, "subscriptiontype", SubscriptionType.objects.all())
+        self.get_components('subscriptiontype').colspan = 3
         btn = XferCompButton('reloadBill')
-        btn.set_location(0, row_max + 5, 2)
+        btn.set_location(0, row_max + 5)
         btn.set_action(self.request, SubscriptionReloadBill.get_action(_('Regenerate'), "/static/diacamma.invoice/images/bill.png"), modal=FORMTYPE_MODAL, close=CLOSE_NO)
         self.add_component(btn)
+        if SubscriptionType.objects.filter(duration=SubscriptionType.DURATION_CALENDAR).count() > 0:
+            param_lists = ['member-subscription-delaytorenew']
+            Params.fill(self, param_lists, 1, self.get_max_row() + 1, nb_col=1)
+            btn = XferCompButton('editparam')
+            btn.set_is_mini(True)
+            btn.set_location(2, self.get_max_row())
+            btn.set_action(self.request, CategoryParamEdit.get_action(TITLE_MODIFY, 'images/edit.png'),
+                           close=CLOSE_NO, params={'params': param_lists, 'nb_col': 1})
+            self.add_component(btn)
 
 
 @ActionsManage.affect_grid(_("Active"), "images/ok.png", unique=SELECT_SINGLE)

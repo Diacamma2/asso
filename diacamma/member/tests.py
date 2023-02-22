@@ -22,7 +22,6 @@ You should have received a copy of the GNU General Public License
 along with Lucterios.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-
 from __future__ import unicode_literals
 from shutil import rmtree
 
@@ -31,12 +30,12 @@ from lucterios.framework.filetools import get_user_dir
 from lucterios.CORE.models import Parameter
 from lucterios.CORE.parameters import Params
 
-from diacamma.member.views_season import SeasonAddModify, SeasonShow, SeasonSubscription,\
-    SeasonActive, DocummentAddModify, DocummentDel, SeasonDocummentClone,\
-    PeriodDel, PeriodAddModify, SubscriptionTypeAddModify, SubscriptionTypeShow,\
+from diacamma.member.views_season import SeasonAddModify, SeasonShow, SeasonSubscription, \
+    SeasonActive, DocummentAddModify, DocummentDel, SeasonDocummentClone, \
+    PeriodDel, PeriodAddModify, SubscriptionTypeAddModify, SubscriptionTypeShow, \
     SubscriptionTypeDel, SubscriptionTypeUp
 from diacamma.member.test_tools import default_season, default_financial, set_parameters
-from diacamma.member.views_conf import CategoryConf, ActivityAddModify,\
+from diacamma.member.views_conf import CategoryConf, ActivityAddModify, \
     ActivityDel, TeamAddModify, TeamDel, AgeAddModify, AgeDel, CategoryParamEdit
 
 
@@ -313,7 +312,8 @@ class SeasonTest(LucteriosTest):
         self.assert_grid_equal('subscriptiontype', {'order_key': 'ordre', 'name': "nom", 'description': "description", 'duration': "durée", 'state': "état", 'price': "prix"}, 0)
         self.assert_json_equal('TAB', '__tab_1', 'Saison')
         self.assert_json_equal('TAB', '__tab_2', 'Les cotisations')
-        self.assertFalse('__tab_3' in self.json_data.keys(), self.json_data.keys())
+        self.assertNotIn('__tab_3', self.json_data.keys())
+        self.assertNotIn('member-subscription-delaytorenew', self.json_data.keys())
 
         self.factory.xfer = SubscriptionTypeAddModify()
         self.calljson('/diacamma.member/subscriptionTypeAddModify', {}, False)
@@ -376,6 +376,20 @@ class SeasonTest(LucteriosTest):
         self.calljson('/diacamma.member/seasonSubscription', {}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'seasonSubscription')
         self.assert_count_equal('subscriptiontype', 1)
+        self.assert_count_equal('', 8)
+        self.assertNotIn('member-subscription-delaytorenew', self.json_data.keys())
+
+        self.factory.xfer = SubscriptionTypeAddModify()
+        self.calljson('/diacamma.member/subscriptionTypeAddModify',
+                      {'SAVE': 'YES', 'name': 'xyz987', 'description': 'foofoo', 'duration': 3, 'articles': '2'}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.member', 'subscriptionTypeAddModify')
+
+        self.factory.xfer = SeasonSubscription()
+        self.calljson('/diacamma.member/seasonSubscription', {}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'seasonSubscription')
+        self.assert_count_equal('subscriptiontype', 2)
+        self.assert_count_equal('', 10)
+        self.assert_json_equal('LABELFORM', 'member-subscription-delaytorenew', '0')
 
 
 class CategoriesTest(LucteriosTest):

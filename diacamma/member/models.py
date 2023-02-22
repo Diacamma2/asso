@@ -55,7 +55,7 @@ from lucterios.contacts.models import Individual, LegalEntity, Responsability, \
 from lucterios.documents.models import FolderContainer
 from lucterios.mailing.email_functions import EmailException
 
-from diacamma.invoice.models import Article, Bill, Detail, get_or_create_customer, invoice_addon_for_third,\
+from diacamma.invoice.models import Article, Bill, Detail, get_or_create_customer, invoice_addon_for_third, \
     CategoryBill
 from diacamma.accounting.tools import get_amount_from_format_devise, format_with_devise, current_system_account
 from diacamma.accounting.models import Third, FiscalYear, EntryAccount, EntryLineAccount, ChartsAccount, Journal
@@ -167,7 +167,7 @@ class Season(LucteriosModel):
                                        "ratio": "%d (%.1f%%)" % (criteria_sum, 100 * criteria_sum / total) if with_total else "%d" % criteria_sum})
             for idx in range(4):
                 total_by_criteria[idx] += val_by_criteria[criteria][idx]
-        values_by_criteria.sort(key=lambda val: -1 * val['sum'])
+        values_by_criteria.sort(key=lambda val:-1 * val['sum'])
         if with_total and (len(values_by_criteria) > 0):
             values_by_criteria.append({name: "{[b]}%s{[/b]}" % _('total'),
                                        "MajM": "{[b]}%d{[/b]}" % total_by_criteria[0],
@@ -253,7 +253,7 @@ class Season(LucteriosModel):
         if adherent is None:
             return False
         else:
-            act_ret = self.activate_adherent(adherent, email=email, usernamebase=usernamebase)
+            act_ret = adherent.activate_adherent(email=email, usernamebase=usernamebase)
             if act_ret == 0:
                 adherent.user.generate_password()
             return (act_ret >= 0)
@@ -267,37 +267,6 @@ class Season(LucteriosModel):
                 nb_del += 1
         return nb_del
 
-    def activate_adherent(self, adherent, email=None, usernamebase=None):
-        defaultgroup = Params.getobject("contacts-defaultgroup")
-        if adherent.user_id is None:
-            if adherent.email != '':
-                username = adherent.create_username(usernamebase)
-                new_user = LucteriosUser.objects.create(username=username, first_name=adherent.firstname, last_name=adherent.lastname, email=adherent.email if email is None else email)
-                if not settings.ASK_LOGIN_EMAIL or not new_user.is_email_already_exists:
-                    adherent.user = new_user
-                    adherent.save()
-                    if defaultgroup is not None:
-                        adherent.user.groups.add(defaultgroup)
-                    adherent.user.generate_password()
-                    return 1
-                else:
-                    new_user.delete()
-                    return -2
-            else:
-                return -1
-        elif not adherent.user.is_active and (not settings.ASK_LOGIN_EMAIL or not adherent.user.is_email_already_exists):
-            adherent.user.email = adherent.email if email is None else email
-            adherent.user.is_active = True
-            adherent.user.save()
-            if defaultgroup is not None:
-                adherent.user.groups.add(defaultgroup)
-            adherent.user.generate_password()
-            return 2
-        elif adherent.user.is_active and (email is not None) and (adherent.user.email != email):
-            adherent.user.email = email
-            adherent.user.save()
-        return 0
-
     def check_connection(self):
         nb_del = self.disabled_old_connection()
         nb_add = 0
@@ -305,7 +274,7 @@ class Season(LucteriosModel):
         error_sending = []
         for adherent in Adherent.objects.filter(Q(subscription__status__in=(Subscription.STATUS_BUILDING, Subscription.STATUS_VALID)) & Q(subscription__season=self)).distinct():
             try:
-                act_ret = self.activate_adherent(adherent)
+                act_ret = adherent.activate_adherent()
                 if act_ret == 1:
                     nb_add += 1
                 elif act_ret == 2:
@@ -773,7 +742,7 @@ class Adherent(Individual):
             fields[keys[0]][0] = ("num", fields[keys[0]][0])
         email_index = fields[keys[0]].index('email')
         if Params.getvalue("member-birth") == 1:
-            fields[keys[0]].insert(email_index + 1, ("birthday", ))
+            fields[keys[0]].insert(email_index + 1, ("birthday",))
         elif Params.getvalue("member-birth") == 2:
             fields[keys[0]].insert(email_index + 1, ("birthday", "birthplace"))
         if Params.getvalue("member-age-enable"):
@@ -949,6 +918,37 @@ class Adherent(Individual):
             logging.getLogger('diacamma.member').exception("import_data")
             return None
 
+    def activate_adherent(self, email=None, usernamebase=None):
+        defaultgroup = Params.getobject("contacts-defaultgroup")
+        if self.user_id is None:
+            if self.email != '':
+                username = self.create_username(usernamebase)
+                new_user = LucteriosUser.objects.create(username=username, first_name=self.firstname, last_name=self.lastname, email=self.email if email is None else email)
+                if not settings.ASK_LOGIN_EMAIL or not new_user.is_email_already_exists:
+                    self.user = new_user
+                    self.save()
+                    if defaultgroup is not None:
+                        self.user.groups.add(defaultgroup)
+                    self.user.generate_password()
+                    return 1
+                else:
+                    new_user.delete()
+                    return -2
+            else:
+                return -1
+        elif not self.user.is_active and (not settings.ASK_LOGIN_EMAIL or not self.user.is_email_already_exists):
+            self.user.email = self.email if email is None else email
+            self.user.is_active = True
+            self.user.save()
+            if defaultgroup is not None:
+                self.user.groups.add(defaultgroup)
+            self.user.generate_password()
+            return 2
+        elif self.user.is_active and (email is not None) and (self.user.email != email):
+            self.user.email = email
+            self.user.save()
+        return 0
+
     def get_documents(self):
         if self.id is None:
             return None
@@ -1008,7 +1008,12 @@ class Adherent(Individual):
                     raise LucteriosException(IMPORTANT, _('No subscription type active !'))
                 new_subscriptiontype = subtypes.first()
             new_subscription = Subscription(adherent=self, subscriptiontype=new_subscriptiontype, status=Subscription.STATUS_BUILDING)
-            new_subscription.set_periode(max(dateref, last_subscription.end_date + timedelta(days=1)))
+            begin_date = max(dateref, last_subscription.end_date + timedelta(days=1))
+            if new_subscriptiontype.duration == SubscriptionType.DURATION_CALENDAR:
+                new_begin_date = last_subscription.end_date + timedelta(days=1)
+                if (dateref - new_begin_date).days < Params.getvalue('member-subscription-delaytorenew'):
+                    begin_date = new_begin_date
+            new_subscription.set_periode(begin_date)
             if Params.getvalue("member-team-enable") == 2:
                 prestation_list = []
                 for license_item in last_subscription.license_set.all():
@@ -1303,7 +1308,8 @@ class Prestation(LucteriosModel):
 class Subscription(LucteriosModel):
     MODE_NOHIMSELF = 0
     MODE_WITHMODERATE = 1
-    MODE_AUTOMATIQUE = 1
+    MODE_AUTOMATIQUE = 2
+    MODE_WITHMODERATEFORNEW = 3
 
     STATUS_WAITING_BUILDING = -1
     STATUS_WAITING = 0
@@ -2281,8 +2287,8 @@ def member_checkparam():
     Parameter.check_and_create(name="member-licence-enabled", typeparam=Parameter.TYPE_BOOL, title=_("member-licence-enabled"), args="{}", value='True')
     Parameter.check_and_create(name="member-subscription-message", typeparam=Parameter.TYPE_STRING, title=_("member-subscription-message"),
                                args="{'Multi':True, 'HyperText': True}", value=_('Welcome,{[br/]}{[br/]}You have a new subscription.Joint, the quotation relative.{[br/]}{[br/]}Regards,'))
-    Parameter.check_and_create(name="member-subscription-mode", typeparam=Parameter.TYPE_SELECT, title=_("member-subscription-mode"), args="{'Enum':3}", value='0',
-                               param_titles=(_("member-subscription-mode.0"), _("member-subscription-mode.1"), _("member-subscription-mode.2")))
+    Parameter.check_and_create(name="member-subscription-mode", typeparam=Parameter.TYPE_SELECT, title=_("member-subscription-mode"), args="{'Enum':4}", value='0',
+                               param_titles=(_("member-subscription-mode.0"), _("member-subscription-mode.1"), _("member-subscription-mode.2"), _("member-subscription-mode.3")))
     Parameter.check_and_create(name="member-family-type", typeparam=Parameter.TYPE_INTEGER, title=_("member-family-type"), args="{}", value='0', meta='("contacts","StructureType", Q(), "id", False)')
     Parameter.check_and_create(name="member-size-page", typeparam=Parameter.TYPE_INTEGER, title=_("member-size-page"), args="{}", value='25', meta='("","", "[(25,\'25\'),(50,\'50\'),(100,\'100\'),(250,\'250\'),(500,\'500\'),]", "", True)')
     Parameter.check_and_create(name="member-fields", typeparam=Parameter.TYPE_STRING, title=_("member-fields"), args="{'Multi':False}", value='')
@@ -2290,6 +2296,7 @@ def member_checkparam():
                                meta='("accounting","ChartsAccount","import diacamma.accounting.tools;django.db.models.Q(code__regex=diacamma.accounting.tools.current_system_account().get_revenue_mask()) & django.db.models.Q(year__is_actif=True)", "code", False)')
     Parameter.check_and_create(name="member-age-statistic", typeparam=Parameter.TYPE_INTEGER, title=_("member-age-statistic"), args="{'Min': 1, 'Max': 100}", value='18')
     Parameter.check_and_create(name="member-default-categorybill", typeparam=Parameter.TYPE_INTEGER, title=_("member-default-categorybill"), args="{}", value='0', meta='("invoice","CategoryBill", Q(), "id", False)')
+    Parameter.check_and_create(name="member-subscription-delaytorenew", typeparam=Parameter.TYPE_INTEGER, title=_("member-subscription-delaytorenew"), args="{'Min': 0, 'Max': 999}", value='0')
 
     LucteriosGroup.redefine_generic(_("# member (administrator)"), Season.get_permission(True, True, True), Adherent.get_permission(True, True, True),
                                     Subscription.get_permission(True, True, True), TaxReceipt.get_permission(True, True, True))

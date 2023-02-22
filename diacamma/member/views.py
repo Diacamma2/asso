@@ -284,7 +284,7 @@ class AdherentActiveList(AdherentAbstractList):
         if Params.getvalue("member-licence-enabled"):
             self.get_components(self.field_id).add_action(self.request, AdherentLicense.get_action(_("License"), ""),
                                                           unique=SELECT_SINGLE, close=CLOSE_NO)
-        if Params.getvalue("member-subscription-mode") == Subscription.MODE_WITHMODERATE:
+        if Params.getvalue("member-subscription-mode") in (Subscription.MODE_WITHMODERATE, Subscription.MODE_WITHMODERATEFORNEW):
             self.add_action(SubscriptionModerate.get_action(_("Moderation"), "images/up.png"), pos_act=0, close=CLOSE_NO)
 
 
@@ -780,7 +780,7 @@ class AdherentRenewList(XferListEditor, AdherentFilter):
         self.item.editor.add_email_selector(self, 0, self.get_max_row() + 1, 10)
         self.get_components('title').colspan = 10
         self.get_components(self.field_id).colspan = 10
-        if Params.getvalue("member-subscription-mode") == Subscription.MODE_WITHMODERATE:
+        if Params.getvalue("member-subscription-mode") in (Subscription.MODE_WITHMODERATE, Subscription.MODE_WITHMODERATEFORNEW):
             self.add_action(SubscriptionModerate.get_action(_("Moderation"), "images/up.png"), pos_act=0, close=CLOSE_NO)
 
 
@@ -1685,7 +1685,7 @@ def situation_member(xfer):
             lab.set_value_as_header(_("No-adhesion found !"))
             lab.set_location(0, row + 1, 4)
             xfer.add_component(lab)
-            if (current_adherent.postal_code != '---') and (Params.getvalue("member-subscription-mode") in (Subscription.MODE_WITHMODERATE, Subscription.MODE_AUTOMATIQUE)):
+            if (current_adherent.postal_code != '---') and (Params.getvalue("member-subscription-mode") != Subscription.MODE_NOHIMSELF):
                 btn = XferCompButton('btnnewsubscript')
                 btn.set_location(0, row + 2, 4)
                 btn.set_action(xfer.request, SubscriptionAddForCurrent.get_action(_('Subscription'), 'diacamma.member/images/adherent.png'), close=CLOSE_NO)
@@ -1811,7 +1811,7 @@ def add_account_subscription(current_contact, xfer):
         grid.add_action(xfer.request, SubscriptionEditAdherent.get_action(TITLE_EDIT, "images/edit.png"), modal=FORMTYPE_MODAL, close=CLOSE_NO, unique=SELECT_SINGLE)
         xfer.add_component(grid)
         xfer.actions = []
-    if (Params.getvalue("member-subscription-mode") in (Subscription.MODE_WITHMODERATE, Subscription.MODE_AUTOMATIQUE)) and (Subscription.objects.filter(Q(adherent_id=current_contact.id) & Q(season=Season.current_season())).count() == 0):
+    if (Params.getvalue("member-subscription-mode") != Subscription.MODE_NOHIMSELF) and (Subscription.objects.filter(Q(adherent_id=current_contact.id) & Q(season=Season.current_season())).count() == 0):
         xfer.new_tab(_('002@Subscription'))
         row = xfer.get_max_row() + 1
         btn = XferCompButton('btnnewsubscript')
@@ -1840,8 +1840,8 @@ def _add_subscription(xfer, contact_filter, before):
 
 
 @signal_and_lock.Signal.decorate('show_contact')
-def shoxcontact_member(item, xfer):
-    if isinstance(item, LegalEntity):
+def showcontact_member(item, xfer):
+    if isinstance(item, LegalEntity) and (item.id != 1):  # no subscription for current
         contact_filter = Q(adherent__responsability__legal_entity=item)
         _add_subscription(xfer, contact_filter, xfer.getparam('SubscriptionBefore') == 'YES')
 

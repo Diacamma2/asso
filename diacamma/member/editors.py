@@ -31,7 +31,7 @@ from django.utils import formats
 
 from lucterios.framework.editors import LucteriosEditor
 from lucterios.framework.xfercomponents import XferCompLabelForm, XferCompDate, XferCompFloat, \
-    XferCompSelect, XferCompCheck, XferCompButton, XferCompGrid
+    XferCompSelect, XferCompCheck, XferCompButton
 from lucterios.framework.error import LucteriosException, IMPORTANT
 from lucterios.framework.tools import CLOSE_NO, FORMTYPE_REFRESH, ActionsManage, get_icon_path, \
     FORMTYPE_MODAL, CLOSE_YES, SELECT_SINGLE, get_url_from_request
@@ -244,7 +244,7 @@ class SubscriptionEditor(LucteriosEditor):
                 activity_id = Activity.objects.all()[0].id
             License.objects.create(subscription=self.item, value=value, activity_id=activity_id, team_id=team_id)
 
-    def _add_season_comp(self, xfer, row):
+    def _add_season_comp(self, xfer, row, last_subscription):
         season = self.item.season
         if self.item.subscriptiontype.duration == SubscriptionType.DURATION_ANNUALLY:
             lbl = XferCompLabelForm("seasondates")
@@ -269,17 +269,32 @@ class SubscriptionEditor(LucteriosEditor):
         elif self.item.subscriptiontype.duration == SubscriptionType.DURATION_CALENDAR:
             begindate = XferCompDate('begin_date')
             begindate.set_needed(True)
-            begindate.set_value(season.date_ref)
+            if last_subscription is None:
+                begindate.set_value(season.date_ref)
+            else:
+                new_begin_date = last_subscription.end_date + timedelta(days=1)
+                if (season.date_ref - new_begin_date).days < Params.getvalue('member-subscription-delaytorenew'):
+                    begindate.set_value(new_begin_date)
+                else:
+                    begindate.set_value(season.date_ref)
             begindate.set_location(1, row)
             begindate.description = _('begin date')
             xfer.add_component(begindate)
+            if (xfer.getparam('autocreate', 0) == 1) and (xfer.params['status'] == Subscription.STATUS_BUILDING):
+                xfer.params['begin_date'] = begindate.value
+                xfer.change_to_readonly('begin_date')
 
     def edit(self, xfer):
         autocreate = xfer.getparam('autocreate', 0) == 1
+        last_subscription = self.item.adherent.last_subscription
         xfer.change_to_readonly("adherent")
         cmp_status = xfer.get_components('status')
         if autocreate:
-            if Params.getvalue("member-subscription-mode") != Subscription.MODE_AUTOMATIQUE:
+            if Params.getvalue("member-subscription-mode") == Subscription.MODE_NOHIMSELF:
+                raise LucteriosException(IMPORTANT, _("No subscription for this mode!"))
+            elif (Params.getvalue("member-subscription-mode") == Subscription.MODE_WITHMODERATEFORNEW) and (last_subscription is not None):
+                status = Subscription.STATUS_BUILDING
+            elif Params.getvalue("member-subscription-mode") == Subscription.MODE_AUTOMATIQUE:
                 status = Subscription.STATUS_BUILDING
             else:
                 status = Subscription.STATUS_WAITING
@@ -297,7 +312,6 @@ class SubscriptionEditor(LucteriosEditor):
                 cmp_status.set_value(Subscription.STATUS_BUILDING)
         else:
             xfer.change_to_readonly("status")
-        last_subscription = self.item.adherent.last_subscription
         cmp_subscriptiontype = xfer.get_components('subscriptiontype')
         if (self.item.id is not None) or autocreate:
             xfer.change_to_readonly('season')
@@ -308,9 +322,8 @@ class SubscriptionEditor(LucteriosEditor):
                 cmp_season.set_value(self.item.season.id)
             cmp_season.set_action(xfer.request, xfer.return_action(),
                                   close=CLOSE_NO, modal=FORMTYPE_REFRESH)
-            if (last_subscription is not None) and (xfer.getparam('subscriptiontype') is None):
-                cmp_subscriptiontype.set_value(
-                    last_subscription.subscriptiontype.id)
+        if (self.item.id is None) and (last_subscription is not None) and (xfer.getparam('subscriptiontype') is None):
+            cmp_subscriptiontype.set_value(last_subscription.subscriptiontype.id)
         if self.item.subscriptiontype_id is None:
             if len(cmp_subscriptiontype.select_list) == 0:
                 raise LucteriosException(IMPORTANT, _("No subscription type defined!"))
@@ -318,7 +331,7 @@ class SubscriptionEditor(LucteriosEditor):
             self.item.subscriptiontype = SubscriptionType.objects.get(id=cmp_subscriptiontype.value)
         cmp_subscriptiontype.set_action(xfer.request, xfer.return_action(), close=CLOSE_NO, modal=FORMTYPE_REFRESH)
         row = xfer.get_max_row() + 1
-        self._add_season_comp(xfer, row)
+        self._add_season_comp(xfer, row, last_subscription)
         if (Params.getvalue("member-team-enable") == 2) and ((self.item.id is None) or (self.item.status in (Subscription.STATUS_WAITING, Subscription.STATUS_BUILDING))):
             xfer.filltab_from_model(1, row + 1, False, ['prestations'])
         elif self.item.id is None:
