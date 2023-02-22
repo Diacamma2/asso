@@ -2297,7 +2297,10 @@ def member_checkparam():
     Parameter.check_and_create(name="member-age-statistic", typeparam=Parameter.TYPE_INTEGER, title=_("member-age-statistic"), args="{'Min': 1, 'Max': 100}", value='18')
     Parameter.check_and_create(name="member-default-categorybill", typeparam=Parameter.TYPE_INTEGER, title=_("member-default-categorybill"), args="{}", value='0', meta='("invoice","CategoryBill", Q(), "id", False)')
     Parameter.check_and_create(name="member-subscription-delaytorenew", typeparam=Parameter.TYPE_INTEGER, title=_("member-subscription-delaytorenew"), args="{'Min': 0, 'Max': 999}", value='0')
-
+    Parameter.check_and_create(name="member-activegroup", typeparam=0, title=_("member-activegroup"),
+                               args="{'Multi':False}", value='',
+                               meta='("CORE","LucteriosGroup","django.db.models.Q()", "id", False)')
+    
     LucteriosGroup.redefine_generic(_("# member (administrator)"), Season.get_permission(True, True, True), Adherent.get_permission(True, True, True),
                                     Subscription.get_permission(True, True, True), TaxReceipt.get_permission(True, True, True))
     LucteriosGroup.redefine_generic(_("# member (editor)"), Adherent.get_permission(True, True, False),

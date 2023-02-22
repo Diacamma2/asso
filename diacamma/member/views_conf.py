@@ -38,14 +38,16 @@ from lucterios.framework.xfergraphic import XferContainerAcknowledge
 from lucterios.CORE.parameters import Params
 from lucterios.CORE.views import ParamEdit, ObjectMerge
 
-from diacamma.member.models import Activity, Age, Team, Season, SubscriptionType, Adherent, TaxReceipt
+from diacamma.member.models import Activity, Age, Team, Season, SubscriptionType, Adherent, TaxReceipt,\
+    Subscription
 from diacamma.payoff.views import SupportingPrint, can_send_email
 
 
 @signal_and_lock.Signal.decorate('config')
 def config_member(setting_list):
     setting_list['20@%s' % _("Adherents")] = ["member-family-type", "member-connection", "member-subscription-mode",
-                                              "member-size-page", "member-default-categorybill", "member-tax-receipt"]
+                                              "member-size-page", "member-default-categorybill",
+                                              "member-tax-receipt", "member-activegroup"]
     return True
 
 
@@ -362,3 +364,16 @@ def conf_wizard_member(wizard_ident, xfer):
     elif (xfer is not None) and (wizard_ident == "member_params"):
         xfer.add_title(_("Diacamma member"), _('Parameters'), _('Configuration of main parameters'))
         fill_params(xfer, ["member-licence-enabled", "member-filter-genre", "member-numero", "member-birth", "member-fields"], True)
+
+
+@signal_and_lock.Signal.decorate('auth_login')
+def member_auth_login(user):
+    activegroup = Params.getobject("member-activegroup")
+    if activegroup is not None:
+        obj_adh = Adherent.objects.filter(user=user).first()
+        if obj_adh is not None:
+            if (obj_adh.current_subscription is None) and (obj_adh.current_subscription.status in (Subscription.STATUS_BUILDING, Subscription.STATUS_VALID)):
+                obj_adh.user.groups.remove(activegroup)
+            else:
+                obj_adh.user.groups.add(activegroup)
+    
