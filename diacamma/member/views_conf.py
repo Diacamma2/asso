@@ -372,8 +372,7 @@ def member_auth_login(user):
     if activegroup is not None:
         obj_adh = Adherent.objects.filter(user=user).first()
         if obj_adh is not None:
-            if (obj_adh.current_subscription is None) and (obj_adh.current_subscription.status in (Subscription.STATUS_BUILDING, Subscription.STATUS_VALID)):
-                obj_adh.user.groups.remove(activegroup)
+            if (obj_adh.current_subscription is None) or not (obj_adh.current_subscription.status in (Subscription.STATUS_BUILDING, Subscription.STATUS_VALID)):
+                user.groups.remove(activegroup)
             else:
-                obj_adh.user.groups.add(activegroup)
-    
+                user.groups.add(activegroup)

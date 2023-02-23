@@ -64,6 +64,8 @@ from diacamma.accounting.models import Third
 from diacamma.accounting.tools import format_with_devise
 from diacamma.invoice.models import get_or_create_customer, Bill
 from diacamma.invoice.views import BillPayableEmail, BillPrint
+from diacamma.invoice.views_summary import CurrentPayableShow
+from diacamma.payoff.models import PaymentMethod
 from diacamma.member.editors import SubscriptionEditor
 from diacamma.member.models import Adherent, Subscription, Season, Age, Team, Activity, License, DocAdherent, SubscriptionType, CommandManager, Prestation, TeamPrestation, ContactAdherent
 
@@ -1543,9 +1545,23 @@ class AdherentStatisticPrint(XferPrintAction):
     with_text_export = True
 
 
+@ActionsManage.affect_other(TITLE_EDIT, "images/show.png", unique=SELECT_SINGLE)
+@MenuManage.describ(None)
+class SubscriptionConfirmCurrent(XferContainerAcknowledge):
+    icon = "adherent.png"
+    model = Subscription
+    field_id = 'subscription'
+
+    def fillresponse(self):
+        if (self.item.status == Subscription.STATUS_BUILDING) and (self.item.bill is not None) and (self.item.bill.status == Bill.STATUS_VALID):
+            if self.item.bill.payoff_have_payment() and (len(PaymentMethod.objects.all()) > 0):
+                self.redirect_action(CurrentPayableShow.get_action(_("Payment"), "diacamma.payoff/images/payments.png"),
+                                     params={'item_name': 'bill', 'bill': self.item.bill.id})
+
+
 @MenuManage.describ(None)
 class SubscriptionAddForCurrent(SubscriptionAddModify):
-    redirect_to_show = False
+    redirect_to_show = 'ConfirmCurrent'
 
     def _search_model(self):
         self.params['autocreate'] = 1

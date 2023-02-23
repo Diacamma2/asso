@@ -167,7 +167,7 @@ class Season(LucteriosModel):
                                        "ratio": "%d (%.1f%%)" % (criteria_sum, 100 * criteria_sum / total) if with_total else "%d" % criteria_sum})
             for idx in range(4):
                 total_by_criteria[idx] += val_by_criteria[criteria][idx]
-        values_by_criteria.sort(key=lambda val:-1 * val['sum'])
+        values_by_criteria.sort(key=lambda val: -1 * val['sum'])
         if with_total and (len(values_by_criteria) > 0):
             values_by_criteria.append({name: "{[b]}%s{[/b]}" % _('total'),
                                        "MajM": "{[b]}%d{[/b]}" % total_by_criteria[0],
@@ -2297,10 +2297,10 @@ def member_checkparam():
     Parameter.check_and_create(name="member-age-statistic", typeparam=Parameter.TYPE_INTEGER, title=_("member-age-statistic"), args="{'Min': 1, 'Max': 100}", value='18')
     Parameter.check_and_create(name="member-default-categorybill", typeparam=Parameter.TYPE_INTEGER, title=_("member-default-categorybill"), args="{}", value='0', meta='("invoice","CategoryBill", Q(), "id", False)')
     Parameter.check_and_create(name="member-subscription-delaytorenew", typeparam=Parameter.TYPE_INTEGER, title=_("member-subscription-delaytorenew"), args="{'Min': 0, 'Max': 999}", value='0')
-    Parameter.check_and_create(name="member-activegroup", typeparam=0, title=_("member-activegroup"),
+    Parameter.check_and_create(name="member-activegroup", typeparam=Parameter.TYPE_META, title=_("member-activegroup"),
                                args="{'Multi':False}", value='',
                                meta='("CORE","LucteriosGroup","django.db.models.Q()", "id", False)')
-    
+
     LucteriosGroup.redefine_generic(_("# member (administrator)"), Season.get_permission(True, True, True), Adherent.get_permission(True, True, True),
                                     Subscription.get_permission(True, True, True), TaxReceipt.get_permission(True, True, True))
     LucteriosGroup.redefine_generic(_("# member (editor)"), Adherent.get_permission(True, True, False),
