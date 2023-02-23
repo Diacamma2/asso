@@ -1553,6 +1553,7 @@ class SubscriptionConfirmCurrent(XferContainerAcknowledge):
     field_id = 'subscription'
 
     def fillresponse(self):
+        self.item.status = int(self.item.status)
         if (self.item.status == Subscription.STATUS_BUILDING) and (self.item.bill is not None) and (self.item.bill.status == Bill.STATUS_VALID):
             if self.item.bill.payoff_have_payment() and (len(PaymentMethod.objects.all()) > 0):
                 self.redirect_action(CurrentPayableShow.get_action(_("Payment"), "diacamma.payoff/images/payments.png"),
