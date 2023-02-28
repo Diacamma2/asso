@@ -731,6 +731,20 @@ class AdherentRenewList(XferListEditor, AdherentFilter):
     def get_items_from_filter(self):
         return self.filter_callback([])
 
+    def fillresponse_body(self):
+        lineorder = self.getparam('GRID_ORDER%adherent', ())
+        if len(lineorder) > 0:
+            self.params['GRID_ORDER%adherent'] = ','.join([item.replace('last_subscription', 'subscription__end_date') for item in lineorder])
+        else:
+            self.params['GRID_ORDER%adherent'] = 'subscription__end_date'
+        XferListEditor.fillresponse_body(self)
+        grid = self.get_components('adherent')
+        family_header = grid.get_header('last_subscription')
+        if family_header is not None:
+            family_header.orderable = 1
+        grid.order_list = lineorder
+        self.params['GRID_ORDER%adherent'] = ','.join(lineorder)
+
     def fillresponse_header(self):
         row = self.get_max_row() + 1
         dateref = convert_date(self.getparam("dateref", ""), Season.current_season().date_ref)
@@ -780,6 +794,12 @@ class AdherentRenewList(XferListEditor, AdherentFilter):
     def fillresponse(self):
         XferListEditor.fillresponse(self)
         self.item.editor.add_email_selector(self, 0, self.get_max_row() + 1, 10)
+        grid = self.get_components('adherent')
+        new_actions = []
+        for grid_action in grid.actions:
+            if not grid_action[0].icon_path.endswith('images/new.png') and not grid_action[0].icon_path.endswith('images/delete.png'):
+                new_actions.append(grid_action)
+        grid.actions = new_actions
         self.get_components('title').colspan = 10
         self.get_components(self.field_id).colspan = 10
         if Params.getvalue("member-subscription-mode") in (Subscription.MODE_WITHMODERATE, Subscription.MODE_WITHMODERATEFORNEW):
