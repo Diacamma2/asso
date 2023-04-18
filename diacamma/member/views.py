@@ -50,6 +50,7 @@ from lucterios.framework.xfercomponents import XferCompLabelForm, \
     XferCompCheckList, XferCompButton, XferCompSelect, XferCompDate, \
     XferCompImage, XferCompEdit, XferCompGrid, XferCompFloat, XferCompCheck
 from lucterios.framework.xfergraphic import XferContainerAcknowledge, XferContainerCustom
+from lucterios.framework.xfersearch import get_search_query_from_criteria
 from lucterios.CORE.editors import XferSavedCriteriaSearchEditor
 from lucterios.CORE.models import Preference
 from lucterios.CORE.parameters import Params, notfree_mode_connect
@@ -113,6 +114,7 @@ class AdherentFilter(object):
             dateref = convert_date(self.getparam("dateref", ""), Season.current_season().date_ref)
             enddate_delay = self.getparam("enddate_delay", 0)
             reminder = self.getparam("reminder", True)
+            savecritera_renew = Params.getobject("member-renew-filter")
             sub_end_date = dateref + timedelta(days=enddate_delay)
             if reminder:
                 self.current_filter = Q(subscription__begin_date__lte=sub_end_date) & Q(subscription__end_date__gte=sub_end_date) & Q(subscription__status__in=(Subscription.STATUS_WAITING, Subscription.STATUS_BUILDING))
@@ -126,6 +128,9 @@ class AdherentFilter(object):
             else:
                 self.current_filter = Q(subscription__end_date=dateref)
                 self.exclude_filter = Q(subscription__begin_date__gt=dateref)
+            if savecritera_renew is not None:
+                filter_result, _desc = get_search_query_from_criteria(savecritera_renew.criteria, Adherent)
+                self.current_filter &= filter_result
             return self.model.objects.filter(self.current_filter).exclude(self.exclude_filter).distinct()
 
 
@@ -763,9 +768,13 @@ class AdherentRenewList(XferListEditor, AdherentFilter):
         if reminder:
             delay_list = []
         else:
-            delay_list = [(-90, _('90 days before reference')), (-30, _('30 days before reference')), (-10, _('10 days before reference')), (-3, _('3 days before reference'))]
+            delay_list = [(-360, _('360 days before reference')), (-180, _('180 days before reference')),
+                          (-90, _('90 days before reference')), (-30, _('30 days before reference')),
+                          (-10, _('10 days before reference')), (-3, _('3 days before reference'))]
         delay_list.extend([(0, _('end the reference day')),
-                           (3, _('3 days after reference')), (10, _('10 days after reference')), (30, _('30 days after reference')), (90, _('90 days after reference'))])
+                           (3, _('3 days after reference')), (10, _('10 days after reference')),
+                           (30, _('30 days after reference')), (90, _('90 days after reference')),
+                           (180, _('180 days after reference')), (360, _('360 days after reference'))])
 
         seldelay = XferCompSelect('enddate_delay')
         seldelay.set_select(delay_list)
@@ -784,11 +793,23 @@ class AdherentRenewList(XferListEditor, AdherentFilter):
         self.add_component(dtref)
         self.fieldnames = Adherent.get_renew_fields()
 
+        savecritera_renew = Params.getobject("member-renew-filter")
+        if savecritera_renew is not None:
+            lbl_critera = XferCompLabelForm('savecritera_renew')
+            lbl_critera.set_location(1, row + 3)
+            lbl_critera.set_value(savecritera_renew.criteria_desc)
+            lbl_critera.description = _("member-renew-filter")
+            self.add_component(lbl_critera)
+        else:
+            lbl_critera = None
+
         self.params['TITLE'] = self.caption
         info_list = []
         info_list.append("{[b]}{[u]}%s{[/u]}{[/b]} : %s" % (ckreminder.description, get_bool_textual(bool(ckreminder.value))))
         info_list.append("{[b]}{[u]}%s{[/u]}{[/b]} : %s" % (seldelay.description, dict(delay_list)[seldelay.value]))
         info_list.append("{[b]}{[u]}%s{[/u]}{[/b]} : %s" % (dtref.description, get_date_formating(dtref.value)))
+        if lbl_critera is not None:
+            info_list.append("{[b]}{[u]}%s{[/u]}{[/b]} : %s" % (lbl_critera.description, lbl_critera.value))
         self.params['INFO'] = '{[br]}'.join(info_list)
 
     def fillresponse(self):

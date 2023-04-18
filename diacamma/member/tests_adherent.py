@@ -34,7 +34,7 @@ from django.conf import settings
 
 from lucterios.framework.test import LucteriosTest
 from lucterios.framework.filetools import get_user_dir
-from lucterios.CORE.models import Parameter, LucteriosUser, LucteriosGroup
+from lucterios.CORE.models import Parameter, LucteriosUser, LucteriosGroup, SavedCriteria
 from lucterios.CORE.parameters import Params
 from lucterios.CORE.views import ObjectMerge
 from lucterios.contacts.views_contacts import LegalEntityShow
@@ -988,6 +988,31 @@ class AdherentTest(BaseAdherentTest):
         self.assert_json_equal('', 'subscription/@1/begin_date', "2009-09-15")
         self.assert_json_equal('', 'subscription/@1/end_date', "2010-09-14")
         self.assert_json_equal('', 'subscription/@1/involvement', ["team3 [activity2] 470"])
+
+    def test_renew_filtered(self):
+        change_ourdetail()
+        self.add_subscriptions()
+        crit = SavedCriteria.objects.create(name="only", modelname=Adherent.get_long_name(), criteria="lastname||5||Dalton")
+
+        self.factory.xfer = AdherentRenewList()
+        self.calljson('/diacamma.member/adherentRenewList', {'dateref': '2010-10-01', 'enddate_delay': -90, 'reminder': False}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentRenewList')
+        self.assert_count_equal('', 7)
+        self.assert_count_equal('adherent', 3)
+        self.assert_json_equal('', 'adherent/@0/id', "2")
+        self.assert_json_equal('', 'adherent/@1/id', "6")
+        self.assert_json_equal('', 'adherent/@2/id', "5")
+
+        Params.setvalue('member-renew-filter', crit.id)
+
+        self.factory.xfer = AdherentRenewList()
+        self.calljson('/diacamma.member/adherentRenewList', {'dateref': '2010-10-01', 'enddate_delay': -90, 'reminder': False}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentRenewList')
+        self.assert_count_equal('', 8)
+        self.assert_json_equal('LABELFORM', 'savecritera_renew', '{[b]}nom{[/b]} contenu {[i]}"Dalton"{[/i]}')
+        self.assert_count_equal('adherent', 2)
+        self.assert_json_equal('', 'adherent/@0/id', "2")
+        self.assert_json_equal('', 'adherent/@1/id', "5")
 
     def test_renew_withdelay_tolow(self):
         configSMTP('localhost', 1125)

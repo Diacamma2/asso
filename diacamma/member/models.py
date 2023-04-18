@@ -2300,6 +2300,8 @@ def member_checkparam():
     Parameter.check_and_create(name="member-activegroup", typeparam=Parameter.TYPE_META, title=_("member-activegroup"),
                                args="{'Multi':False}", value='',
                                meta='("CORE","LucteriosGroup","django.db.models.Q()", "id", False)')
+    Parameter.check_and_create(name="member-renew-filter", typeparam=Parameter.TYPE_INTEGER, title=_("member-renew-filter"), args="{}", value='',
+                               meta='("CORE","SavedCriteria","django.db.models.Q(modelname=\'%s\')", "id", False)' % Adherent.get_long_name())
 
     LucteriosGroup.redefine_generic(_("# member (administrator)"), Season.get_permission(True, True, True), Adherent.get_permission(True, True, True),
                                     Subscription.get_permission(True, True, True), TaxReceipt.get_permission(True, True, True))
