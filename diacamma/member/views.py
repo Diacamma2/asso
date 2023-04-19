@@ -59,7 +59,7 @@ from lucterios.CORE.xferprint import XferPrintAction
 from lucterios.CORE.xferprint import XferPrintLabel
 from lucterios.CORE.xferprint import XferPrintListing
 from lucterios.contacts.models import Individual, LegalEntity, Responsability, AbstractContact
-from lucterios.contacts.views_contacts import LegalEntityAddModify
+from lucterios.contacts.views_contacts import LegalEntityAddModify, AbstractContactFindDouble
 from lucterios.mailing.email_functions import will_mail_send
 from diacamma.accounting.models import Third
 from diacamma.accounting.tools import format_with_devise
@@ -724,6 +724,11 @@ class AdherentSearch(XferSavedCriteriaSearchEditor):
     def __init__(self, **kwargs):
         XferSavedCriteriaSearchEditor.__init__(self, **kwargs)
         self.size_by_page = Params.getvalue("member-size-page")
+
+    def fillresponse(self):
+        XferSavedCriteriaSearchEditor.fillresponse(self)
+        self.add_action(AbstractContactFindDouble.get_action(_("duplicate"), "images/clone.png"),
+                        params={'modelname': self.model.get_long_name(), 'field_id': self.field_id}, pos_act=0)
 
 
 @MenuManage.describ('member.change_adherent', FORMTYPE_NOMODAL, 'member.actions', _('List of adherents with old subscribtion not renew yet'))
@@ -1836,7 +1841,18 @@ def change_bill_member(action, old_bill, new_bill):
             sub.bill = new_bill
             if sub.status == Subscription.STATUS_BUILDING:
                 sub.status = Subscription.STATUS_VALID
-            sub.save(with_bill=False)
+            with_bill = False
+            if sub.subscriptiontype.duration == SubscriptionType.DURATION_CALENDAR:
+                last_before_sub = Subscription.objects.filter(adherent=sub.adherent, end_date__lt=sub.begin_date).order_by('begin_date').last()
+                if last_before_sub is None:
+                    sub.set_periode(new_bill.date)
+                    with_bill = True
+                else:
+                    new_begin_date = last_before_sub.end_date + timedelta(days=1)
+                    if (new_bill.date - new_begin_date).days > Params.getvalue('member-subscription-delaytorenew'):
+                        sub.set_periode(new_bill.date)
+                        with_bill = True
+            sub.save(with_bill=with_bill)
 
 
 @MenuManage.describ('')

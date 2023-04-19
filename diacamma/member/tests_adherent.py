@@ -222,7 +222,7 @@ class AdherentTest(BaseAdherentTest):
         self.factory.xfer = AdherentShow()
         self.calljson('/diacamma.member/adherentShow', {'adherent': 2}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'adherentShow')
-        self.assert_count_equal('', 2 + (18 + 1) + 2 + 2)  # header + identity + subscription + grade
+        self.assert_count_equal('', 3 + (18 + 1) + 2 + 2)  # header + identity + subscription + grade
         self.assert_json_equal('LABELFORM', 'dateref', self.dateref_expected.isoformat(), True)
         self.assert_json_equal('LABELFORM', 'firstname', "Marie")
         self.assert_json_equal('LABELFORM', 'lastname', "DUPOND")
@@ -656,7 +656,7 @@ class AdherentTest(BaseAdherentTest):
 
         self.factory.xfer = AdherentShow()
         self.calljson('/diacamma.member/adherentShow', {'adherent': 2, 'dateref': '2009-10-01'}, False)
-        self.assert_count_equal('', 2 + (19 + 5) + 2 + 5 + 5 + 2)  # header + identity/docs + subscription + financial + invoice + grade
+        self.assert_count_equal('', 3 + (19 + 5) + 2 + 6 + 5 + 2)  # header + identity/docs + subscription + financial + invoice + grade
         self.assert_attrib_equal('doc_1', "description", "Doc 1")
         self.assert_attrib_equal('doc_2', "description", "Doc 2")
         self.assert_json_equal('CHECK', 'doc_1', "0")
@@ -695,7 +695,7 @@ class AdherentTest(BaseAdherentTest):
         self.factory.xfer = AdherentShow()
         self.calljson('/diacamma.member/adherentShow', {'adherent': 2, 'dateref': '2009-10-01'}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'adherentShow')
-        self.assert_count_equal('', 2 + (15 + 5) + 2 + 5 + 5 + 2)  # header + identity + subscription + financial + invoice + grade
+        self.assert_count_equal('', 3 + (15 + 5) + 2 + 6 + 5 + 2)  # header + identity + subscription + financial + invoice + grade
         self.assert_count_equal('subscription', 1)  # nb=5
 
         self.factory.xfer = AdherentAddModify()
@@ -3370,7 +3370,7 @@ class AdherentFamilyTest(BaseAdherentTest):
         self.calljson('/diacamma.member/adherentShow',
                       {'adherent': 2, 'dateref': '2009-10-01'}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'adherentShow')
-        self.assert_count_equal('', 2 + (15 + 2 + 5) + 2 + 5 + 5 + 2)  # header + identity/family/docs + subscription + financial + invoice + grade
+        self.assert_count_equal('', 3 + (15 + 2 + 5) + 2 + 6 + 5 + 2)  # header + identity/family/docs + subscription + financial + invoice + grade
         self.assert_json_equal('LABELFORM', 'family', None)
         self.assert_json_equal('', '#famillybtn/action/icon', "/static/lucterios.CORE/images/add.png")
 

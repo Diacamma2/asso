@@ -271,6 +271,8 @@ class SubscriptionEditor(LucteriosEditor):
             begindate.set_needed(True)
             if last_subscription is None:
                 begindate.set_value(season.date_ref)
+            elif self.item.id is not None:
+                begindate.set_value(self.item.begin_date)
             else:
                 new_begin_date = last_subscription.end_date + timedelta(days=1)
                 if (season.date_ref - new_begin_date).days < Params.getvalue('member-subscription-delaytorenew'):

@@ -748,7 +748,7 @@ class Adherent(Individual):
         if Params.getvalue("member-age-enable"):
             fields[keys[0]].insert(email_index + 1, ("age_category",))
         fields[_('002@Subscription')] = ['subscription_set']
-        fields[''] = [("dateref",)]
+        fields[''] = [("dateref",), ((_('adherent'), 'str'),)]
         return fields
 
     @classmethod
