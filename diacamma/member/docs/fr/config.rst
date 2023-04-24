@@ -12,6 +12,18 @@ Vous pouvez modifier les paramètrages généraux relatifs à la gestion des adh
 
 	.. image:: conf_general.png
 
+- **Type de structure 'famille'** : Pour activer la gestion des adhérents par famille.  
+  Vous devez préciser ici comment les familles  seront classifiées(structure morales).
+- **Activer la création de connexion** : Permet d'attribuer un accès de connexion par adhérent.   
+  "Par adhérent": une action permettra d'attribué une connexion à tout les adhérents actifs.  
+  "Après demande": l'outil "mot de passe oublié" permet d'activé une connexion si l'adhérents associé est actif.
+- **Mode de cotisation** : Possibilité de créer une cotisation à la demande.
+- **Résultats par page** : Taille par défaut de la pagination des adhérents.
+- **Catégorie de facturation pour les cotisations** : Catégorie à appliquer pour la facturation des cotisations.
+- **code comptable des reçus fiscaux** : Préciser la liste des codes comptable soumis à défiscalisation.
+- **groupe des adhérents actifs** : Groupe de connexion associé à un adhérent actif (enlevé si non renouvelé).
+- **Filtrage pour le renouvellement** : Filtrage supplémentaire pour l'écran de renouvellement d'adhésion.
+
 
 Saisons et cotisations
 ----------------------
