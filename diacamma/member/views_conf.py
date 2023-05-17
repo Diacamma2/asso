@@ -369,7 +369,7 @@ def conf_wizard_member(wizard_ident, xfer):
 @signal_and_lock.Signal.decorate('auth_login')
 def member_auth_login(user):
     activegroup = Params.getobject("member-activegroup")
-    if activegroup is not None:
+    if not user.is_anonymous and (activegroup is not None):
         obj_adh = Adherent.objects.filter(user=user).first()
         if obj_adh is not None:
             if (obj_adh.current_subscription is None) or not (obj_adh.current_subscription.status in (Subscription.STATUS_BUILDING, Subscription.STATUS_VALID)):
