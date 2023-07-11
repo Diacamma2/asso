@@ -33,7 +33,7 @@ from django.db.models.query import QuerySet
 from django.db.models.aggregates import Min, Max, Count
 from django.db.models.fields import BooleanField
 from django.db.models import Q
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.utils import formats, timezone
 from django_fsm import FSMIntegerField, transition
 from django.conf import settings

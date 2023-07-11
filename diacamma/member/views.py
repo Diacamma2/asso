@@ -30,7 +30,7 @@ from django.conf import settings
 from django.db.models import Q, Value
 from django.db.models.functions import Concat, Trim
 from django.utils import formats
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from lucterios.framework import signal_and_lock
 from lucterios.framework.error import LucteriosException, IMPORTANT

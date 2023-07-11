@@ -26,7 +26,7 @@ from __future__ import unicode_literals
 from datetime import timedelta
 
 from django.db.models.aggregates import Max
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.utils import formats
 
 from lucterios.framework.editors import LucteriosEditor
