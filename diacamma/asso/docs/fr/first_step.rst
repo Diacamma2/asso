@@ -75,7 +75,7 @@ Ajout des adhérents de l'association
 Il vous faut maintenant ajouter les différents adhérents de votre association.
 Deux solutions pour cela: un par un ou via une importation.
 Pour les ajouter un par un, vous devez ajouter une fiche pour chacun de vos adhérents.
-Si vous avez une liste d'adhérents à importer, extrayez-la au format CSV, en respectant la structure de fichier expliquée dans le manuel.
+Si vous avez une liste d'adhérents à importer, extrayez-la au format CSV, ODS ou XLS, en respectant la structure de fichier expliquée dans le manuel.
 
 N'oubliez pas de leur attribuer une cotisation, sinon ils n'apparaîtrons pas dans la liste des adhérents cotisants. 
 En cas d'erreur, vous pouvez facilement les retrouver à l'aide de l'outil de recherche.
