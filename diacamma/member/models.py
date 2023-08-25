@@ -59,8 +59,7 @@ from diacamma.invoice.models import Article, Bill, Detail, get_or_create_custome
     CategoryBill
 from diacamma.accounting.tools import get_amount_from_format_devise, format_with_devise, current_system_account
 from diacamma.accounting.models import Third, FiscalYear, EntryAccount, EntryLineAccount, ChartsAccount, Journal
-from diacamma.payoff.views import get_html_payment
-from diacamma.payoff.models import PaymentMethod, Supporting, Payoff
+from diacamma.payoff.models import PaymentMethod, Supporting, Payoff, get_html_payment
 
 
 class Season(LucteriosModel):
