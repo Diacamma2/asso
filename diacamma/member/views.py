@@ -1839,7 +1839,7 @@ def change_bill_member(action, old_bill, new_bill):
     if action == 'convert':
         for sub in Subscription.objects.filter(bill=old_bill):
             sub.bill = new_bill
-            if sub.status == Subscription.STATUS_BUILDING:
+            if (sub.status == Subscription.STATUS_BUILDING) and (new_bill.bill_type == Bill.BILLTYPE_BILL):
                 sub.status = Subscription.STATUS_VALID
             with_bill = False
             if sub.subscriptiontype.duration == SubscriptionType.DURATION_CALENDAR:

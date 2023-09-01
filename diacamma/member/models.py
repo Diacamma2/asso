@@ -1430,21 +1430,21 @@ class Subscription(LucteriosModel):
             new_cmt.extend(cmt)
             Detail.create_for_bill(self.bill, presta.article, designation="{[br/]}".join(new_cmt))
 
-    def _search_or_create_bill(self, bill_type, parentbill=None):
+    def _search_or_create_bill(self, bill_types, parentbill=None):
         new_third = get_or_create_customer(self.adherent.get_ref_contact().id)
-        bill_list = Bill.objects.filter(third=new_third, bill_type=bill_type, status=Bill.STATUS_BUILDING).annotate(subscription_count=Count('subscription')).filter(subscription_count__gte=1).order_by('-date')
-        if bill_type == Bill.BILLTYPE_QUOTATION:
+        bill_list = Bill.objects.filter(third=new_third, bill_type__in=bill_types, status=Bill.STATUS_BUILDING).annotate(subscription_count=Count('subscription')).filter(subscription_count__gte=1).order_by('-date')
+        if Bill.BILLTYPE_QUOTATION in bill_types:
             date_ref = timezone.now()
         else:
             date_ref = self.season.date_ref
         if len(bill_list) > 0:
             self.bill = bill_list[0]
             self.bill.date = date_ref
-        if (self.bill is None) or (self.bill.bill_type != bill_type) or (self.bill.status != Bill.STATUS_BUILDING):
+        if (self.bill is None) or (self.bill.bill_type not in bill_types) or (self.bill.status != Bill.STATUS_BUILDING):
             categoryBill = Params.getobject("member-default-categorybill")
             if categoryBill is None:
                 categoryBill = CategoryBill.objects.filter(is_default=True).first()
-            self.bill = Bill.objects.create(bill_type=bill_type, date=date_ref, third=new_third, parentbill=parentbill, categoryBill=categoryBill)
+            self.bill = Bill.objects.create(bill_type=bill_types[0], date=date_ref, third=new_third, parentbill=parentbill, categoryBill=categoryBill)
 
     def _regenerate_bill(self, bill_type):
         self.bill.bill_type = bill_type
@@ -1479,7 +1479,7 @@ class Subscription(LucteriosModel):
 
     def _save_presta_in_bill(self, bill_type, prestation_id):
         if self.status == self.STATUS_VALID:
-            self._search_or_create_bill(bill_type)
+            self._search_or_create_bill([bill_type])
             cmt = self._append_subscription_detail()
             presta = Prestation.objects.get(id=prestation_id)
             new_cmt = [presta.team_prestation.team.description]
@@ -1523,7 +1523,7 @@ class Subscription(LucteriosModel):
             return False
         modify = False
         if self.status in (self.STATUS_BUILDING, self.STATUS_VALID):
-            if (self.status == self.STATUS_VALID) and (self.bill is not None) and (self.bill.bill_type == Bill.BILLTYPE_QUOTATION) and (self.bill.status == Bill.STATUS_VALID):
+            if (self.status == self.STATUS_VALID) and (self.bill is not None) and (self.bill.bill_type in (Bill.BILLTYPE_QUOTATION, Bill.BILLTYPE_ORDER)) and (self.bill.status == Bill.STATUS_VALID):
                 self.bill = self.bill.convert_to_bill()
                 modify = True
                 convert_bill = True
@@ -1531,27 +1531,27 @@ class Subscription(LucteriosModel):
                 convert_bill = False
             create_bill = (self.bill is None)
             if self.status == self.STATUS_BUILDING:
-                bill_type = Bill.BILLTYPE_QUOTATION
+                bill_types = [Bill.BILLTYPE_QUOTATION, Bill.BILLTYPE_ORDER]
             else:
-                bill_type = Bill.BILLTYPE_BILL
+                bill_types = [Bill.BILLTYPE_BILL]
             if create_bill:
-                self._search_or_create_bill(bill_type)
+                self._search_or_create_bill(bill_types)
                 modify = True
             if (self.bill.status == Bill.STATUS_VALID):
                 old_bill = self.bill
-                if old_bill.bill_type == Bill.BILLTYPE_QUOTATION:
+                if old_bill.bill_type in [Bill.BILLTYPE_QUOTATION, Bill.BILLTYPE_ORDER]:
                     old_bill.cancel()
                 else:
                     old_bill.undo()
                 old_bill.save()
                 self.bill = None
-                self._search_or_create_bill(bill_type, parentbill=old_bill)
+                self._search_or_create_bill(bill_types, parentbill=old_bill)
                 for subscription_item in old_bill.subscription_set.all():
                     subscription_item.bill = self.bill
                     subscription_item.save(with_bill=False)
                 modify = True
             if (self.bill.status == Bill.STATUS_BUILDING) and not convert_bill:
-                self._regenerate_bill(bill_type)
+                self._regenerate_bill(bill_types[0])
         if (self.status == self.STATUS_CANCEL) and (self.bill is not None):
             if self.bill.status == Bill.STATUS_BUILDING:
                 self.bill.delete()
@@ -1658,7 +1658,7 @@ class Subscription(LucteriosModel):
         if len(other_subscription) > 0:
             old_bill = self.bill
             self.bill = None
-            self._search_or_create_bill(old_bill.bill_type, parentbill=old_bill)
+            self._search_or_create_bill([old_bill.bill_type], parentbill=old_bill)
             new_bill = self.bill
             for other_item in other_subscription:
                 other_item.bill = new_bill
