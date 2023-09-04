@@ -231,6 +231,7 @@ class AdherentTest(BaseAdherentTest):
         self.assert_json_equal('LABELFORM', 'birthday', "1998-08-04")
         self.assert_json_equal('LABELFORM', 'birthplace', "Fort-de-France")
         self.assert_json_equal('LABELFORM', 'age_category', "Benjamins")
+        self.assert_json_equal('LABELFORM', 'user', None)
         self.assert_count_equal('subscription', 0)  # nb=6
         self.assert_count_equal('degrees', 0)
 
@@ -258,6 +259,33 @@ class AdherentTest(BaseAdherentTest):
         self.assert_json_equal('LABELFORM', 'num', "2")
         self.assert_json_equal('LABELFORM', 'birthday', "2000-06-22")
         self.assert_json_equal('LABELFORM', 'age_category', "Poussins")
+        self.assert_json_equal('LABELFORM', 'user', None)
+
+    def test_add_adherent_with_connexion(self):
+        Parameter.change_value('member-connection', 1)
+        Parameter.change_value('contacts-createaccount', 1)
+        Params.clear()
+        self.factory.xfer = AdherentAddModify()
+        self.calljson('/diacamma.member/adherentAddModify', {"address": 'Avenue de la Paix{[newline]}BP 987',
+                                                             "comment": 'no comment', "firstname": 'Marie', "lastname": 'DUPOND',
+                                                             "city": 'ST PIERRE', "country": 'MARTINIQUE', "tel2": '06-54-87-19-34', "SAVE": 'YES',
+                                                             "tel1": '09-96-75-15-00', "postal_code": '97250', "email": 'marie.dupond@worldcompany.com',
+                                                             "birthday": "1998-08-04", "birthplace": "Fort-de-France",
+                                                             "genre": "2"}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.member', 'adherentAddModify')
+
+        self.factory.xfer = AdherentShow()
+        self.calljson('/diacamma.member/adherentShow', {'adherent': 2}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentShow')
+        self.assert_count_equal('', 3 + (18 + 2) + 2 + 2)  # header + identity + subscription + grade
+        self.assert_json_equal('LABELFORM', 'dateref', self.dateref_expected.isoformat(), True)
+        self.assert_json_equal('LABELFORM', 'firstname', "Marie")
+        self.assert_json_equal('LABELFORM', 'lastname', "DUPOND")
+        self.assert_json_equal('LABELFORM', 'num', "1")
+        self.assert_json_equal('LABELFORM', 'birthday', "1998-08-04")
+        self.assert_json_equal('LABELFORM', 'birthplace', "Fort-de-France")
+        self.assert_json_equal('LABELFORM', 'age_category', "Benjamins")
+        self.assert_json_equal('LABELFORM', 'user', 'marieD')
 
     def test_add_subscription(self):
         default_adherents()
@@ -2136,6 +2164,49 @@ class AdherentTest(BaseAdherentTest):
         self.assertEqual('rantanplan', user.username)
         self.assertEqual(True, user.is_active)
         self.assertEqual([], list(user.groups.all()))
+
+    def test_connexion_with_createaccount(self):
+        self.add_subscriptions()
+        new_groupe = LucteriosGroup.objects.create(name='new_groupe')
+        param = Parameter.objects.get(name='contacts-defaultgroup')
+        param.value = '%d' % new_groupe.id
+        param.save()
+        configSMTP('localhost', 3125)
+        change_ourdetail()
+        Parameter.change_value('member-connection', 1)
+        Parameter.change_value('contacts-createaccount', 1)
+        Params.clear()
+        adh_luke = Adherent.objects.get(firstname='Lucky')
+        adh_luke.user = LucteriosUser.objects.create(username='lucky', first_name=adh_luke.firstname, last_name=adh_luke.lastname, email=adh_luke.email, is_active=False)
+        adh_luke.save()
+        new_adh = create_adherent("Ma'a", 'Dalton', '1961-04-12')
+        new_adh.user = LucteriosUser.objects.create(username='maa', first_name=new_adh.firstname, last_name=new_adh.lastname, email=new_adh.email, is_active=True)
+        new_adh.save()
+        new_adh = create_adherent("Rantanplan", 'Chien', '2010-01-01')
+        new_adh.user = LucteriosUser.objects.create(username='rantanplan', first_name=new_adh.firstname, last_name=new_adh.lastname, email=new_adh.email, is_active=True)
+        new_adh.save()
+
+        self.factory.xfer = AdherentActiveList()
+        self.calljson('/diacamma.member/adherentActiveList', {'dateref': '2009-10-01'}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'adherentActiveList')
+        self.assert_count_equal('adherent', 5)
+        self.assertEqual(len(self.json_actions), 4)
+
+        server = TestReceiver()
+        server.start(3125)
+        try:
+            self.assertEqual(3, len(LucteriosUser.objects.filter(is_active=True)))
+            self.factory.xfer = AdherentConnection()
+            self.calljson('/diacamma.member/adherentConnection', {'CONFIRME': 'YES', 'RELOAD': 'YES'}, False)
+            self.assert_observer('core.custom', 'diacamma.member', 'adherentConnection')
+            self.assert_json_equal('LABELFORM', 'info', '{[center]}{[b]}Résultat{[/b]}{[/center]}{[br/]}0 connexion(s) supprimée(s).{[br/]}4 connexion(s) ajoutée(s).{[br/]}1 connexion(s) réactivée(s).')
+
+            print('email sending %s' % [server.get(srv_id)[2] for srv_id in range(server.count())])
+            self.assertEqual([['Avrel.Dalton@worldcompany.com'], ['Jack.Dalton@worldcompany.com'], ['Joe.Dalton@worldcompany.com'], ['Lucky.Luke@worldcompany.com'], ['William.Dalton@worldcompany.com']], sorted([server.get(srv_id)[2] for srv_id in range(server.count())]))
+            self.assertEqual(5, server.count())
+            self.assertEqual(8, len(LucteriosUser.objects.filter(is_active=True)))
+        finally:
+            server.stop()
 
     def test_prestation_manage(self):
         default_prestation()

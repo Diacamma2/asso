@@ -259,11 +259,12 @@ class Season(LucteriosModel):
 
     def disabled_old_connection(self):
         nb_del = 0
-        for adherent in Adherent.objects.filter(Q(user__is_active=True)).exclude(Q(responsability__legal_entity_id=1)):
-            if len(adherent.subscription_set.filter(Q(season=self) & Q(status__in=(Subscription.STATUS_BUILDING, Subscription.STATUS_VALID)))) == 0:
-                adherent.user.is_active = False
-                adherent.user.save()
-                nb_del += 1
+        if Params.getvalue("contacts-createaccount") == 0:
+            for adherent in Adherent.objects.filter(Q(user__is_active=True)).exclude(Q(responsability__legal_entity_id=1)):
+                if len(adherent.subscription_set.filter(Q(season=self) & Q(status__in=(Subscription.STATUS_BUILDING, Subscription.STATUS_VALID)))) == 0:
+                    adherent.user.is_active = False
+                    adherent.user.save()
+                    nb_del += 1
         return nb_del
 
     def check_connection(self):

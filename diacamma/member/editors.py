@@ -127,6 +127,11 @@ class AgeEditor(LucteriosEditor):
 
 class AdherentEditor(IndividualEditor):
 
+    def saving(self, xfer):
+        IndividualEditor.saving(self, xfer)
+        if (Params.getvalue("member-connection") == Adherent.CONNECTION_BYADHERENT) and (Params.getvalue("contacts-createaccount") != 0):
+            self.item.activate_adherent()
+
     def edit(self, xfer):
         IndividualEditor.edit(self, xfer)
         birthday = xfer.get_components('birthday')
