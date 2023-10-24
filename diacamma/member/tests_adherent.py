@@ -4888,7 +4888,7 @@ class TaxtReceiptTest(InvoiceTest):
         self.assert_json_equal('LABELFORM', 'mode_payoff', 'espèces')
 
         self.factory.xfer = TaxReceiptPrint()
-        self.calljson('/diacamma.member/taxReceiptPrint', {'taxreceipt': '2', 'PRINT_PERSITENT': True, 'PRINT_MODE': 3, 'MODEL': 8}, False)
+        self.calljson('/diacamma.member/taxReceiptPrint', {'taxreceipt': '2', 'PRINT_PERSITENT_MODE': 0, 'PRINT_MODE': 3, 'MODEL': 8}, False)
         self.assert_observer('core.print', 'diacamma.member', 'taxReceiptPrint')
         check_pdfreport(self, 'TaxReceipt', 2, True)
         self.save_pdf()

@@ -2015,7 +2015,7 @@ class TaxReceipt(Supporting):
                                                      num=num_val['num__max'] + 1 if num_val['num__max'] is not None else 1)
                 new_tax_receipt.entries.set(receipt_info['entries'])
                 new_tax_receipt.save()
-                new_tax_receipt.get_saved_pdfreport()
+                new_tax_receipt.get_saved_pdfreport(False)
 
     class Meta(object):
         verbose_name = _('tax receipt')
