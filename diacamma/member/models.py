@@ -2222,7 +2222,7 @@ def member_addon_search(model, search_result):
 @Signal.decorate('check_report')
 def check_report_member(year):
     for taxreceipt in TaxReceipt.objects.filter(fiscal_year=year):
-        taxreceipt.get_saved_pdfreport()
+        taxreceipt.get_saved_pdfreport(False)
 
 
 def convert_parameter_team():
