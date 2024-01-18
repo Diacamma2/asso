@@ -1633,6 +1633,8 @@ class Subscription(LucteriosModel):
         query_dates = (Q(begin_date__lte=self.end_date) & Q(end_date__gte=self.end_date)) | (Q(begin_date__lte=self.begin_date) & Q(end_date__gte=self.begin_date))
         if is_new and (len(self.adherent.subscription_set.filter((Q(subscriptiontype__duration=SubscriptionType.DURATION_ANNUALLY) & Q(season=self.season)) | (~Q(subscriptiontype__duration=SubscriptionType.DURATION_ANNUALLY) & query_dates))) > 0):
             raise LucteriosException(IMPORTANT, _("dates always used!"))
+        if (self.subscriptiontype.duration not in (SubscriptionType.DURATION_MONTLY, SubscriptionType.DURATION_PERIODIC)) and self.adherent.subscription_set.filter(season=self.season).exclude(id=self.id).count() > 0:
+            raise LucteriosException(IMPORTANT, _("season always used!"))
         self.status = int(self.status)
         LucteriosModel.save(self, force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
         if not force_insert and with_bill and self.change_bill():

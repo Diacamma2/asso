@@ -759,7 +759,7 @@ class AdherentRenewList(XferListEditor, AdherentFilter):
         row = self.get_max_row() + 1
         dateref = convert_date(self.getparam("dateref", ""), Season.current_season().date_ref)
         enddate_delay = self.getparam("enddate_delay", 0)
-        reminder = self.getparam("reminder", True)
+        reminder = self.getparam("reminder", False)
         self.params["reminder"] = reminder
 
         ckreminder = XferCompCheck('reminder')
@@ -841,6 +841,12 @@ class AdherentAddModify(XferAddEditor):
     field_id = 'adherent'
     caption_add = _("Add adherent")
     caption_modify = _("Modify adherent")
+
+    def fillresponse(self):
+        if self.is_new:
+            if 'birthday' not in self.params:
+                self.item.birthday = '1901-01-01'
+        XferAddEditor.fillresponse(self)
 
 
 @ActionsManage.affect_list(TITLE_PRINT, "images/print.png", condition=lambda xfer: Params.getobject("member-family-type") is not None)
@@ -1632,7 +1638,7 @@ class SubscriptionAddForCurrent(SubscriptionAddModify):
 
 
 def right_adherentaccess(request):
-    if not notfree_mode_connect():
+    if not notfree_mode_connect() or settings.USER_READONLY:
         return False
     if (signal_and_lock.Signal.call_signal("send_connection", None, None, None) == 0):
         return False

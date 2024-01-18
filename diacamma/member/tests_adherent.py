@@ -89,6 +89,7 @@ class BaseAdherentTest(LucteriosTest):
     def setUp(self):
         settings.LOGIN_FIELD = 'username'
         settings.ASK_LOGIN_EMAIL = False
+        settings.USER_READONLY = False
         LucteriosTest.setUp(self)
         rmtree(get_user_dir(), True)
         default_financial()
@@ -2123,9 +2124,9 @@ class AdherentTest(BaseAdherentTest):
             self.factory.xfer = AdherentConnection()
             self.calljson('/diacamma.member/adherentConnection', {'CONFIRME': 'YES', 'RELOAD': 'YES'}, False)
             self.assert_observer('core.custom', 'diacamma.member', 'adherentConnection')
+            print('email sending %s' % [server.get(srv_id)[2] for srv_id in range(server.count())])
             self.assert_json_equal('LABELFORM', 'info', '{[center]}{[b]}Résultat{[/b]}{[/center]}{[br/]}1 connexion(s) supprimée(s).{[br/]}3 connexion(s) ajoutée(s).{[br/]}1 connexion(s) réactivée(s).{[br/]}{[br/]}1 courriel(s) ont échoué:{[ul]}{[li]}Dalton Joe : ', True)
 
-            print('email sending %s' % [server.get(srv_id)[2] for srv_id in range(server.count())])
             self.assertEqual([['Avrel.Dalton@worldcompany.com'], ['Jack.Dalton@worldcompany.com'], ['Lucky.Luke@worldcompany.com'], ['William.Dalton@worldcompany.com']], sorted([server.get(srv_id)[2] for srv_id in range(server.count())]))
             self.assertEqual(4, server.count())
             self.assertEqual(7, len(LucteriosUser.objects.filter(is_active=True)))
@@ -3616,12 +3617,12 @@ class AdherentFamilyTest(BaseAdherentTest):
         self.assert_json_equal('', 'detail/@0/article', 'ABC1')
         self.assert_json_equal('', 'detail/@0/designation', "Article 01{[br/]}Cotisation de 'Dalton Avrel'{[br/]}Pour la période 01/09/2009 -> 31/08/2010")
         self.assert_json_equal('', 'detail/@0/price', 12.34)
-        self.assert_json_equal('', 'detail/@0/quantity', '1.000')
+        self.assert_json_equal('', 'detail/@0/quantity_txt', '1,000')
         self.assert_json_equal('', 'detail/@0/total', 12.34)
         self.assert_json_equal('', 'detail/@1/article', 'ABC5')
         self.assert_json_equal('', 'detail/@1/designation', "Article 05{[br/]}Cotisation de 'Dalton Avrel'{[br/]}Pour la période 01/09/2009 -> 31/08/2010")
         self.assert_json_equal('', 'detail/@1/price', 64.10)
-        self.assert_json_equal('', 'detail/@1/quantity', '1.00')
+        self.assert_json_equal('', 'detail/@1/quantity_txt', '1,00')
         self.assert_json_equal('', 'detail/@1/total', 64.10)
 
         self.factory.xfer = SubscriptionAddModify()
