@@ -48,7 +48,8 @@ from lucterios.framework.xferadvance import XferListEditor, TITLE_OK, TITLE_ADD,
 from lucterios.framework.xferadvance import XferShowEditor
 from lucterios.framework.xfercomponents import XferCompLabelForm, \
     XferCompCheckList, XferCompButton, XferCompSelect, XferCompDate, \
-    XferCompImage, XferCompEdit, XferCompGrid, XferCompFloat, XferCompCheck
+    XferCompImage, XferCompEdit, XferCompGrid, XferCompFloat, XferCompCheck,\
+    GRID_ORDER, GRID_SIZE
 from lucterios.framework.xfergraphic import XferContainerAcknowledge, XferContainerCustom
 from lucterios.framework.xfersearch import get_search_query_from_criteria
 from lucterios.CORE.editors import XferSavedCriteriaSearchEditor
@@ -147,15 +148,15 @@ class AdherentAbstractList(XferListEditor, AdherentFilter):
         return self.model.objects.filter(self.get_filter()).distinct()
 
     def fillresponse_body(self):
-        lineorder = self.getparam('GRID_ORDER%adherent', ())
-        self.params['GRID_ORDER%adherent'] = ','.join([item.replace('family', 'responsability__legal_entity__name') for item in lineorder])
+        lineorder = self.getparam(GRID_ORDER + 'adherent', ())
+        self.params[GRID_ORDER + 'adherent'] = ','.join([item.replace('family', 'responsability__legal_entity__name') for item in lineorder])
         XferListEditor.fillresponse_body(self)
         grid = self.get_components('adherent')
         family_header = grid.get_header('family')
         if family_header is not None:
             family_header.orderable = 1
         grid.order_list = lineorder
-        self.params['GRID_ORDER%adherent'] = ','.join(lineorder)
+        self.params[GRID_ORDER + 'adherent'] = ','.join(lineorder)
 
     def fillresponse_header(self):
         row = self.get_max_row() + 1
@@ -482,9 +483,10 @@ class PrestationShow(XferShowEditor):
         self.add_action(AdherentListing.get_action(TITLE_LISTING, "images/print.png"), pos_act=0, close=CLOSE_NO, params={"team": self.item.team_id, "activity": self.item.activity_id})
 
     def fillresponse(self):
+        if (GRID_SIZE + 'adherent') not in self.params:
+            self.params[GRID_SIZE + 'adherent'] = Params.getvalue("member-size-page")
         XferShowEditor.fillresponse(self)
         adherent = self.get_components('adherent')
-        adherent.size_by_page = Params.getvalue("member-size-page")
         adherent.actions = []
         adherent.add_action(self.request, AdherentShow.get_action(TITLE_EDIT, "images/show.png"), unique=SELECT_SINGLE)
         adherent.add_action(self.request, AdherentPrestationDel.get_action(TITLE_DELETE, "images/delete.png"), unique=SELECT_MULTI, close=CLOSE_NO)
@@ -742,18 +744,18 @@ class AdherentRenewList(XferListEditor, AdherentFilter):
         return self.filter_callback([])
 
     def fillresponse_body(self):
-        lineorder = self.getparam('GRID_ORDER%adherent', ())
+        lineorder = self.getparam(GRID_ORDER + 'adherent', ())
         if len(lineorder) > 0:
-            self.params['GRID_ORDER%adherent'] = ','.join([item.replace('last_subscription', 'subscription__end_date') for item in lineorder])
+            self.params[GRID_ORDER + 'adherent'] = ','.join([item.replace('last_subscription', 'subscription__end_date') for item in lineorder])
         else:
-            self.params['GRID_ORDER%adherent'] = 'subscription__end_date'
+            self.params[GRID_ORDER + 'adherent'] = 'subscription__end_date'
         XferListEditor.fillresponse_body(self)
         grid = self.get_components('adherent')
         family_header = grid.get_header('last_subscription')
         if family_header is not None:
             family_header.orderable = 1
         grid.order_list = lineorder
-        self.params['GRID_ORDER%adherent'] = ','.join(lineorder)
+        self.params[GRID_ORDER + 'adherent'] = ','.join(lineorder)
 
     def fillresponse_header(self):
         row = self.get_max_row() + 1

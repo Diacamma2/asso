@@ -1216,7 +1216,9 @@ class TeamPrestation(LucteriosModel):
 
     @property
     def adherent_set(self):
-        return Adherent.objects.filter(subscription__season__iscurrent=True, subscription__status__in=(Subscription.STATUS_BUILDING, Subscription.STATUS_VALID), subscription__license__team=self.team, subscription__license__activity=self.activity).distinct()
+        return Adherent.objects.filter(subscription__season__iscurrent=True,
+                                       subscription__status__in=(Subscription.STATUS_BUILDING, Subscription.STATUS_VALID),
+                                       subscription__license__team=self.team, subscription__license__activity=self.activity).distinct()
 
     def get_nb_adherent(self):
         return self.adherent_set.count()
