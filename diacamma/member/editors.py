@@ -320,15 +320,6 @@ class SubscriptionEditor(LucteriosEditor):
         else:
             xfer.change_to_readonly("status")
         cmp_subscriptiontype = xfer.get_components('subscriptiontype')
-        if (self.item.id is not None) or autocreate:
-            xfer.change_to_readonly('season')
-        else:
-            cmp_season = xfer.get_components('season')
-            if self.item.season_id is None:
-                self.item.season = Season.current_season()
-                cmp_season.set_value(self.item.season.id)
-            cmp_season.set_action(xfer.request, xfer.return_action(),
-                                  close=CLOSE_NO, modal=FORMTYPE_REFRESH)
         if (self.item.id is None) and (last_subscription is not None) and (xfer.getparam('subscriptiontype') is None):
             cmp_subscriptiontype.set_value(last_subscription.subscriptiontype.id)
         if self.item.subscriptiontype_id is None:
@@ -337,6 +328,26 @@ class SubscriptionEditor(LucteriosEditor):
             cmp_subscriptiontype.get_json()
             self.item.subscriptiontype = SubscriptionType.objects.get(id=cmp_subscriptiontype.value)
         cmp_subscriptiontype.set_action(xfer.request, xfer.return_action(), close=CLOSE_NO, modal=FORMTYPE_REFRESH)
+        if (self.item.id is not None) or autocreate:
+            xfer.change_to_readonly('season')
+        else:
+            cmp_season = xfer.get_components('season')
+            current_season = Season.current_season()
+            if self.item.subscriptiontype.duration in (SubscriptionType.DURATION_ANNUALLY, SubscriptionType.DURATION_CALENDAR):
+                season_exclud = {sub.season_id for sub in xfer.item.adherent.subscription_set.all()}
+                cmp_season.select_list = []
+                for season in Season.objects.exclude(id__in=season_exclud):
+                    if season.end_date < current_season.begin_date:
+                        continue
+                    cmp_season.select_list.append((season.id, str(season)))
+                if len(cmp_season.select_list) > 0:
+                    cmp_season.set_value(cmp_season.select_list[-1][0])
+                self.item.season = Season.objects.get(id=cmp_season.value)
+            if self.item.season_id is None:
+                self.item.season = Season.current_season()
+                cmp_season.set_value(self.item.season.id)
+            cmp_season.set_action(xfer.request, xfer.return_action(),
+                                  close=CLOSE_NO, modal=FORMTYPE_REFRESH)
         row = xfer.get_max_row() + 1
         self._add_season_comp(xfer, row, last_subscription)
         if (Params.getvalue("member-team-enable") == 2) and ((self.item.id is None) or (self.item.status in (Subscription.STATUS_WAITING, Subscription.STATUS_BUILDING))):
