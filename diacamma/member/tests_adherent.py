@@ -71,7 +71,7 @@ from diacamma.member.views import AdherentActiveList, AdherentAddModify, Adheren
     AdherentLabel, SubscriptionAddForCurrent, SubscriptionConfirmCurrent
 from diacamma.member.test_tools import default_season, default_financial, default_params, \
     default_adherents, default_subscription, set_parameters, default_prestation, create_adherent
-from diacamma.member.views_conf import TaxReceiptList, TaxReceiptCheck, TaxReceiptShow, TaxReceiptPrint, CategoryConf
+from diacamma.member.views_conf import TaxReceiptList, TaxReceiptCheck, TaxReceiptShow, TaxReceiptPrint, CategoryConf, TaxReceiptCheckOnlyOn
 
 
 class BaseAdherentTest(LucteriosTest):
@@ -5178,6 +5178,69 @@ class TaxtReceiptTest(InvoiceTest):
         self.calljson('/diacamma.member/taxReceiptList', {'year': 2014}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'taxReceiptList')
         self.assert_count_equal('taxreceipt', 0)
+
+    def test_bill_and_asset(self):
+        details = [{'article': 4, 'designation': 'article 4', 'price': '100.00', 'quantity': 1}]
+        bill_id1 = self._create_bill(details, 1, '2015-04-01', 4, True)
+        asset_id = self._create_bill(details, 2, '2015-04-02', 4, True)
+        bill_id2 = self._create_bill(details, 1, '2015-04-04', 4, True)
+
+        self.factory.xfer = PayoffAddModify()
+        self.calljson('/diacamma.payoff/payoffAddModify', {'SAVE': 'YES', 'supportings': bill_id2,
+                                                           'amount': '100.0', 'payer': "Ma'a Dalton", 'date': '2015-04-05', 'mode': 1, 'reference': 'abc', 'bank_account': 1}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.payoff', 'payoffAddModify')
+
+        self.factory.xfer = EntryAccountClose()
+        self.calljson('/diacamma.accounting/entryAccountClose',
+                      {'CONFIRME': 'YES', 'year': '1', 'journal': '2', "entryline": "1;2;3;4;5;6;7;8"}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.accounting', 'entryAccountClose')
+
+        self.factory.xfer = EntryAccountList()
+        self.calljson('/diacamma.accounting/entryAccountList',
+                      {'year': '1', 'journal': '0', 'filter': '2'}, False)
+        self.assert_observer('core.custom', 'diacamma.accounting', 'entryAccountList')
+        self.assert_count_equal('entryline', 8)
+        self.assert_json_equal('LABELFORM', 'result', [100.00, 0.00, 100.00, 100.00, 100.00])
+
+        self.factory.xfer = TaxReceiptCheck()
+        self.calljson('/diacamma.member/taxReceiptCheck', {'year': 2015, 'CONFIRME': 'YES'}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.member', 'taxReceiptCheck')
+
+        self.factory.xfer = TaxReceiptList()
+        self.calljson('/diacamma.member/taxReceiptList', {'year': 2015}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'taxReceiptList')
+        self.assert_count_equal('taxreceipt', 1)
+
+        self.factory.xfer = TaxReceiptShow()
+        self.calljson('/diacamma.member/taxReceiptShow', {'taxreceipt': 4}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'taxReceiptShow')
+        self.assert_count_equal('', 9)
+        self.assert_json_equal('LABELFORM', 'num', 1)
+        self.assert_json_equal('LABELFORM', 'third', 'Dalton Joe')
+        self.assert_count_equal('entryline', 1)
+        self.assert_json_equal('LABELFORM', 'total', 100.0)
+        self.assert_json_equal('LABELFORM', 'date_payoff', '2015-04-05')
+        self.assert_json_equal('LABELFORM', 'mode_payoff', 'chèque')
+
+        self.factory.xfer = PayoffAddModify()
+        self.calljson('/diacamma.payoff/payoffAddModify', {'SAVE': 'YES', 'supporting': bill_id1, 'amount': '100.0',
+                                                           'date': '2015-04-03', 'mode': 6, 'linked_supporting': asset_id}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.payoff', 'payoffAddModify')
+
+        self.factory.xfer = TaxReceiptCheckOnlyOn()
+        self.calljson('/diacamma.member/taxReceiptCheckOnlyOn', {'taxreceipt': 4, 'CONFIRME': 'YES'}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.member', 'taxReceiptCheckOnlyOn')
+
+        self.factory.xfer = TaxReceiptShow()
+        self.calljson('/diacamma.member/taxReceiptShow', {'taxreceipt': 4}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'taxReceiptShow')
+        self.assert_count_equal('', 9)
+        self.assert_json_equal('LABELFORM', 'num', 1)
+        self.assert_json_equal('LABELFORM', 'third', 'Dalton Joe')
+        self.assert_count_equal('entryline', 3)
+        self.assert_json_equal('LABELFORM', 'total', 100.0)
+        self.assert_json_equal('LABELFORM', 'date_payoff', '2015-04-05')
+        self.assert_json_equal('LABELFORM', 'mode_payoff', 'chèque')
 
 
 class AdherentConnectionTest(BaseAdherentTest):

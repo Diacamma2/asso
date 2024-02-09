@@ -1861,15 +1861,15 @@ class TaxReceiptPayoffSet(QuerySet):
 
     def _fill_from_links(self, links, origin_entries):
         origin_entries_id = [entry.id for entry in origin_entries]
+        nb_line = 0
         for link in links:
-            nb_line = 0
             for entry_letter in EntryAccount.objects.filter(Q(entrylineaccount__link=link)).exclude(id__in=origin_entries_id).distinct():
                 if entry_letter.close is False:
                     self._result_cache = []
                     return False
                 entryline_query = Q(account__code__regex=current_system_account().get_cash_mask())
                 entryline_query |= Q(account__type_of_account=ChartsAccount.TYPE_EXPENSE)
-                entryline_query |= (Q(account__type_of_account=ChartsAccount.TYPE_REVENUE) & Q(amount__lt=0))
+                entryline_query |= (Q(account__type_of_account=ChartsAccount.TYPE_REVENUE))
                 entryline_letter_list = entry_letter.entrylineaccount_set.filter(entryline_query)
                 if len(entryline_letter_list) > 0:
                     for entryline_letter in entryline_letter_list:
@@ -1884,9 +1884,9 @@ class TaxReceiptPayoffSet(QuerySet):
                     if (nextyear_entryline is not None) and (nextyear_entryline.link is not None):
                         if self._fill_from_links([nextyear_entryline.link], origin_entries + [nextyear_entryline.entry]):
                             nb_line += 1
-            if nb_line == 0:
-                self._result_cache = []
-                return False
+        if nb_line == 0:
+            self._result_cache = []
+            return False
         return True
 
     def _fetch_all(self):
@@ -1902,7 +1902,7 @@ class TaxReceiptPayoffSet(QuerySet):
                 entries.append(self.entry)
             for entry in entries:
                 for entryline in entry.entrylineaccount_set.all():
-                    if entryline.link is not None:
+                    if (entryline.link is not None) and (entryline.link not in links):
                         links.append(entryline.link)
             self._fill_from_links(links, entries)
 
@@ -1997,21 +1997,29 @@ class TaxReceipt(Supporting):
         return folder.add_pdf_document(title, user, metadata, pdf_content)
 
     @classmethod
+    def _extract_third_entries(cls, tax_receipt, year, current_third=None):
+        third_entries = {}
+        extract_query = Q(close=True) & Q(entrylineaccount__account__code__in=tax_receipt.split(';')) & Q(taxreceipt=None)
+        for entry in EntryAccount.objects.filter(extract_query):
+            thirds = [third_line.third for third_line in entry.get_thirds() if third_line.link is not None]
+            if (len(thirds) == 1) and (thirds[0] is not None):
+                third = thirds[0]
+                if (current_third is not None) and (current_third.id != third.id):
+                    continue
+                date_payoff = TaxReceiptPayoffSet(hints={'entry': entry, 'third': third}).last_date_payoff
+                if (date_payoff is not None) and (date_payoff.year == year):
+                    if third.id not in third_entries:
+                        third_entries[third.id] = {'third': third, 'entries': [], 'date': date_payoff}
+                    if date_payoff > third_entries[third.id]['date']:
+                        third_entries[third.id]['date'] = date_payoff
+                    third_entries[third.id]['entries'].append(entry)
+        return third_entries
+
+    @classmethod
     def create_all(cls, year):
         tax_receipt = Params.getvalue("member-tax-receipt")
         if tax_receipt != '':
-            third_entries = {}
-            for entry in EntryAccount.objects.filter(Q(close=True) & Q(entrylineaccount__account__code__in=tax_receipt.split(';')) & Q(taxreceipt=None)):
-                thirds = [third_line.third for third_line in entry.get_thirds() if third_line.link is not None]
-                if (len(thirds) == 1) and (thirds[0] is not None):
-                    third = thirds[0]
-                    date_payoff = TaxReceiptPayoffSet(hints={'entry': entry, 'third': third}).last_date_payoff
-                    if (date_payoff is not None) and (date_payoff.year == year):
-                        if third.id not in third_entries:
-                            third_entries[third.id] = {'third': third, 'entries': [], 'date': date_payoff}
-                        if date_payoff > third_entries[third.id]['date']:
-                            third_entries[third.id]['date'] = date_payoff
-                        third_entries[third.id]['entries'].append(entry)
+            third_entries = cls._extract_third_entries(tax_receipt, year)
             for receipt_info in sorted(third_entries.values(), key=lambda item: str(item['third'])):
                 num_val = cls.objects.filter(Q(year=year)).aggregate(Max('num'))
                 new_tax_receipt = cls.objects.create(year=year, third=receipt_info['third'], date=timezone.now().date(),
@@ -2021,11 +2029,24 @@ class TaxReceipt(Supporting):
                 new_tax_receipt.save()
                 new_tax_receipt.get_saved_pdfreport(False)
 
+    def regenerate(self):
+        tax_receipt = Params.getvalue("member-tax-receipt")
+        if tax_receipt == '':
+            return
+        self.entries.clear()
+        self.date = timezone.now().date()
+        self.save()
+        third_entries = list(self._extract_third_entries(tax_receipt, self.year, current_third=self.third).values())
+        if (len(third_entries) == 1) and (third_entries[0]['third'].id == self.third.id):
+            self.entries.set(third_entries[0]['entries'])
+            self.save()
+            self.get_saved_pdfreport(True)
+
     class Meta(object):
         verbose_name = _('tax receipt')
         verbose_name_plural = _('tax receipts')
         ordering = ['year', 'num', 'third']
-        default_permissions = ['change']
+        default_permissions = ['change', 'check']
 
 
 class CommandManager(object):

@@ -280,6 +280,19 @@ class TaxReceiptCheck(XferContainerAcknowledge):
             TaxReceipt.create_all(year)
 
 
+@ActionsManage.affect_show(_('Check'), "images/ok.png")
+@MenuManage.describ('member.check_taxreceipt')
+class TaxReceiptCheckOnlyOn(XferContainerAcknowledge):
+    icon = "taxreceipt.png"
+    model = TaxReceipt
+    field_id = 'taxreceipt'
+    caption = _("Check tax receipt")
+
+    def fillresponse(self):
+        if self.confirme(_('Do you want to re-generate this tax receipte for year "%s" ?') % self.item.year):
+            self.item.regenerate()
+
+
 @ActionsManage.affect_grid(TITLE_EDIT, "images/show.png", unique=SELECT_SINGLE)
 @MenuManage.describ('member.change_taxreceipt')
 class TaxReceiptShow(XferShowEditor):
