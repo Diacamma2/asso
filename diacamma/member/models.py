@@ -1916,7 +1916,7 @@ class TaxReceiptPayoffSet(QuerySet):
 
 
 class TaxReceipt(Supporting):
-    num = models.IntegerField(verbose_name=_('numeros'), null=False)
+    num = models.IntegerField(verbose_name=_('numeros'), null=True, default=None)
     fiscal_year = models.ForeignKey(FiscalYear, verbose_name=_('fiscal year'), null=False, db_index=True, on_delete=models.CASCADE)
     year = models.IntegerField(verbose_name=_('year'), null=False, unique_for_year=True)
     entries = models.ManyToManyField(EntryAccount, verbose_name=_('entries'))
@@ -2019,19 +2019,26 @@ class TaxReceipt(Supporting):
     def create_all(cls, year):
         tax_receipt = Params.getvalue("member-tax-receipt")
         if tax_receipt != '':
+            for taxitem in cls.objects.filter(Q(year=year), num__isnull=True):
+                taxitem.regenerate()
             third_entries = cls._extract_third_entries(tax_receipt, year)
             for receipt_info in sorted(third_entries.values(), key=lambda item: str(item['third'])):
-                num_val = cls.objects.filter(Q(year=year)).aggregate(Max('num'))
                 new_tax_receipt = cls.objects.create(year=year, third=receipt_info['third'], date=timezone.now().date(),
-                                                     fiscal_year=FiscalYear.get_current(receipt_info['date']),
-                                                     num=num_val['num__max'] + 1 if num_val['num__max'] is not None else 1)
+                                                     fiscal_year=FiscalYear.get_current(receipt_info['date']), num=None)
                 new_tax_receipt.entries.set(receipt_info['entries'])
                 new_tax_receipt.save()
-                new_tax_receipt.get_saved_pdfreport(False)
+
+    @classmethod
+    def valid_all(cls, year):
+        for taxitem in cls.objects.filter(Q(year=year), num__isnull=True):
+            num_val = cls.objects.filter(Q(year=year)).aggregate(Max('num'))
+            taxitem.num = num_val['num__max'] + 1 if num_val['num__max'] is not None else 1
+            taxitem.save()
+            taxitem.get_saved_pdfreport(False)
 
     def regenerate(self):
         tax_receipt = Params.getvalue("member-tax-receipt")
-        if tax_receipt == '':
+        if (tax_receipt == '') or (self.num is not None):
             return
         self.entries.clear()
         self.date = timezone.now().date()
@@ -2042,11 +2049,16 @@ class TaxReceipt(Supporting):
             self.save()
             self.get_saved_pdfreport(True)
 
+    def generate_pdfreport(self):
+        if self.num is not None:
+            return Supporting.generate_pdfreport(self)
+        return None
+
     class Meta(object):
         verbose_name = _('tax receipt')
         verbose_name_plural = _('tax receipts')
         ordering = ['year', 'num', 'third']
-        default_permissions = ['change', 'check']
+        default_permissions = ['change']
 
 
 class CommandManager(object):

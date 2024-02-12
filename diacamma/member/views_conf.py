@@ -34,7 +34,7 @@ from lucterios.framework.tools import ActionsManage, MenuManage, FORMTYPE_NOMODA
 from lucterios.framework.error import LucteriosException, IMPORTANT
 from lucterios.framework.xfercomponents import XferCompButton, XferCompLabelForm, XferCompCheckList, XferCompFloat, XferCompSelect
 from lucterios.framework import signal_and_lock
-from lucterios.framework.xfergraphic import XferContainerAcknowledge
+from lucterios.framework.xfergraphic import XferContainerAcknowledge, XFER_DBOX_WARNING
 from lucterios.CORE.parameters import Params
 from lucterios.CORE.views import ParamEdit, ObjectMerge
 
@@ -267,7 +267,20 @@ class TaxReceiptList(XferListEditor):
         self.filter = Q(year=select_year)
 
 
-@ActionsManage.affect_list(_('Check'), "images/ok.png")
+@ActionsManage.affect_list(_('Valid'), "images/ok.png")
+@MenuManage.describ('member.change_taxreceipt')
+class TaxReceiptValid(XferContainerAcknowledge):
+    icon = "taxreceipt.png"
+    model = TaxReceipt
+    field_id = 'taxreceipt'
+    caption = _("Valid tax receipt")
+
+    def fillresponse(self, year=0):
+        if self.confirme(_('Do you want to validate tax receiptes for year "%s" ?{[br/]}{[u]}Warning:{[/u]} Tax receipts are not removable.') % year):
+            TaxReceipt.valid_all(year)
+
+
+@ActionsManage.affect_list(_('Check'), "images/refresh.png")
 @MenuManage.describ('member.change_taxreceipt')
 class TaxReceiptCheck(XferContainerAcknowledge):
     icon = "taxreceipt.png"
@@ -276,12 +289,12 @@ class TaxReceiptCheck(XferContainerAcknowledge):
     caption = _("Check tax receipt")
 
     def fillresponse(self, year=0):
-        if self.confirme(_('Do you want to generate tax receipte for year "%s" ?{[br/]}{[u]}Warning:{[/u]} Tax receipts are not removable.') % year):
+        if self.confirme(_('Do you want to generate tax receiptes for year "%s" ?') % year):
             TaxReceipt.create_all(year)
 
 
-@ActionsManage.affect_show(_('Check'), "images/ok.png")
-@MenuManage.describ('member.check_taxreceipt')
+@ActionsManage.affect_show(_('Check'), "images/refresh.png", condition=lambda xfer: xfer.item.num is None)
+@MenuManage.describ('member.change_taxreceipt')
 class TaxReceiptCheckOnlyOn(XferContainerAcknowledge):
     icon = "taxreceipt.png"
     model = TaxReceipt
@@ -303,7 +316,7 @@ class TaxReceiptShow(XferShowEditor):
 
 
 @ActionsManage.affect_grid(_("Send"), "lucterios.mailing/images/email.png", close=CLOSE_NO, unique=SELECT_MULTI, condition=lambda xfer, gridname='': can_send_email(xfer))
-@ActionsManage.affect_show(_("Send"), "lucterios.mailing/images/email.png", close=CLOSE_NO, condition=lambda xfer: can_send_email(xfer))
+@ActionsManage.affect_show(_("Send"), "lucterios.mailing/images/email.png", close=CLOSE_NO, condition=lambda xfer: (xfer.item.num is not None) and can_send_email(xfer))
 @MenuManage.describ('member.change_taxreceipt')
 class TaxReceiptEmail(XferContainerAcknowledge):
     caption = _("Send by email")
@@ -312,8 +325,11 @@ class TaxReceiptEmail(XferContainerAcknowledge):
     field_id = 'taxreceipt'
 
     def fillresponse(self):
-        self.redirect_action(ActionsManage.get_action_url('payoff.Supporting', 'Email', self),
-                             close=CLOSE_NO, params={'item_name': self.field_id, "modelname": ""})
+        if (hasattr(self.items, 'filter') and self.items.filter(num__isnull=True).count() > 0) or (isinstance(self.items, list) and (self.item.num is None)):
+            self.message(_('Some tax receipts are not validated !'), XFER_DBOX_WARNING)
+        else:
+            self.redirect_action(ActionsManage.get_action_url('payoff.Supporting', 'Email', self),
+                                 close=CLOSE_NO, params={'item_name': self.field_id, "modelname": ""})
 
 
 @ActionsManage.affect_grid(_("Print"), "images/print.png", close=CLOSE_NO, unique=SELECT_MULTI)
@@ -334,6 +350,12 @@ class TaxReceiptPrint(SupportingPrint):
 
     def items_callback(self):
         return self.items
+
+    def get_report_generator(self):
+        report = SupportingPrint.get_report_generator(self)
+        if (report is not None) and ((hasattr(self.items, 'filter') and self.items.filter(num__isnull=True).count() > 0) or (isinstance(self.items, list) and (self.item.num is None))):
+            report.watermark = _('simulation')
+        return report
 
 
 @signal_and_lock.Signal.decorate('conf_wizard')
