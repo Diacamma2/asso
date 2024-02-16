@@ -46,6 +46,7 @@ from lucterios.contacts.editors import IndividualEditor
 from diacamma.member.models import Period, Season, Subscription, Team, License, convert_date, same_day_months_after, Activity, Adherent, \
     SubscriptionType, Prestation
 from diacamma.invoice.models import Article
+from diacamma.accounting.models import ChartsAccount, FiscalYear
 
 
 class SeasonEditor(LucteriosEditor):
@@ -530,3 +531,7 @@ class TaxReceiptEditor(LucteriosEditor):
         entryline.actions = []
         entryline.delete_header('link')
         entryline.add_action(xfer.request, EntryAccountOpenFromLine.get_action(TITLE_EDIT, "images/edit.png"), close=CLOSE_NO, unique=SELECT_SINGLE)
+        fiscalyears = FiscalYear.objects.filter(begin__gte='%s-01-01' % xfer.item.year, end__lte='%s-12-31' % xfer.item.year)
+        if ChartsAccount.objects.filter(year__in=fiscalyears, type_of_account__in=(3, 4)).exclude(rubric='').count() == 0:
+            xfer.remove_component('__empty__')
+            xfer.remove_component('type_gift')

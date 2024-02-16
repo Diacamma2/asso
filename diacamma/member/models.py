@@ -1841,7 +1841,7 @@ class TaxReceiptPayoffSet(QuerySet):
         self.current_third = self._hints['third'] if 'third' in self._hints else None
 
     def _add_payoff(self, entryline):
-        new_payoff = Payoff(date=entryline.entry.date_value, amount=entryline.amount, mode=2, payer=str(self.current_third))
+        new_payoff = Payoff(date=entryline.entry.date_value, amount=entryline.amount, mode=Payoff.MODE_CHEQUE, payer=str(self.current_third))
         new_payoff.id = -10 * (len(self._result_cache) + 1)
         old_payoff = entryline.entry.payoff_set.all().first()
         if entryline.account.type_of_account == ChartsAccount.TYPE_EXPENSE:
@@ -1850,7 +1850,7 @@ class TaxReceiptPayoffSet(QuerySet):
             new_payoff.mode = TaxReceiptPayoffSet.PAYOFF_MODE_REVENU
         elif old_payoff is None:
             if entryline.account.code == Params.getvalue("payoff-cash-account"):
-                new_payoff.mode = 0
+                new_payoff.mode = Payoff.MODE_CASH
         else:
             new_payoff.mode = old_payoff.mode
             new_payoff.payer = old_payoff.payer
@@ -1923,7 +1923,9 @@ class TaxReceipt(Supporting):
     date = models.DateField(verbose_name=_('date'), null=False)
     total = LucteriosVirtualField(verbose_name=_('total'), compute_from='get_total', format_string=lambda: format_with_devise(5))
     date_payoff = LucteriosVirtualField(verbose_name=_('date payoff'), compute_from='get_date_payoff', format_string='D')
-    mode_payoff = LucteriosVirtualField(verbose_name=_('mode payoff'), compute_from='get_mode_payoff')
+    mode_payoff = LucteriosVirtualField(verbose_name=_('type payoff'), compute_from='get_mode_payoff')
+    type_gift = LucteriosVirtualField(verbose_name=_('type gift'), compute_from='get_type_gift')
+    __empty__ = LucteriosVirtualField(verbose_name='', compute_from=lambda *_args: '')
 
     def __str__(self):
         return _("Tax receipt #%(num)s-%(year)s %(third)s") % {'num': self.num, 'year': self.year, 'third': self.third}
@@ -1934,12 +1936,12 @@ class TaxReceipt(Supporting):
 
     @classmethod
     def get_show_fields(cls):
-        fields = ["year", ("num", 'date'), "third", "entryline_set", 'total', ('date_payoff', 'mode_payoff')]
+        fields = ["year", ("num", 'date'), "third", "entryline_set", 'total', ('date_payoff', 'mode_payoff'), ('__empty__', 'type_gift')]
         return fields
 
     @classmethod
     def get_print_fields(cls):
-        return ["fiscal_year", "year", "num", 'date', 'total', 'date_payoff', 'mode_payoff', "third", "entryline_set", 'OUR_DETAIL', 'DEFAULT_DOCUMENTS']
+        return ["fiscal_year", "year", "num", 'date', 'total', 'date_payoff', 'mode_payoff', 'type_gift', "third", "entryline_set", 'OUR_DETAIL', 'DEFAULT_DOCUMENTS']
 
     @property
     def entryline_set(self):
@@ -1991,6 +1993,9 @@ class TaxReceipt(Supporting):
         field = Payoff.get_field_by_name('mode')
         modes = sorted(set([payoff.mode for payoff in self.payoff_set.all()]))
         return ", ".join([get_mode_text(mode) for mode in modes])
+
+    def get_type_gift(self):
+        return ", ".join(sorted(set([entryline.account.rubric for entryline in self.entryline_set.all()])))
 
     def add_pdf_document(self, title, user, metadata, pdf_content):
         folder, _new = FolderContainer.objects.get_or_create(name="%d" % self.year)

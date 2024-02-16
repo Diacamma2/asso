@@ -38,12 +38,12 @@ from diacamma.member.models import Season, Activity, Team, Age, Document, \
 from diacamma.invoice.models import Article
 
 
-def default_financial():
+def default_financial(with_rubric=False):
     from diacamma.invoice.views_conf import paramchange_invoice
     from diacamma.payoff.views_conf import paramchange_payoff
     paramchange_invoice([])
     paramchange_payoff([])
-    default_compta_fr()
+    default_compta_fr(with_rubric=with_rubric)
     default_articles()
     default_bankaccount_fr()
 
