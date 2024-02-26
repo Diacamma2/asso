@@ -1841,7 +1841,7 @@ class TaxReceiptPayoffSet(QuerySet):
         self.current_third = self._hints['third'] if 'third' in self._hints else None
 
     def _add_payoff(self, entryline):
-        new_payoff = Payoff(date=entryline.entry.date_value, amount=entryline.amount, mode=Payoff.MODE_CHEQUE, payer=str(self.current_third))
+        new_payoff = Payoff(date=entryline.entry.date_value, amount=entryline.amount, mode=Params.getvalue("member-tax-receipt-payoff"), payer=str(self.current_third))
         new_payoff.id = -10 * (len(self._result_cache) + 1)
         old_payoff = entryline.entry.payoff_set.all().first()
         if entryline.account.type_of_account == ChartsAccount.TYPE_EXPENSE:
@@ -1948,7 +1948,7 @@ class TaxReceipt(Supporting):
         if self.id is None:
             return EntryLineAccount.objects.filter(Q(entry__isnull=True))
         tax_receipt = Params.getvalue("member-tax-receipt")
-        return EntryLineAccount.objects.filter(Q(entry__in=list(self.entries.all())) & Q(account__code__in=tax_receipt.split(';')))
+        return EntryLineAccount.objects.filter(Q(entry__in=list(self.entries.all())) & Q(account__code__in=tax_receipt))
 
     @property
     def payoff_set(self):
@@ -2004,7 +2004,7 @@ class TaxReceipt(Supporting):
     @classmethod
     def _extract_third_entries(cls, tax_receipt, year, current_third=None):
         third_entries = {}
-        extract_query = Q(close=True) & Q(entrylineaccount__account__code__in=tax_receipt.split(';')) & Q(taxreceipt=None)
+        extract_query = Q(close=True) & Q(entrylineaccount__account__code__in=tax_receipt) & Q(taxreceipt=None)
         for entry in EntryAccount.objects.filter(extract_query):
             thirds = [third_line.third for third_line in entry.get_thirds() if third_line.link is not None]
             if (len(thirds) == 1) and (thirds[0] is not None):
@@ -2023,7 +2023,7 @@ class TaxReceipt(Supporting):
     @classmethod
     def create_all(cls, year):
         tax_receipt = Params.getvalue("member-tax-receipt")
-        if tax_receipt != '':
+        if len(tax_receipt) > 0:
             for taxitem in cls.objects.filter(Q(year=year), num__isnull=True):
                 taxitem.regenerate()
             third_entries = cls._extract_third_entries(tax_receipt, year)
@@ -2043,7 +2043,7 @@ class TaxReceipt(Supporting):
 
     def regenerate(self):
         tax_receipt = Params.getvalue("member-tax-receipt")
-        if (tax_receipt == '') or (self.num is not None):
+        if len(tax_receipt) == 0 or (self.num is not None):
             return
         self.entries.clear()
         self.date = timezone.now().date()
@@ -2336,6 +2336,8 @@ def member_checkparam():
     Parameter.check_and_create(name="member-fields", typeparam=Parameter.TYPE_STRING, title=_("member-fields"), args="{'Multi':False}", value='')
     Parameter.check_and_create(name="member-tax-receipt", typeparam=Parameter.TYPE_STRING, title=_("member-tax-receipt"), args="{'Multi':True}", value='',
                                meta='("accounting","ChartsAccount","import diacamma.accounting.tools;django.db.models.Q(code__regex=diacamma.accounting.tools.current_system_account().get_revenue_mask()) & django.db.models.Q(year__is_actif=True)", "code", False)')
+    Parameter.check_and_create(name="member-tax-receipt-payoff", typeparam=Parameter.TYPE_SELECT, title=_("member-tax-receipt-payoff"), args="{'Enum':6}", value=str(Payoff.MODE_CHEQUE),
+                               param_titles=(_("member-tax-receipt-payoff.0"), _("member-tax-receipt-payoff.1"), _("member-tax-receipt-payoff.2"), _("member-tax-receipt-payoff.3"), _("member-tax-receipt-payoff.4"), _("member-tax-receipt-payoff.5")))
     Parameter.check_and_create(name="member-age-statistic", typeparam=Parameter.TYPE_INTEGER, title=_("member-age-statistic"), args="{'Min': 1, 'Max': 100}", value='18')
     Parameter.check_and_create(name="member-default-categorybill", typeparam=Parameter.TYPE_INTEGER, title=_("member-default-categorybill"), args="{}", value='0', meta='("invoice","CategoryBill", Q(), "id", False)')
     Parameter.check_and_create(name="member-subscription-delaytorenew", typeparam=Parameter.TYPE_INTEGER, title=_("member-subscription-delaytorenew"), args="{'Min': 0, 'Max': 999}", value='0')

@@ -47,7 +47,8 @@ from diacamma.payoff.views import SupportingPrint, can_send_email
 def config_member(setting_list):
     setting_list['20@%s' % _("Adherents")] = ["member-family-type", "member-connection", "member-subscription-mode",
                                               "member-size-page", "member-default-categorybill",
-                                              "member-tax-receipt", "member-activegroup", "member-renew-filter"]
+                                              "member-tax-receipt", "member-tax-receipt-payoff",
+                                              "member-activegroup", "member-renew-filter"]
     return True
 
 
