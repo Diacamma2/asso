@@ -186,7 +186,7 @@ class Season(LucteriosModel):
         total = 0
         for adh in Adherent.objects.filter(query).distinct():
             nb_sub = adh.subscription_set.filter(Q(subscriptiontype__duration=0) & Q(begin_date__lte=self.date_ref)).count()
-            if adh.birthday >= birthday:
+            if not isinstance(adh.birthday, date) or adh.birthday >= birthday:
                 offset = +1
             else:
                 offset = -1

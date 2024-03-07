@@ -26,6 +26,7 @@ from __future__ import unicode_literals
 from datetime import timedelta
 
 from django.db.models.aggregates import Max
+from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 from django.utils import formats
 
@@ -531,7 +532,10 @@ class TaxReceiptEditor(LucteriosEditor):
         entryline.actions = []
         entryline.delete_header('link')
         entryline.add_action(xfer.request, EntryAccountOpenFromLine.get_action(TITLE_EDIT, "images/edit.png"), close=CLOSE_NO, unique=SELECT_SINGLE)
-        fiscalyears = FiscalYear.objects.filter(begin__gte='%s-01-01' % xfer.item.year, end__lte='%s-12-31' % xfer.item.year)
+        fiscalyears = FiscalYear.objects.filter(
+            (Q(begin__lte='%s-01-01' % xfer.item.year) & Q(end__gte='%s-01-01' % xfer.item.year)) |
+            (Q(begin__lte='%s-12-31' % xfer.item.year) & Q(end__gte='%s-12-31' % xfer.item.year))
+        )
         if ChartsAccount.objects.filter(year__in=fiscalyears, type_of_account__in=(3, 4)).exclude(rubric='').count() == 0:
             xfer.remove_component('__empty__')
             xfer.remove_component('type_gift')

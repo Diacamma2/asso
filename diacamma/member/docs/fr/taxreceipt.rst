@@ -70,10 +70,19 @@ Les mouvements satisfaisant à ces cinq conditions sont reportés dans le reçu 
 
  * Attribution d'un numéro unique (spécifique à l'année civile) à tout reçu fiscal
  * Possibilité de gérer des reçus fiscaux pour "abandon de frais"
- 	Ces dons peuvent prendre plusieurs formes (argent, abandon de revenus ou de produits, renonciation expresse à des frais engagés dans le cadre d’une activité bénévole respectant certaines conditions)
+ Ces dons peuvent prendre plusieurs formes (argent, abandon de revenus ou de produits, renonciation expresse à des frais engagés dans le cadre d’une activité bénévole respectant certaines conditions)
 
-Une fois généré, chaque reçu pourra être imprimé en PDF et pourra être envoyé par courriel (tout comme les factures).
+Une fois généré, chaque reçu pourra être imprimé en PDF en mode "simulation", afin de pouvoir vérifier le résultat. 
+Depuis la fiche d'un reçu, il est possible de relancer la génération via le bouton "Contrôle".
 
-**Attention :** la génération de reçus fiscaux est définitive. Comme ils correspondent à la réalité d'une comptabilité validée, il n'est pas possible de les corriger ou de les annuler.
+**Remarque :** Si vous avez défini des rubriques de compte de résultat (voir le manuel "Diacamma Comptabilité", "Création, modification et édition de comptes du plan comptable"), 
+ceux-ci sont alors utilisé dans le reçu fiscal en précision de nature du don. 
 
-**Note:** Une version PDF des reçus est automatiquement sauvegardée dans le *Gestionnaire de documents*, dans un répertoire ayant pour nom l'année civile. Si ce répertoire n'existe pas, il est créé.
+Après les avoir bien vérifiés, cliquer sur le bouton "Validées" afin de figer ces différents reçu.
+Il peut alors être envoyé par courriel, en PDF (tout comme les factures).
+
+**Attention :** la validation de reçus fiscaux est définitive.
+Comme ils correspondent à la réalité d'une comptabilité validée, il n'est pas possible de les corriger ou de les annuler.
+
+**Note:** Une version PDF des reçus validés est automatiquement sauvegardée dans le *Gestionnaire de documents*, dans un répertoire ayant pour nom l'année civile. 
+Si ce répertoire n'existe pas, il est créé.
