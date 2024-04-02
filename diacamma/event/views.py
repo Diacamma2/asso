@@ -48,12 +48,13 @@ from diacamma.member.models import Season
 from diacamma.event.models import Event, Organizer, Participant, Degree
 
 MenuManage.add_sub("event.actions", "association", "diacamma.event/images/event.png",
-                   _("Events"), _("Management of events."), 80)
+                   _("Events"), _("Management of events."), 80, 'mdi:mdi-calendar')
 
 
 class GenericEventList(XferListEditor):
     model = Event
     field_id = 'event'
+    short_icon = "mdi:mdi-calendar-range"
     event_type = None
 
     def fillresponse_header(self):
@@ -76,6 +77,7 @@ def rigth_examination(request):
 @MenuManage.describ(rigth_examination, FORMTYPE_NOMODAL, 'event.actions', _('Event manage'))
 class EventListExamination(GenericEventList):
     icon = "degree.png"
+    short_icon = "mdi:mdi-trophy-outline"
     caption = _("Examination")
     event_type = Event.EVENTTYPE_EXAMINATION
 
@@ -83,6 +85,7 @@ class EventListExamination(GenericEventList):
 @MenuManage.describ('event.change_event', FORMTYPE_NOMODAL, 'event.actions', _('Event manage'))
 class EventListOuting(GenericEventList):
     icon = "outing.png"
+    short_icon = "mdi:mdi-calendar-multiselect"
     caption = _("Training or outing")
     event_type = Event.EVENTTYPE_TRAINING
 
@@ -90,27 +93,30 @@ class EventListOuting(GenericEventList):
 @MenuManage.describ('event.change_event', FORMTYPE_NOMODAL, 'event.actions', _('To find an event'))
 class EventSearch(XferSearchEditor):
     icon = "event.png"
+    short_icon = "mdi:mdi-calendar-range"
     model = Event
     field_id = 'event'
     caption = _("Search event")
 
 
-@ActionsManage.affect_grid(TITLE_CREATE, "images/new.png")
-@ActionsManage.affect_grid(TITLE_MODIFY, "images/edit.png", unique=SELECT_SINGLE)
-@ActionsManage.affect_show(TITLE_MODIFY, "images/edit.png", close=CLOSE_YES, condition=lambda xfer: xfer.item.status == Event.STATUS_BUILDING)
+@ActionsManage.affect_grid(TITLE_CREATE, "images/new.png", short_icon='mdi:mdi-pencil-plus')
+@ActionsManage.affect_grid(TITLE_MODIFY, "images/edit.png", short_icon='mdi:mdi-pencil-outline', unique=SELECT_SINGLE)
+@ActionsManage.affect_show(TITLE_MODIFY, "images/edit.png", short_icon='mdi:mdi-pencil-outline', close=CLOSE_YES, condition=lambda xfer: xfer.item.status == Event.STATUS_BUILDING)
 @MenuManage.describ('event.add_event')
 class EventAddModify(XferAddEditor):
     icon = "event.png"
+    short_icon = "mdi:mdi-calendar-range"
     model = Event
     field_id = 'event'
     caption_add = _("Add event")
     caption_modify = _("Modify event")
 
 
-@ActionsManage.affect_grid(TITLE_EDIT, "images/show.png", unique=SELECT_SINGLE)
+@ActionsManage.affect_grid(TITLE_EDIT, "images/show.png", short_icon='mdi:mdi-text-box-outline', unique=SELECT_SINGLE)
 @MenuManage.describ('event.change_event')
 class EventShow(XferShowEditor):
     icon = "event.png"
+    short_icon = "mdi:mdi-calendar-range"
     model = Event
     field_id = 'event'
     caption = _("Show examination")
@@ -120,6 +126,7 @@ class EventShow(XferShowEditor):
 @MenuManage.describ('event.add_event')
 class EventTransition(XferTransition):
     icon = "degree.png"
+    short_icon = "mdi:mdi-trophy-outline"
     model = Event
     field_id = 'event'
 
@@ -129,6 +136,7 @@ class EventTransition(XferTransition):
         dlg.item = self.item
         img = XferCompImage('img')
         img.set_value(self.icon_path())
+        img.set_short_icon(self.short_icon)
         img.set_location(0, 0, 1, 3)
         dlg.add_component(img)
         lbl = XferCompLabelForm('title')
@@ -166,8 +174,8 @@ class EventTransition(XferTransition):
             edt.set_location(4, row_id)
             dlg.add_component(edt)
             row_id += 1
-        dlg.add_action(self.return_action(TITLE_OK, "images/ok.png"), close=CLOSE_YES, params={'CONFIRME': 'YES'})
-        dlg.add_action(WrapAction(TITLE_CANCEL, 'images/cancel.png'))
+        dlg.add_action(self.return_action(TITLE_OK, "images/ok.png", short_icon='mdi:mdi-check'), close=CLOSE_YES, params={'CONFIRME': 'YES'})
+        dlg.add_action(WrapAction(TITLE_CANCEL, 'images/cancel.png', 'mdi:mdi-cancel'))
 
     def fill_confirm(self, transition, trans):
         if (transition == 'validate') and (self.item.event_type == Event.EVENTTYPE_EXAMINATION) and (self.getparam('CONFIRME') is None):
@@ -176,19 +184,21 @@ class EventTransition(XferTransition):
             XferTransition.fill_confirm(self, transition, trans)
 
 
-@ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", unique=SELECT_MULTI)
+@ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", short_icon='mdi:mdi-delete-outline', unique=SELECT_MULTI)
 @MenuManage.describ('event.delete_event')
 class EventDel(XferDelete):
     icon = "degree.png"
+    short_icon = "mdi:mdi-trophy-outline"
     model = Event
     field_id = 'event'
     caption = _("Delete examination")
 
 
-@ActionsManage.affect_show(TITLE_PRINT, "images/print.png")
+@ActionsManage.affect_show(TITLE_PRINT, "images/print.png", short_icon='mdi:mdi-printer-outline')
 @MenuManage.describ('event.change_event')
 class EventPrint(XferPrintAction):
     icon = "degree.png"
+    short_icon = "mdi:mdi-trophy-outline"
     model = Event
     field_id = 'event'
     caption = _("Print event")
@@ -198,6 +208,7 @@ class EventPrint(XferPrintAction):
 @MenuManage.describ('event.add_event')
 class OrganizerSave(XferContainerAcknowledge):
     icon = "degree.png"
+    short_icon = "mdi:mdi-trophy-outline"
     model = Organizer
     field_id = 'organizer'
     caption_add = _("Add organizer")
@@ -209,10 +220,11 @@ class OrganizerSave(XferContainerAcknowledge):
                 event_id=event, contact_id=contact_id)
 
 
-@ActionsManage.affect_grid(TITLE_ADD, "images/add.png", condition=lambda xfer, gridname='': xfer.item.status == Event.STATUS_BUILDING)
+@ActionsManage.affect_grid(TITLE_ADD, "images/add.png", short_icon='mdi:mdi-pencil-plus-outline', condition=lambda xfer, gridname='': xfer.item.status == Event.STATUS_BUILDING)
 @MenuManage.describ('event.add_event')
 class OrganizerAddModify(ContactSelection):
     icon = "degree.png"
+    short_icon = "mdi:mdi-trophy-outline"
     caption = _("Add organizer")
     mode_select = SELECT_MULTI
     select_class = OrganizerSave
@@ -222,19 +234,21 @@ class OrganizerAddModify(ContactSelection):
     methods_allowed = ('POST', 'PUT')
 
 
-@ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", unique=SELECT_MULTI, condition=lambda xfer, gridname='': xfer.item.status == Event.STATUS_BUILDING)
+@ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", short_icon='mdi:mdi-delete-outline', unique=SELECT_MULTI, condition=lambda xfer, gridname='': xfer.item.status == Event.STATUS_BUILDING)
 @MenuManage.describ('event.add_event')
 class OrganizerDel(XferDelete):
     icon = "degree.png"
+    short_icon = "mdi:mdi-trophy-outline"
     model = Organizer
     field_id = 'organizer'
     caption = _("Delete organizer")
 
 
-@ActionsManage.affect_grid(_("Responsible"), "images/ok.png", unique=SELECT_SINGLE, intop=True, condition=lambda xfer, gridname='': xfer.item.status == Event.STATUS_BUILDING)
+@ActionsManage.affect_grid(_("Responsible"), "images/ok.png", short_icon='mdi:mdi-check', unique=SELECT_SINGLE, intop=True, condition=lambda xfer, gridname='': xfer.item.status == Event.STATUS_BUILDING)
 @MenuManage.describ('event.add_event')
 class OrganizerResponsible(XferContainerAcknowledge):
     icon = "degree.png"
+    short_icon = "mdi:mdi-trophy-outline"
     model = Organizer
     field_id = 'organizer'
     caption = _("Responsible")
@@ -246,6 +260,7 @@ class OrganizerResponsible(XferContainerAcknowledge):
 @MenuManage.describ('event.add_event')
 class ParticipantSave(XferContainerAcknowledge):
     icon = "degree.png"
+    short_icon = "mdi:mdi-trophy-outline"
     model = Participant
     field_id = 'participant'
     caption_add = _("Add participant")
@@ -259,10 +274,11 @@ class ParticipantSave(XferContainerAcknowledge):
                     event_id=event, contact_id=contact_id)
 
 
-@ActionsManage.affect_grid(TITLE_EDIT, "images/show.png", unique=SELECT_SINGLE)
+@ActionsManage.affect_grid(TITLE_EDIT, "images/show.png", short_icon='mdi:mdi-text-box-outline', unique=SELECT_SINGLE)
 @MenuManage.describ('event.change_event')
 class ParticipantOpen(XferContainerAcknowledge):
     icon = "degree.png"
+    short_icon = "mdi:mdi-trophy-outline"
     model = Participant
     field_id = 'participant'
     caption_add = _("Add participant")
@@ -277,10 +293,11 @@ class ParticipantOpen(XferContainerAcknowledge):
                              close=CLOSE_NO, params={field_id: str(current_contact.id)})
 
 
-@ActionsManage.affect_grid(TITLE_ADD, "images/add.png", condition=lambda xfer, gridname='': hasattr(xfer.item, 'status') and (xfer.item.status == Event.STATUS_BUILDING))
+@ActionsManage.affect_grid(TITLE_ADD, "images/add.png", short_icon='mdi:mdi-pencil-plus-outline', condition=lambda xfer, gridname='': hasattr(xfer.item, 'status') and (xfer.item.status == Event.STATUS_BUILDING))
 @MenuManage.describ('event.add_event')
 class ParticipantAdd(AdherentSelection):
     icon = "degree.png"
+    short_icon = "mdi:mdi-trophy-outline"
     caption = _("Add participant")
     mode_select = SELECT_MULTI
     model = Participant
@@ -289,10 +306,11 @@ class ParticipantAdd(AdherentSelection):
     methods_allowed = ('POST', 'PUT')
 
 
-@ActionsManage.affect_grid(_("Add contact"), "images/add.png", condition=lambda xfer, gridname='': xfer.item.status == Event.STATUS_BUILDING)
+@ActionsManage.affect_grid(_("Add contact"), "images/add.png", short_icon='mdi:mdi-pencil-plus-outline', condition=lambda xfer, gridname='': xfer.item.status == Event.STATUS_BUILDING)
 @MenuManage.describ('event.add_event')
 class ParticipantAddContact(ContactSelection):
     icon = "degree.png"
+    short_icon = "mdi:mdi-trophy-outline"
     caption = _("Add participant")
     mode_select = SELECT_MULTI
     select_class = ParticipantSave
@@ -302,10 +320,11 @@ class ParticipantAddContact(ContactSelection):
     methods_allowed = ('POST', 'PUT')
 
 
-@ActionsManage.affect_grid(TITLE_MODIFY, "images/edit.png", unique=SELECT_SINGLE, condition=lambda xfer, gridname='': (xfer.item.status == Event.STATUS_BUILDING))
+@ActionsManage.affect_grid(TITLE_MODIFY, "images/edit.png", short_icon='mdi:mdi-pencil-outline', unique=SELECT_SINGLE, condition=lambda xfer, gridname='': (xfer.item.status == Event.STATUS_BUILDING))
 @MenuManage.describ('event.add_event')
 class ParticipantModify(XferAddEditor):
     icon = "degree.png"
+    short_icon = "mdi:mdi-trophy-outline"
     model = Participant
     field_id = 'participant'
     caption_add = _("Add participant")
@@ -313,10 +332,11 @@ class ParticipantModify(XferAddEditor):
     redirect_to_show = None
 
 
-@ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", unique=SELECT_MULTI, condition=lambda xfer, gridname='': xfer.item.status == Event.STATUS_BUILDING)
+@ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", short_icon='mdi:mdi-delete-outline', unique=SELECT_MULTI, condition=lambda xfer, gridname='': xfer.item.status == Event.STATUS_BUILDING)
 @MenuManage.describ('event.add_event')
 class ParticipantDel(XferDelete):
     icon = "degree.png"
+    short_icon = "mdi:mdi-trophy-outline"
     model = Participant
     field_id = 'participant'
     caption = _("Delete participant")
@@ -325,6 +345,7 @@ class ParticipantDel(XferDelete):
 @MenuManage.describ(rigth_examination, FORMTYPE_MODAL, 'event.actions', _('Statistic of degrees'))
 class DegreeStatistic(XferContainerCustom):
     icon = "degree.png"
+    short_icon = "mdi:mdi-trophy-outline"
     model = Degree
     field_id = 'degree'
     caption = _("Statistic")
@@ -338,6 +359,7 @@ class DegreeStatistic(XferContainerCustom):
             working_season = Season.objects.get(id=season)
         img = XferCompImage('img')
         img.set_value(self.icon_path())
+        img.set_short_icon(self.short_icon)
         img.set_location(0, 0)
         self.add_component(img)
         sel = XferCompSelect('season')
@@ -398,14 +420,15 @@ class DegreeStatistic(XferContainerCustom):
             lab.set_value_as_name(str(total))
             lab.set_location(2, pos_y)
             self.add_component(lab)
-        self.add_action(DegreeStatisticPrint.get_action(TITLE_PRINT, "images/print.png"),
+        self.add_action(DegreeStatisticPrint.get_action(TITLE_PRINT, "images/print.png", short_icon='mdi:mdi-printer-outline'),
                         close=CLOSE_NO, params={'classname': self.__class__.__name__})
-        self.add_action(WrapAction(TITLE_CLOSE, 'images/close.png'))
+        self.add_action(WrapAction(TITLE_CLOSE, 'images/close.png', 'mdi:mdi-close'))
 
 
 @MenuManage.describ(rigth_examination)
 class DegreeStatisticPrint(XferPrintAction):
     icon = "degree.png"
+    short_icon = "mdi:mdi-trophy-outline"
     model = Degree
     field_id = 'degree'
     caption = _("Statistic")

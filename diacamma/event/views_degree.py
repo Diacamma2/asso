@@ -52,21 +52,23 @@ def show_contact_degree(contact, xfer):
             xfer.add_component(grid)
 
 
-@ActionsManage.affect_grid(TITLE_ADD, "images/add.png")
-@ActionsManage.affect_grid(TITLE_MODIFY, "images/edit.png", unique=SELECT_SINGLE)
+@ActionsManage.affect_grid(TITLE_ADD, "images/add.png", short_icon='mdi:mdi-pencil-plus-outline')
+@ActionsManage.affect_grid(TITLE_MODIFY, "images/edit.png", short_icon='mdi:mdi-pencil-outline', unique=SELECT_SINGLE)
 @MenuManage.describ('event.add_degree')
 class DegreeAddModify(XferAddEditor):
     icon = "degree.png"
+    short_icon = "mdi:mdi-trophy-outline"
     model = Degree
     field_id = 'degrees'
     caption_add = _("Add degree")
     caption_modify = _("Modify degree")
 
 
-@ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", unique=SELECT_MULTI)
+@ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", short_icon='mdi:mdi-delete-outline', unique=SELECT_MULTI)
 @MenuManage.describ('event.delete_degree')
 class DegreeDel(XferDelete):
     icon = "degree.png"
+    short_icon = "mdi:mdi-trophy-outline"
     model = Degree
     field_id = 'degrees'
     caption = _("Delete degree")

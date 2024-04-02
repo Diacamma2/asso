@@ -48,7 +48,7 @@ def fill_params(xfer):
     Params.fill(xfer, param_lists, 1, xfer.get_max_row() + 1, nb_col=1)
     btn = XferCompButton('editparam')
     btn.set_location(1, xfer.get_max_row() + 1, 2, 1)
-    btn.set_action(xfer.request, ParamEdit.get_action(TITLE_MODIFY, 'images/edit.png'),
+    btn.set_action(xfer.request, ParamEdit.get_action(TITLE_MODIFY, 'images/edit.png', short_icon='mdi:mdi-pencil-outline'),
                    close=CLOSE_NO, params={'params': param_lists, 'nb_col': 1})
     xfer.add_component(btn)
 
@@ -56,6 +56,7 @@ def fill_params(xfer):
 @MenuManage.describ('event.change_degreetype', FORMTYPE_MODAL, 'member.conf', _('Management of degrees'))
 class EventConf(XferListEditor):
     icon = "degree.png"
+    short_icon = "mdi:mdi-trophy-outline"
     caption = _("Configuration of degrees")
 
     def fillresponse_header(self):
@@ -71,11 +72,12 @@ class EventConf(XferListEditor):
             self.fill_grid(0, SubDegreeType, "subdegreetype", SubDegreeType.objects.all())
 
 
-@ActionsManage.affect_grid(TITLE_ADD, "images/add.png")
-@ActionsManage.affect_grid(TITLE_MODIFY, "images/edit.png", unique=SELECT_SINGLE)
+@ActionsManage.affect_grid(TITLE_ADD, "images/add.png", short_icon='mdi:mdi-pencil-plus-outline')
+@ActionsManage.affect_grid(TITLE_MODIFY, "images/edit.png", short_icon='mdi:mdi-pencil-outline', unique=SELECT_SINGLE)
 @MenuManage.describ('event.add_degreetype')
 class DegreeTypeAddModify(XferAddEditor):
     icon = "degree.png"
+    short_icon = "mdi:mdi-trophy-outline"
     model = DegreeType
     field_id = 'degreetype'
     caption_add = _("Add degree type")
@@ -87,30 +89,33 @@ class DegreeTypeAddModify(XferAddEditor):
         XferAddEditor.fillresponse(self)
 
 
-@ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", unique=SELECT_MULTI)
+@ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", short_icon='mdi:mdi-delete-outline', unique=SELECT_MULTI)
 @MenuManage.describ('event.delete_degreetype')
 class DegreeTypeDel(XferDelete):
     icon = "degree.png"
+    short_icon = "mdi:mdi-trophy-outline"
     model = DegreeType
     field_id = 'degreetype'
     caption = _("Delete degree type")
 
 
-@ActionsManage.affect_grid(TITLE_ADD, "images/add.png")
-@ActionsManage.affect_grid(TITLE_MODIFY, "images/edit.png", unique=SELECT_SINGLE)
+@ActionsManage.affect_grid(TITLE_ADD, "images/add.png", short_icon='mdi:mdi-pencil-plus-outline')
+@ActionsManage.affect_grid(TITLE_MODIFY, "images/edit.png", short_icon='mdi:mdi-pencil-outline', unique=SELECT_SINGLE)
 @MenuManage.describ('event.add_degreetype')
 class SubDegreeTypeAddModify(XferAddEditor):
     icon = "degree.png"
+    short_icon = "mdi:mdi-trophy-outline"
     model = SubDegreeType
     field_id = 'subdegreetype'
     caption_add = _("Add sub degree type")
     caption_modify = _("Modify sub degree type")
 
 
-@ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", unique=SELECT_MULTI)
+@ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", short_icon='mdi:mdi-delete-outline', unique=SELECT_MULTI)
 @MenuManage.describ('event.delete_degreetype')
 class SubDegreeTypeDel(XferDelete):
     icon = "degree.png"
+    short_icon = "mdi:mdi-trophy-outline"
     model = SubDegreeType
     field_id = 'subdegreetype'
     caption = _("Delete sub degree type")

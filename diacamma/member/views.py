@@ -71,10 +71,10 @@ from diacamma.payoff.models import PaymentMethod
 from diacamma.member.editors import SubscriptionEditor
 from diacamma.member.models import Adherent, Subscription, Season, Age, Team, Activity, License, DocAdherent, SubscriptionType, CommandManager, Prestation, TeamPrestation, ContactAdherent
 
-MenuManage.add_sub("association", None, "diacamma.member/images/association.png", _("Association"), _("Association tools"), 30)
+MenuManage.add_sub("association", None, "diacamma.member/images/association.png", _("Association"), _("Association tools"), 30, 'mdi:mdi-human-male-female-child')
 
 MenuManage.add_sub("member.actions", "association", "diacamma.member/images/member.png",
-                   _("Adherents"), _("Management of adherents and subscriptions."), 50)
+                   _("Adherents"), _("Management of adherents and subscriptions."), 50, 'mdi:mdi-human-queue')
 
 
 class AdherentFilter(object):
@@ -137,6 +137,7 @@ class AdherentFilter(object):
 
 class AdherentAbstractList(XferListEditor, AdherentFilter):
     icon = "adherent.png"
+    short_icon = 'mdi:mdi-badge-account-horizontal-outline'
     model = Adherent
     field_id = 'adherent'
 
@@ -222,7 +223,7 @@ class AdherentAbstractList(XferListEditor, AdherentFilter):
         btn = XferCompButton('btndateref')
         btn.is_default = True
         btn.set_location(max(col1, col2), row + 1)
-        btn.set_action(self.request, self.return_action(_('Refresh'), ''), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
+        btn.set_action(self.request, self.return_action(_('Refresh'), '', 'mdi:mdi-refresh'), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
         self.add_component(btn)
 
         info_list = []
@@ -267,13 +268,13 @@ class AdherentSelection(AdherentAbstractList):
         self.item = Adherent()
         self.action_list = []
         if self.final_class is not None:
-            self.add_action(self.final_class.get_action(TITLE_OK, "images/ok.png"))
+            self.add_action(self.final_class.get_action(TITLE_OK, "images/ok.png", short_icon='mdi:mdi-check'))
         AdherentAbstractList.fillresponse(self)
         self.get_components('title').colspan = 10
         self.get_components(self.field_id).colspan = 10
         if self.select_class is not None:
             grid = self.get_components(self.field_id)
-            grid.add_action(self.request, self.select_class.get_action(_("Select"), "images/ok.png"),
+            grid.add_action(self.request, self.select_class.get_action(_("Select"), "images/ok.png", short_icon='mdi:mdi-check'),
                             close=CLOSE_YES, unique=self.mode_select, pos_act=0)
 
 
@@ -293,7 +294,7 @@ class AdherentActiveList(AdherentAbstractList):
             self.get_components(self.field_id).add_action(self.request, AdherentLicense.get_action(_("License"), ""),
                                                           unique=SELECT_SINGLE, close=CLOSE_NO)
         if Params.getvalue("member-subscription-mode") in (Subscription.MODE_WITHMODERATE, Subscription.MODE_WITHMODERATEFORNEW):
-            self.add_action(SubscriptionModerate.get_action(_("Moderation"), "images/up.png"), pos_act=0, close=CLOSE_NO)
+            self.add_action(SubscriptionModerate.get_action(_("Moderation"), "images/up.png", short_icon='mdi:mdi-account-check'), pos_act=0, close=CLOSE_NO)
 
 
 def show_thirdlist(request):
@@ -306,6 +307,7 @@ def show_thirdlist(request):
 @MenuManage.describ(show_thirdlist, FORMTYPE_NOMODAL, 'member.actions', _('List of  families of members up to date with their subscription'))
 class AdherentContactList(XferListEditor):
     icon = "adherent.png"
+    short_icon = 'mdi:mdi-badge-account-horizontal-outline'
     model = ContactAdherent
     field_id = 'abstractcontact'
     caption = _("Season adherents")
@@ -371,6 +373,7 @@ def show_prestationlist(request):
 @MenuManage.describ(show_prestationlist, FORMTYPE_NOMODAL, 'member.actions', _('List of prestations and manage subscribtions associated.'))
 class PrestationList(XferListEditor):
     icon = "adherent.png"
+    short_icon = 'mdi:mdi-badge-account-horizontal-outline'
     model = TeamPrestation
     field_id = 'team_prestation'
     caption = _("List prestations")
@@ -394,25 +397,27 @@ class PrestationList(XferListEditor):
     def fillresponse(self):
         XferListEditor.fillresponse(self)
         if WrapAction.is_permission(self.request, 'member.add_subscription'):
-            self.get_components(self.field_id).add_action(self.request, ObjectMerge.get_action(_("Merge"), "images/clone.png"),
+            self.get_components(self.field_id).add_action(self.request, ObjectMerge.get_action(_("Merge"), "images/clone.png", short_icon='mdi:mdi-set-merge'),
                                                           close=CLOSE_NO, unique=SELECT_MULTI, params={'modelname': self.model.get_long_name(), 'field_id': self.field_id})
 
 
-@ActionsManage.affect_grid(TITLE_CREATE, "images/new.png")
-@ActionsManage.affect_grid(TITLE_MODIFY, "images/edit.png", unique=SELECT_SINGLE)
+@ActionsManage.affect_grid(TITLE_CREATE, "images/new.png", short_icon='mdi:mdi-pencil-plus')
+@ActionsManage.affect_grid(TITLE_MODIFY, "images/edit.png", short_icon='mdi:mdi-pencil-outline', unique=SELECT_SINGLE)
 @MenuManage.describ('member.add_subscription')
 class PrestationAddModify(XferAddEditor):
     icon = "adherent.png"
+    short_icon = 'mdi:mdi-badge-account-horizontal-outline'
     model = TeamPrestation
     field_id = 'team_prestation'
     caption_add = _("Add prestation")
     caption_modify = _("Modify prestation")
 
 
-@ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", unique=SELECT_MULTI)
+@ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", short_icon='mdi:mdi-delete-outline', unique=SELECT_MULTI)
 @MenuManage.describ('member.delete_subscription')
 class PrestationDel(XferDelete):
     icon = "adherent.png"
+    short_icon = 'mdi:mdi-badge-account-horizontal-outline'
     model = TeamPrestation
     field_id = 'team_prestation'
     caption = _("Delete prestation")
@@ -426,6 +431,7 @@ class PrestationDel(XferDelete):
             dlg = self.create_custom(self.model)
             img = XferCompImage('img')
             img.set_value(self.icon_path())
+            img.set_short_icon(self.short_icon)
             img.set_location(0, 0, 1, 4)
             dlg.add_component(img)
             lab = XferCompLabelForm('lbl_title')
@@ -440,34 +446,37 @@ class PrestationDel(XferDelete):
             sel.set_value(0)
             sel.description = _('%s action') % Params.getvalue("member-team-text").lower()
             dlg.add_component(sel)
-            dlg.add_action(self.return_action(TITLE_OK, "images/ok.png"), close=CLOSE_YES, params={'CONFIRME': 'YES'})
-            dlg.add_action(WrapAction(TITLE_CANCEL, 'images/cancel.png'))
+            dlg.add_action(self.return_action(TITLE_OK, "images/ok.png", short_icon='mdi:mdi-check'), close=CLOSE_YES, params={'CONFIRME': 'YES'})
+            dlg.add_action(WrapAction(TITLE_CANCEL, 'images/cancel.png', 'mdi:mdi-cancel'))
 
 
-@ActionsManage.affect_grid(TITLE_CREATE, "images/new.png")
-@ActionsManage.affect_grid(TITLE_MODIFY, "images/edit.png", unique=SELECT_SINGLE)
+@ActionsManage.affect_grid(TITLE_CREATE, "images/new.png", short_icon='mdi:mdi-pencil-plus')
+@ActionsManage.affect_grid(TITLE_MODIFY, "images/edit.png", short_icon='mdi:mdi-pencil-outline', unique=SELECT_SINGLE)
 @MenuManage.describ('member.add_subscription')
 class PrestationPriceAddModify(XferAddEditor):
     icon = "adherent.png"
+    short_icon = 'mdi:mdi-badge-account-horizontal-outline'
     model = Prestation
     field_id = 'prestation'
     caption_add = _("Add price prestation")
     caption_modify = _("Modify price prestation")
 
 
-@ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", unique=SELECT_MULTI, condition=lambda xfer, gridname='': xfer.item.prestation_set.count() > 1)
+@ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", short_icon='mdi:mdi-delete-outline', unique=SELECT_MULTI, condition=lambda xfer, gridname='': xfer.item.prestation_set.count() > 1)
 @MenuManage.describ('member.delete_subscription')
 class PrestationPriceDel(XferDelete):
     icon = "adherent.png"
+    short_icon = 'mdi:mdi-badge-account-horizontal-outline'
     model = Prestation
     field_id = 'prestation'
     caption = _("Delete price prestation")
 
 
-@ActionsManage.affect_grid(TITLE_EDIT, "images/show.png", unique=SELECT_SINGLE)
+@ActionsManage.affect_grid(TITLE_EDIT, "images/show.png", short_icon='mdi:mdi-text-box-outline', unique=SELECT_SINGLE)
 @MenuManage.describ('member.change_subscription')
 class PrestationShow(XferShowEditor):
     icon = "adherent.png"
+    short_icon = 'mdi:mdi-badge-account-horizontal-outline'
     model = TeamPrestation
     field_id = 'team_prestation'
     caption = _("Show prestation")
@@ -480,7 +489,7 @@ class PrestationShow(XferShowEditor):
         if Params.getvalue("member-activite-enable"):
             info_list.append("{[b]}{[u]}%s{[/u]}{[/b]} : %s" % (Params.getvalue("member-activite-text"), self.item.activity))
         self.params['INFO'] = '{[br]}'.join(info_list)
-        self.add_action(AdherentListing.get_action(TITLE_LISTING, "images/print.png"), pos_act=0, close=CLOSE_NO, params={"team": self.item.team_id, "activity": self.item.activity_id})
+        self.add_action(AdherentListing.get_action(TITLE_LISTING, "images/print.png", short_icon='mdi:mdi-printer-pos-edit-outline'), pos_act=0, close=CLOSE_NO, params={"team": self.item.team_id, "activity": self.item.activity_id})
 
     def fillresponse(self):
         if (GRID_SIZE + 'adherent') not in self.params:
@@ -488,16 +497,17 @@ class PrestationShow(XferShowEditor):
         XferShowEditor.fillresponse(self)
         adherent = self.get_components('adherent')
         adherent.actions = []
-        adherent.add_action(self.request, AdherentShow.get_action(TITLE_EDIT, "images/show.png"), unique=SELECT_SINGLE)
-        adherent.add_action(self.request, AdherentPrestationDel.get_action(TITLE_DELETE, "images/delete.png"), unique=SELECT_MULTI, close=CLOSE_NO)
-        adherent.add_action(self.request, AdherentPrestationAdd.get_action(TITLE_ADD, "images/add.png"), unique=SELECT_NONE, close=CLOSE_NO)
+        adherent.add_action(self.request, AdherentShow.get_action(TITLE_EDIT, "images/show.png", short_icon='mdi:mdi-text-box-outline'), unique=SELECT_SINGLE)
+        adherent.add_action(self.request, AdherentPrestationDel.get_action(TITLE_DELETE, "images/delete.png", short_icon='mdi:mdi-delete-outline'), unique=SELECT_MULTI, close=CLOSE_NO)
+        adherent.add_action(self.request, AdherentPrestationAdd.get_action(TITLE_ADD, "images/add.png", short_icon='mdi:mdi-pencil-plus-outline'), unique=SELECT_NONE, close=CLOSE_NO)
         self._add_listing()
 
 
-@ActionsManage.affect_grid(_('Swap'), "images/right.png", unique=SELECT_MULTI)
+@ActionsManage.affect_grid(_('Swap'), "images/right.png", short_icon='mdi:mdi-swap-vertical', unique=SELECT_MULTI)
 @MenuManage.describ('member.add_subscription')
 class PrestationSwap(XferContainerAcknowledge):
     icon = "adherent.png"
+    short_icon = 'mdi:mdi-badge-account-horizontal-outline'
     model = TeamPrestation
     field_id = 'team_prestation'
     caption = _("Swap prestation")
@@ -524,8 +534,8 @@ class PrestationSwap(XferContainerAcknowledge):
         swap.set_value([item[0] for item in self.right_adherents])
         swap.set_location(0, 2, 2)
         dlg.add_component(swap)
-        dlg.add_action(self.return_action(TITLE_OK, "images/ok.png"), close=CLOSE_YES, params={'CONFIRME': 'YES'})
-        dlg.add_action(WrapAction(TITLE_CANCEL, 'images/cancel.png'))
+        dlg.add_action(self.return_action(TITLE_OK, "images/ok.png", short_icon='mdi:mdi-check'), close=CLOSE_YES, params={'CONFIRME': 'YES'})
+        dlg.add_action(WrapAction(TITLE_CANCEL, 'images/cancel.png', 'mdi:mdi-cancel'))
 
     def _swap_adherent(self, swap_list):
         right_adherentids = [str(item[0]) for item in self.right_adherents]
@@ -551,10 +561,11 @@ class PrestationSwap(XferContainerAcknowledge):
             self._swap_gui()
 
 
-@ActionsManage.affect_grid(_('Split'), "images/add.png", unique=SELECT_SINGLE)
+@ActionsManage.affect_grid(_('Split'), "images/add.png", short_icon='mdi:mdi-content-copy', unique=SELECT_SINGLE)
 @MenuManage.describ('member.add_subscription')
 class PrestationSplit(XferContainerAcknowledge):
     icon = "adherent.png"
+    short_icon = 'mdi:mdi-badge-account-horizontal-outline'
     model = TeamPrestation
     field_id = 'team_prestation'
     caption_add = _("Split prestation")
@@ -584,14 +595,15 @@ class PrestationSplit(XferContainerAcknowledge):
         dlg.remove_component('multiprice')
         img = XferCompImage('img')
         img.set_value(self.icon_path())
+        img.set_short_icon(self.short_icon)
         img.set_location(0, 0, 1, 6)
         dlg.add_component(img)
         lab = XferCompLabelForm('info')
         lab.set_value_as_header(_('Precise information about new %s associated.') % Params.getvalue("member-team-text").lower())
         lab.set_location(1, 0, 2)
         dlg.add_component(lab)
-        dlg.add_action(self.return_action(TITLE_SAVE, "images/ok.png"), close=CLOSE_YES, params={'CONFIRME': 'YES'})
-        dlg.add_action(WrapAction(TITLE_CANCEL, 'images/cancel.png'))
+        dlg.add_action(self.return_action(TITLE_SAVE, 'images/save.png', short_icon='mdi:mdi-content-save-outline'), close=CLOSE_YES, params={'CONFIRME': 'YES'})
+        dlg.add_action(WrapAction(TITLE_CANCEL, 'images/cancel.png', 'mdi:mdi-cancel'))
 
     def fillresponse(self):
         if self.getparam("CONFIRME") == 'YES':
@@ -603,6 +615,7 @@ class PrestationSplit(XferContainerAcknowledge):
 @MenuManage.describ('member.add_subscription')
 class AdherentPrestationDel(XferDelete):
     icon = "adherent.png"
+    short_icon = 'mdi:mdi-badge-account-horizontal-outline'
     model = Adherent
     field_id = 'adherent'
     caption = _("Delete prestation")
@@ -621,6 +634,7 @@ class AdherentPrestationDel(XferDelete):
 @MenuManage.describ('member.add_subscription')
 class AdherentPrestationSave(XferContainerAcknowledge):
     icon = "adherent.png"
+    short_icon = 'mdi:mdi-badge-account-horizontal-outline'
     model = Adherent
     field_id = 'adherent'
     caption = _("Add prestation")
@@ -638,6 +652,7 @@ class AdherentPrestationSave(XferContainerAcknowledge):
         dlg.item.adherent = self.items[0]
         img = XferCompImage('img')
         img.set_value(self.icon_path())
+        img.set_short_icon(self.short_icon)
         img.set_location(0, 0, 1, 4)
         dlg.add_component(img)
         lab = XferCompLabelForm('lbl_title')
@@ -668,8 +683,8 @@ class AdherentPrestationSave(XferContainerAcknowledge):
             presta.description = _('prestation price')
             presta.set_value(prestation.get_name_price())
             dlg.add_component(presta)
-        dlg.add_action(self.return_action(TITLE_OK, "images/ok.png"), close=CLOSE_YES, params={'NEW_SUB': 'YES'})
-        dlg.add_action(WrapAction(TITLE_CANCEL, 'images/cancel.png'))
+        dlg.add_action(self.return_action(TITLE_OK, "images/ok.png", short_icon='mdi:mdi-check'), close=CLOSE_YES, params={'NEW_SUB': 'YES'})
+        dlg.add_action(WrapAction(TITLE_CANCEL, 'images/cancel.png', 'mdi:mdi-cancel'))
 
     def _create_subscription(self, adherent):
         editor = SubscriptionEditor(Subscription(adherent=adherent, season=Season.current_season(), subscriptiontype_id=self.getparam('subscriptiontype', 0), status=self.getparam('status', 0)))
@@ -702,6 +717,7 @@ class AdherentPrestationSave(XferContainerAcknowledge):
 @MenuManage.describ('member.add_subscription')
 class AdherentPrestationAdd(AdherentSelection):
     icon = "adherent.png"
+    short_icon = 'mdi:mdi-badge-account-horizontal-outline'
     model = Adherent
     mode_select = SELECT_MULTI
     select_class = AdherentPrestationSave
@@ -713,12 +729,13 @@ class AdherentPrestationAdd(AdherentSelection):
     def fillresponse(self):
         AdherentSelection.fillresponse(self)
         self.actions = []
-        self.add_action(WrapAction(TITLE_CLOSE, 'images/close.png'))
+        self.add_action(WrapAction(TITLE_CLOSE, 'images/close.png', 'mdi:mdi-close'))
 
 
 @MenuManage.describ('member.change_adherent', FORMTYPE_NOMODAL, 'member.actions', _('To find an adherent following a set of criteria.'))
 class AdherentSearch(XferSavedCriteriaSearchEditor):
     icon = "adherent.png"
+    short_icon = 'mdi:mdi-badge-account-horizontal-outline'
     model = Adherent
     field_id = 'adherent'
     caption = _("Search adherent")
@@ -729,13 +746,14 @@ class AdherentSearch(XferSavedCriteriaSearchEditor):
 
     def fillresponse(self):
         XferSavedCriteriaSearchEditor.fillresponse(self)
-        self.add_action(AbstractContactFindDouble.get_action(_("duplicate"), "images/clone.png"),
+        self.add_action(AbstractContactFindDouble.get_action(_("duplicate"), "images/clone.png", short_icon='mdi:mdi-content-copy'),
                         params={'modelname': self.model.get_long_name(), 'field_id': self.field_id}, pos_act=0)
 
 
 @MenuManage.describ('member.change_adherent', FORMTYPE_NOMODAL, 'member.actions', _('List of adherents with old subscribtion not renew yet'))
 class AdherentRenewList(XferListEditor, AdherentFilter):
     icon = "adherent.png"
+    short_icon = 'mdi:mdi-badge-account-horizontal-outline'
     model = Adherent
     field_id = 'adherent'
     caption = _("Adherents to renew")
@@ -831,14 +849,15 @@ class AdherentRenewList(XferListEditor, AdherentFilter):
         self.get_components('title').colspan = 10
         self.get_components(self.field_id).colspan = 10
         if Params.getvalue("member-subscription-mode") in (Subscription.MODE_WITHMODERATE, Subscription.MODE_WITHMODERATEFORNEW):
-            self.add_action(SubscriptionModerate.get_action(_("Moderation"), "images/up.png"), pos_act=0, close=CLOSE_NO)
+            self.add_action(SubscriptionModerate.get_action(_("Moderation"), "images/up.png", short_icon='mdi:mdi-account-check'), pos_act=0, close=CLOSE_NO)
 
 
-@ActionsManage.affect_grid(TITLE_CREATE, "images/new.png")
-@ActionsManage.affect_show(TITLE_MODIFY, "images/edit.png", close=CLOSE_YES)
+@ActionsManage.affect_grid(TITLE_CREATE, "images/new.png", short_icon='mdi:mdi-pencil-plus')
+@ActionsManage.affect_show(TITLE_MODIFY, "images/edit.png", short_icon='mdi:mdi-pencil-outline', close=CLOSE_YES)
 @MenuManage.describ('contacts.add_abstractcontact')
 class AdherentAddModify(XferAddEditor):
     icon = "adherent.png"
+    short_icon = 'mdi:mdi-badge-account-horizontal-outline'
     model = Adherent
     field_id = 'adherent'
     caption_add = _("Add adherent")
@@ -851,10 +870,11 @@ class AdherentAddModify(XferAddEditor):
         XferAddEditor.fillresponse(self)
 
 
-@ActionsManage.affect_list(TITLE_PRINT, "images/print.png", condition=lambda xfer: Params.getobject("member-family-type") is not None)
+@ActionsManage.affect_list(TITLE_PRINT, "images/print.png", short_icon='mdi:mdi-printer-outline', condition=lambda xfer: Params.getobject("member-family-type") is not None)
 @MenuManage.describ('contacts.change_abstractcontact')
 class AdherentContactPrint(XferPrintAction):
     icon = "adherent.png"
+    short_icon = 'mdi:mdi-badge-account-horizontal-outline'
     model = ContactAdherent
     field_id = 'abstractcontact'
     caption = _("Print adherent")
@@ -862,10 +882,11 @@ class AdherentContactPrint(XferPrintAction):
     with_text_export = True
 
 
-@ActionsManage.affect_grid(TITLE_EDIT, "images/show.png", unique=SELECT_SINGLE)
+@ActionsManage.affect_grid(TITLE_EDIT, "images/show.png", short_icon='mdi:mdi-text-box-outline', unique=SELECT_SINGLE)
 @MenuManage.describ('contacts.change_abstractcontact')
 class AdherentShow(XferShowEditor):
     icon = "adherent.png"
+    short_icon = 'mdi:mdi-badge-account-horizontal-outline'
     model = Adherent
     field_id = 'adherent'
     caption = _("Show adherent")
@@ -874,6 +895,7 @@ class AdherentShow(XferShowEditor):
 @MenuManage.describ('member.add_subscription')
 class AdherentLicense(XferContainerCustom):
     icon = "adherent.png"
+    short_icon = 'mdi:mdi-badge-account-horizontal-outline'
     model = Adherent
     field_id = 'adherent'
     caption = _("License")
@@ -881,6 +903,7 @@ class AdherentLicense(XferContainerCustom):
     def fillresponse(self):
         img = XferCompImage('img')
         img.set_value(self.icon_path())
+        img.set_short_icon(self.short_icon)
         img.set_location(0, 0, 1, 3)
         self.add_component(img)
         self.item = self.item.current_subscription
@@ -914,13 +937,14 @@ class AdherentLicense(XferContainerCustom):
             lbl.description = _('value')
             self.add_component(lbl)
             row += 1
-        self.add_action(AdherentLicenseSave.get_action(TITLE_OK, 'images/ok.png'))
-        self.add_action(WrapAction(TITLE_CANCEL, 'images/cancel.png'))
+        self.add_action(AdherentLicenseSave.get_action(TITLE_OK, 'images/ok.png', short_icon='mdi:mdi-check'))
+        self.add_action(WrapAction(TITLE_CANCEL, 'images/cancel.png', 'mdi:mdi-cancel'))
 
 
 @MenuManage.describ('member.add_subscription')
 class AdherentLicenseSave(XferContainerAcknowledge):
     icon = "adherent.png"
+    short_icon = 'mdi:mdi-badge-account-horizontal-outline'
     model = Adherent
     field_id = 'adherent'
     caption = _("License")
@@ -936,6 +960,7 @@ class AdherentLicenseSave(XferContainerAcknowledge):
 @MenuManage.describ('member.add_subscription')
 class AdherentSubscription(XferContainerAcknowledge):
     icon = "adherent.png"
+    short_icon = 'mdi:mdi-badge-account-horizontal-outline'
     model = Adherent
     field_id = 'adherent'
     caption = _("Subscription")
@@ -945,10 +970,11 @@ class AdherentSubscription(XferContainerAcknowledge):
             self.redirect_action(SubscriptionShow.get_action(), modal=FORMTYPE_MODAL, close=CLOSE_YES, params={'subscription': self.item.current_subscription.id})
 
 
-@ActionsManage.affect_grid(_("Send"), "images/upload.png", unique=SELECT_MULTI, condition=lambda xfer, gridname='': xfer.getparam('reminder', False))
+@ActionsManage.affect_grid(_("Send"), "images/upload.png", short_icon='mdi:mdi-email-outline', unique=SELECT_MULTI, condition=lambda xfer, gridname='': xfer.getparam('reminder', False))
 @MenuManage.describ('member.add_subscription')
 class AdherentSendSubscription(XferContainerAcknowledge):
     icon = "adherent.png"
+    short_icon = 'mdi:mdi-badge-account-horizontal-outline'
     model = Adherent
     field_id = 'adherent'
     caption = _("Send subscription")
@@ -958,6 +984,7 @@ class AdherentSendSubscription(XferContainerAcknowledge):
             dlg = self.create_custom(self.model)
             img = XferCompImage('img')
             img.set_value(self.icon_path())
+            img.set_short_icon(self.short_icon)
             img.set_location(0, 0, 1, 4)
             dlg.add_component(img)
             lab = XferCompLabelForm('lbl_title')
@@ -974,8 +1001,8 @@ class AdherentSendSubscription(XferContainerAcknowledge):
             sel.set_value(0)
             sel.description = _('Sending mode')
             dlg.add_component(sel)
-            dlg.add_action(self.return_action(TITLE_OK, "images/ok.png"), close=CLOSE_YES)
-            dlg.add_action(WrapAction(TITLE_CANCEL, 'images/cancel.png'))
+            dlg.add_action(self.return_action(TITLE_OK, "images/ok.png", short_icon='mdi:mdi-check'), close=CLOSE_YES)
+            dlg.add_action(WrapAction(TITLE_CANCEL, 'images/cancel.png', 'mdi:mdi-cancel'))
         else:
             bill_list = []
             for adh in self.items:
@@ -990,10 +1017,11 @@ class AdherentSendSubscription(XferContainerAcknowledge):
                 self.redirect_action(BillPrint.get_action(), close=CLOSE_NO, params={'bill': ";".join(bill_list)})
 
 
-@ActionsManage.affect_grid(_("re-new"), "images/add.png", unique=SELECT_MULTI, condition=lambda xfer, gridname='': not xfer.getparam('reminder', True))
+@ActionsManage.affect_grid(_("re-new"), "images/add.png", short_icon='mdi:mdi-pencil-plus-outline', unique=SELECT_MULTI, condition=lambda xfer, gridname='': not xfer.getparam('reminder', True))
 @MenuManage.describ('member.add_subscription')
 class AdherentRenew(XferContainerAcknowledge):
     icon = "adherent.png"
+    short_icon = 'mdi:mdi-badge-account-horizontal-outline'
     model = Adherent
     field_id = 'adherent'
     caption = _("re-new")
@@ -1011,10 +1039,11 @@ class AdherentRenew(XferContainerAcknowledge):
                 self.redirect_action(AdherentSendSubscription.get_action(), close=CLOSE_NO, params={'adherent': ";".join(adh_success)})
 
 
-@ActionsManage.affect_grid(_("command"), "images/add.png", unique=SELECT_MULTI, condition=lambda xfer, gridname='': not xfer.getparam('reminder', True))
+@ActionsManage.affect_grid(_("command"), "images/add.png", short_icon='mdi:mdi-pencil-plus-outline', unique=SELECT_MULTI, condition=lambda xfer, gridname='': not xfer.getparam('reminder', True))
 @MenuManage.describ('member.add_subscription')
 class AdherentCommand(XferContainerAcknowledge):
     icon = "adherent.png"
+    short_icon = 'mdi:mdi-badge-account-horizontal-outline'
     model = Adherent
     field_id = 'adherent'
     caption = _("Command subscription")
@@ -1025,6 +1054,7 @@ class AdherentCommand(XferContainerAcknowledge):
             dlg = self.create_custom(self.model)
             img = XferCompImage('img')
             img.set_value(self.icon_path())
+            img.set_short_icon(self.short_icon)
             img.set_location(0, 0, 1, 4)
             dlg.add_component(img)
             lab = XferCompLabelForm('lbl_title')
@@ -1038,8 +1068,8 @@ class AdherentCommand(XferContainerAcknowledge):
                 for head_name, value in cmd_item.items():
                     grid.set_value(cmd_id, head_name, value)
             grid.set_location(1, 2, 2)
-            grid.add_action(self.request, AdherentCommandModify.get_action(TITLE_MODIFY, "images/edit.png"), close=CLOSE_NO, unique=SELECT_SINGLE)
-            grid.add_action(self.request, AdherentCommandDelete.get_action(TITLE_DELETE, "images/delete.png"), close=CLOSE_NO, unique=SELECT_SINGLE)
+            grid.add_action(self.request, AdherentCommandModify.get_action(TITLE_MODIFY, "images/edit.png", short_icon='mdi:mdi-pencil-outline'), close=CLOSE_NO, unique=SELECT_SINGLE)
+            grid.add_action(self.request, AdherentCommandDelete.get_action(TITLE_DELETE, "images/delete.png", short_icon='mdi:mdi-delete-outline'), close=CLOSE_NO, unique=SELECT_SINGLE)
             dlg.params['CMD_FILE'] = cmd_manager.file_name
             dlg.add_component(grid)
             if len(grid.records) > 0:
@@ -1052,10 +1082,10 @@ class AdherentCommand(XferContainerAcknowledge):
                     dlg.add_component(chk)
                 else:
                     dlg.params['send_email'] = False
-                dlg.add_action(AdherentCommand.get_action(TITLE_OK, "images/ok.png"), close=CLOSE_YES, params={'SAVE': 'YES'})
-                dlg.add_action(WrapAction(TITLE_CANCEL, 'images/cancel.png'))
+                dlg.add_action(AdherentCommand.get_action(TITLE_OK, "images/ok.png", short_icon='mdi:mdi-check'), close=CLOSE_YES, params={'SAVE': 'YES'})
+                dlg.add_action(WrapAction(TITLE_CANCEL, 'images/cancel.png', 'mdi:mdi-cancel'))
             else:
-                dlg.add_action(WrapAction(TITLE_CLOSE, 'images/close.png'))
+                dlg.add_action(WrapAction(TITLE_CLOSE, 'images/close.png', 'mdi:mdi-close'))
         else:
             dateref = convert_date(self.getparam("dateref", ""), Season.current_season().date_ref)
             if send_email:
@@ -1073,6 +1103,7 @@ class AdherentCommand(XferContainerAcknowledge):
 @MenuManage.describ('member.add_subscription')
 class AdherentCommandDelete(XferContainerAcknowledge):
     icon = "adherent.png"
+    short_icon = 'mdi:mdi-badge-account-horizontal-outline'
     caption = _("Delete subscription command")
 
     def fillresponse(self, AdhCmd=0):
@@ -1083,6 +1114,7 @@ class AdherentCommandDelete(XferContainerAcknowledge):
 @MenuManage.describ('member.add_subscription')
 class AdherentCommandModify(XferContainerAcknowledge):
     icon = "adherent.png"
+    short_icon = 'mdi:mdi-badge-account-horizontal-outline'
     caption = _("Modify subscription command")
 
     def fillresponse(self, AdhCmd=0):
@@ -1091,6 +1123,7 @@ class AdherentCommandModify(XferContainerAcknowledge):
             dlg = self.create_custom(self.model)
             img = XferCompImage('img')
             img.set_value(self.icon_path())
+            img.set_short_icon(self.short_icon)
             img.set_location(0, 0, 1, 4)
             dlg.add_component(img)
             lab = XferCompLabelForm('lbl_title')
@@ -1146,8 +1179,8 @@ class AdherentCommandModify(XferContainerAcknowledge):
                     lbl.description = ftitle
                     dlg.add_component(lbl)
                 row += 1
-            dlg.add_action(self.return_action(TITLE_OK, "images/ok.png"), close=CLOSE_YES, params={'SAVE': 'YES'})
-            dlg.add_action(WrapAction(TITLE_CLOSE, 'images/close.png'))
+            dlg.add_action(self.return_action(TITLE_OK, "images/ok.png", short_icon='mdi:mdi-check'), close=CLOSE_YES, params={'SAVE': 'YES'})
+            dlg.add_action(WrapAction(TITLE_CLOSE, 'images/close.png', 'mdi:mdi-close'))
         else:
             cmd_item = cmd_manager.get(AdhCmd)
             cmd_item['type'] = self.getparam("type", cmd_item['type'])
@@ -1158,10 +1191,11 @@ class AdherentCommandModify(XferContainerAcknowledge):
             cmd_manager.set(AdhCmd, cmd_item)
 
 
-@ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", unique=SELECT_MULTI)
+@ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", short_icon='mdi:mdi-delete-outline', unique=SELECT_MULTI)
 @MenuManage.describ('contacts.delete_abstractcontact')
 class AdherentDel(XferDelete):
     icon = "adherent.png"
+    short_icon = 'mdi:mdi-badge-account-horizontal-outline'
     model = Adherent
     field_id = 'adherent'
     caption = _("Delete adherent")
@@ -1171,6 +1205,7 @@ class AdherentDel(XferDelete):
 @MenuManage.describ('contacts.add_abstractcontact')
 class AdherentDoc(XferContainerAcknowledge):
     icon = "adherent.png"
+    short_icon = 'mdi:mdi-badge-account-horizontal-outline'
     model = Adherent
     field_id = 'adherent'
     caption = _("Modify document")
@@ -1183,20 +1218,22 @@ class AdherentDoc(XferContainerAcknowledge):
                 doc.save()
 
 
-@ActionsManage.affect_show(TITLE_PRINT, "images/print.png")
+@ActionsManage.affect_show(TITLE_PRINT, "images/print.png", short_icon='mdi:mdi-printer-outline')
 @MenuManage.describ('contacts.change_abstractcontact')
 class AdherentPrint(XferPrintAction):
     icon = "adherent.png"
+    short_icon = 'mdi:mdi-badge-account-horizontal-outline'
     model = Adherent
     field_id = 'adherent'
     caption = _("Print adherent")
     action_class = AdherentShow
 
 
-@ActionsManage.affect_list(TITLE_LABEL, "images/print.png")
+@ActionsManage.affect_list(TITLE_LABEL, "images/print.png", short_icon='mdi:mdi-printer-pos-star-outline')
 @MenuManage.describ('contacts.change_abstractcontact')
 class AdherentLabel(XferPrintLabel, AdherentFilter):
     icon = "adherent.png"
+    short_icon = 'mdi:mdi-badge-account-horizontal-outline'
     model = Adherent
     field_id = 'adherent'
     caption = _("Label adherent")
@@ -1211,10 +1248,11 @@ class AdherentLabel(XferPrintLabel, AdherentFilter):
         return AdherentFilter.filter_callback(self, items)
 
 
-@ActionsManage.affect_list(TITLE_LISTING, "images/print.png")
+@ActionsManage.affect_list(TITLE_LISTING, "images/print.png", short_icon='mdi:mdi-printer-pos-edit-outline')
 @MenuManage.describ('contacts.change_abstractcontact')
 class AdherentListing(XferPrintListing, AdherentFilter):
     icon = "adherent.png"
+    short_icon = 'mdi:mdi-badge-account-horizontal-outline'
     model = Adherent
     field_id = 'adherent'
     caption = _("Listing adherent")
@@ -1236,10 +1274,11 @@ def right_adherentconnection(request):
         return False
 
 
-@ActionsManage.affect_list(_('Connection'), "images/passwd.png")
+@ActionsManage.affect_list(_('Connection'), "images/passwd.png", short_icon='mdi:mdi-key')
 @MenuManage.describ(right_adherentconnection)
 class AdherentConnection(XferContainerAcknowledge):
     icon = "adherent.png"
+    short_icon = 'mdi:mdi-badge-account-horizontal-outline'
     model = Adherent
     field_id = 'adherent'
     caption = _("Check access right")
@@ -1260,6 +1299,7 @@ class AdherentConnection(XferContainerAcknowledge):
 
 class BaseAdherentFamilyList(XferContainerCustom):
     icon = "adherent.png"
+    short_icon = 'mdi:mdi-badge-account-horizontal-outline'
     model = Adherent
     field_id = 'adherent'
     caption = _("Family")
@@ -1274,6 +1314,7 @@ class BaseAdherentFamilyList(XferContainerCustom):
             raise LucteriosException(IMPORTANT, _('No family type!'))
         img = XferCompImage('img')
         img.set_value(self.icon_path())
+        img.set_short_icon(self.short_icon)
         img.set_location(0, 0)
         self.add_component(img)
         lbl = XferCompLabelForm('title')
@@ -1295,18 +1336,18 @@ class BaseAdherentFamilyList(XferContainerCustom):
         grid.set_location(0, 2, 2)
         grid.set_size(200, 500)
         self.add_component(grid)
-        self.add_action(WrapAction(TITLE_CLOSE, 'images/close.png'))
+        self.add_action(WrapAction(TITLE_CLOSE, 'images/close.png', 'mdi:mdi-close'))
 
 
-@ActionsManage.affect_other(_('Family'), "images/add.png")
+@ActionsManage.affect_other(_('Family'), "images/add.png", short_icon='mdi:mdi-pencil-plus-outline')
 @MenuManage.describ('contacts.add_abstractcontact')
 class AdherentFamilyAdd(BaseAdherentFamilyList):
 
     def fillresponse(self):
         BaseAdherentFamilyList.fillresponse(self)
         grid = self.get_components('legal_entity')
-        grid.add_action(self.request, AdherentFamilySelect.get_action(_("Select"), "images/ok.png"), close=CLOSE_YES, unique=SELECT_SINGLE)
-        grid.add_action(self.request, AdherentFamilyCreate.get_action(TITLE_CREATE, "images/new.png"), close=CLOSE_YES, unique=SELECT_NONE, params=self.item.get_default_family_value())
+        grid.add_action(self.request, AdherentFamilySelect.get_action(_("Select"), "images/ok.png", short_icon='mdi:mdi-check'), close=CLOSE_YES, unique=SELECT_SINGLE)
+        grid.add_action(self.request, AdherentFamilyCreate.get_action(TITLE_CREATE, "images/new.png", short_icon='mdi:mdi-pencil-plus'), close=CLOSE_YES, unique=SELECT_NONE, params=self.item.get_default_family_value())
         grid.add_action(self.request, ActionsManage.get_action_url('contacts.LegalEntity', 'Show', self), close=CLOSE_NO, unique=SELECT_SINGLE)
 
 
@@ -1314,6 +1355,7 @@ class AdherentFamilyAdd(BaseAdherentFamilyList):
 @MenuManage.describ('contacts.add_abstractcontact')
 class AdherentFamilySelect(XferContainerAcknowledge):
     icon = "adherent.png"
+    short_icon = 'mdi:mdi-badge-account-horizontal-outline'
     model = LegalEntity
     field_id = 'legal_entity'
 
@@ -1324,6 +1366,7 @@ class AdherentFamilySelect(XferContainerAcknowledge):
 @MenuManage.describ('contacts.add_abstractcontact')
 class AdherentFamilyCreate(LegalEntityAddModify):
     icon = "/static/lucterios.contacts/images/legalEntity.png"
+    short_icon = "mdi:mdi-account-multiple-outline"
     redirect_to_show = 'FamilySelect'
 
     def fillresponse(self):
@@ -1331,14 +1374,14 @@ class AdherentFamilyCreate(LegalEntityAddModify):
         self.change_to_readonly('structure_type')
 
 
-@ActionsManage.affect_other(_("Family"), "images/add.png")
+@ActionsManage.affect_other(_("Family"), "images/add.png", short_icon='mdi:mdi-pencil-plus-outline')
 @MenuManage.describ('contacts.add_abstractcontact')
 class FamilyAdherentAdd(BaseAdherentFamilyList):
 
     def fillresponse(self):
         BaseAdherentFamilyList.fillresponse(self)
         grid = self.get_components('legal_entity')
-        grid.add_action(self.request, FamilyAdherentCreate.get_action(_("Select"), "images/ok.png"), close=CLOSE_YES, unique=SELECT_SINGLE)
+        grid.add_action(self.request, FamilyAdherentCreate.get_action(_("Select"), "images/ok.png", short_icon='mdi:mdi-check'), close=CLOSE_YES, unique=SELECT_SINGLE)
         grid.add_action(self.request, ActionsManage.get_action_url('contacts.LegalEntity', 'AddModify', self), close=CLOSE_YES, unique=SELECT_NONE, params={'name': self.getparam('namefilter', '')})
         grid.add_action(self.request, ActionsManage.get_action_url('contacts.LegalEntity', 'Show', self), close=CLOSE_NO, unique=SELECT_SINGLE)
 
@@ -1361,6 +1404,7 @@ class FamilyAdherentCreate(AdherentAddModify):
 @MenuManage.describ('contacts.add_abstractcontact')
 class FamilyAdherentAdded(XferContainerAcknowledge):
     icon = "adherent.png"
+    short_icon = 'mdi:mdi-badge-account-horizontal-outline'
     model = Adherent
     field_id = 'adherent'
 
@@ -1372,6 +1416,7 @@ class FamilyAdherentAdded(XferContainerAcknowledge):
 @MenuManage.describ('member.change_subscription')
 class SubscriptionModerate(XferListEditor):
     icon = "adherent.png"
+    short_icon = 'mdi:mdi-badge-account-horizontal-outline'
     model = Subscription
     field_id = 'subscription'
     caption = _("Subscriptions to moderate")
@@ -1382,10 +1427,11 @@ class SubscriptionModerate(XferListEditor):
         self.params['status_filter'] = Subscription.STATUS_WAITING
 
 
-@ActionsManage.affect_grid(_("Show adherent"), "images/open.png", intop=True, unique=SELECT_SINGLE, condition=lambda xfer, gridname='': (xfer.getparam('adherent') is None) and (xfer.getparam('individual') is None))
+@ActionsManage.affect_grid(_("Show adherent"), "images/open.png", short_icon='mdi:mdi-text-box-outline', intop=True, unique=SELECT_SINGLE, condition=lambda xfer, gridname='': (xfer.getparam('adherent') is None) and (xfer.getparam('individual') is None))
 @MenuManage.describ('member.add_subscription')
 class SubscriptionOpenAdherent(XferContainerAcknowledge):
     icon = "adherent.png"
+    short_icon = 'mdi:mdi-badge-account-horizontal-outline'
     model = Subscription
     field_id = 'subscription'
     caption = _("Show adherent")
@@ -1396,11 +1442,12 @@ class SubscriptionOpenAdherent(XferContainerAcknowledge):
         self.redirect_action(AdherentShow.get_action(), params={'adherent': self.item.adherent_id})
 
 
-@ActionsManage.affect_grid(TITLE_ADD, "images/add.png", condition=lambda xfer, gridname='': (xfer.getparam('adherent') is not None) or (xfer.getparam('individual') is not None))
-@ActionsManage.affect_show(TITLE_MODIFY, "images/edit.png", close=CLOSE_YES)
+@ActionsManage.affect_grid(TITLE_ADD, "images/add.png", short_icon='mdi:mdi-pencil-plus-outline', condition=lambda xfer, gridname='': (xfer.getparam('adherent') is not None) or (xfer.getparam('individual') is not None))
+@ActionsManage.affect_show(TITLE_MODIFY, "images/edit.png", short_icon='mdi:mdi-pencil-outline', close=CLOSE_YES)
 @MenuManage.describ('member.add_subscription')
 class SubscriptionAddModify(XferAddEditor):
     icon = "adherent.png"
+    short_icon = 'mdi:mdi-badge-account-horizontal-outline'
     model = Subscription
     field_id = 'subscription'
     caption_add = _("Add subscription")
@@ -1408,19 +1455,21 @@ class SubscriptionAddModify(XferAddEditor):
     redirect_to_show = 'Bill'
 
 
-@ActionsManage.affect_grid(TITLE_EDIT, "images/show.png", unique=SELECT_SINGLE)
+@ActionsManage.affect_grid(TITLE_EDIT, "images/show.png", short_icon='mdi:mdi-text-box-outline', unique=SELECT_SINGLE)
 @MenuManage.describ('member.change_subscription')
 class SubscriptionShow(XferShowEditor):
     icon = "adherent.png"
+    short_icon = 'mdi:mdi-badge-account-horizontal-outline'
     model = Subscription
     field_id = 'subscription'
     caption = _("Show subscription")
 
 
-@ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", unique=SELECT_MULTI)
+@ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", short_icon='mdi:mdi-delete-outline', unique=SELECT_MULTI)
 @MenuManage.describ('member.delete_subscription')
 class SubscriptionDel(XferDelete):
     icon = "adherent.png"
+    short_icon = 'mdi:mdi-badge-account-horizontal-outline'
     model = Subscription
     field_id = 'subscription'
     caption = _("Delete subscription")
@@ -1430,6 +1479,7 @@ class SubscriptionDel(XferDelete):
 @MenuManage.describ('member.add_subscription')
 class SubscriptionTransition(XferTransition):
     icon = "adherent.png"
+    short_icon = 'mdi:mdi-badge-account-horizontal-outline'
     model = Subscription
     field_id = 'subscription'
 
@@ -1439,11 +1489,12 @@ class SubscriptionTransition(XferTransition):
         XferTransition.fillresponse(self)
 
 
-@ActionsManage.affect_grid(_('Bill'), 'images/ok.png', unique=SELECT_SINGLE, close=CLOSE_NO, condition=lambda xfer, gridname='': (xfer.getparam('status_filter') is None) or (xfer.getparam('status_filter', -1) not in (-1, Subscription.STATUS_WAITING, Subscription.STATUS_BUILDING)))
-@ActionsManage.affect_show(_('Bill'), 'images/ok.png', close=CLOSE_NO)
+@ActionsManage.affect_grid(_('Bill'), 'images/ok.png', short_icon='mdi:mdi-check', unique=SELECT_SINGLE, close=CLOSE_NO, condition=lambda xfer, gridname='': (xfer.getparam('status_filter') is None) or (xfer.getparam('status_filter', -1) not in (-1, Subscription.STATUS_WAITING, Subscription.STATUS_BUILDING)))
+@ActionsManage.affect_show(_('Bill'), 'images/ok.png', short_icon='mdi:mdi-check', close=CLOSE_NO)
 @MenuManage.describ('invoice.change_bill')
 class SubscriptionShowBill(XferContainerAcknowledge):
     icon = "adherent.png"
+    short_icon = 'mdi:mdi-badge-account-horizontal-outline'
     model = Subscription
     field_id = 'subscription'
     caption = _("Show bill of subscription")
@@ -1453,21 +1504,23 @@ class SubscriptionShowBill(XferContainerAcknowledge):
             self.redirect_action(ActionsManage.get_action_url('invoice.Bill', 'Show', self), close=CLOSE_NO, params={'bill': self.item.bill_id})
 
 
-@ActionsManage.affect_grid(TITLE_ADD, "images/add.png")
-@ActionsManage.affect_grid(TITLE_MODIFY, "images/edit.png", unique=SELECT_SINGLE)
+@ActionsManage.affect_grid(TITLE_ADD, "images/add.png", short_icon='mdi:mdi-pencil-plus-outline')
+@ActionsManage.affect_grid(TITLE_MODIFY, "images/edit.png", short_icon='mdi:mdi-pencil-outline', unique=SELECT_SINGLE)
 @MenuManage.describ('member.add_subscription')
 class LicenseAddModify(XferAddEditor):
     icon = "adherent.png"
+    short_icon = 'mdi:mdi-badge-account-horizontal-outline'
     model = License
     field_id = 'license'
     caption_add = _("Add involvement")
     caption_modify = _("Modify involvement")
 
 
-@ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", unique=SELECT_MULTI)
+@ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", short_icon='mdi:mdi-delete-outline', unique=SELECT_MULTI)
 @MenuManage.describ('member.add_subscription')
 class LicenseDel(XferDelete):
     icon = "adherent.png"
+    short_icon = 'mdi:mdi-badge-account-horizontal-outline'
     model = License
     field_id = 'license'
     caption = _("Delete involvement")
@@ -1476,6 +1529,7 @@ class LicenseDel(XferDelete):
 @MenuManage.describ('member.change_adherent', FORMTYPE_MODAL, 'member.actions', _('Statistic of adherents and subscriptions'))
 class AdherentStatistic(XferContainerCustom):
     icon = "statistic.png"
+    short_icon = 'mdi:mdi-finance'
     model = Adherent
     field_id = 'adherent'
     caption = _("Statistic")
@@ -1539,6 +1593,7 @@ class AdherentStatistic(XferContainerCustom):
             working_season = Season.objects.get(id=season)
         img = XferCompImage('img')
         img.set_value(self.icon_path())
+        img.set_short_icon(self.short_icon)
         img.set_location(0, 0)
         self.add_component(img)
         sel = XferCompSelect('season')
@@ -1584,14 +1639,15 @@ class AdherentStatistic(XferContainerCustom):
                         self.add_static_grid(_("Result by %s") % Params.getvalue("member-activite-text").lower(), 'activity_%d' % tab_iden,
                                              stat_activity, "activity", Params.getvalue("member-activite-text"))
 
-        self.add_action(AdherentStatisticPrint.get_action(TITLE_PRINT, "images/print.png"),
+        self.add_action(AdherentStatisticPrint.get_action(TITLE_PRINT, "images/print.png", short_icon='mdi:mdi-printer-outline'),
                         close=CLOSE_NO, params={'classname': self.__class__.__name__})
-        self.add_action(WrapAction(TITLE_CLOSE, 'images/close.png'))
+        self.add_action(WrapAction(TITLE_CLOSE, 'images/close.png', 'mdi:mdi-close'))
 
 
 @MenuManage.describ('member.change_adherent')
 class AdherentStatisticPrint(XferPrintAction):
     icon = "statistic.png"
+    short_icon = 'mdi:mdi-finance'
     model = Adherent
     field_id = 'adherent'
     caption = _("Statistic")
@@ -1599,10 +1655,11 @@ class AdherentStatisticPrint(XferPrintAction):
     with_text_export = True
 
 
-@ActionsManage.affect_other(TITLE_EDIT, "images/show.png", unique=SELECT_SINGLE)
+@ActionsManage.affect_other(TITLE_EDIT, "images/show.png", short_icon='mdi:mdi-text-box-outline', unique=SELECT_SINGLE)
 @MenuManage.describ(None)
 class SubscriptionConfirmCurrent(XferContainerAcknowledge):
     icon = "adherent.png"
+    short_icon = 'mdi:mdi-badge-account-horizontal-outline'
     model = Subscription
     field_id = 'subscription'
 
@@ -1653,11 +1710,13 @@ def right_adherentaccess(request):
 class AskAdherentAccess(XferContainerAcknowledge):
     caption = _("Ask adherent access")
     icon = "images/passwd.png"
+    short_icon = 'mdi:mdi-key'
 
     def _fill_dialog(self):
         dlg = self.create_custom()
         img = XferCompImage('img')
         img.set_value(self.icon_path())
+        img.set_short_icon(self.short_icon)
         img.set_location(0, 0, 1, 3)
         dlg.add_component(img)
         lbl = XferCompLabelForm('lbl_title')
@@ -1669,8 +1728,8 @@ class AskAdherentAccess(XferContainerAcknowledge):
         email.mask = r"[^@]+@[^@]+\.[^@]+"
         email.description = _("email")
         dlg.add_component(email)
-        dlg.add_action(self.return_action(TITLE_OK, 'images/ok.png'), params={"CONFIRME": "YES"})
-        dlg.add_action(WrapAction(TITLE_CANCEL, 'images/cancel.png'))
+        dlg.add_action(self.return_action(TITLE_OK, 'images/ok.png', short_icon='mdi:mdi-check'), params={"CONFIRME": "YES"})
+        dlg.add_action(WrapAction(TITLE_CANCEL, 'images/cancel.png', 'mdi:mdi-cancel'))
 
     def fillresponse(self):
         try:
@@ -1689,10 +1748,11 @@ def auth_action_member(actions_basic):
     actions_basic.append(AskAdherentAccess.get_action(_("Ask adherent access")))
 
 
-@ActionsManage.affect_list(_('Disable access'), "images/passwd.png")
+@ActionsManage.affect_list(_('Disable access'), "images/passwd.png", short_icon='mdi:mdi-key')
 @MenuManage.describ(lambda request: Params.getvalue("member-connection") == Adherent.CONNECTION_BYASKING)
 class AdherentDisableConnection(XferContainerAcknowledge):
     icon = "adherent.png"
+    short_icon = 'mdi:mdi-badge-account-horizontal-outline'
     model = Adherent
     field_id = 'adherent'
     caption = _("Disable access right")
@@ -1890,7 +1950,7 @@ def add_account_subscription(current_contact, xfer):
         grid.no_pager = True
         grid.set_model(current_subscriptions, Subscription.get_other_fields(), xfer)
         grid.set_location(old_subcomp.col, old_subcomp.row, old_subcomp.colspan)
-        grid.add_action(xfer.request, SubscriptionEditAdherent.get_action(TITLE_EDIT, "images/edit.png"), modal=FORMTYPE_MODAL, close=CLOSE_NO, unique=SELECT_SINGLE)
+        grid.add_action(xfer.request, SubscriptionEditAdherent.get_action(TITLE_EDIT, "images/edit.png", short_icon='mdi:mdi-pencil-outline'), modal=FORMTYPE_MODAL, close=CLOSE_NO, unique=SELECT_SINGLE)
         xfer.add_component(grid)
         xfer.actions = []
     if (Params.getvalue("member-subscription-mode") != Subscription.MODE_NOHIMSELF) and (Subscription.objects.filter(Q(adherent_id=current_contact.id) & Q(season=Season.current_season())).count() == 0):

@@ -297,7 +297,7 @@ class Season(LucteriosModel):
         return value
 
     def get_begin_date(self):
-        val = self.period_set.all().aggregate(Min('begin_date'))
+        val = self.period_set.all().aggregate(Min('begin_date')) if self.id is not None else {}
         if 'begin_date__min' in val.keys():
             return val['begin_date__min']
         else:
@@ -317,7 +317,7 @@ class Season(LucteriosModel):
         return months
 
     def get_end_date(self):
-        val = self.period_set.all().aggregate(Max('end_date'))
+        val = self.period_set.all().aggregate(Max('end_date')) if self.id is not None else {}
         if 'end_date__max' in val.keys():
             return val['end_date__max']
         else:
@@ -325,10 +325,11 @@ class Season(LucteriosModel):
 
     def refresh_periodnum(self):
         nb = 1
-        for period in self.period_set.all().order_by("begin_date", "end_date"):
-            period.num = nb
-            nb += 1
-            period.save(refresh_num=False)
+        if self.id is not None:
+            for period in self.period_set.all().order_by("begin_date", "end_date"):
+                period.num = nb
+                nb += 1
+                period.save(refresh_num=False)
 
     def clone_doc_need(self):
         old_season = Season.objects.filter(
@@ -1037,7 +1038,7 @@ class Adherent(Individual):
             return False
 
     def get_last_subscription(self):
-        subscriptions = self.subscription_set.all().order_by('-end_date')
+        subscriptions = self.subscription_set.all().order_by('-end_date') if self.id is not None else []
         if len(subscriptions) > 0:
             return subscriptions[0]
         else:
@@ -1224,7 +1225,10 @@ class TeamPrestation(LucteriosModel):
         return self.adherent_set.count()
 
     def get_prices(self):
-        return [prest.article.price for prest in self.prestation_set.all()]
+        if self.id is not None:
+            return [prest.article.price for prest in self.prestation_set.all()]
+        else:
+            return []
 
     def merge_objects(self, alias_objects=[]):
         for alias_object in alias_objects:
@@ -1995,7 +1999,10 @@ class TaxReceipt(Supporting):
         return ", ".join([get_mode_text(mode) for mode in modes])
 
     def get_type_gift(self):
-        return ", ".join(sorted(set([entryline.account.rubric for entryline in self.entryline_set.all()])))
+        if self.id is not None:
+            return ", ".join(sorted(set([entryline.account.rubric for entryline in self.entryline_set.all()])))
+        else:
+            return ""
 
     def add_pdf_document(self, title, user, metadata, pdf_content):
         folder, _new = FolderContainer.objects.get_or_create(name="%d" % self.year)
@@ -2354,7 +2361,7 @@ def member_checkparam():
     LucteriosGroup.redefine_generic(_("# member (shower)"), Adherent.get_permission(True, False, False),
                                     Subscription.get_permission(True, False, False), TaxReceipt.get_permission(True, False, False))
     Preference.check_and_create(name="adherent-team", typeparam=Preference.TYPE_INTEGER, title=_("adherent-team"),
-                                args="{'Multi':True}", value="", meta='("member","Team","~django.db.models.Q(state=%s)","id",False)' % SubscriptionType.STATE_UNACTIVATE)
+                                args="{'Multi':True}", value="", meta='("member","Team","~django.db.models.Q(unactive=False)","id",False)')
     Preference.check_and_create(name="adherent-activity", typeparam=Preference.TYPE_INTEGER, title=_("adherent-activity"),
                                 args="{'Multi':True}", value="", meta='("member","Activity","django.db.models.Q()","id",False)')
     Preference.check_and_create(name="adherent-age", typeparam=Preference.TYPE_INTEGER, title=_("adherent-age"),
