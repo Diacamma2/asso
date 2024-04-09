@@ -16,6 +16,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='event',
             name='status',
-            field=django_fsm.FSMIntegerField(choices=[(0, 'building'), (1, 'valid')], db_index=True, default=0, verbose_name='status'),
+            field=django_fsm.FSMIntegerField(choices=[(0, 'building event'), (1, 'valid event')], db_index=True, default=0, verbose_name='status'),
         ),
     ]
