@@ -1819,7 +1819,7 @@ def situation_member(xfer):
             if (current_adherent.postal_code != '---') and (Params.getvalue("member-subscription-mode") != Subscription.MODE_NOHIMSELF):
                 btn = XferCompButton('btnnewsubscript')
                 btn.set_location(0, row + 2, 4)
-                btn.set_action(xfer.request, SubscriptionAddForCurrent.get_action(_('Subscription'), 'diacamma.member/images/adherent.png'), close=CLOSE_NO)
+                btn.set_action(xfer.request, SubscriptionAddForCurrent.get_action(_('Subscription'), 'diacamma.member/images/adherent.png', 'mdi:mdi-badge-account-horizontal-outline'), close=CLOSE_NO)
                 btn.java_script = """if (typeof Singleton().hide_subscription === 'undefined') {
     current.actionPerformed();
     Singleton().hide_subscription = 1;

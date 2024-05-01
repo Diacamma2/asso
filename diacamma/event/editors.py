@@ -87,7 +87,9 @@ class EventEditor(LucteriosEditor):
             participant.delete_header('current_degree')
             xfer.caption = _("Show trainning/outing")
             img.set_value("/static/diacamma.event/images/outing.png")
+            img.set_short_icon('mdi:mdi-calendar-multiselect')
         else:
             xfer.caption = _("Show examination")
             xfer.remove_component('date_end')
             img.set_value("/static/diacamma.event/images/degree.png")
+            img.set_short_icon('mdi:mdi-trophy-outline')

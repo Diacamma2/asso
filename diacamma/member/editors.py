@@ -36,7 +36,7 @@ from lucterios.framework.xfercomponents import XferCompLabelForm, XferCompDate, 
 from lucterios.framework.error import LucteriosException, IMPORTANT
 from lucterios.framework.tools import CLOSE_NO, FORMTYPE_REFRESH, ActionsManage, get_icon_path, \
     FORMTYPE_MODAL, CLOSE_YES, SELECT_SINGLE, get_url_from_request
-from lucterios.framework.xferadvance import TITLE_EDIT
+from lucterios.framework.xferadvance import TITLE_EDIT, TITLE_MODIFY, TITLE_ADD
 
 from lucterios.CORE.parameters import Params
 from lucterios.CORE.models import Preference
@@ -101,7 +101,7 @@ class SubscriptionTypeEditor(LucteriosEditor):
         articles_comp = xfer.get_components('articles')
         btn = XferCompButton("btn_article")
         btn.set_location(articles_comp.col + articles_comp.colspan, articles_comp.row)
-        btn.set_action(xfer.request, ArticleList.get_action(_('Articles'), 'diacamma.invoice/images/article.png'), close=CLOSE_NO)
+        btn.set_action(xfer.request, ArticleList.get_action(_('Articles'), 'diacamma.invoice/images/article.png', "mdi:mdi-invoice-list-outline"), close=CLOSE_NO)
         btn.set_is_mini(True)
         xfer.add_component(btn)
 
@@ -155,6 +155,7 @@ class AdherentEditor(IndividualEditor):
             xfer.params['individual'] = xfer.getparam('adherent', 0)
         img = xfer.get_components('img')
         img.set_value(get_icon_path("diacamma.member/images/adherent.png"))
+        img.set_short_icon('mdi:mdi-badge-account-horizontal-outline')
 
         if Params.getobject("member-family-type") is not None:
             xfer.tab = 1
@@ -173,11 +174,13 @@ class AdherentEditor(IndividualEditor):
             btn.set_location(3, row_init)
             if current_family is None:
                 act = ActionsManage.get_action_url('member.Adherent', 'FamilyAdd', xfer)
-                act.set_value("", "images/add.png")
+                act.set_value(TITLE_ADD, "images/add.png")
+                act.short_icon = 'mdi:mdi-pencil-plus-outline'
                 btn.set_action(xfer.request, act, modal=FORMTYPE_MODAL, close=CLOSE_NO)
             else:
                 act = ActionsManage.get_action_url('contacts.LegalEntity', 'Show', xfer)
-                act.set_value("", "images/edit.png")
+                act.set_value(TITLE_MODIFY, "images/edit.png")
+                act.short_icon = 'mdi:mdi-pencil-outline'
                 btn.set_action(xfer.request, act, modal=FORMTYPE_MODAL, close=CLOSE_NO, params={'legal_entity': str(current_family.id)})
             xfer.add_component(btn)
 
