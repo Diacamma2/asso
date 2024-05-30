@@ -1399,7 +1399,7 @@ class Subscription(LucteriosModel):
     def prestations_query(self):
         select_list = []
         for item in Prestation.objects.filter(team_prestation__team__unactive=False):
-            select_list.append((item.id, str(item)))
+            select_list.append((str(item.id), str(item)))
         return select_list
 
     def set_periode(self, dateref):
