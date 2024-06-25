@@ -352,6 +352,55 @@ class DegreeStatistic(XferContainerCustom):
     readonly = True
     methods_allowed = ('GET', )
 
+    def _show_statistic(self, action_name, working_season):
+        total = 0
+        pos_y = 2
+        stat_result = getattr(Degree, action_name)(working_season)
+        for activity, sublist in stat_result:
+            subtotal = 0
+            if activity is not None:
+                lab = XferCompLabelForm("lblactivite_%s__%d" % (action_name, activity.id))
+                lab.set_italic()
+                lab.set_value(str(activity))
+                lab.set_location(0, pos_y, 3)
+                self.add_component(lab)
+                pos_y += 1
+            for degree_name, subdegree_name, val in sublist:
+                lab = XferCompLabelForm("title_%s_%d" % (action_name, pos_y))
+                lab.set_value(degree_name)
+                lab.set_location(1, pos_y)
+                self.add_component(lab)
+                lab = XferCompLabelForm("subtitle_%s_%d" % (action_name, pos_y))
+                lab.set_value(subdegree_name)
+                lab.set_location(2, pos_y)
+                self.add_component(lab)
+                lab = XferCompLabelForm("val_%s_%d" % (action_name, pos_y))
+                lab.set_value(str(val))
+                lab.set_location(3, pos_y)
+                self.add_component(lab)
+                subtotal += val
+                total += val
+                pos_y += 1
+            if activity is not None:
+                lab = XferCompLabelForm("lblsubtotal_%s_%d" % (action_name, activity.id))
+                lab.set_value_as_header(_("Total"))
+                lab.set_location(1, pos_y, 2)
+                self.add_component(lab)
+                lab = XferCompLabelForm("subtotal_%s_%d" % (action_name, activity.id))
+                lab.set_italic()
+                lab.set_value(str(subtotal))
+                lab.set_location(2, pos_y)
+                self.add_component(lab)
+                pos_y += 1
+        lab = XferCompLabelForm("lbltotal_%s" % action_name)
+        lab.set_value_as_headername(_("Total"))
+        lab.set_location(1, pos_y, 2)
+        self.add_component(lab)
+        lab = XferCompLabelForm("total_%s" % action_name)
+        lab.set_value_as_name(str(total))
+        lab.set_location(2, pos_y)
+        self.add_component(lab)
+
     def fillresponse(self, season):
         if season is None:
             working_season = Season.current_season()
@@ -366,60 +415,19 @@ class DegreeStatistic(XferContainerCustom):
         sel.set_needed(True)
         sel.set_select_query(Season.objects.all())
         sel.set_value(working_season.id)
-        sel.set_location(1, 0)
+        sel.set_location(1, 0, 2)
         sel.description = _('season')
         sel.set_action(self.request, self.return_action('', ''), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
         self.add_component(sel)
-        stat_result = Degree.get_statistic(working_season)
-        if len(stat_result) == 0:
-            lab = XferCompLabelForm('lbl_season')
-            lab.set_color('red')
-            lab.set_value_as_infocenter(_('no degree!'))
-            lab.set_location(1, 1, 2)
-            self.add_component(lab)
-        else:
-            total = 0
-            pos_y = 2
-            for activity, sublist in stat_result:
-                subtotal = 0
-                if activity is not None:
-                    lab = XferCompLabelForm("lblactivite_%d" % activity.id)
-                    lab.set_italic()
-                    lab.set_value(str(activity))
-                    lab.set_location(0, pos_y, 3)
-                    self.add_component(lab)
-                    pos_y += 1
-                for degree_name, val in sublist:
-                    lab = XferCompLabelForm("title_%d" % pos_y)
-                    lab.set_value(degree_name)
-                    lab.set_location(1, pos_y)
-                    self.add_component(lab)
-                    lab = XferCompLabelForm("val_%d" % pos_y)
-                    lab.set_value(str(val))
-                    lab.set_location(2, pos_y)
-                    self.add_component(lab)
-                    subtotal += val
-                    total += val
-                    pos_y += 1
-                if activity is not None:
-                    lab = XferCompLabelForm("lblsubtotal_%d" % activity.id)
-                    lab.set_value_as_header(_("Total"))
-                    lab.set_location(1, pos_y)
-                    self.add_component(lab)
-                    lab = XferCompLabelForm("subtotal_%d" % activity.id)
-                    lab.set_italic()
-                    lab.set_value(str(subtotal))
-                    lab.set_location(2, pos_y)
-                    self.add_component(lab)
-                    pos_y += 1
-            lab = XferCompLabelForm("lbltotal")
-            lab.set_value_as_headername(_("Total"))
-            lab.set_location(1, pos_y)
-            self.add_component(lab)
-            lab = XferCompLabelForm("total")
-            lab.set_value_as_name(str(total))
-            lab.set_location(2, pos_y)
-            self.add_component(lab)
+        self.new_tab(_('allocated in this season'))
+        self._show_statistic('get_statistic', working_season)
+        show_member_fields = Params.getvalue("member-fields").split(";")
+        if 'higher_degree' in show_member_fields:
+            self.new_tab(_('higher allocated'))
+            self._show_statistic('get_higher_statistic', working_season)
+        if 'lastdate_degree' in show_member_fields:
+            self.new_tab(_('laster allocated'))
+            self._show_statistic('get_laster_statistic', working_season)
         self.add_action(DegreeStatisticPrint.get_action(TITLE_PRINT, "images/print.png", short_icon='mdi:mdi-printer-outline'),
                         close=CLOSE_NO, params={'classname': self.__class__.__name__})
         self.add_action(WrapAction(TITLE_CLOSE, 'images/close.png', 'mdi:mdi-close'))

@@ -33,6 +33,7 @@ from django.db.models.query import QuerySet
 from django.db.models.aggregates import Min, Max, Count
 from django.db.models.fields import BooleanField
 from django.db.models import Q
+from django.apps import apps
 from django.utils.translation import gettext_lazy as _
 from django.utils import formats, timezone
 from django_fsm import FSMIntegerField, transition
@@ -643,6 +644,9 @@ class Adherent(Individual):
     last_subscription = LucteriosVirtualField(verbose_name=_("last subscription"), compute_from='get_last_subscription')
     current_subscription = LucteriosVirtualField(verbose_name=_("current subscription"), compute_from='get_current_subscription')
 
+    higher_degree = LucteriosVirtualField(verbose_name=_("higher degree"), compute_from='get_higher_degree')
+    lastdate_degree = LucteriosVirtualField(verbose_name=_("last date degree"), compute_from='get_lastdate_degree')
+
     def __init__(self, *args, **kwargs):
         Individual.__init__(self, *args, **kwargs)
         self.date_ref = None
@@ -658,6 +662,11 @@ class Adherent(Individual):
             if item in fields:
                 fields.remove(item)
         return fields
+
+    @classmethod
+    def get_degree_fields(cls):
+        return [(_('%s (higher)') % Params.getvalue("event-degree-text"), 'higher_degree'),
+                (_('%s (laster)') % Params.getvalue("event-degree-text"), 'lastdate_degree')]
 
     @classmethod
     def get_allowed_fields(cls):
@@ -677,6 +686,8 @@ class Adherent(Individual):
             allowed_fields.extend(["age_category", "age_from_ref"])
         if Params.getvalue("member-licence-enabled"):
             allowed_fields.append('license')
+        if cls.has_degree():
+            allowed_fields.extend(cls.get_degree_fields())
         allowed_fields.extend(['comment', 'user', 'documents', 'last_subscription', 'current_subscription'])
         return allowed_fields
 
@@ -804,6 +815,10 @@ class Adherent(Individual):
             ident_field.append('subscription_set.license_set.activity')
         if Params.getvalue("member-licence-enabled"):
             ident_field.append('subscription_set.license_set.value')
+        if cls.has_degree():
+            for field_title, field_name in cls.get_degree_fields():
+                if field_name in Params.getvalue("member-fields").split(";"):
+                    ident_field.append((field_title, field_name))
         ident_field.extend(['comment', 'user', 'last_subscription'])
         ident_field.extend(['subscription_set.season.str', 'subscription_set.subscriptiontype.str'])
         ident_field.extend(['subscription_set', 'responsability_set', 'documents', 'OUR_DETAIL'])
@@ -949,6 +964,36 @@ class Adherent(Individual):
             self.user.email = email
             self.user.save()
         return 0
+
+    @classmethod
+    def has_degree(cls):
+        DegreeType = apps.get_model('event', "DegreeType")
+        return (DegreeType is not None) and (DegreeType.objects.count() > 0)
+
+    def get_higher_degree_ex(self, date_before=None):
+        if self.has_degree:
+            if (date_before is None) and (self.date_ref is not None):
+                date_before = self.date_ref
+            Degree = apps.get_model('event', "Degree")
+            query = Q(date__lte=date_before) if date_before is not None else Q()
+            query &= Q(adherent=self)
+            return [Degree.objects.filter(query & Q(degree__activity=activity)).order_by('-degree__level', '-subdegree__level').first()
+                    for activity in Activity.objects.all()]
+
+    def get_higher_degree(self):
+        if self.has_degree:
+            higher_degree = [str(degree) for degree in self.get_higher_degree_ex() if degree is not None]
+            if len(higher_degree) > 0:
+                return higher_degree
+        return None
+
+    def get_lastdate_degree(self, date_before=None):
+        if self.has_degree:
+            if (date_before is None) and (self.date_ref is not None):
+                date_before = self.date_ref
+            query = Q(date__lte=date_before) if date_before is not None else Q()
+            return self.degree_set.filter(query).order_by('-date').first()
+        return None
 
     def get_documents(self):
         if self.id is None:

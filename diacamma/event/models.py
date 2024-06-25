@@ -279,13 +279,19 @@ class Degree(LucteriosModel):
         if (self.subdegree is None) or (Params.getvalue("event-subdegree-enable") == 0):
             return str(self.degree)
         else:
-            return "%s %s" % (self.degree, self.subdegree)
+            return "%s - %s" % (self.degree, self.subdegree)
 
     def get_text(self):
         if (self.subdegree is None) or (Params.getvalue("event-subdegree-enable") == 0):
             return str(self.degree.name)
         else:
             return "%s %s" % (self.degree.name, self.subdegree.name)
+
+    def get_full_level(self):
+        if (self.subdegree is None) or (Params.getvalue("event-subdegree-enable") == 0):
+            return self.degree.level * 100000
+        else:
+            return self.degree.level * 100000 + self.subdegree.level
 
     @classmethod
     def get_default_fields(cls):
@@ -320,18 +326,65 @@ class Degree(LucteriosModel):
                 return item[1][0].level * 100000 + item[1][1].level
         static_res = []
         for activity in Activity.objects.all():
-            degree_activity = {}
-            for degree in Degree.objects.filter(date__gte=season.begin_date, date__lte=season.end_date, degree__activity=activity).distinct():
-                if degree.get_text() not in degree_activity.keys():
-                    degree_activity[degree.get_text()] = [degree.degree, degree.subdegree, 0]
-                degree_activity[degree.get_text()][2] += 1
             result_activity = []
-            for item in sorted(degree_activity.items(), key=lambda item: sort_fct(item), reverse=True):
-                result_activity.append((item[0], item[1][2]))
+            last_degreetype = None
+            last_subdegreetype = None
+            nb_degree = 0
+            for degree in Degree.objects.filter(date__gte=season.begin_date, date__lte=season.end_date, degree__activity=activity).distinct().order_by('-degree__level', '-subdegree__level'):
+                if (last_degreetype != degree.degree) or (last_subdegreetype != degree.subdegree):
+                    if nb_degree > 0:
+                        result_activity.append((str(last_degreetype), str(last_subdegreetype) if last_subdegreetype is not None else '', nb_degree))
+                    last_degreetype = degree.degree
+                    last_subdegreetype = degree.subdegree
+                    nb_degree = 0
+                nb_degree += 1
+            if nb_degree > 0:
+                result_activity.append((str(last_degreetype), str(last_subdegreetype) if last_subdegreetype is not None else '', nb_degree))
             if Params.getvalue("member-activite-enable"):
                 static_res.append((activity, result_activity))
             else:
                 static_res.append((None, result_activity))
+        return static_res
+
+    @classmethod
+    def get_higher_statistic(cls, season):
+        static_res = []
+        for activity in Activity.objects.all():
+            result_activity = {}
+            for adh in Adherent.objects.filter(subscription__season=season):
+                heigher_degrees = adh.get_higher_degree_ex(season.end_date)
+                for heigher_degree in heigher_degrees:
+                    if (heigher_degree is None) or (heigher_degree.degree.activity != activity):
+                        continue
+                    ident_degree = (heigher_degree.degree_id, heigher_degree.subdegree_id)
+                    if ident_degree not in result_activity:
+                        result_activity[ident_degree] = [heigher_degree.get_full_level(), heigher_degree.degree, heigher_degree.subdegree, 0]
+                    result_activity[ident_degree][3] += 1
+            new_result_activity = [(str(item[1]), str(item[2]), item[3]) for item in sorted(result_activity.values(), key=lambda item:item[0], reverse=True)]
+            if Params.getvalue("member-activite-enable"):
+                static_res.append((activity, new_result_activity))
+            else:
+                static_res.append((None, new_result_activity))
+        return static_res
+
+    @classmethod
+    def get_laster_statistic(cls, season):
+        static_res = []
+        for activity in Activity.objects.all():
+            result_activity = {}
+            for adh in Adherent.objects.filter(subscription__season=season):
+                laster_degree = adh.get_lastdate_degree(season.end_date)
+                if (laster_degree is None) or (laster_degree.degree.activity != activity):
+                    continue
+                ident_degree = (laster_degree.degree_id, laster_degree.subdegree_id)
+                if ident_degree not in result_activity:
+                    result_activity[ident_degree] = [laster_degree.get_full_level(), laster_degree.degree, laster_degree.subdegree, 0]
+                result_activity[ident_degree][3] += 1
+            new_result_activity = [(str(item[1]), str(item[2]), item[3]) for item in sorted(result_activity.values(), key=lambda item:item[0], reverse=True)]
+            if Params.getvalue("member-activite-enable"):
+                static_res.append((activity, new_result_activity))
+            else:
+                static_res.append((None, new_result_activity))
         return static_res
 
     def can_delete(self):
