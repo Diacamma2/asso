@@ -1384,9 +1384,9 @@ class Subscription(LucteriosModel):
 
     def __str__(self):
         if not isinstance(self.begin_date, str) and not isinstance(self.end_date, str):
-            ret = "%s:%s->%s" % (self.subscriptiontype, formats.date_format(self.begin_date, "SHORT_DATE_FORMAT"), formats.date_format(self.end_date, "SHORT_DATE_FORMAT"))
+            ret = "%s:%s->%s" % (SubscriptionType.get_cache_text(self.subscriptiontype_id), formats.date_format(self.begin_date, "SHORT_DATE_FORMAT"), formats.date_format(self.end_date, "SHORT_DATE_FORMAT"))
         else:
-            ret = self.subscriptiontype
+            ret = SubscriptionType.get_cache_text(self.subscriptiontype_id)
         if self.status in (self.STATUS_WAITING, self.STATUS_BUILDING):
             ret = "[%s] %s" % (dict(self.LIST_STATUS)[self.status], ret)
         return ret
