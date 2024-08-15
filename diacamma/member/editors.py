@@ -101,7 +101,7 @@ class SubscriptionTypeEditor(LucteriosEditor):
         articles_comp = xfer.get_components('articles')
         btn = XferCompButton("btn_article")
         btn.set_location(articles_comp.col + articles_comp.colspan, articles_comp.row)
-        btn.set_action(xfer.request, ArticleList.get_action(_('Articles'), 'diacamma.invoice/images/article.png', "mdi:mdi-invoice-list-outline"), close=CLOSE_NO)
+        btn.set_action(xfer.request, ArticleList.get_action(_('Articles'), short_icon="mdi:mdi-invoice-list-outline"), close=CLOSE_NO)
         btn.set_is_mini(True)
         xfer.add_component(btn)
 
@@ -154,8 +154,7 @@ class AdherentEditor(IndividualEditor):
         if xfer.getparam('individual') is None:
             xfer.params['individual'] = xfer.getparam('adherent', 0)
         img = xfer.get_components('img')
-        img.set_value(get_icon_path("diacamma.member/images/adherent.png"))
-        img.set_short_icon('mdi:mdi-badge-account-horizontal-outline')
+        img.set_value('mdi:mdi-badge-account-horizontal-outline', '#')
 
         if Params.getobject("member-family-type") is not None:
             xfer.tab = 1
@@ -174,13 +173,11 @@ class AdherentEditor(IndividualEditor):
             btn.set_location(3, row_init)
             if current_family is None:
                 act = ActionsManage.get_action_url('member.Adherent', 'FamilyAdd', xfer)
-                act.set_value(TITLE_ADD, "images/add.png")
-                act.short_icon = 'mdi:mdi-pencil-plus-outline'
+                act.set_value(TITLE_ADD, 'mdi:mdi-pencil-plus-outline')
                 btn.set_action(xfer.request, act, modal=FORMTYPE_MODAL, close=CLOSE_NO)
             else:
                 act = ActionsManage.get_action_url('contacts.LegalEntity', 'Show', xfer)
-                act.set_value(TITLE_MODIFY, "images/edit.png")
-                act.short_icon = 'mdi:mdi-pencil-outline'
+                act.set_value(TITLE_MODIFY, 'mdi:mdi-pencil-outline')
                 btn.set_action(xfer.request, act, modal=FORMTYPE_MODAL, close=CLOSE_NO, params={'legal_entity': str(current_family.id)})
             xfer.add_component(btn)
 
@@ -534,10 +531,9 @@ class TaxReceiptEditor(LucteriosEditor):
         entryline = xfer.get_components('entryline')
         entryline.actions = []
         entryline.delete_header('link')
-        entryline.add_action(xfer.request, EntryAccountOpenFromLine.get_action(TITLE_EDIT, "images/edit.png"), close=CLOSE_NO, unique=SELECT_SINGLE)
+        entryline.add_action(xfer.request, EntryAccountOpenFromLine.get_action(TITLE_EDIT, short_icon="mdi:mdi-text-box-outline"), close=CLOSE_NO, unique=SELECT_SINGLE)
         fiscalyears = FiscalYear.objects.filter(
-            (Q(begin__lte='%s-01-01' % xfer.item.year) & Q(end__gte='%s-01-01' % xfer.item.year)) |
-            (Q(begin__lte='%s-12-31' % xfer.item.year) & Q(end__gte='%s-12-31' % xfer.item.year))
+            (Q(begin__lte='%s-01-01' % xfer.item.year) & Q(end__gte='%s-01-01' % xfer.item.year)) | (Q(begin__lte='%s-12-31' % xfer.item.year) & Q(end__gte='%s-12-31' % xfer.item.year))
         )
         if ChartsAccount.objects.filter(year__in=fiscalyears, type_of_account__in=(3, 4)).exclude(rubric='').count() == 0:
             xfer.remove_component('__empty__')

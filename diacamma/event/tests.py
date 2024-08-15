@@ -31,11 +31,11 @@ from lucterios.framework.filetools import get_user_dir
 from lucterios.CORE.models import Parameter
 from lucterios.CORE.parameters import Params
 
-from diacamma.member.test_tools import default_adherents, default_season,\
+from diacamma.member.test_tools import default_adherents, default_season, \
     default_params, set_parameters
 from diacamma.member.views import AdherentShow
 
-from diacamma.event.views_conf import EventConf, DegreeTypeAddModify,\
+from diacamma.event.views_conf import EventConf, DegreeTypeAddModify, \
     DegreeTypeDel, SubDegreeTypeAddModify, SubDegreeTypeDel
 from diacamma.event.views_degree import DegreeAddModify, DegreeDel
 from diacamma.event.test_tools import default_event_params

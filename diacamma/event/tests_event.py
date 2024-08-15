@@ -36,7 +36,7 @@ from diacamma.member.views import AdherentShow, SubscriptionAddModify, AdherentF
 from diacamma.invoice.views import BillList, BillShow
 
 from diacamma.event.test_tools import default_event_params, add_default_degree
-from diacamma.event.views import EventListExamination, EventListOuting, EventAddModify, EventDel, EventShow, OrganizerAddModify, OrganizerSave, OrganizerResponsible, OrganizerDel,\
+from diacamma.event.views import EventListExamination, EventListOuting, EventAddModify, EventDel, EventShow, OrganizerAddModify, OrganizerSave, OrganizerResponsible, OrganizerDel, \
     ParticipantAdd, ParticipantSave, ParticipantDel, ParticipantOpen, EventTransition, ParticipantModify
 
 

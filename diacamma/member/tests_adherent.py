@@ -1237,8 +1237,8 @@ class AdherentTest(BaseAdherentTest):
         self.assert_count_equal('Array', 6)
         self.assert_count_equal('#Array/actions', 0)
         self.assertEqual(len(self.json_actions), 3)
-        self.assert_action_equal('POST', self.json_actions[0], (str('Retour'), 'images/left.png', 'lucterios.contacts', 'contactImport', 0, 2, 1, {'step': '0'}))
-        self.assert_action_equal('POST', self.json_actions[1], (str('Ok'), 'images/ok.png', 'lucterios.contacts', 'contactImport', 0, 2, 1, {'step': '2'}))
+        self.assert_action_equal('POST', self.json_actions[0], (str('Retour'), 'mdi:mdi-page-next-outline', 'lucterios.contacts', 'contactImport', 0, 2, 1, {'step': '0'}))
+        self.assert_action_equal('POST', self.json_actions[1], (str('Ok'), 'mdi:mdi-check', 'lucterios.contacts', 'contactImport', 0, 2, 1, {'step': '2'}))
         self.assertEqual(len(self.json_context), 8)
 
         self.factory.xfer = ContactImport()
@@ -1253,7 +1253,7 @@ class AdherentTest(BaseAdherentTest):
         self.assert_count_equal('Array', 6)
         self.assert_count_equal('#Array/actions', 0)
         self.assertEqual(len(self.json_actions), 3)
-        self.assert_action_equal('POST', self.json_actions[1], (str('Ok'), 'images/ok.png', 'lucterios.contacts', 'contactImport', 0, 2, 1, {'step': '3'}))
+        self.assert_action_equal('POST', self.json_actions[1], (str('Ok'), 'mdi:mdi-check', 'lucterios.contacts', 'contactImport', 0, 2, 1, {'step': '3'}))
 
         self.factory.xfer = ContactImport()
         self.calljson('/lucterios.contacts/contactImport', {'step': 3, 'modelname': 'member.Adherent', 'quotechar': "'", 'delimiter': ',',
@@ -1623,10 +1623,10 @@ class AdherentTest(BaseAdherentTest):
         self.assert_json_equal('', 'AdhCmd/@1/activity', "activity2")
         self.assert_json_equal('', 'AdhCmd/@1/reduce', 0.00)
 
-        configSMTP('localhost', 3025)
+        configSMTP('localhost', AdherentConnectionTest.smtp_port)
         change_ourdetail()
         server = TestReceiver()
-        server.start(3025)
+        server.start(AdherentConnectionTest.smtp_port)
         try:
             self.assertEqual(0, server.count())
 
@@ -2094,7 +2094,7 @@ class AdherentTest(BaseAdherentTest):
         param = Parameter.objects.get(name='contacts-defaultgroup')
         param.value = '%d' % new_groupe.id
         param.save()
-        configSMTP('localhost', 3125)
+        configSMTP('localhost', AdherentConnectionTest.smtp_port)
         change_ourdetail()
         Parameter.change_value('member-connection', 1)
         Params.clear()
@@ -2119,7 +2119,7 @@ class AdherentTest(BaseAdherentTest):
         self.assertEqual(len(self.json_actions), 4)
 
         server = TestReceiver()
-        server.start(3125)
+        server.start(AdherentConnectionTest.smtp_port)
         try:
             self.assertEqual(3, len(LucteriosUser.objects.filter(is_active=True)))
             self.factory.xfer = AdherentConnection()
@@ -2173,7 +2173,7 @@ class AdherentTest(BaseAdherentTest):
         param = Parameter.objects.get(name='contacts-defaultgroup')
         param.value = '%d' % new_groupe.id
         param.save()
-        configSMTP('localhost', 3125)
+        configSMTP('localhost', AdherentConnectionTest.smtp_port)
         change_ourdetail()
         Parameter.change_value('member-connection', 1)
         Parameter.change_value('contacts-createaccount', 1)
@@ -2195,7 +2195,7 @@ class AdherentTest(BaseAdherentTest):
         self.assertEqual(len(self.json_actions), 4)
 
         server = TestReceiver()
-        server.start(3125)
+        server.start(AdherentConnectionTest.smtp_port)
         try:
             self.assertEqual(3, len(LucteriosUser.objects.filter(is_active=True)))
             self.factory.xfer = AdherentConnection()
@@ -2282,8 +2282,8 @@ class AdherentTest(BaseAdherentTest):
         self.assert_count_equal('', 3)
         self.assert_select_equal("group_mode", {0: 'désactivation group', 1: 'suppression group', 2: 'laisser group'})
         self.assertEqual(len(self.json_actions), 2)
-        self.assert_action_equal('DELETE', self.json_actions[0], (str('Ok'), 'images/ok.png', 'diacamma.member', 'prestationDel', 1, 1, 1, {'CONFIRME': 'YES'}))
-        self.assert_action_equal('GET', self.json_actions[1], (str('Annuler'), 'images/cancel.png'))
+        self.assert_action_equal('DELETE', self.json_actions[0], (str('Ok'), 'mdi:mdi-check', 'diacamma.member', 'prestationDel', 1, 1, 1, {'CONFIRME': 'YES'}))
+        self.assert_action_equal('GET', self.json_actions[1], (str('Annuler'), 'mdi:mdi-cancel'))
 
         self.factory.xfer = PrestationDel()
         self.calljson('/diacamma.member/prestationDel', {"team_prestation": 4, 'CONFIRME': 'YES', 'group_mode': 0}, False)
@@ -3179,7 +3179,7 @@ class AdherentTest(BaseAdherentTest):
         self.factory.xfer = ObjectMerge()
         self.calljson('/CORE/objectMerge', {'modelname': 'member.TeamPrestation', 'field_id': 'team_prestation', 'team_prestation': '2;3', 'CONFIRME': 'YES', 'mrg_object': '3'}, False)
         self.assert_observer('core.acknowledge', 'CORE', 'objectMerge')
-        self.assert_action_equal('GET', self.response_json['action'], ('Editer', 'images/show.png', 'diacamma.member', 'prestationShow', 1, 1, 1, {"team_prestation": 3}))
+        self.assert_action_equal('GET', self.response_json['action'], ('Editer', 'mdi:mdi-text-box-outline', 'diacamma.member', 'prestationShow', 1, 1, 1, {"team_prestation": 3}))
 
         self.factory.xfer = PrestationList()
         self.calljson('/diacamma.member/prestationList', {}, False)
@@ -3400,7 +3400,7 @@ class AdherentTest(BaseAdherentTest):
         self.factory.xfer = PrestationSplit()
         self.calljson('/diacamma.member/prestationSplit', {'team_prestation': '1', 'CONFIRME': 'YES', 'team_name': 'team3b', 'team_description': "team N°3b{[br/]}The newbies+", 'activity': 2, 'article': 1}, False)
         self.assert_observer('core.acknowledge', 'diacamma.member', 'prestationSplit')
-        self.assert_action_equal('POST', self.response_json['action'], ('Permuter entre prestations', 'diacamma.member/images/adherent.png', 'diacamma.member', 'prestationSwap', 1, 1, 1, {"team_prestation": '1;4'}))
+        self.assert_action_equal('POST', self.response_json['action'], ('Permuter entre prestations', 'mdi:mdi-badge-account-horizontal-outline', 'diacamma.member', 'prestationSwap', 1, 1, 1, {"team_prestation": '1;4'}))
 
         self.factory.xfer = PrestationList()
         self.calljson('/diacamma.member/prestationList', {}, False)
@@ -3446,7 +3446,7 @@ class AdherentFamilyTest(BaseAdherentTest):
         self.assert_observer('core.custom', 'diacamma.member', 'adherentShow')
         self.assert_count_equal('', 3 + (15 + 2 + 5) + 2 + 6 + 5 + 2)  # header + identity/family/docs + subscription + financial + invoice + grade
         self.assert_json_equal('LABELFORM', 'family', None)
-        self.assert_json_equal('', '#famillybtn/action/icon', "/static/lucterios.CORE/images/add.png")
+        self.assert_json_equal('', '#famillybtn/action/short_icon', "mdi:mdi-pencil-plus-outline")
 
     def test_new_family(self):
         default_adherents()
@@ -3457,7 +3457,7 @@ class AdherentFamilyTest(BaseAdherentTest):
         self.assert_observer('core.custom', 'diacamma.member', 'adherentFamilyAdd')
         self.assert_count_equal('', 4)
         self.assert_count_equal('legal_entity', 0)
-        self.assert_json_equal('', '#legal_entity/actions/@1/icon', "/static/lucterios.CORE/images/new.png")
+        self.assert_json_equal('', '#legal_entity/actions/@1/short_icon', "mdi:mdi-pencil-plus")
         json_values = self.get_json_path('#legal_entity/actions/@1/params').items()
         self.assertEqual(len(json_values), 9)
         params_value = {'adherent': 2}
@@ -3484,7 +3484,7 @@ class AdherentFamilyTest(BaseAdherentTest):
         self.calljson('/diacamma.member/adherentShow', {'adherent': 2, 'dateref': '2009-10-01'}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'adherentShow')
         self.assert_json_equal('LABELFORM', 'family', "Dalton")
-        self.assert_json_equal('', '#famillybtn/action/icon', "/static/lucterios.CORE/images/edit.png")
+        self.assert_json_equal('', '#famillybtn/action/short_icon', "mdi:mdi-pencil-outline")
 
         self.factory.xfer = LegalEntityShow()
         self.calljson('/lucterios.contacts/legalEntityShow', {'legal_entity': '7'}, False)
@@ -3518,7 +3518,7 @@ class AdherentFamilyTest(BaseAdherentTest):
         self.calljson('/diacamma.member/adherentShow', {'adherent': 2, 'dateref': '2009-10-01'}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'adherentShow')
         self.assert_json_equal('LABELFORM', 'family', "LES DALTONS")
-        self.assert_json_equal('', '#famillybtn/action/icon', "/static/lucterios.CORE/images/edit.png")
+        self.assert_json_equal('', '#famillybtn/action/short_icon', "mdi:mdi-pencil-outline")
 
     def test_add_adherent(self):
         default_adherents()
@@ -3527,7 +3527,7 @@ class AdherentFamilyTest(BaseAdherentTest):
         self.factory.xfer = AdherentAddModify()
         self.calljson('/diacamma.member/adherentAddModify', {}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'adherentAddModify')
-        self.assert_json_equal('', '#famillybtn/action/icon', "/static/lucterios.CORE/images/add.png")
+        self.assert_json_equal('', '#famillybtn/action/short_icon', "mdi:mdi-pencil-plus-outline")
 
         self.factory.xfer = FamilyAdherentAdd()
         self.calljson('/diacamma.member/familyAdherentAdd', {}, False)
@@ -3562,7 +3562,7 @@ class AdherentFamilyTest(BaseAdherentTest):
         self.assert_json_equal('LABELFORM', 'firstname', "Ma'a")
         self.assert_json_equal('LABELFORM', 'lastname', "DALTON")
         self.assert_json_equal('LABELFORM', 'family', "LES DALTONS")
-        self.assert_json_equal('', '#famillybtn/action/icon', "/static/lucterios.CORE/images/edit.png")
+        self.assert_json_equal('', '#famillybtn/action/short_icon', "mdi:mdi-pencil-outline")
 
     def test_subscription_bill(self):
         default_adherents()
@@ -3671,7 +3671,7 @@ class AdherentFamilyTest(BaseAdherentTest):
         self.factory.xfer = BillShow()
         self.calljson('/diacamma.invoice/billShow', {'bill': 2}, False)
         self.assert_observer('core.custom', 'diacamma.invoice', 'billShow')
-        self.assert_action_equal('GET', self.get_json_path('#parentbill/action'), ("origine", "diacamma.invoice/images/origin.png",
+        self.assert_action_equal('GET', self.get_json_path('#parentbill/action'), ("origine", "mdi:mdi-invoice-edit-outline",
                                                                                    "diacamma.invoice", "billShow", 0, 1, 1, {'bill': 1}))
 
     def test_cancel_cotation(self):
@@ -3701,7 +3701,7 @@ class AdherentFamilyTest(BaseAdherentTest):
         self.factory.xfer = BillShow()
         self.calljson('/diacamma.invoice/billShow', {'bill': 2}, False)
         self.assert_observer('core.custom', 'diacamma.invoice', 'billShow')
-        self.assert_action_equal('GET', self.get_json_path('#parentbill/action'), ("origine", "diacamma.invoice/images/origin.png",
+        self.assert_action_equal('GET', self.get_json_path('#parentbill/action'), ("origine", "mdi:mdi-invoice-edit-outline",
                                                                                    "diacamma.invoice", "billShow", 0, 1, 1, {'bill': 1}))
 
     def test_delete_cotation(self):
@@ -3731,7 +3731,7 @@ class AdherentFamilyTest(BaseAdherentTest):
         self.factory.xfer = BillShow()
         self.calljson('/diacamma.invoice/billShow', {'bill': 2}, False)
         self.assert_observer('core.custom', 'diacamma.invoice', 'billShow')
-        self.assert_action_equal('GET', self.get_json_path('#parentbill/action'), ("origine", "diacamma.invoice/images/origin.png",
+        self.assert_action_equal('GET', self.get_json_path('#parentbill/action'), ("origine", "mdi:mdi-invoice-edit-outline",
                                                                                    "diacamma.invoice", "billShow", 0, 1, 1, {'bill': 1}))
 
     def test_command(self):
@@ -3789,10 +3789,10 @@ class AdherentFamilyTest(BaseAdherentTest):
         self.assert_observer('core.custom', 'diacamma.member', 'adherentCommand')
         self.assert_count_equal('AdhCmd', 2)
 
-        configSMTP('localhost', 3225)
+        configSMTP('localhost', AdherentConnectionTest.smtp_port)
         change_ourdetail()
         server = TestReceiver()
-        server.start(3225)
+        server.start(AdherentConnectionTest.smtp_port)
         try:
             self.assertEqual(0, server.count())
 
@@ -4456,6 +4456,8 @@ class AdherentFamilyTest(BaseAdherentTest):
 
 class SubscriptionModeTest(BaseAdherentTest):
 
+    smtp_port = 3025
+
     def setUp(self):
         BaseAdherentTest.setUp(self)
         change_ourdetail()
@@ -4467,11 +4469,12 @@ class SubscriptionModeTest(BaseAdherentTest):
         self.joe_adh = adherent_list[3]
         self.joe_adh.activate_adherent()
         default_subscription()
-        configSMTP('localhost', 3026)
+        SubscriptionModeTest.smtp_port += 1
+        configSMTP('localhost', SubscriptionModeTest.smtp_port)
 
     def valid_check_email(self, params, nb_mail, subscriptid=1):
         server = TestReceiver()
-        server.start(3026)
+        server.start(SubscriptionModeTest.smtp_port)
         try:
             params.update({"SAVE": "YES", "adherent": 5, 'autocreate': 1})
             self.factory.xfer = SubscriptionAddForCurrent()
@@ -5542,7 +5545,7 @@ class AdherentConnectionTest(BaseAdherentTest):
         self.assert_json_equal('LABELFORM', 'legalentity_structure_type', "famille")
         self.assert_json_equal('LABELFORM', 'legalentity_name', "LES DALTONS")
         self.assert_json_equal('LINK', 'legalentity_email', "dalton@worldcompany.com")
-        self.assert_action_equal('POST', self.get_json_path('#btn_edit/action'), ("Editer", "images/edit.png",
+        self.assert_action_equal('POST', self.get_json_path('#btn_edit/action'), ("Editer", "mdi:mdi-pencil-outline",
                                                                                   "lucterios.contacts", "currentLegalEntityModify", 0, 1, 1, {'legal_entity': 7}))
         self.assert_count_equal('subscription', 2)
         self.assertEqual(LucteriosUser.objects.all().count(), 2)

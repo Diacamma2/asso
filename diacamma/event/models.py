@@ -360,7 +360,7 @@ class Degree(LucteriosModel):
                     if ident_degree not in result_activity:
                         result_activity[ident_degree] = [heigher_degree.get_full_level(), heigher_degree.degree, heigher_degree.subdegree, 0]
                     result_activity[ident_degree][3] += 1
-            new_result_activity = [(str(item[1]), str(item[2]), item[3]) for item in sorted(result_activity.values(), key=lambda item:item[0], reverse=True)]
+            new_result_activity = [(str(item[1]), str(item[2]), item[3]) for item in sorted(result_activity.values(), key=lambda item: item[0], reverse=True)]
             if Params.getvalue("member-activite-enable"):
                 static_res.append((activity, new_result_activity))
             else:
@@ -380,7 +380,7 @@ class Degree(LucteriosModel):
                 if ident_degree not in result_activity:
                     result_activity[ident_degree] = [laster_degree.get_full_level(), laster_degree.degree, laster_degree.subdegree, 0]
                 result_activity[ident_degree][3] += 1
-            new_result_activity = [(str(item[1]), str(item[2]), item[3]) for item in sorted(result_activity.values(), key=lambda item:item[0], reverse=True)]
+            new_result_activity = [(str(item[1]), str(item[2]), item[3]) for item in sorted(result_activity.values(), key=lambda item: item[0], reverse=True)]
             if Params.getvalue("member-activite-enable"):
                 static_res.append((activity, new_result_activity))
             else:

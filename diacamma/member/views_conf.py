@@ -38,7 +38,7 @@ from lucterios.framework.xfergraphic import XferContainerAcknowledge, XFER_DBOX_
 from lucterios.CORE.parameters import Params
 from lucterios.CORE.views import ParamEdit, ObjectMerge
 
-from diacamma.member.models import Activity, Age, Team, Season, SubscriptionType, Adherent, TaxReceipt,\
+from diacamma.member.models import Activity, Age, Team, Season, SubscriptionType, Adherent, TaxReceipt, \
     Subscription
 from diacamma.payoff.views import SupportingPrint, can_send_email
 
@@ -70,7 +70,7 @@ def fill_params(xfer, param_lists=None, smallbtn=False):
     btn = XferCompButton('editparam')
     btn.set_is_mini(smallbtn)
     btn.set_location(3, xfer.get_max_row() + 1)
-    btn.set_action(xfer.request, CategoryParamEdit.get_action(TITLE_MODIFY, 'images/edit.png', 'mdi:mdi-pencil-outline'),
+    btn.set_action(xfer.request, CategoryParamEdit.get_action(TITLE_MODIFY, short_icon='mdi:mdi-pencil-outline'),
                    close=CLOSE_NO, params={'params': param_lists, 'nb_col': nb_col})
     xfer.add_component(btn)
 
@@ -94,7 +94,6 @@ class CategoryParamEdit(ParamEdit):
 
 @MenuManage.describ('CORE.change_parameter', FORMTYPE_MODAL, 'member.conf', _('Management of member categories'))
 class CategoryConf(XferListEditor):
-    icon = "config.png"
     short_icon = "mdi:mdi-account-settings"
     caption = _("Categories")
 
@@ -129,7 +128,7 @@ class CategoryConf(XferListEditor):
             self.fill_grid(0, Activity, "activity", Activity.objects.all())
             grid = self.get_components("activity")
             if WrapAction.is_permission(self.request, 'CORE.add_parameter'):
-                grid.add_action(self.request, ObjectMerge.get_action(_("Merge"), "images/clone.png", short_icon='mdi:mdi-content-copy'), close=CLOSE_NO, unique=SELECT_MULTI,
+                grid.add_action(self.request, ObjectMerge.get_action(_("Merge"), short_icon='mdi:mdi-content-copy'), close=CLOSE_NO, unique=SELECT_MULTI,
                                 params={'modelname': 'member.Activity', 'field_id': 'activity'})
             if hasattr(settings, "DIACAMMA_MAXACTIVITY") and (getattr(settings, "DIACAMMA_MAXACTIVITY") <= grid.nb_lines):
                 lbl = XferCompLabelForm("limit_activity")
@@ -140,11 +139,10 @@ class CategoryConf(XferListEditor):
                 grid.delete_action("diacamma.member/activityAddModify", True)
 
 
-@ActionsManage.affect_grid(TITLE_ADD, "images/add.png", short_icon='mdi:mdi-pencil-plus-outline')
-@ActionsManage.affect_grid(TITLE_MODIFY, "images/edit.png", short_icon='mdi:mdi-pencil-outline', unique=SELECT_SINGLE)
+@ActionsManage.affect_grid(TITLE_ADD, short_icon='mdi:mdi-pencil-plus-outline')
+@ActionsManage.affect_grid(TITLE_MODIFY, short_icon='mdi:mdi-pencil-outline', unique=SELECT_SINGLE)
 @MenuManage.describ('CORE.add_parameter')
 class AgeAddModify(XferAddEditor):
-    icon = "config.png"
     short_icon = "mdi:mdi-account-settings"
     model = Age
     field_id = 'age'
@@ -152,21 +150,19 @@ class AgeAddModify(XferAddEditor):
     caption_modify = _("Modify age")
 
 
-@ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", short_icon='mdi:mdi-delete-outline', unique=SELECT_MULTI)
+@ActionsManage.affect_grid(TITLE_DELETE, short_icon='mdi:mdi-delete-outline', unique=SELECT_MULTI)
 @MenuManage.describ('CORE.add_parameter')
 class AgeDel(XferDelete):
-    icon = "config.png"
     short_icon = "mdi:mdi-account-settings"
     model = Age
     field_id = 'age'
     caption = _("Delete age")
 
 
-@ActionsManage.affect_grid(TITLE_ADD, "images/add.png", short_icon='mdi:mdi-pencil-plus-outline')
-@ActionsManage.affect_grid(TITLE_MODIFY, "images/edit.png", short_icon='mdi:mdi-pencil-outline', unique=SELECT_SINGLE)
+@ActionsManage.affect_grid(TITLE_ADD, short_icon='mdi:mdi-pencil-plus-outline')
+@ActionsManage.affect_grid(TITLE_MODIFY, short_icon='mdi:mdi-pencil-outline', unique=SELECT_SINGLE)
 @MenuManage.describ('CORE.add_parameter')
 class TeamAddModify(XferAddEditor):
-    icon = "config.png"
     short_icon = "mdi:mdi-account-settings"
     model = Team
     field_id = 'team'
@@ -174,20 +170,18 @@ class TeamAddModify(XferAddEditor):
     caption_modify = _("Modify team")
 
 
-@ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", short_icon='mdi:mdi-delete-outline', unique=SELECT_MULTI)
+@ActionsManage.affect_grid(TITLE_DELETE, short_icon='mdi:mdi-delete-outline', unique=SELECT_MULTI)
 @MenuManage.describ('CORE.add_parameter')
 class TeamDel(XferDelete):
-    icon = "config.png"
     short_icon = "mdi:mdi-account-settings"
     model = Team
     field_id = 'team'
     caption = _("Delete team")
 
 
-@ActionsManage.affect_grid(TITLE_CLONE, 'images/clone.png', short_icon='mdi:mdi-content-copy', unique=SELECT_SINGLE)
+@ActionsManage.affect_grid(TITLE_CLONE, short_icon='mdi:mdi-content-copy', unique=SELECT_SINGLE)
 @MenuManage.describ('CORE.add_parameter')
 class TeamClone(XferContainerAcknowledge):
-    icon = "config.png"
     short_icon = "mdi:mdi-account-settings"
     model = Team
     field_id = 'team'
@@ -198,10 +192,9 @@ class TeamClone(XferContainerAcknowledge):
         self.redirect_action(TeamAddModify.get_action(), params={self.field_id: self.item.id})
 
 
-@ActionsManage.affect_grid(_("dis-en-abled"), 'images/ok.png', short_icon="mdi:mdi-check", unique=SELECT_MULTI)
+@ActionsManage.affect_grid(_("dis-en-abled"), short_icon="mdi:mdi-check", unique=SELECT_MULTI)
 @MenuManage.describ('CORE.add_parameter')
 class TeamEnabled(XferContainerAcknowledge):
-    icon = "config.png"
     short_icon = "mdi:mdi-account-settings"
     model = Team
     field_id = 'team'
@@ -213,11 +206,10 @@ class TeamEnabled(XferContainerAcknowledge):
             item.save()
 
 
-@ActionsManage.affect_grid(TITLE_ADD, "images/add.png", short_icon='mdi:mdi-pencil-plus-outline')
-@ActionsManage.affect_grid(TITLE_MODIFY, "images/edit.png", short_icon='mdi:mdi-pencil-outline', unique=SELECT_SINGLE)
+@ActionsManage.affect_grid(TITLE_ADD, short_icon='mdi:mdi-pencil-plus-outline')
+@ActionsManage.affect_grid(TITLE_MODIFY, short_icon='mdi:mdi-pencil-outline', unique=SELECT_SINGLE)
 @MenuManage.describ('CORE.add_parameter')
 class ActivityAddModify(XferAddEditor):
-    icon = "config.png"
     short_icon = "mdi:mdi-account-settings"
     model = Activity
     redirect_to_show = None
@@ -233,20 +225,18 @@ class ActivityAddModify(XferAddEditor):
         XferAddEditor.fillresponse(self)
 
 
-@ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", short_icon='mdi:mdi-delete-outline', unique=SELECT_MULTI)
+@ActionsManage.affect_grid(TITLE_DELETE, short_icon='mdi:mdi-delete-outline', unique=SELECT_MULTI)
 @MenuManage.describ('CORE.add_parameter')
 class ActivityDel(XferDelete):
-    icon = "config.png"
     short_icon = "mdi:mdi-account-settings"
     model = Activity
     field_id = 'activity'
     caption = _("Delete activity")
 
 
-@ActionsManage.affect_other(TITLE_EDIT, "images/show.png", short_icon='mdi:mdi-text-box-outline')
+@ActionsManage.affect_other(TITLE_EDIT, short_icon='mdi:mdi-text-box-outline')
 @MenuManage.describ('CORE.change_parameter')
 class ActivityShow(XferShowEditor):
-    icon = "config.png"
     short_icon = "mdi:mdi-account-settings"
     model = Activity
     field_id = 'activity'
@@ -262,7 +252,6 @@ def show_taxreceipt(request):
 
 @MenuManage.describ(show_taxreceipt, FORMTYPE_NOMODAL, 'financial', _('Management of tax receipts'))
 class TaxReceiptList(XferListEditor):
-    icon = "taxreceipt.png"
     short_icon = "mdi:mdi-receipt-text-outline"
     model = TaxReceipt
     field_id = 'taxreceipt'
@@ -279,10 +268,9 @@ class TaxReceiptList(XferListEditor):
         self.filter = Q(year=select_year)
 
 
-@ActionsManage.affect_list(_('Valid'), "images/ok.png", short_icon="mdi:mdi-check")
+@ActionsManage.affect_list(_('Valid'), short_icon="mdi:mdi-check")
 @MenuManage.describ('member.change_taxreceipt')
 class TaxReceiptValid(XferContainerAcknowledge):
-    icon = "taxreceipt.png"
     short_icon = "mdi:mdi-receipt-text-outline"
     model = TaxReceipt
     field_id = 'taxreceipt'
@@ -293,10 +281,9 @@ class TaxReceiptValid(XferContainerAcknowledge):
             TaxReceipt.valid_all(year)
 
 
-@ActionsManage.affect_list(_('Check'), "images/refresh.png", short_icon="mdi:mdi-refresh")
+@ActionsManage.affect_list(_('Check'), short_icon="mdi:mdi-refresh")
 @MenuManage.describ('member.change_taxreceipt')
 class TaxReceiptCheck(XferContainerAcknowledge):
-    icon = "taxreceipt.png"
     short_icon = "mdi:mdi-receipt-text-outline"
     model = TaxReceipt
     field_id = 'taxreceipt'
@@ -307,10 +294,9 @@ class TaxReceiptCheck(XferContainerAcknowledge):
             TaxReceipt.create_all(year)
 
 
-@ActionsManage.affect_show(_('Check'), "images/refresh.png", short_icon="mdi:mdi-refresh", condition=lambda xfer: xfer.item.num is None)
+@ActionsManage.affect_show(_('Check'), short_icon="mdi:mdi-refresh", condition=lambda xfer: xfer.item.num is None)
 @MenuManage.describ('member.change_taxreceipt')
 class TaxReceiptCheckOnlyOn(XferContainerAcknowledge):
-    icon = "taxreceipt.png"
     short_icon = "mdi:mdi-receipt-text-outline"
     model = TaxReceipt
     field_id = 'taxreceipt'
@@ -321,22 +307,20 @@ class TaxReceiptCheckOnlyOn(XferContainerAcknowledge):
             self.item.regenerate()
 
 
-@ActionsManage.affect_grid(TITLE_EDIT, "images/show.png", short_icon='mdi:mdi-text-box-outline', unique=SELECT_SINGLE)
+@ActionsManage.affect_grid(TITLE_EDIT, short_icon='mdi:mdi-text-box-outline', unique=SELECT_SINGLE)
 @MenuManage.describ('member.change_taxreceipt')
 class TaxReceiptShow(XferShowEditor):
-    icon = "taxreceipt.png"
     short_icon = "mdi:mdi-receipt-text-outline"
     model = TaxReceipt
     field_id = 'taxreceipt'
     caption = _("Show tax receipt")
 
 
-@ActionsManage.affect_grid(_("Send"), "lucterios.mailing/images/email.png", short_icon="mdi:mdi-email-outline", close=CLOSE_NO, unique=SELECT_MULTI, condition=lambda xfer, gridname='': can_send_email(xfer))
-@ActionsManage.affect_show(_("Send"), "lucterios.mailing/images/email.png", short_icon="mdi:mdi-email-outline", close=CLOSE_NO, condition=lambda xfer: (xfer.item.num is not None) and can_send_email(xfer))
+@ActionsManage.affect_grid(_("Send"), short_icon="mdi:mdi-email-outline", close=CLOSE_NO, unique=SELECT_MULTI, condition=lambda xfer, gridname='': can_send_email(xfer))
+@ActionsManage.affect_show(_("Send"), short_icon="mdi:mdi-email-outline", close=CLOSE_NO, condition=lambda xfer: (xfer.item.num is not None) and can_send_email(xfer))
 @MenuManage.describ('member.change_taxreceipt')
 class TaxReceiptEmail(XferContainerAcknowledge):
     caption = _("Send by email")
-    icon = "taxreceipt.png"
     short_icon = "mdi:mdi-receipt-text-outline"
     model = TaxReceipt
     field_id = 'taxreceipt'
@@ -349,11 +333,10 @@ class TaxReceiptEmail(XferContainerAcknowledge):
                                  close=CLOSE_NO, params={'item_name': self.field_id, "modelname": ""})
 
 
-@ActionsManage.affect_grid(_("Print"), "images/print.png", short_icon="mdi:mdi-printer-outline", close=CLOSE_NO, unique=SELECT_MULTI)
-@ActionsManage.affect_show(_("Print"), "images/print.png", short_icon="mdi:mdi-printer-outline", close=CLOSE_NO)
+@ActionsManage.affect_grid(_("Print"), short_icon="mdi:mdi-printer-outline", close=CLOSE_NO, unique=SELECT_MULTI)
+@ActionsManage.affect_show(_("Print"), short_icon="mdi:mdi-printer-outline", close=CLOSE_NO)
 @MenuManage.describ('member.change_taxreceipt')
 class TaxReceiptPrint(SupportingPrint):
-    icon = "taxreceipt.png"
     short_icon = "mdi:mdi-receipt-text-outline"
     model = TaxReceipt
     field_id = 'taxreceipt'

@@ -40,12 +40,11 @@ from lucterios.CORE.parameters import Params
 from diacamma.member.models import Season, Period, SubscriptionType, Document
 from diacamma.member.views_conf import CategoryParamEdit
 
-MenuManage.add_sub("member.conf", "core.extensions", "", _("Member"), "", 5, 'mdi:mdi-human-queue')
+MenuManage.add_sub("member.conf", "core.extensions", short_icon='mdi:mdi-human-queue', caption=_("Member"), pos=5)
 
 
 @MenuManage.describ('member.change_season', FORMTYPE_NOMODAL, 'member.conf', _('Management of seasons and subscriptions'))
 class SeasonSubscription(XferListEditor):
-    icon = "season.png"
     short_icon = "mdi:mdi-calendar-month-outline"
     model = Season
     field_id = 'season'
@@ -81,7 +80,7 @@ class SeasonSubscription(XferListEditor):
         self.get_components('subscriptiontype').colspan = 3
         btn = XferCompButton('reloadBill')
         btn.set_location(0, row_max + 5)
-        btn.set_action(self.request, SubscriptionReloadBill.get_action(_('Regenerate'), "/static/diacamma.invoice/images/bill.png", 'mdi:mdi-invoice-edit-outline'), modal=FORMTYPE_MODAL, close=CLOSE_NO)
+        btn.set_action(self.request, SubscriptionReloadBill.get_action(_('Regenerate'), short_icon='mdi:mdi-invoice-edit-outline'), modal=FORMTYPE_MODAL, close=CLOSE_NO)
         self.add_component(btn)
         if SubscriptionType.objects.filter(duration=SubscriptionType.DURATION_CALENDAR).count() > 0:
             param_lists = ['member-subscription-delaytorenew']
@@ -89,15 +88,14 @@ class SeasonSubscription(XferListEditor):
             btn = XferCompButton('editparam')
             btn.set_is_mini(True)
             btn.set_location(2, self.get_max_row())
-            btn.set_action(self.request, CategoryParamEdit.get_action(TITLE_MODIFY, 'images/edit.png', 'mdi:mdi-pencil-outline'),
+            btn.set_action(self.request, CategoryParamEdit.get_action(TITLE_MODIFY, short_icon='mdi:mdi-pencil-outline'),
                            close=CLOSE_NO, params={'params': param_lists, 'nb_col': 1})
             self.add_component(btn)
 
 
-@ActionsManage.affect_grid(_("Active"), "images/ok.png", short_icon='mdi:mdi-check', unique=SELECT_SINGLE)
+@ActionsManage.affect_grid(_("Active"), short_icon='mdi:mdi-check', unique=SELECT_SINGLE)
 @MenuManage.describ('member.add_season')
 class SeasonActive(XferContainerAcknowledge):
-    icon = "season.png"
     short_icon = "mdi:mdi-calendar-month-outline"
     model = Season
     field_id = 'season'
@@ -107,10 +105,9 @@ class SeasonActive(XferContainerAcknowledge):
         self.item.set_has_actif()
 
 
-@ActionsManage.affect_grid(TITLE_CREATE, "images/new.png", short_icon='mdi:mdi-pencil-plus')
+@ActionsManage.affect_grid(TITLE_CREATE, short_icon='mdi:mdi-pencil-plus')
 @MenuManage.describ('member.add_season')
 class SeasonAddModify(XferAddEditor):
-    icon = "season.png"
     short_icon = "mdi:mdi-calendar-month-outline"
     model = Season
     field_id = 'season'
@@ -118,21 +115,19 @@ class SeasonAddModify(XferAddEditor):
     caption_modify = _("Modify season")
 
 
-@ActionsManage.affect_grid(TITLE_EDIT, "images/show.png", short_icon='mdi:mdi-text-box-outline', unique=SELECT_SINGLE)
+@ActionsManage.affect_grid(TITLE_EDIT, short_icon='mdi:mdi-text-box-outline', unique=SELECT_SINGLE)
 @MenuManage.describ('member.change_season')
 class SeasonShow(XferShowEditor):
-    icon = "season.png"
     short_icon = "mdi:mdi-calendar-month-outline"
     model = Season
     field_id = 'season'
     caption = _("Show season")
 
 
-@ActionsManage.affect_grid(TITLE_ADD, "images/add.png", short_icon='mdi:mdi-pencil-plus-outline')
-@ActionsManage.affect_grid(TITLE_MODIFY, "images/edit.png", short_icon='mdi:mdi-pencil-outline', unique=SELECT_SINGLE)
+@ActionsManage.affect_grid(TITLE_ADD, short_icon='mdi:mdi-pencil-plus-outline')
+@ActionsManage.affect_grid(TITLE_MODIFY, short_icon='mdi:mdi-pencil-outline', unique=SELECT_SINGLE)
 @MenuManage.describ('member.add_season')
 class DocummentAddModify(XferAddEditor):
-    icon = "season.png"
     short_icon = "mdi:mdi-calendar-month-outline"
     model = Document
     field_id = 'document'
@@ -140,20 +135,18 @@ class DocummentAddModify(XferAddEditor):
     caption_modify = _("Modify document")
 
 
-@ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", short_icon='mdi:mdi-delete-outline', unique=SELECT_MULTI)
+@ActionsManage.affect_grid(TITLE_DELETE, short_icon='mdi:mdi-delete-outline', unique=SELECT_MULTI)
 @MenuManage.describ('member.add_season')
 class DocummentDel(XferDelete):
-    icon = "season.png"
     short_icon = "mdi:mdi-calendar-month-outline"
     model = Document
     field_id = 'document'
     caption = _("Delete document")
 
 
-@ActionsManage.affect_grid(_('Import doc.'), "images/clone.png", short_icon='mdi:mdi-content-copy', unique=SELECT_SINGLE, close=CLOSE_NO)
+@ActionsManage.affect_grid(_('Import doc.'), short_icon='mdi:mdi-content-copy', unique=SELECT_SINGLE, close=CLOSE_NO)
 @MenuManage.describ('member.add_season')
 class SeasonDocummentClone(XferContainerAcknowledge):
-    icon = "season.png"
     short_icon = "mdi:mdi-calendar-month-outline"
     model = Season
     field_id = 'season'
@@ -163,11 +156,10 @@ class SeasonDocummentClone(XferContainerAcknowledge):
         self.item.clone_doc_need()
 
 
-@ActionsManage.affect_grid(TITLE_ADD, "images/add.png", short_icon='mdi:mdi-pencil-plus-outline')
-@ActionsManage.affect_grid(TITLE_MODIFY, "images/edit.png", short_icon='mdi:mdi-pencil-outline', unique=SELECT_SINGLE)
+@ActionsManage.affect_grid(TITLE_ADD, short_icon='mdi:mdi-pencil-plus-outline')
+@ActionsManage.affect_grid(TITLE_MODIFY, short_icon='mdi:mdi-pencil-outline', unique=SELECT_SINGLE)
 @MenuManage.describ('member.add_season')
 class PeriodAddModify(XferAddEditor):
-    icon = "season.png"
     short_icon = "mdi:mdi-calendar-month-outline"
     model = Period
     field_id = 'period'
@@ -175,22 +167,20 @@ class PeriodAddModify(XferAddEditor):
     caption_modify = _("Modify period")
 
 
-@ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", short_icon='mdi:mdi-delete-outline', unique=SELECT_MULTI)
+@ActionsManage.affect_grid(TITLE_DELETE, short_icon='mdi:mdi-delete-outline', unique=SELECT_MULTI)
 @MenuManage.describ('member.add_season')
 class PeriodDel(XferDelete):
-    icon = "season.png"
     short_icon = "mdi:mdi-calendar-month-outline"
     model = Period
     field_id = 'period'
     caption = _("Delete period")
 
 
-@ActionsManage.affect_grid(TITLE_ADD, "images/add.png", short_icon='mdi:mdi-pencil-plus-outline')
-@ActionsManage.affect_grid(TITLE_MODIFY, "images/edit.png", short_icon='mdi:mdi-pencil-outline', unique=SELECT_SINGLE)
-@ActionsManage.affect_show(TITLE_MODIFY, "images/edit.png", short_icon='mdi:mdi-pencil-outline', close=CLOSE_YES)
+@ActionsManage.affect_grid(TITLE_ADD, short_icon='mdi:mdi-pencil-plus-outline')
+@ActionsManage.affect_grid(TITLE_MODIFY, short_icon='mdi:mdi-pencil-outline', unique=SELECT_SINGLE)
+@ActionsManage.affect_show(TITLE_MODIFY, short_icon='mdi:mdi-pencil-outline', close=CLOSE_YES)
 @MenuManage.describ('member.add_subscription')
 class SubscriptionTypeAddModify(XferAddEditor):
-    icon = "season.png"
     short_icon = "mdi:mdi-calendar-month-outline"
     model = SubscriptionType
     field_id = 'subscriptiontype'
@@ -198,30 +188,27 @@ class SubscriptionTypeAddModify(XferAddEditor):
     caption_modify = _("Modify subscription")
 
 
-@ActionsManage.affect_grid(TITLE_EDIT, "images/show.png", short_icon='mdi:mdi-text-box-outline', unique=SELECT_SINGLE)
+@ActionsManage.affect_grid(TITLE_EDIT, short_icon='mdi:mdi-text-box-outline', unique=SELECT_SINGLE)
 @MenuManage.describ('member.change_subscription')
 class SubscriptionTypeShow(XferShowEditor):
-    icon = "season.png"
     short_icon = "mdi:mdi-calendar-month-outline"
     model = SubscriptionType
     field_id = 'subscriptiontype'
     caption = _("Show subscription")
 
 
-@ActionsManage.affect_grid(TITLE_DELETE, "images/delete.png", short_icon='mdi:mdi-delete-outline', unique=SELECT_MULTI)
+@ActionsManage.affect_grid(TITLE_DELETE, short_icon='mdi:mdi-delete-outline', unique=SELECT_MULTI)
 @MenuManage.describ('member.delete_subscription')
 class SubscriptionTypeDel(XferDelete):
-    icon = "season.png"
     short_icon = "mdi:mdi-calendar-month-outline"
     model = SubscriptionType
     field_id = 'subscriptiontype'
     caption = _("Delete subscription")
 
 
-@ActionsManage.affect_grid(_('Up'), "images/up.png", short_icon='mdi:mdi-arrow-up-bold-outline', unique=SELECT_SINGLE)
+@ActionsManage.affect_grid(_('Up'), short_icon='mdi:mdi-arrow-up-bold-outline', unique=SELECT_SINGLE)
 @MenuManage.describ('member.add_subscription')
 class SubscriptionTypeUp(XferContainerAcknowledge):
-    icon = "season.png"
     short_icon = "mdi:mdi-calendar-month-outline"
     model = SubscriptionType
     field_id = 'subscriptiontype'
@@ -233,7 +220,6 @@ class SubscriptionTypeUp(XferContainerAcknowledge):
 
 @MenuManage.describ('member.add_subscription')
 class SubscriptionReloadBill(XferContainerAcknowledge):
-    icon = "/static/diacamma.invoice/images/bill.png"
     short_icon = 'mdi:mdi-invoice-edit-outline'
     caption = _("Quotation regeneration")
 
