@@ -34,7 +34,7 @@ from lucterios.framework.editors import LucteriosEditor
 from lucterios.framework.xfercomponents import XferCompLabelForm, XferCompDate, XferCompFloat, \
     XferCompSelect, XferCompCheck, XferCompButton
 from lucterios.framework.error import LucteriosException, IMPORTANT
-from lucterios.framework.tools import CLOSE_NO, FORMTYPE_REFRESH, ActionsManage, get_icon_path, \
+from lucterios.framework.tools import CLOSE_NO, FORMTYPE_REFRESH, ActionsManage, \
     FORMTYPE_MODAL, CLOSE_YES, SELECT_SINGLE, get_url_from_request
 from lucterios.framework.xferadvance import TITLE_EDIT, TITLE_MODIFY, TITLE_ADD
 

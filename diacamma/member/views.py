@@ -221,7 +221,7 @@ class AdherentAbstractList(XferListEditor, AdherentFilter):
         btn = XferCompButton('btndateref')
         btn.is_default = True
         btn.set_location(max(col1, col2), row + 1)
-        btn.set_action(self.request, self.return_action(_('Refresh'), '', 'mdi:mdi-refresh'), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
+        btn.set_action(self.request, self.return_action(_('Refresh'), short_icon='mdi:mdi-refresh'), modal=FORMTYPE_REFRESH, close=CLOSE_NO)
         self.add_component(btn)
 
         info_list = []
@@ -824,7 +824,7 @@ class AdherentRenewList(XferListEditor, AdherentFilter):
         grid = self.get_components('adherent')
         new_actions = []
         for grid_action in grid.actions:
-            if not grid_action[0].icon_path.endswith('mdi:mdi-pencil-plus') and not grid_action[0].icon_path.endswith('mdi:mdi-delete-outline'):
+            if not grid_action[0].short_icon.endswith('mdi:mdi-pencil-plus') and not grid_action[0].short_icon.endswith('mdi:mdi-delete-outline'):
                 new_actions.append(grid_action)
         grid.actions = new_actions
         self.get_components('title').colspan = 10
@@ -1166,7 +1166,7 @@ class AdherentDel(XferDelete):
     caption = _("Delete adherent")
 
 
-@ActionsManage.affect_other(_('Modify'), '')
+@ActionsManage.affect_other(TITLE_MODIFY, short_icon='mdi:mdi-badge-account-horizontal-outline')
 @MenuManage.describ('contacts.add_abstractcontact')
 class AdherentDoc(XferContainerAcknowledge):
     short_icon = 'mdi:mdi-badge-account-horizontal-outline'
@@ -1309,7 +1309,7 @@ class AdherentFamilyAdd(BaseAdherentFamilyList):
         grid.add_action(self.request, ActionsManage.get_action_url('contacts.LegalEntity', 'Show', self), close=CLOSE_NO, unique=SELECT_SINGLE)
 
 
-@ActionsManage.affect_other(_("Family"), "")
+@ActionsManage.affect_other(_("Family"), short_icon='mdi:mdi-badge-account-horizontal-outline')
 @MenuManage.describ('contacts.add_abstractcontact')
 class AdherentFamilySelect(XferContainerAcknowledge):
     short_icon = 'mdi:mdi-badge-account-horizontal-outline'
@@ -1356,7 +1356,7 @@ class FamilyAdherentCreate(AdherentAddModify):
         AdherentAddModify.fillresponse(self)
 
 
-@ActionsManage.affect_other(_("Family"), "")
+@ActionsManage.affect_other(_("Family"), short_icon='mdi:mdi-badge-account-horizontal-outline')
 @MenuManage.describ('contacts.add_abstractcontact')
 class FamilyAdherentAdded(XferContainerAcknowledge):
     short_icon = 'mdi:mdi-badge-account-horizontal-outline'
