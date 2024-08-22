@@ -48,7 +48,7 @@ def show_contact_degree(contact, xfer):
             grid.set_model(degrees, None, xfer)
             grid.add_action_notified(xfer, Degree)
             grid.set_location(0, xfer.get_max_row() + 1, 2)
-            grid.set_size(200, 500)
+            grid.set_height(350)
             xfer.add_component(grid)
 
 

@@ -1292,7 +1292,7 @@ class BaseAdherentFamilyList(XferContainerCustom):
         grid = XferCompGrid('legal_entity')
         grid.set_model(self.family_type.legalentity_set.filter(name__icontains=name_filter), None, self)
         grid.set_location(0, 2, 2)
-        grid.set_size(200, 500)
+        grid.set_height(350)
         self.add_component(grid)
         self.add_action(WrapAction(TITLE_CLOSE, short_icon='mdi:mdi-close'))
 
@@ -1916,7 +1916,7 @@ def _add_subscription(xfer, contact_filter, before):
         grid.set_model(subscriptions, Subscription.get_other_fields(), xfer)
         grid.set_location(0, row + 1, 2)
         grid.add_action_notified(xfer, model=Subscription)
-        grid.set_size(350, 500)
+        grid.set_height(350)
         xfer.add_component(grid)
 
 
