@@ -2299,10 +2299,14 @@ class CommandManager(object):
 def member_addon_search(model, search_result):
     res = False
     if model is Third:
-        for field_name in ["season", "subscriptiontype", "status"]:
+        for field_name in ["subscriptiontype", "status", "season"]:
             Subscription_search = Bill.convert_field_for_search('subscription_set', (field_name, Subscription._meta.get_field(field_name), field_name, Q()))
             bill_search = Supporting.convert_field_for_search('bill', Subscription_search)
             search_result.append(Third.convert_field_for_search('supporting_set', bill_search, add_verbose=False))
+        season_search = Subscription.convert_field_for_search('season', ('iscurrent', Season._meta.get_field('iscurrent'), 'iscurrent', Q()))
+        Subscription_search = Bill.convert_field_for_search('subscription_set', season_search)
+        bill_search = Supporting.convert_field_for_search('bill', Subscription_search)
+        search_result.append(Third.convert_field_for_search('supporting_set', bill_search, add_verbose=False))
         res = True
     if model is Adherent:
         for subfield in invoice_addon_for_third():
