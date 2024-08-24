@@ -69,83 +69,83 @@ class AssoTest(BaseAdherentTest):
 
         self.calljson('/CORE/configurationWizard', {'steplist': steplist})
         self.assert_observer('core.custom', 'CORE', 'configurationWizard')
-        self.assert_count_equal('', 8)
-
-        self.calljson('/CORE/configurationWizard', {'steplist': steplist, 'step': 1})
-        self.assert_observer('core.custom', 'CORE', 'configurationWizard')
-        self.assert_count_equal('', 18)
+        self.assert_count_equal('', 7)
 
         self.calljson('/CORE/configurationWizard', {'steplist': steplist, 'step': 2})
         self.assert_observer('core.custom', 'CORE', 'configurationWizard')
-        self.assert_count_equal('', 15)
+        self.assert_count_equal('', 16)
 
         self.calljson('/CORE/configurationWizard', {'steplist': steplist, 'step': 3})
         self.assert_observer('core.custom', 'CORE', 'configurationWizard')
-        self.assert_count_equal('', 9)
+        self.assert_count_equal('', 13)
 
         self.calljson('/CORE/configurationWizard', {'steplist': steplist, 'step': 4})
         self.assert_observer('core.custom', 'CORE', 'configurationWizard')
-        self.assert_count_equal('', 8)
+        self.assert_count_equal('', 7)
 
         self.calljson('/CORE/configurationWizard', {'steplist': steplist, 'step': 5})
         self.assert_observer('core.custom', 'CORE', 'configurationWizard')
-        self.assert_count_equal('', 14)
+        self.assert_count_equal('', 6)
 
         self.calljson('/CORE/configurationWizard', {'steplist': steplist, 'step': 6})
         self.assert_observer('core.custom', 'CORE', 'configurationWizard')
-        self.assert_count_equal('', 20)
+        self.assert_count_equal('', 12)
 
         self.calljson('/CORE/configurationWizard', {'steplist': steplist, 'step': 7})
         self.assert_observer('core.custom', 'CORE', 'configurationWizard')
-        self.assert_count_equal('', 13)
+        self.assert_count_equal('', 18)
 
         self.calljson('/CORE/configurationWizard', {'steplist': steplist, 'step': 8})
         self.assert_observer('core.custom', 'CORE', 'configurationWizard')
-        self.assert_count_equal('', 8)
+        self.assert_count_equal('', 11)
 
         self.calljson('/CORE/configurationWizard', {'steplist': steplist, 'step': 9})
         self.assert_observer('core.custom', 'CORE', 'configurationWizard')
-        self.assert_count_equal('', 11)
+        self.assert_count_equal('', 6)
 
         self.calljson('/CORE/configurationWizard', {'steplist': steplist, 'step': 10})
         self.assert_observer('core.custom', 'CORE', 'configurationWizard')
-        self.assert_count_equal('', 10)
+        self.assert_count_equal('', 9)
 
         self.calljson('/CORE/configurationWizard', {'steplist': steplist, 'step': 11})
         self.assert_observer('core.custom', 'CORE', 'configurationWizard')
-        self.assert_count_equal('', 11)
+        self.assert_count_equal('', 8)
 
         self.calljson('/CORE/configurationWizard', {'steplist': steplist, 'step': 12})
         self.assert_observer('core.custom', 'CORE', 'configurationWizard')
-        self.assert_count_equal('', 8)
+        self.assert_count_equal('', 9)
 
         self.calljson('/CORE/configurationWizard', {'steplist': steplist, 'step': 13})
         self.assert_observer('core.custom', 'CORE', 'configurationWizard')
-        self.assert_count_equal('', 8)
+        self.assert_count_equal('', 6)
 
         self.calljson('/CORE/configurationWizard', {'steplist': steplist, 'step': 14})
         self.assert_observer('core.custom', 'CORE', 'configurationWizard')
-        self.assert_count_equal('', 19)
+        self.assert_count_equal('', 6)
 
         self.calljson('/CORE/configurationWizard', {'steplist': steplist, 'step': 15})
         self.assert_observer('core.custom', 'CORE', 'configurationWizard')
-        self.assert_count_equal('', 8)
+        self.assert_count_equal('', 17)
 
         self.calljson('/CORE/configurationWizard', {'steplist': steplist, 'step': 16})
         self.assert_observer('core.custom', 'CORE', 'configurationWizard')
-        self.assert_count_equal('', 9)
+        self.assert_count_equal('', 6)
 
         self.calljson('/CORE/configurationWizard', {'steplist': steplist, 'step': 17})
         self.assert_observer('core.custom', 'CORE', 'configurationWizard')
-        self.assert_count_equal('', 10)
+        self.assert_count_equal('', 7)
 
         self.calljson('/CORE/configurationWizard', {'steplist': steplist, 'step': 18})
         self.assert_observer('core.custom', 'CORE', 'configurationWizard')
-        self.assert_count_equal('', 18)
+        self.assert_count_equal('', 8)
 
         self.calljson('/CORE/configurationWizard', {'steplist': steplist, 'step': 19})
         self.assert_observer('core.custom', 'CORE', 'configurationWizard')
-        self.assert_count_equal('', 13)
+        self.assert_count_equal('', 16)
+
+        self.calljson('/CORE/configurationWizard', {'steplist': steplist, 'step': 20})
+        self.assert_observer('core.custom', 'CORE', 'configurationWizard')
+        self.assert_count_equal('', 12)
 
     def test_situation(self):
         self.calljson('/CORE/authentification', {'login': 'joe', 'password': 'joe'})
