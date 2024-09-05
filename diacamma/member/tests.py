@@ -30,13 +30,17 @@ from lucterios.framework.filetools import get_user_dir
 from lucterios.CORE.models import Parameter
 from lucterios.CORE.parameters import Params
 
+from diacamma.accounting.models import FiscalYear
+from diacamma.accounting.test_tools import create_year
+
 from diacamma.member.views_season import SeasonAddModify, SeasonShow, SeasonSubscription, \
     SeasonActive, DocummentAddModify, DocummentDel, SeasonDocummentClone, \
     PeriodDel, PeriodAddModify, SubscriptionTypeAddModify, SubscriptionTypeShow, \
     SubscriptionTypeDel, SubscriptionTypeUp
 from diacamma.member.test_tools import default_season, default_financial, set_parameters
 from diacamma.member.views_conf import CategoryConf, ActivityAddModify, \
-    ActivityDel, TeamAddModify, TeamDel, AgeAddModify, AgeDel, CategoryParamEdit
+    ActivityDel, TeamAddModify, TeamDel, AgeAddModify, AgeDel, CategoryParamEdit, \
+    ActivityEnabled
 
 
 class SeasonTest(LucteriosTest):
@@ -391,6 +395,88 @@ class SeasonTest(LucteriosTest):
         self.assert_count_equal('', 10)
         self.assert_json_equal('LABELFORM', 'member-subscription-delaytorenew', '0')
 
+    def test_change_fiscalyear(self):
+        default_season()
+
+        self.factory.xfer = SeasonSubscription()
+        self.calljson('/diacamma.member/seasonSubscription', {'show_filter': 0}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'seasonSubscription')
+        self.assert_count_equal('season', 5)
+        self.assert_json_equal('', 'season/@0/designation', "2011/2012")
+        self.assert_json_equal('', 'season/@0/iscurrent', False)
+        self.assert_json_equal('', 'season/@1/designation', "2010/2011")
+        self.assert_json_equal('', 'season/@1/iscurrent', False)
+        self.assert_json_equal('', 'season/@2/designation', "2009/2010")
+        self.assert_json_equal('', 'season/@2/iscurrent', True)
+        self.assert_json_equal('', 'season/@3/designation', "2008/2009")
+        self.assert_json_equal('', 'season/@3/iscurrent', False)
+        self.assert_json_equal('', 'season/@4/designation', "2007/2008")
+        self.assert_json_equal('', 'season/@4/iscurrent', False)
+
+        default_financial()
+        FiscalYear.objects.create(begin='2016-01-01', end='2016-12-31', status=0, last_fiscalyear_id=1)
+        self.assertEqual(FiscalYear.get_current().begin.isoformat(), "2015-01-01")
+
+        self.factory.xfer = SeasonSubscription()
+        self.calljson('/diacamma.member/seasonSubscription', {'show_filter': 0}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'seasonSubscription')
+        self.assert_count_equal('season', 5)
+        self.assert_json_equal('', 'season/@0/designation', "2016/2017")
+        self.assert_json_equal('', 'season/@0/iscurrent', False)
+        self.assert_json_equal('', 'season/@1/designation', "2015/2016")
+        self.assert_json_equal('', 'season/@1/iscurrent', False)
+        self.assert_json_equal('', 'season/@2/designation', "2014/2015")
+        self.assert_json_equal('', 'season/@2/iscurrent', True)
+        self.assert_json_equal('', 'season/@3/designation', "2013/2014")
+        self.assert_json_equal('', 'season/@3/iscurrent', False)
+        self.assert_json_equal('', 'season/@4/designation', "2012/2013")
+        self.assert_json_equal('', 'season/@4/iscurrent', False)
+
+        self.assertEqual(FiscalYear.get_current().begin.isoformat(), "2015-01-01")
+
+        self.factory.xfer = SeasonActive()
+        self.calljson('/diacamma.member/seasonActive', {'season': 16}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.member', 'seasonActive')
+
+        self.assertEqual(FiscalYear.get_current().begin.isoformat(), "2016-01-01")
+
+        self.factory.xfer = SeasonSubscription()
+        self.calljson('/diacamma.member/seasonSubscription', {'show_filter': 0}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'seasonSubscription')
+        self.assert_count_equal('season', 5)
+        self.assert_json_equal('', 'season/@0/designation', "2017/2018")
+        self.assert_json_equal('', 'season/@0/iscurrent', False)
+        self.assert_json_equal('', 'season/@1/designation', "2016/2017")
+        self.assert_json_equal('', 'season/@1/iscurrent', False)
+        self.assert_json_equal('', 'season/@2/designation', "2015/2016")
+        self.assert_json_equal('', 'season/@2/iscurrent', True)
+        self.assert_json_equal('', 'season/@3/designation', "2014/2015")
+        self.assert_json_equal('', 'season/@3/iscurrent', False)
+        self.assert_json_equal('', 'season/@4/designation', "2013/2014")
+        self.assert_json_equal('', 'season/@4/iscurrent', False)
+
+        create_year(0, year=2025)
+        self.assertEqual(FiscalYear.get_current().begin.isoformat(), "2025-01-01")
+        self.factory.xfer = SeasonSubscription()
+        self.calljson('/diacamma.member/seasonSubscription', {'show_filter': 0}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'seasonSubscription')
+        self.assert_count_equal('season', 5)
+        self.assert_json_equal('', 'season/@0/designation', "2017/2018")
+        self.assert_json_equal('', 'season/@0/iscurrent', False)
+        self.assert_json_equal('', 'season/@1/designation', "2016/2017")
+        self.assert_json_equal('', 'season/@1/iscurrent', False)
+        self.assert_json_equal('', 'season/@2/designation', "2015/2016")
+        self.assert_json_equal('', 'season/@2/iscurrent', True)
+        self.assert_json_equal('', 'season/@3/designation', "2014/2015")
+        self.assert_json_equal('', 'season/@3/iscurrent', False)
+        self.assert_json_equal('', 'season/@4/designation', "2013/2014")
+        self.assert_json_equal('', 'season/@4/iscurrent', False)
+
+        self.factory.xfer = SeasonActive()
+        self.calljson('/diacamma.member/seasonActive', {'season': 1}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.member', 'seasonActive')
+        self.assertEqual(FiscalYear.get_current().begin.isoformat(), "2025-01-01")
+
 
 class CategoriesTest(LucteriosTest):
 
@@ -403,7 +489,7 @@ class CategoriesTest(LucteriosTest):
         self.calljson('/diacamma.member/categoryConf', {}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'categoryConf')
         self.assert_count_equal('', 2 + 14 + 2 + 3 + 2)
-        self.assert_grid_equal('activity', {'name': "nom", 'description': "description"}, 1)
+        self.assert_grid_equal('activity', {'name': "nom", 'description': "description", 'unactive': "désactivé"}, 1)
 
         self.factory.xfer = ActivityAddModify()
         self.calljson('/diacamma.member/activityAddModify', {}, False)
@@ -419,7 +505,44 @@ class CategoriesTest(LucteriosTest):
         self.calljson('/diacamma.member/categoryConf', {}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'categoryConf')
         self.assert_count_equal('activity', 2)
+        self.assert_json_equal('', 'activity/@0/name', "défaut")
+        self.assert_json_equal('', 'activity/@0/unactive', False)
         self.assert_json_equal('', 'activity/@1/name', "xyz")
+        self.assert_json_equal('', 'activity/@1/unactive', False)
+
+        self.factory.xfer = ActivityEnabled()
+        self.calljson('/diacamma.member/activityEnabled', {"activity": 1}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.member', 'activityEnabled')
+
+        self.factory.xfer = CategoryConf()
+        self.calljson('/diacamma.member/categoryConf', {}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'categoryConf')
+        self.assert_count_equal('activity', 2)
+        self.assert_json_equal('', 'activity/@0/name', "xyz")
+        self.assert_json_equal('', 'activity/@0/unactive', False)
+        self.assert_json_equal('', 'activity/@1/name', "défaut")
+        self.assert_json_equal('', 'activity/@1/unactive', True)
+
+        self.factory.xfer = ActivityDel()
+        self.calljson('/diacamma.member/activityDel', {"CONFIRME": "YES", "activity": 2}, False)
+        self.assert_observer('core.exception', 'diacamma.member', 'activityDel')
+
+        self.factory.xfer = ActivityEnabled()
+        self.calljson('/diacamma.member/activityEnabled', {"activity": 2}, False)
+        self.assert_observer('core.exception', 'diacamma.member', 'activityEnabled')
+
+        self.factory.xfer = ActivityEnabled()
+        self.calljson('/diacamma.member/activityEnabled', {"activity": 1}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.member', 'activityEnabled')
+
+        self.factory.xfer = CategoryConf()
+        self.calljson('/diacamma.member/categoryConf', {}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'categoryConf')
+        self.assert_count_equal('activity', 2)
+        self.assert_json_equal('', 'activity/@0/name', "défaut")
+        self.assert_json_equal('', 'activity/@0/unactive', False)
+        self.assert_json_equal('', 'activity/@1/name', "xyz")
+        self.assert_json_equal('', 'activity/@1/unactive', False)
 
         self.factory.xfer = ActivityDel()
         self.calljson('/diacamma.member/activityDel', {"CONFIRME": "YES", "activity": 2}, False)
@@ -429,6 +552,8 @@ class CategoriesTest(LucteriosTest):
         self.calljson('/diacamma.member/categoryConf', {}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'categoryConf')
         self.assert_count_equal('activity', 1)
+        self.assert_json_equal('', 'activity/@0/name', "défaut")
+        self.assert_json_equal('', 'activity/@0/unactive', False)
 
         self.factory.xfer = ActivityDel()
         self.calljson('/diacamma.member/activityDel', {"CONFIRME": "YES", "activity": 1}, False)

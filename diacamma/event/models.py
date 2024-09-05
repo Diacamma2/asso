@@ -84,6 +84,10 @@ class DegreeType(LucteriosModel):
         else:
             return ['name', 'level']
 
+    @property
+    def activity_query(self):
+        return Activity.get_all()
+
     class Meta(object):
         verbose_name = _('degree type')
         verbose_name_plural = _('degree types')
@@ -172,6 +176,10 @@ class Event(LucteriosModel):
     @classmethod
     def get_search_fields(cls):
         return ['status', 'event_type', 'date', 'date_end', 'comment']
+
+    @property
+    def activity_query(self):
+        return Activity.get_all()
 
     @property
     def event_type_txt(self):
@@ -325,7 +333,7 @@ class Degree(LucteriosModel):
             else:
                 return item[1][0].level * 100000 + item[1][1].level
         static_res = []
-        for activity in Activity.objects.all():
+        for activity in Activity.get_all():
             result_activity = []
             last_degreetype = None
             last_subdegreetype = None
@@ -349,7 +357,7 @@ class Degree(LucteriosModel):
     @classmethod
     def get_higher_statistic(cls, season):
         static_res = []
-        for activity in Activity.objects.all():
+        for activity in Activity.get_all():
             result_activity = {}
             for adh in Adherent.objects.filter(subscription__season=season):
                 heigher_degrees = adh.get_higher_degree_ex(season.end_date)
@@ -370,7 +378,7 @@ class Degree(LucteriosModel):
     @classmethod
     def get_laster_statistic(cls, season):
         static_res = []
-        for activity in Activity.objects.all():
+        for activity in Activity.get_all():
             result_activity = {}
             for adh in Adherent.objects.filter(subscription__season=season):
                 laster_degree = adh.get_lastdate_degree(season.end_date)

@@ -83,7 +83,7 @@ class DegreeTypeAddModify(XferAddEditor):
 
     def fillresponse(self):
         if not Params.getvalue("member-activite-enable"):
-            self.params['activity'] = Activity.objects.all().first().id
+            self.params['activity'] = Activity.get_all().first().id
         XferAddEditor.fillresponse(self)
 
 

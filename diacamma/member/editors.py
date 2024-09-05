@@ -248,7 +248,7 @@ class SubscriptionEditor(LucteriosEditor):
             team_id = xfer.getparam('team')
             value = xfer.getparam('value')
             if activity_id is None:
-                activity_id = Activity.objects.all()[0].id
+                activity_id = Activity.get_all().first().id
             License.objects.create(subscription=self.item, value=value, activity_id=activity_id, team_id=team_id)
 
     def _add_season_comp(self, xfer, row, last_subscription):
@@ -386,7 +386,7 @@ class LicenseEditor(LucteriosEditor):
             activity.set_select_query(Activity.get_all())
             activity.set_needed(True)
         else:
-            default_act = Activity.objects.all()[0]
+            default_act = Activity.get_all().first()
             xfer.params['activity'] = default_act.id
 
 

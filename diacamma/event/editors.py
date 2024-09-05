@@ -55,7 +55,7 @@ class EventEditor(LucteriosEditor):
 
     def before_save(self, xfer):
         if self.item.activity_id is None:
-            activities = Activity.objects.all()
+            activities = Activity.get_all()
             if len(activities) == 0:
                 raise LucteriosException(IMPORTANT, _('No activity!'))
             self.item.activity = activities[0]

@@ -25,21 +25,6 @@ along with Lucterios.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import unicode_literals
 
 from django.db import migrations, models
-from django.utils.translation import gettext_lazy as _
-
-from diacamma.member.models import Activity, License
-
-
-def convert_values(*args):
-    # add default activity
-    if len(Activity.objects.all()) == 0:
-        default_act = Activity.objects.create(
-            name=_("default"), description=_("default"))
-    else:
-        default_act = Activity.objects.all()[0]
-    for lic in License.objects.filter(activity__isnull=True):
-        lic.activity = default_act
-        lic.update()
 
 
 class Migration(migrations.Migration):
@@ -49,7 +34,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(convert_values),
         migrations.AlterField(
             model_name='license',
             name='activity',

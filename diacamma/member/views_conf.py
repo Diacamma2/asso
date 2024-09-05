@@ -125,7 +125,7 @@ class CategoryConf(XferListEditor):
                 grid.delete_header('unactive')
         if Params.getvalue("member-activite-enable") == 1:
             self.new_tab(Params.getvalue("member-activite-text"))
-            self.fill_grid(0, Activity, "activity", Activity.objects.all())
+            self.fill_grid(0, Activity, "activity", Activity.get_all(nofilter=True))
             grid = self.get_components("activity")
             if WrapAction.is_permission(self.request, 'CORE.add_parameter'):
                 grid.add_action(self.request, ObjectMerge.get_action(_("Merge"), short_icon='mdi:mdi-content-copy'), close=CLOSE_NO, unique=SELECT_MULTI,
@@ -241,6 +241,22 @@ class ActivityShow(XferShowEditor):
     model = Activity
     field_id = 'activity'
     caption = _("Show activity")
+
+
+@ActionsManage.affect_grid(_("dis-en-abled"), short_icon="mdi:mdi-check", unique=SELECT_SINGLE)
+@MenuManage.describ('CORE.add_parameter')
+class ActivityEnabled(XferContainerAcknowledge):
+    short_icon = "mdi:mdi-account-settings"
+    model = Activity
+    field_id = 'activity'
+    caption_add = _("Enabled activity")
+
+    def fillresponse(self):
+        cant_unactive_msg = self.item.can_delete()
+        if cant_unactive_msg != '':
+            raise LucteriosException(IMPORTANT, cant_unactive_msg)
+        self.item.unactive = not self.item.unactive
+        self.item.save()
 
 
 def show_taxreceipt(request):
@@ -388,7 +404,7 @@ def conf_wizard_member(wizard_ident, xfer):
             xfer.fill_grid(1, Team, "team", Team.objects.all())
         if Params.getvalue("member-activite-enable") == 1:
             xfer.new_tab(Params.getvalue("member-activite-text"))
-            xfer.fill_grid(1, Activity, "activity", Activity.objects.all())
+            xfer.fill_grid(1, Activity, "activity", Activity.get_all())
             grid = xfer.get_components("activity")
             if hasattr(settings, "DIACAMMA_MAXACTIVITY") and (getattr(settings, "DIACAMMA_MAXACTIVITY") <= grid.nb_lines):
                 lbl = XferCompLabelForm("limit_activity")

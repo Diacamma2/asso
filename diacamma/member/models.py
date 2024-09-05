@@ -85,13 +85,15 @@ class Season(LucteriosModel):
     def get_show_fields(cls):
         return ["designation", ("begin_date", 'end_date'), 'period_set', 'document_set']
 
-    def set_has_actif(self):
+    def set_has_actif(self, no_notif=False):
         all_season = Season.objects.all()
         for season_item in all_season:
             season_item.iscurrent = False
             season_item.save()
         self.iscurrent = True
         self.save()
+        if not no_notif:
+            Signal.call_signal("season_change")
 
     @classmethod
     def current_season(cls):
@@ -510,20 +512,23 @@ class SubscriptionType(LucteriosModel):
 class Activity(LucteriosModel):
     name = models.CharField(_('name'), max_length=50)
     description = models.TextField(_('description'), null=True, default="")
+    unactive = models.BooleanField(verbose_name=_('unactive'), default=False)
 
     def __str__(self):
         return self.name
 
     @classmethod
-    def get_all(cls):
+    def get_all(cls, nofilter=False):
         activities = Activity.objects.all()
         if hasattr(settings, "DIACAMMA_MAXACTIVITY"):
             activities = activities[0:getattr(settings, "DIACAMMA_MAXACTIVITY")]
+        if not nofilter:
+            activities = activities.filter(unactive=False)
         return activities
 
     @classmethod
     def get_default_fields(cls):
-        return ["name", "description"]
+        return ["name", "description", "unactive"]
 
     @classmethod
     def get_edit_fields(cls):
@@ -531,10 +536,10 @@ class Activity(LucteriosModel):
 
     @classmethod
     def get_show_fields(cls):
-        return ["name", "description"]
+        return ["name", "description", "unactive"]
 
     def can_delete(self):
-        if (len(Activity.objects.all()) == 1):
+        if not self.unactive and (len(Activity.objects.filter(unactive=False)) == 1):
             return _("1 activity is needs!")
         return ""
 
@@ -542,7 +547,7 @@ class Activity(LucteriosModel):
         verbose_name = _('activity')
         verbose_name_plural = _('activities')
         default_permissions = []
-        ordering = ['name']
+        ordering = ['unactive', 'name']
 
 
 class Team(LucteriosModel):
@@ -978,7 +983,7 @@ class Adherent(Individual):
             query = Q(date__lte=date_before) if date_before is not None else Q()
             query &= Q(adherent=self)
             return [Degree.objects.filter(query & Q(degree__activity=activity)).order_by('-degree__level', '-subdegree__level').first()
-                    for activity in Activity.objects.all()]
+                    for activity in Activity.get_all()]
 
     def get_higher_degree(self):
         if self.has_degree:
@@ -1216,6 +1221,10 @@ class TeamPrestation(LucteriosModel):
     def team_query(self):
         return Team.objects.filter(unactive=False)
 
+    @property
+    def activity_query(self):
+        return Activity.get_all()
+
     def get_first_article(self):
         first_presta = self.prestation_set.first()
         if first_presta is not None:
@@ -1296,7 +1305,7 @@ class TeamPrestation(LucteriosModel):
 
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         if (self.id is None) and (self.activity_id is None):
-            self.activity = Activity.objects.all().first()
+            self.activity = Activity.get_all().first()
         return LucteriosModel.save(self, force_insert=force_insert, force_update=force_update, using=using, update_fields=update_fields)
 
     class Meta(object):
@@ -1645,7 +1654,7 @@ class Subscription(LucteriosModel):
             try:
                 activity = Activity.objects.get(name__iexact=rowdata['activity'])
             except Exception:
-                activity = Activity.objects.all()[0]
+                activity = Activity.get_all().first()
                 if 'activity' in rowdata and (rowdata['activity'].strip() != ''):
                     import_logs.append(_("%(name)s '%(value)s' unknown !") % {'name': Params.getvalue("member-activite-text"), 'value': rowdata['activity'].strip()})
             try:
@@ -2356,8 +2365,24 @@ def convert_prestation():
         prest.save()
 
 
+def initial_migration():
+    # add default activity
+    if Activity.objects.count() == 0:
+        default_act = Activity.objects.create(name=_("default"), description=_("default"))
+    else:
+        default_act = Activity.objects.filter(unactive=False).first()
+        if default_act is None:
+            default_act = Activity.objects.first()
+            default_act.unactive = False
+            default_act.save()
+    for lic in License.objects.filter(activity__isnull=True):
+        lic.activity = default_act
+        lic.update()
+
+
 @Signal.decorate('convertdata')
 def member_convertdata():
+    initial_migration()
     for subtype in SubscriptionType.objects.filter(order_key__isnull=True).order_by('id'):
         subtype.save()
     for subtype in SubscriptionType.objects.filter(unactive__isnull=False):
@@ -2419,6 +2444,26 @@ def member_checkparam():
                                 args="{'Multi':False}", value=Adherent.GENRE_ALL, meta='("","","%s","",False)' % (Adherent.SELECT_GENRE,))
     Preference.check_and_create(name="adherent-status", typeparam=Preference.TYPE_INTEGER, title=_("adherent-status"),
                                 args="{'Multi':False}", value=Subscription.STATUS_WAITING_BUILDING, meta='("","","%s","",False)' % (Subscription.SELECT_STATUS,))
+
+
+@Signal.decorate('season_change')
+def change_from_season():
+    current_season = Season.current_season()
+    middle_date = current_season.begin_date + (current_season.end_date - current_season.begin_date) / 2
+    new_year = FiscalYear.get_current(middle_date)
+    if new_year is not None:
+        new_year.set_has_actif()
+
+
+@Signal.decorate('fiscalyear_change')
+def change_from_fiscalyear():
+    current_year = FiscalYear.get_current()
+    middle_date = current_year.begin + (current_year.end - current_year.begin) / 2
+    try:
+        new_season = Season.get_from_date(middle_date)
+        new_season.set_has_actif(no_notif=True)
+    except LucteriosException:
+        pass
 
 
 @Signal.decorate('auditlog_register')

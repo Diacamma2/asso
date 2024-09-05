@@ -33,7 +33,7 @@ from diacamma.event.models import DegreeType, SubDegreeType, Degree
 
 
 def default_event_params():
-    for activity in Activity.objects.all():
+    for activity in Activity.get_all():
         for level in range(1, 10):
             DegreeType.objects.create(name="level #%d.%d" % (activity.id, level), level=level, activity=activity)
     for level in range(1, 6):

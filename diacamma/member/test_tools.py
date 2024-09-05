@@ -68,6 +68,7 @@ def default_params():
     default.description = "activity N°1"
     default.save()
     Activity.objects.create(name="activity2", description="activity N°2")
+    Activity.objects.create(name="activity3", description="activity N°3 - not used", unactive=True)
     Team.objects.create(name="team1", description="team N°1{[br/]}The bests")
     Team.objects.create(name="team2", description="team N°2{[br/]}The chalengers")
     Team.objects.create(name="team3", description="team N°3{[br/]}The newbies")
