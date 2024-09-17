@@ -15,6 +15,7 @@ Les différents modules disponibles vous permettront, par exemple, de :
  - Gérer vos documents de façon centralisée grâce à la gestion documentaire.
  - Gérer la comptabilité de votre association.
  - Gérer vos devis, factures et factures proformat pour les adhérents subventionnés par un CE, entre autre.
+ - Gérer des stocks de produit, lié à votre facturation et proposer une centrale d'achat à vos adhérents.
 
 Ce manuel vous aidera dans l'utilisation de ce logiciel.
 Si malgré tout, vous ne trouvez pas la réponse à vos problèmes, visiter notre site https://www.diacamma.org où vous trouverez des tutoriels et des astuces.
@@ -22,7 +23,7 @@ Si malgré tout, vous ne trouvez pas la réponse à vos problèmes, visiter notr
 Installation
 ------------
 
-Vous pouvez installer *Diacamma Asso* sur un ordinateur dédié à votre association que ce soit un Apple Macintosh (macOS 10.12 "Sierra" et +) ou bien un PC sous MS-Windows (8 et +) ou sous GNU Linux (Ubuntu 16.04 ou +).
+Vous pouvez installer *Diacamma Asso* sur un ordinateur dédié à votre association que ce soit un Apple Macintosh (macOS 10.12 "Sierra" et +) ou bien un PC sous MS-Windows (10 et +) ou sous GNU Linux (Ubuntu 22.04 ou +).
 
 *Diacamma Asso* est un logiciel client/serveur : vous pouvez l'installer sur un ordinateur centralisateur et accéder aux données depuis un autre PC connecté au premier, sans limite du nombre d'utilisateurs simultanés.
 Si le PC contenant les données est connecté de manière permanente à internet, vous aurez accès à vos données depuis n'importe où dans le monde!

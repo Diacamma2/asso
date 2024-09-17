@@ -4,6 +4,8 @@ Statistiques des adhérents
      Menu *Association/Adhérents/Statistiques*
 
 .. image:: statistiques.png
+   :height: 400px
+   :align: center
 
 Vous avez la possibilité d'éditer les statistiques d'adhésion d'une saison donnée.
 

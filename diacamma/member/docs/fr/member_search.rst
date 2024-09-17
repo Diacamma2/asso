@@ -4,6 +4,8 @@ Rechercher un adhérent
      Menu *Association/Adhérents/Recherche d'adhérents*
 
 .. image:: search.png
+   :height: 400px
+   :align: center
 
 Vous pouvez alors faire une recherche suivant des critères variés portant sur l'identité ou les adhésions.
 Vous pouvez également rechercher des adhérents sur des 'documents demandés' ou sur un champ personnalisé.

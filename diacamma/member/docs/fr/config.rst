@@ -10,7 +10,9 @@ Générale
      
 Vous pouvez modifier les paramètrages généraux relatifs à la gestion des adhésions.
 
-	.. image:: conf_general.png
+.. image:: conf_general.png
+   :height: 400px
+   :align: center
 
 - **Type de structure 'famille'** : Pour activer la gestion des adhérents par famille.  
   Vous devez préciser ici comment les familles  seront classifiées(structure morales).
@@ -21,6 +23,7 @@ Vous pouvez modifier les paramètrages généraux relatifs à la gestion des adh
 - **Résultats par page** : Taille par défaut de la pagination des adhérents.
 - **Catégorie de facturation pour les cotisations** : Catégorie à appliquer pour la facturation des cotisations.
 - **code comptable des reçus fiscaux** : Préciser la liste des codes comptable soumis à défiscalisation.
+- **Règlement par défaut des reçus fiscaux** : Pour les règlements soumis à défiscalisation et qui n'aurait pas de mode défini.
 - **groupe des adhérents actifs** : Groupe de connexion associé à un adhérent actif (enlevé si non renouvelé).
 - **Filtrage pour le renouvellement** : Filtrage supplémentaire pour l'écran de renouvellement d'adhésion.
 
@@ -34,7 +37,9 @@ Vous pouvez modifier les paramètres de la gestion des licences sportives, en l'
 
 **Les Saisons**
 
-	.. image:: season_list.png
+.. image:: season_list.png
+   :height: 400px
+   :align: center
 
 Ici, vous pourrez ajouter de nouvelles saisons au fur et à mesure de l'utilisation du logiciel. Vous pourrez également déterminer la saison courante (dite active).
 De plus, chaque saison est découpée en quatre périodes et en douze mois.
@@ -46,11 +51,15 @@ Le premier des douze mois commence le mois de la plus petite date de début de p
 
 Vous pouvez associer à chaque saison une liste de documents que chaque adhérent devra vous fournir pour finaliser son inscription.
 
-	.. image:: documents.png
+.. image:: documents.png
+   :height: 400px
+   :align: center
 
 **Les types de cotisation**
 
-	.. image:: cotisations.png
+.. image:: cotisations.png
+   :height: 400px
+   :align: center
 
 Ici vous pourrez saisir les différents types de cotisation proposés par votre association. Par exemple, pour une association pratiquant plusieurs activités sportives distinctes, vous pouvez avoir un type de cotisation pour chaque activité, un autre pour plusieurs de ces activités, et encore des types différents selon une pratique en compétition ou hors compétition des activités.
 
@@ -76,7 +85,9 @@ Vous pouvez ne pas vouloir utiliser certaines catégories. Pour cela, désactive
 De la même façon, vous pouvez préciser si vous souhaitez pouvoir créer automatiquement une connexion par adhérent actif, afficher un numéro d'adhérent ou gérer des numéros de licence.
 Vous pouvez également personnaliser la désignation 'équipe' et 'activité'.
 
-	.. image:: categories.png
+.. image:: categories.png
+   :height: 400px
+   :align: center
 
 **Les âges**
 
@@ -84,14 +95,18 @@ Vous pourrez ici renseigner les catégories d'âges existantes dans votre associ
 
 Vous n'aurez pas besoin de changer les valeurs des années de naissance ultérieurement : le décalage est effectué automatiquement d'année en année.
 
-	.. image:: age.png
+.. image:: age.png
+   :height: 400px
+   :align: center
 
 **Les équipes/cours**
 
 Vous gérez différentes équipes ou différents cours et vous souhaitez pouvoir gérer vos adhérents selon ce critère.
 Renseignez-les ici, vous pourrez alors affecter des adhérents à ces équipes ou cours et ainsi les retrouver plus facilement.
 
-	.. image:: team.png
+.. image:: team.png
+   :height: 400px
+   :align: center
 
 **Les activités**
 
@@ -100,4 +115,10 @@ Vous gérez différentes activités (par exemple plusieurs arts martiaux) dans v
 Exemple : une association regroupant judo et karaté, et donc affiliée à deux fédérations sportives différentes.
 Vous pourriez alors saisir 2 licences par adhérent (sous réserve que vos adhérents pratiquent les deux sports et soient licenciés des deux fédérations).
 
-	.. image:: activity.png
+.. image:: activity.png
+   :height: 400px
+   :align: center
+
+Il est possible de supprimer ou de désactiver une activité.
+Il n'est pas possible de supprimer une activité utilisée (par exemple dans une ancienne cotisation), dans ce cas là, désactivez la si vous ne vous en servez plus.
+Il doit toujours avoir au moins une activité active.

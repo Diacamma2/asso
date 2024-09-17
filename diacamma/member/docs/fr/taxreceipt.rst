@@ -54,7 +54,9 @@ Génération des reçus
 Visualisez les reçus fiscaux déjà produits et filtrez-les sur l'année civile.
 L'ouverture du droit à déduction fiscale nait du règlement du produit ouvrant droit à déduction. C'est pour cela que le reçu fiscal est établi sur l'année du règlement. En cas de règlement fractionné, c'est le dernier versement qui fait naître le droit à déduction.
 
-	.. image:: taxreceipts.png
+.. image:: taxreceipts.png
+   :height: 400px
+   :align: center
 
 Les reçus fiscaux de l'année sélectionnée peuvent être générés, via le bouton "Contrôle" (situé en bas à droite) :
 

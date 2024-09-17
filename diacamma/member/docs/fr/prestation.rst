@@ -10,7 +10,9 @@ De plus, dans la facture d'adhésion est ajouté alors l'article relatif à cett
 Pour activer ce mode, vous devez configurer dans le menu *Administration/Modules (conf.)/Catégories*, le paramètre *Activer les équipes* = "Avec prestation"
 Une fois alors votre Diacamma rafraichi, un nouvelle écran *Association/Liste de prestations*
 
-	.. image:: listprestation.png
+.. image:: listprestation.png
+   :height: 400px
+   :align: center
 
 Créer un prestation
 -------------------
@@ -19,7 +21,9 @@ Depuis l'écran *Association/Liste de prestations*, il vous est possible de cré
 
 Pour cela, cliquez sur le bouton "Créer".
 
-	.. image:: newprestation.png
+.. image:: newprestation.png
+   :height: 400px
+   :align: center
 	
 Vous pouvez alors créer une prestation soit en créant une équipe/cours, soit en l'associant à une existante.
 Si vous gerez des activités, vous devez alors associer cette prestation à une activité existante.
@@ -30,7 +34,9 @@ Vous pouvez bien entendu, ensuite modifier cette prestation: nom et description 
 Si vous le voulez alors, vous pouvez également lui associé d'autres articles afin que celle-ci comporte plusieurs tarif.
 Cochez "Utiliser le multi-prix" pour que l'interface vous propose l'ajout, la modification ou la suppression d'un article de prix.
 
-	.. image:: modifprestation.png
+.. image:: modifprestation.png
+   :height: 400px
+   :align: center
 
 Si vous souhaitez supprimer une prestation, il vous sera demandé ce que vous souhaitez faire de l'équipe/cours associée: la désactiver, la supprimer ou la laisser.
 
@@ -39,7 +45,9 @@ Associer des pratiquants
 
 A chacune de ces prestations, vous pouvez bien sur ajouter des pratiquants.
 
-	.. image:: showprestation.png
+.. image:: showprestation.png
+   :height: 400px
+   :align: center
 	
 Via le bouton "Ajouter", rechercher une (ou plusieurs) fiche adhérent qui sera alors associé à cette prestation.
 Vous pouvez de là également créer une nouvelle fiche.
@@ -58,7 +66,9 @@ Bien entendu, vos prestations ne sont pas figées.
 Vous pouvez vouloir inverser des pratiquants, d'une prestation à une autre. 
 Pour cela, cliquez sur "Permuter" après avoir sélectionné 2 prestations: un écran vous invitera à associer les bons pratiquants au bon groupe.
 
-	.. image:: swapingprestation.png
+.. image:: swapingprestation.png
+   :height: 400px
+   :align: center
 	
 Dans la même idée, le bouton "Dédoubler" vous permet de créer une nouvelle prestation d'après une ancienne et d'ensuite pouvoir permuter les pratiquants comme vous le souhaitez.
 

@@ -7,6 +7,9 @@ Consultez la liste de vos adhérents :
      Menu *Association/Adhérents/Adhérents cotisants*
 
 .. image:: members.png
+   :height: 400px
+   :align: center
+   :align: center
 
 De cet écran vous pouvez, après avoir filtré vos adhérents sur un ou plusieurs critères, imprimer les listes, les étiquettes ou les cartes d'adhérents.
 Sélectionnez et éditez une ligne pour consulter la fiche de l'adhérent.
@@ -14,6 +17,9 @@ Sélectionnez et éditez une ligne pour consulter la fiche de l'adhérent.
 *Diacamma Asso* sauvegarde plusieurs types d'informations relatives à un adhérent. Vous pouvez les consulter dans la fiche de l'adhérent.
 
 .. image:: file.png
+   :height: 400px
+   :align: center
+   :align: center
 
 Cette fiche comporte :
  - L'identité de l'adhérent : nom, prénom, adresse, téléphone, date et lieu de naissance...
@@ -27,7 +33,10 @@ Enfin, depuis la fiche d'un adhérent, il est possible de lui donner un droit d'
 En fonction de vos droits de connexion, il vous sera possible de modifier l'identité d'un adhérent, d'ajouter une adhésion passée ou un diplôme obtenu.
 
 .. image:: modify.png
+   :height: 400px
+   :align: center
+   :align: center
 
-**Attention:** La loi Informatique et liberté n'autorise la conservation de données que si elles sont relatives à l'activité de nos adhérents. Veillez donc à bien adapter vos commentaires à ce cadre législatif et à informer toute personne de son inscription dans votre base de données.
-Consultez le texte de loi en cas de doute, et n'hésitez pas à contacter la CNIL en cas de besoin.
+**Attention:** Le règlement général sur la protection des données (RGPD) n'autorise la conservation de données que si elles sont relatives à l'activité de nos adhérents. Veillez donc à bien adapter vos commentaires à ce cadre législatif et à informer toute personne de son inscription dans votre base de données.
+Consultez la réglementation de loi en cas de doute, et n'hésitez pas à contacter la CNIL en cas de besoin (https://www.cnil.fr/fr/reglement-europeen-protection-donnees).
 
