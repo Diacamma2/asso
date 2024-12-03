@@ -1405,6 +1405,11 @@ class SubscriptionAddModify(XferAddEditor):
     caption_add = _("Add subscription")
     caption_modify = _("Modify subscription")
     redirect_to_show = 'Bill'
+    
+    def fillresponse(self):
+        if (Params.getvalue("member-team-enable") != 0) and (Team.objects.filter(unactive=False).count() == 0):
+            raise LucteriosException(IMPORTANT, _("No actived team is defined !"))
+        XferAddEditor.fillresponse(self)
 
 
 @ActionsManage.affect_grid(TITLE_EDIT, short_icon='mdi:mdi-text-box-outline', unique=SELECT_SINGLE)
