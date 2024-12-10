@@ -4790,7 +4790,7 @@ class TaxtReceiptTest(InvoiceTest):
         default_financial()
         default_season()
         default_params()
-        create_account(['708'], 3, rubric='GGG' if self._testMethodName.endswith("_with_rubric") else '')
+        create_account(['708'], 3)
         default_adherents(True)
         change_ourdetail()
 
@@ -5331,7 +5331,8 @@ class TaxtReceiptTest(InvoiceTest):
         self.assert_json_equal('', 'taxreceipt/@0/third', 'Dalton Joe')
         self.assert_json_equal('', 'taxreceipt/@0/total', 100.0)
 
-    def test_multi_with_rubric(self):
+    def test_multi_with_reason(self):
+        Params.setvalue("member-tax-reason-payoff", "708:GGG{[br/]}")
         current_year = FiscalYear.get_current()
         current_year.begin = '2015-01-01'
         current_year.end = '2015-12-31'
@@ -5407,6 +5408,43 @@ class TaxtReceiptTest(InvoiceTest):
         self.assert_json_equal('', 'taxreceipt/@0/num', 1)
         self.assert_json_equal('', 'taxreceipt/@0/third', 'Dalton Joe')
         self.assert_json_equal('', 'taxreceipt/@0/total', 300.0)
+
+    def test_exclude_bankcode(self):
+        Params.setvalue("member-tax-exclude-payoff", "1")
+        details = [{'article': 4, 'designation': 'article 4', 'price': '100.00', 'quantity': 1},
+                   {'article': 1, 'designation': 'article 1', 'price': '100.00', 'quantity': 1}]
+        bill_id = self._create_bill(details, 1, '2015-06-21', 4, True)
+        self.factory.xfer = PayoffAddModify()
+        self.calljson('/diacamma.payoff/payoffAddModify', {'SAVE': 'YES', 'supportings': bill_id,
+                                                           'amount': '200.0', 'payer': "Ma'a Dalton", 'date': '2015-06-30', 'mode': 3, 'reference': 'abc', 'bank_account': 1}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.payoff', 'payoffAddModify')
+
+        details = [{'article': 4, 'designation': 'article 4', 'price': '100.00', 'quantity': 2}]
+        self._create_bill(details, 1, '2015-11-11', 4, True)
+
+        self.factory.xfer = EntryAccountClose()
+        self.calljson('/diacamma.accounting/entryAccountClose',
+                      {'CONFIRME': 'YES', 'year': '1', 'journal': '2', "entryline": "1;2;3;4;5;6;7"}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.accounting', 'entryAccountClose')
+
+        current_year = FiscalYear.get_current()
+        current_year.closed()
+
+        self.factory.xfer = EntryAccountList()
+        self.calljson('/diacamma.accounting/entryAccountList',
+                      {'year': '1', 'journal': '0', 'filter': '2'}, False)
+        self.assert_observer('core.custom', 'diacamma.accounting', 'entryAccountList')
+        self.assert_count_equal('entryline', 7 + 5)
+        self.assert_json_equal('LABELFORM', 'result', [400.00, 0.00, 400.00, 200.00, 200.00])
+
+        self.factory.xfer = TaxReceiptCheck()
+        self.calljson('/diacamma.member/taxReceiptCheck', {'year': 2015, 'CONFIRME': 'YES'}, False)
+        self.assert_observer('core.acknowledge', 'diacamma.member', 'taxReceiptCheck')
+
+        self.factory.xfer = TaxReceiptList()
+        self.calljson('/diacamma.member/taxReceiptList', {'year': 2015}, False)
+        self.assert_observer('core.custom', 'diacamma.member', 'taxReceiptList')
+        self.assert_count_equal('taxreceipt', 0)
 
 
 class AdherentConnectionTest(BaseAdherentTest):

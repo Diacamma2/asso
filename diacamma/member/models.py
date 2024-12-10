@@ -169,7 +169,7 @@ class Season(LucteriosModel):
                                        "ratio": "%d (%.1f%%)" % (criteria_sum, 100 * criteria_sum / total) if with_total else "%d" % criteria_sum})
             for idx in range(4):
                 total_by_criteria[idx] += val_by_criteria[criteria][idx]
-        values_by_criteria.sort(key=lambda val: -1 * val['sum'])
+        values_by_criteria.sort(key=lambda val:-1 * val['sum'])
         if with_total and (len(values_by_criteria) > 0):
             values_by_criteria.append({name: "{[b]}%s{[/b]}" % _('total'),
                                        "MajM": "{[b]}%d{[/b]}" % total_by_criteria[0],
@@ -1897,11 +1897,14 @@ class TaxReceiptPayoffSet(QuerySet):
         self.taxreceipt = self._hints['taxreceipt'] if 'taxreceipt' in self._hints else None
         self.entry = self._hints['entry'] if 'entry' in self._hints else None
         self.current_third = self._hints['third'] if 'third' in self._hints else None
+        self.exclude_bank_account_ids = Params.getvalue('member-tax-exclude-payoff')
 
     def _add_payoff(self, entryline):
         new_payoff = Payoff(date=entryline.entry.date_value, amount=entryline.amount, mode=Params.getvalue("member-tax-receipt-payoff"), payer=str(self.current_third))
         new_payoff.id = -10 * (len(self._result_cache) + 1)
         old_payoff = entryline.entry.payoff_set.all().first()
+        if old_payoff is not None and old_payoff.bank_account_id in self.exclude_bank_account_ids:
+            return 0
         if entryline.account.type_of_account == ChartsAccount.TYPE_EXPENSE:
             new_payoff.mode = TaxReceiptPayoffSet.PAYOFF_MODE_FEE
         elif (entryline.account.type_of_account == ChartsAccount.TYPE_REVENUE) and (entryline.amount < 0):
@@ -2052,9 +2055,28 @@ class TaxReceipt(Supporting):
         modes = sorted(set([payoff.mode for payoff in self.payoff_set.all()]))
         return ", ".join([get_mode_text(mode) for mode in modes])
 
+    @classmethod
+    def reason_list(cls):
+        for reason_item in Params.getvalue("member-tax-reason-payoff").split("{[br/]}"):
+            if reason_item.count(':') != 1:
+                continue
+            reason_code, reason_text = reason_item.split(':')
+            reason_code, reason_text = reason_code.strip(), reason_text.strip()
+            if reason_code == '' or reason_text == '':
+                continue
+            yield reason_code, reason_text
+    
+    @classmethod
+    def find_reason(cls, code):
+        for reason_code, reason_text in cls.reason_list():
+            if code.startswith(reason_code):
+                return reason_text
+        return ""
+
     def get_type_gift(self):
         if self.id is not None:
-            return ", ".join(sorted(set([entryline.account.rubric for entryline in self.entryline_set.all()])))
+            reason_list = [self.find_reason(entryline.account.code) for entryline in self.entryline_set.all()]
+            return ", ".join(sorted(set([reason_item for reason_item in reason_list if reason_item != ''])))
         else:
             return ""
 
@@ -2318,13 +2340,13 @@ def member_addon_search(model, search_result):
         search_result.append(Third.convert_field_for_search('supporting_set', bill_search, add_verbose=False))
         for field_name in ["subscriptiontype", "status", "season"]:
             Subscription_search = Adherent.convert_field_for_search('subscription_set', (field_name, Subscription._meta.get_field(field_name), field_name, Q()))
-            Adherent_search= Individual.convert_field_for_search('adherent', Subscription_search)
-            Individual_search= AbstractContact.convert_field_for_search('individual', Adherent_search, add_verbose=False)
+            Adherent_search = Individual.convert_field_for_search('adherent', Subscription_search)
+            Individual_search = AbstractContact.convert_field_for_search('individual', Adherent_search, add_verbose=False)
             search_result.append(Third.convert_field_for_search('contact', Individual_search, add_verbose=False))
         season_search = Subscription.convert_field_for_search('season', ('iscurrent', Season._meta.get_field('iscurrent'), 'iscurrent', Q()))
         Subscription_search = Bill.convert_field_for_search('subscription_set', season_search)
-        Adherent_search= Individual.convert_field_for_search('adherent', Subscription_search)
-        Individual_search= AbstractContact.convert_field_for_search('individual', Adherent_search, add_verbose=False)
+        Adherent_search = Individual.convert_field_for_search('adherent', Subscription_search)
+        Individual_search = AbstractContact.convert_field_for_search('individual', Adherent_search, add_verbose=False)
         search_result.append(Third.convert_field_for_search('contact', Individual_search, add_verbose=False))
         res = True
     if model is Adherent:
@@ -2427,6 +2449,10 @@ def member_checkparam():
     Parameter.check_and_create(name="member-fields", typeparam=Parameter.TYPE_STRING, title=_("member-fields"), args="{'Multi':False}", value='')
     Parameter.check_and_create(name="member-tax-receipt", typeparam=Parameter.TYPE_STRING, title=_("member-tax-receipt"), args="{'Multi':True}", value='',
                                meta='("accounting","ChartsAccount","import diacamma.accounting.tools;django.db.models.Q(code__regex=diacamma.accounting.tools.current_system_account().get_revenue_mask()) & django.db.models.Q(year__is_actif=True)", "code", False)')
+    Parameter.check_and_create(name="member-tax-exclude-payoff", typeparam=Parameter.TYPE_INTEGER, title=_("member-tax-exclude-payoff"), args="{'Multi':True}", value='',
+                               meta='("payoff","BankAccount","django.db.models.Q()", "id", False)')
+    Parameter.check_and_create(name="member-tax-reason-payoff", typeparam=Parameter.TYPE_STRING, title=_("member-tax-reason-payoff"), args="{'Multi':True}", value='')
+
     Parameter.check_and_create(name="member-tax-receipt-payoff", typeparam=Parameter.TYPE_SELECT, title=_("member-tax-receipt-payoff"), args="{'Enum':6}", value=str(Payoff.MODE_CHEQUE),
                                param_titles=(_("member-tax-receipt-payoff.0"), _("member-tax-receipt-payoff.1"), _("member-tax-receipt-payoff.2"), _("member-tax-receipt-payoff.3"), _("member-tax-receipt-payoff.4"), _("member-tax-receipt-payoff.5")))
     Parameter.check_and_create(name="member-age-statistic", typeparam=Parameter.TYPE_INTEGER, title=_("member-age-statistic"), args="{'Min': 1, 'Max': 100}", value='18')

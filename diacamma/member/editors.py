@@ -532,9 +532,6 @@ class TaxReceiptEditor(LucteriosEditor):
         entryline.actions = []
         entryline.delete_header('link')
         entryline.add_action(xfer.request, EntryAccountOpenFromLine.get_action(TITLE_EDIT, short_icon="mdi:mdi-text-box-outline"), close=CLOSE_NO, unique=SELECT_SINGLE)
-        fiscalyears = FiscalYear.objects.filter(
-            (Q(begin__lte='%s-01-01' % xfer.item.year) & Q(end__gte='%s-01-01' % xfer.item.year)) | (Q(begin__lte='%s-12-31' % xfer.item.year) & Q(end__gte='%s-12-31' % xfer.item.year))
-        )
-        if ChartsAccount.objects.filter(year__in=fiscalyears, type_of_account__in=(3, 4)).exclude(rubric='').count() == 0:
+        if len(list(self.item.reason_list())) == 0:
             xfer.remove_component('__empty__')
             xfer.remove_component('type_gift')
