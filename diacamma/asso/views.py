@@ -23,8 +23,8 @@ along with Lucterios.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 from __future__ import unicode_literals
-
-from os.path import join, dirname, isfile
+from os.path import join, dirname
+import os
 
 from lucterios.framework import signal_and_lock
 from lucterios.CORE.parameters import Params
@@ -33,7 +33,10 @@ from lucterios.CORE.parameters import Params
 @signal_and_lock.Signal.decorate('initial_account')
 def initial_account_asso(account_list):
     from diacamma.accounting.system import accounting_system_ident
-    filename = join(dirname(__file__), 'init_%s.csv' % accounting_system_ident(Params.getvalue("accounting-system")))
-    if isinstance(account_list, list):
-        account_list.append(filename)
-    return isfile(filename)
+    ret = False
+    for file_name in os.listdir(dirname(__file__)):
+        if file_name.startswith('init_%s' % accounting_system_ident(Params.getvalue("accounting-system"))) and file_name[-4:] == '.csv':
+            ret = True
+            if isinstance(account_list, list):
+                account_list.append(join(dirname(__file__), file_name))
+    return ret
