@@ -169,7 +169,7 @@ class Season(LucteriosModel):
                                        "ratio": "%d (%.1f%%)" % (criteria_sum, 100 * criteria_sum / total) if with_total else "%d" % criteria_sum})
             for idx in range(4):
                 total_by_criteria[idx] += val_by_criteria[criteria][idx]
-        values_by_criteria.sort(key=lambda val:-1 * val['sum'])
+        values_by_criteria.sort(key=lambda val: -1 * val['sum'])
         if with_total and (len(values_by_criteria) > 0):
             values_by_criteria.append({name: "{[b]}%s{[/b]}" % _('total'),
                                        "MajM": "{[b]}%d{[/b]}" % total_by_criteria[0],
@@ -2065,7 +2065,7 @@ class TaxReceipt(Supporting):
             if reason_code == '' or reason_text == '':
                 continue
             yield reason_code, reason_text
-    
+
     @classmethod
     def find_reason(cls, code):
         for reason_code, reason_text in cls.reason_list():
@@ -2330,7 +2330,7 @@ class CommandManager(object):
 def member_addon_search(model, search_result):
     res = False
     if model is Third:
-        for field_name in ["subscriptiontype", "status", "season"]:
+        for field_name in ["subscriptiontype", "status", "season", "begin_date", "end_date"]:
             Subscription_search = Bill.convert_field_for_search('subscription_set', (field_name, Subscription._meta.get_field(field_name), field_name, Q()))
             bill_search = Supporting.convert_field_for_search('bill', Subscription_search)
             search_result.append(Third.convert_field_for_search('supporting_set', bill_search, add_verbose=False))
@@ -2338,7 +2338,7 @@ def member_addon_search(model, search_result):
         Subscription_search = Bill.convert_field_for_search('subscription_set', season_search)
         bill_search = Supporting.convert_field_for_search('bill', Subscription_search)
         search_result.append(Third.convert_field_for_search('supporting_set', bill_search, add_verbose=False))
-        for field_name in ["subscriptiontype", "status", "season"]:
+        for field_name in ["subscriptiontype", "status", "season", "begin_date", "end_date"]:
             Subscription_search = Adherent.convert_field_for_search('subscription_set', (field_name, Subscription._meta.get_field(field_name), field_name, Q()))
             Adherent_search = Individual.convert_field_for_search('adherent', Subscription_search)
             Individual_search = AbstractContact.convert_field_for_search('individual', Adherent_search, add_verbose=False)
