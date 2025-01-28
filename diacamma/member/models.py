@@ -2145,7 +2145,7 @@ class TaxReceipt(Supporting):
     class Meta(object):
         verbose_name = _('tax receipt')
         verbose_name_plural = _('tax receipts')
-        ordering = ['year', 'num', 'third']
+        ordering = ['year', 'third', 'num']
         default_permissions = ['change']
 
 

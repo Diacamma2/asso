@@ -24,7 +24,8 @@ along with Lucterios.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import unicode_literals
 
 from django.utils.translation import gettext_lazy as _
-from django.db.models import Q
+from django.db.models.functions import Concat
+from django.db.models import Q, Value
 from django.conf import settings
 from django.utils import timezone
 
@@ -32,6 +33,7 @@ from lucterios.framework.xferadvance import XferAddEditor, XferListEditor, TITLE
 from lucterios.framework.xferadvance import XferDelete
 from lucterios.framework.tools import ActionsManage, MenuManage, FORMTYPE_NOMODAL, CLOSE_NO, SELECT_MULTI, SELECT_SINGLE, WrapAction, FORMTYPE_REFRESH, FORMTYPE_MODAL
 from lucterios.framework.error import LucteriosException, IMPORTANT
+from lucterios.framework.models import LucteriosQuerySet
 from lucterios.framework.xfercomponents import XferCompButton, XferCompLabelForm, XferCompCheckList, XferCompFloat, XferCompSelect
 from lucterios.framework import signal_and_lock
 from lucterios.framework.xfergraphic import XferContainerAcknowledge, XFER_DBOX_WARNING
@@ -273,6 +275,20 @@ class TaxReceiptList(XferListEditor):
     model = TaxReceipt
     field_id = 'taxreceipt'
     caption = _("Tax receipts")
+
+    def get_items_from_filter(self):
+        items = self.model.objects.select_related('third', 'third__contact', 'third__contact__individual', 'third__contact__legalentity').annotate(completename=Concat('third__contact__individual__lastname', Value(' '), 'third__contact__individual__firstname')).filter(self.filter).distinct()
+        sort_third = self.getparam('GRID_ORDER%taxreceipt', '')
+        sort_thirdbis = self.getparam('GRID_ORDER%taxreceipt+', '')
+        self.params['GRID_ORDER%taxreceipt'] = ""
+        if sort_third != '':
+            if sort_thirdbis.startswith('-'):
+                sort_thirdbis = "+"
+            else:
+                sort_thirdbis = "-"
+            self.params['GRID_ORDER%taxreceipt+'] = sort_thirdbis
+        items = sorted(items, key=lambda t: str(t.third).lower(), reverse=sort_thirdbis.startswith('-'))
+        return LucteriosQuerySet(model=TaxReceipt, initial=items)
 
     def fillresponse_header(self):
         select_year = self.getparam('year', timezone.now().year)
