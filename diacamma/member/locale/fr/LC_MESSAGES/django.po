@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-10 06:48+0000\n"
-"PO-Revision-Date: 2024-12-10 07:51+0100\n"
+"POT-Creation-Date: 2025-01-29 08:24+0000\n"
+"PO-Revision-Date: 2025-01-29 09:24+0100\n"
 "Last-Translator: Laurent Gay <l.gay@sd-libre.fr>\n"
 "Language-Team: français <>\n"
 "Language: fr\n"
@@ -20,8 +20,8 @@ msgstr ""
 "X-Translated-Using: django-rosetta 0.7.8\n"
 "X-Generator: Poedit 3.5\n"
 
-#: __init__.py:43 views_conf.py:387 views_conf.py:390 views_conf.py:397
-#: views_conf.py:418
+#: __init__.py:43 views_conf.py:403 views_conf.py:406 views_conf.py:413
+#: views_conf.py:434
 msgid "Diacamma member"
 msgstr "Adhérent Diacamma"
 
@@ -50,7 +50,7 @@ msgstr "date min."
 msgid "date max."
 msgstr "date max."
 
-#: editors.py:169 models.py:642 models.py:836 models.py:2333 views.py:1889
+#: editors.py:169 models.py:642 models.py:836 models.py:2355 views.py:1889
 msgid "family"
 msgstr "famille"
 
@@ -124,7 +124,7 @@ msgstr "Pas de saison définie !"
 msgid "No period find!"
 msgstr "Aucune période trouvée !"
 
-#: models.py:174 models.py:1982
+#: models.py:174 models.py:1985
 msgid "total"
 msgstr "total"
 
@@ -146,7 +146,7 @@ msgstr "nom"
 msgid "document needs"
 msgstr "document nécessaire"
 
-#: models.py:390 models.py:638 models.py:1977 printmodel/Adherent_0001.py:45
+#: models.py:390 models.py:638 models.py:1980 printmodel/Adherent_0001.py:45
 #: printmodel/Adherent_0003.py:55 views.py:1746
 msgid "numeros"
 msgstr "N°"
@@ -207,7 +207,7 @@ msgstr "ordre"
 msgid "price"
 msgstr "prix"
 
-#: models.py:506 models.py:837 models.py:1385 models.py:2142
+#: models.py:506 models.py:837 models.py:1385 models.py:2164
 #: printmodel/Adherent_0003.py:56
 msgid "subscription type"
 msgstr "type de cotisation"
@@ -267,7 +267,7 @@ msgstr "date de naissance"
 msgid "birthplace"
 msgstr "lieu de naissance"
 
-#: models.py:643 models.py:2144
+#: models.py:643 models.py:2166
 msgid "age category"
 msgstr "catégorie d'âge"
 
@@ -310,7 +310,7 @@ msgstr "%s (le plus récent)"
 msgid "002@Subscription"
 msgstr "Cotisation"
 
-#: models.py:768 models.py:1151 models.py:1383 models.py:2141
+#: models.py:768 models.py:1151 models.py:1383 models.py:2163
 msgid "adherent"
 msgstr "adhérent"
 
@@ -319,7 +319,7 @@ msgstr "adhérent"
 msgid "subscription"
 msgstr "cotisation"
 
-#: models.py:841 models.py:1313 models.py:1390 models.py:2146
+#: models.py:841 models.py:1313 models.py:1390 models.py:2168
 msgid "prestations"
 msgstr "prestations"
 
@@ -336,7 +336,7 @@ msgstr "Pas de type de structure 'famille' !"
 msgid "subscription type '%s' unknown !"
 msgstr "Type de cotisation '%s' inconnue !"
 
-#: models.py:1059 models.py:2171
+#: models.py:1059 models.py:2193
 msgid "No subscription type active !"
 msgstr "Aucun type de cotisation actif !"
 
@@ -364,7 +364,7 @@ msgstr "article"
 msgid "prestation"
 msgstr "prestation"
 
-#: models.py:1319 models.py:2374 models.py:2381
+#: models.py:1319 models.py:2396 models.py:2403
 msgid "default"
 msgstr "défaut"
 
@@ -468,7 +468,7 @@ msgstr "Rééditer"
 msgid "You cannot delete this subscription!"
 msgstr "Vous ne pouvez pas supprimer cette cotisation !"
 
-#: models.py:1786 models.py:2302
+#: models.py:1786 models.py:2324
 msgid "New subscription"
 msgstr "Nouvelle cotisation"
 
@@ -488,148 +488,148 @@ msgstr "documents"
 msgid "involvements"
 msgstr "participations"
 
-#: models.py:1978
+#: models.py:1981
 msgid "fiscal year"
 msgstr "exercice fiscal"
 
-#: models.py:1979 views_conf.py:283
+#: models.py:1982 views_conf.py:299
 msgid "year"
 msgstr "année"
 
-#: models.py:1980
+#: models.py:1983
 msgid "entries"
 msgstr "entrées"
 
-#: models.py:1981
+#: models.py:1984
 msgid "date"
 msgstr "date"
 
-#: models.py:1983
+#: models.py:1986
 msgid "date payoff"
 msgstr "date du versement réalisé"
 
-#: models.py:1984
+#: models.py:1987
 msgid "type payoff"
 msgstr "type(s) de versement(s) réalisé(s)"
 
-#: models.py:1985
+#: models.py:1988
 msgid "type gift"
 msgstr "nature(s) de la donation"
 
-#: models.py:1989
+#: models.py:1992
 #, python-format
 msgid "Tax receipt #%(num)s-%(year)s %(third)s"
 msgstr "Reçu fiscal N°%(num)s-%(year)s %(third)s"
 
-#: models.py:2043
+#: models.py:2046
 msgid "waiver of fee"
 msgstr "abandon de frais"
 
-#: models.py:2045
+#: models.py:2048
 msgid "waiver of revenue or produce"
 msgstr "abandon de revenus ou de produits"
 
-#: models.py:2124 printmodel/TaxReceipt_0001.py:30
+#: models.py:2146 printmodel/TaxReceipt_0001.py:30
 msgid "tax receipt"
 msgstr "reçu fiscal"
 
-#: models.py:2125
+#: models.py:2147
 msgid "tax receipts"
 msgstr "reçus fiscaux"
 
-#: models.py:2154
+#: models.py:2176
 msgid "reduce"
 msgstr "réduction"
 
-#: models.py:2408
+#: models.py:2430
 msgid "member-age-enable"
 msgstr "Activer les cat. d'âges"
 
-#: models.py:2409
+#: models.py:2431
 msgid "member-team-enable"
 msgstr "Activer les équipes"
 
-#: models.py:2410
+#: models.py:2432
 msgid "member-team-enable.0"
 msgstr "Non"
 
-#: models.py:2410
+#: models.py:2432
 msgid "member-team-enable.1"
 msgstr "Simple"
 
-#: models.py:2410
+#: models.py:2432
 msgid "member-team-enable.2"
 msgstr "Avec prestation"
 
-#: models.py:2411
+#: models.py:2433
 msgid "member-team-text"
 msgstr "Intitulé équipe"
 
-#: models.py:2411
+#: models.py:2433
 msgid "Team"
 msgstr "Équipe"
 
-#: models.py:2412
+#: models.py:2434
 msgid "member-activite-enable"
 msgstr "Activer les activités"
 
-#: models.py:2413
+#: models.py:2435
 msgid "member-activite-text"
 msgstr "Intitulé activité"
 
-#: models.py:2413
+#: models.py:2435
 msgid "Activity"
 msgstr "Activité"
 
-#: models.py:2414
+#: models.py:2436
 msgid "member-connection"
 msgstr "Activer la création de connexion"
 
-#: models.py:2415
+#: models.py:2437
 msgid "member-connection.0"
 msgstr "Sans"
 
-#: models.py:2415
+#: models.py:2437
 msgid "member-connection.1"
 msgstr "Par adhérent"
 
-#: models.py:2415
+#: models.py:2437
 msgid "member-connection.2"
 msgstr "Après demande"
 
-#: models.py:2416
+#: models.py:2438
 msgid "member-birth"
 msgstr "Utiliser date et lieu de naissance"
 
-#: models.py:2417
+#: models.py:2439
 msgid "member-birth.0"
 msgstr "Non"
 
-#: models.py:2417
+#: models.py:2439
 msgid "member-birth.1"
 msgstr "Seulement la date"
 
-#: models.py:2417
+#: models.py:2439
 msgid "member-birth.2"
 msgstr "Date et lieu"
 
-#: models.py:2418
+#: models.py:2440
 msgid "member-filter-genre"
 msgstr "Filtrage par genre"
 
-#: models.py:2419
+#: models.py:2441
 msgid "member-numero"
 msgstr "Afficher le numéro d'adhérent"
 
-#: models.py:2420
+#: models.py:2442
 msgid "member-licence-enabled"
 msgstr "Gérer un numéro de licence"
 
-#: models.py:2421
+#: models.py:2443
 msgid "member-subscription-message"
 msgstr "message de nouvelle de cotisation"
 
-#: models.py:2422
+#: models.py:2444
 msgid ""
 "Welcome,{[br/]}{[br/]}You have a new subscription.Joint, the quotation "
 "relative.{[br/]}{[br/]}Regards,"
@@ -637,131 +637,131 @@ msgstr ""
 "Bienvenue,{[br/]}{[br/]}vous avez une nouvelle cotisation. Ci-joint, le "
 "devis correspondant.{[br/]}{[br/]}Salutations,"
 
-#: models.py:2423
+#: models.py:2445
 msgid "member-subscription-mode"
 msgstr "Mode de cotisation"
 
-#: models.py:2424
+#: models.py:2446
 msgid "member-subscription-mode.0"
 msgstr "Pas d'autocotisation"
 
-#: models.py:2424
+#: models.py:2446
 msgid "member-subscription-mode.1"
 msgstr "Autocotisation avec modération"
 
-#: models.py:2424
+#: models.py:2446
 msgid "member-subscription-mode.2"
 msgstr "Autocotisation automatique"
 
-#: models.py:2424
+#: models.py:2446
 msgid "member-subscription-mode.3"
 msgstr "Autocotisation avec modération (seulement pour nouveau)"
 
-#: models.py:2425
+#: models.py:2447
 msgid "member-family-type"
 msgstr "Type de structure 'famille'"
 
-#: models.py:2426
+#: models.py:2448
 msgid "member-size-page"
 msgstr "Résultats par page"
 
-#: models.py:2427
+#: models.py:2449
 msgid "member-fields"
 msgstr "Champs affichés"
 
-#: models.py:2428
+#: models.py:2450
 msgid "member-tax-receipt"
 msgstr "Code comptable des reçus fiscaux"
 
-#: models.py:2430
+#: models.py:2452
 msgid "member-tax-exclude-payoff"
 msgstr "Code bancaire à exclure pour les reçus fiscaux"
 
-#: models.py:2432
+#: models.py:2454
 msgid "member-tax-reason-payoff"
 msgstr ""
-"Raison de paiement des reçus fiscaux (préciser \"<racine code comptable>:"
-"<raison>\")"
+"Raison de paiement des reçus fiscaux (préciser \"racine code comptable:"
+"raison\")"
 
-#: models.py:2434
+#: models.py:2456
 msgid "member-tax-receipt-payoff"
 msgstr "Règlement par défaut des reçus fiscaux"
 
-#: models.py:2435
+#: models.py:2457
 msgid "member-tax-receipt-payoff.0"
 msgstr "espèces"
 
-#: models.py:2435
+#: models.py:2457
 msgid "member-tax-receipt-payoff.1"
 msgstr "chèque"
 
-#: models.py:2435
+#: models.py:2457
 msgid "member-tax-receipt-payoff.2"
 msgstr "virement"
 
-#: models.py:2435
+#: models.py:2457
 msgid "member-tax-receipt-payoff.3"
 msgstr "carte de crédit"
 
-#: models.py:2435
+#: models.py:2457
 msgid "member-tax-receipt-payoff.4"
 msgstr "autre"
 
-#: models.py:2435
+#: models.py:2457
 msgid "member-tax-receipt-payoff.5"
 msgstr "prélèvement"
 
-#: models.py:2436
+#: models.py:2458
 msgid "member-age-statistic"
 msgstr "age max des jeunes (statistiques)"
 
-#: models.py:2437
+#: models.py:2459
 msgid "member-default-categorybill"
 msgstr "Catégorie de facturation pour les cotisations"
 
-#: models.py:2438
+#: models.py:2460
 msgid "member-subscription-delaytorenew"
 msgstr ""
 "Délai pour considérer une cotisation comme un renouvellement (type "
 "Calendaire)"
 
-#: models.py:2439
+#: models.py:2461
 msgid "member-activegroup"
 msgstr "Groupe des adhérents actifs"
 
-#: models.py:2442 views.py:807
+#: models.py:2464 views.py:807
 msgid "member-renew-filter"
 msgstr "Filtrage pour le renouvellement"
 
-#: models.py:2445
+#: models.py:2467
 msgid "# member (administrator)"
 msgstr "# adhérent (administrateur)"
 
-#: models.py:2447
+#: models.py:2469
 msgid "# member (editor)"
 msgstr "# adhérent (éditeur)"
 
-#: models.py:2449
+#: models.py:2471
 msgid "# member (shower)"
 msgstr "# adhérent (observateur)"
 
-#: models.py:2451
+#: models.py:2473
 msgid "adherent-team"
 msgstr "adhérent > équipes"
 
-#: models.py:2453
+#: models.py:2475
 msgid "adherent-activity"
 msgstr "adhérent > activités"
 
-#: models.py:2455
+#: models.py:2477
 msgid "adherent-age"
 msgstr "adhérent > ages"
 
-#: models.py:2457
+#: models.py:2479
 msgid "adherent-genre"
 msgstr "adhérent > genre"
 
-#: models.py:2459
+#: models.py:2481
 msgid "adherent-status"
 msgstr "adhérent > statut"
 
@@ -887,7 +887,7 @@ msgstr "Association"
 msgid "Association tools"
 msgstr "Ensemble d'outils aidant la gestion d'une association."
 
-#: views.py:76 views.py:1741 views.py:1788 views_conf.py:48
+#: views.py:76 views.py:1741 views.py:1788 views_conf.py:50
 msgid "Adherents"
 msgstr "Adhérents"
 
@@ -900,7 +900,7 @@ msgstr ""
 "renouvellements d’adhésion.{[/li]}{[li]}Générer automatiquement devis ou "
 "factures liés à vos adhésions.{[/li]}{[/ul]}"
 
-#: views.py:175 views.py:248 views_conf.py:107 views_conf.py:401
+#: views.py:175 views.py:248 views_conf.py:109 views_conf.py:417
 msgid "Age"
 msgstr "Âge"
 
@@ -965,7 +965,7 @@ msgstr "Liste des prestations et gestion des cotisations associées."
 msgid "List prestations"
 msgstr "Liste de prestations"
 
-#: views.py:396 views_conf.py:132
+#: views.py:396 views_conf.py:134
 msgid "Merge"
 msgstr "Fusion"
 
@@ -1160,7 +1160,7 @@ msgstr "Adhérent"
 msgid "no subscription!"
 msgstr "Pas de cotisation !"
 
-#: views.py:947 views_conf.py:336 views_conf.py:337
+#: views.py:947 views_conf.py:352 views_conf.py:353
 msgid "Send"
 msgstr "Envoyer"
 
@@ -1168,7 +1168,7 @@ msgstr "Envoyer"
 msgid "Send subscription"
 msgstr "Envoi de cotisation"
 
-#: views.py:968 views_conf.py:340
+#: views.py:968 views_conf.py:356
 msgid "Send by email"
 msgstr "Envoyer par courriel"
 
@@ -1475,107 +1475,107 @@ msgstr "Adhérents en attente de modération : %d"
 msgid "limitation: %d activities allowed"
 msgstr "limitation : %d activités autorisées"
 
-#: views_conf.py:96
+#: views_conf.py:98
 msgid "Management of member categories"
 msgstr "Gestion des catégories d'adhésion"
 
-#: views_conf.py:99 views_conf.py:397
+#: views_conf.py:101 views_conf.py:413
 msgid "Categories"
 msgstr "Catégories"
 
-#: views_conf.py:102 views_conf.py:398 views_conf.py:418
+#: views_conf.py:104 views_conf.py:414 views_conf.py:434
 msgid "Parameters"
 msgstr "Paramètres"
 
-#: views_conf.py:114
+#: views_conf.py:116
 msgid "show only enabled team"
 msgstr "afficher seulement les éléments actifs"
 
-#: views_conf.py:114
+#: views_conf.py:116
 msgid "show all teams"
 msgstr "afficher tous les éléments actifs"
 
-#: views_conf.py:114
+#: views_conf.py:116
 msgid "show only disabled team"
 msgstr "afficher seulement les éléments désactivés"
 
-#: views_conf.py:116
+#: views_conf.py:118
 msgid "team filter"
 msgstr "filtrage d'éléments"
 
-#: views_conf.py:137 views_conf.py:225 views_conf.py:413
+#: views_conf.py:139 views_conf.py:227 views_conf.py:429
 msgid "You have the maximum of activities!"
 msgstr "Vous avez le maximum d'activités !"
 
-#: views_conf.py:150
+#: views_conf.py:152
 msgid "Add age"
 msgstr "Ajouter un âge"
 
-#: views_conf.py:151
+#: views_conf.py:153
 msgid "Modify age"
 msgstr "Modification d'un âge"
 
-#: views_conf.py:160
+#: views_conf.py:162
 msgid "Delete age"
 msgstr "Suppression d'âge(s)"
 
-#: views_conf.py:170 views_conf.py:189
+#: views_conf.py:172 views_conf.py:191
 msgid "Add team"
 msgstr "Ajout d'une équipe"
 
-#: views_conf.py:171
+#: views_conf.py:173
 msgid "Modify team"
 msgstr "Modification d'une équipe"
 
-#: views_conf.py:180
+#: views_conf.py:182
 msgid "Delete team"
 msgstr "Suppression d'équipe(s)"
 
-#: views_conf.py:196 views_conf.py:247
+#: views_conf.py:198 views_conf.py:249
 msgid "dis-en-abled"
 msgstr "(Dé)activer"
 
-#: views_conf.py:202
+#: views_conf.py:204
 msgid "Enabled team"
 msgstr "Activer"
 
-#: views_conf.py:218
+#: views_conf.py:220
 msgid "Add activity"
 msgstr "Ajouter une activité"
 
-#: views_conf.py:219
+#: views_conf.py:221
 msgid "Modify activity"
 msgstr "Modification d'une activité"
 
-#: views_conf.py:235
+#: views_conf.py:237
 msgid "Delete activity"
 msgstr "Suppression d'activité(s)"
 
-#: views_conf.py:244
+#: views_conf.py:246
 msgid "Show activity"
 msgstr "Voir une activité"
 
-#: views_conf.py:253
+#: views_conf.py:255
 msgid "Enabled activity"
 msgstr "Activité activé"
 
-#: views_conf.py:270
+#: views_conf.py:272
 msgid "Management of tax receipts"
 msgstr "Édition et impression des reçus fiscaux"
 
-#: views_conf.py:275
+#: views_conf.py:277
 msgid "Tax receipts"
 msgstr "Reçus fiscaux"
 
-#: views_conf.py:288
+#: views_conf.py:304
 msgid "Valid"
 msgstr "Valider"
 
-#: views_conf.py:294
+#: views_conf.py:310
 msgid "Valid tax receipt"
 msgstr "Valider les reçus fiscaux"
 
-#: views_conf.py:297
+#: views_conf.py:313
 #, python-format
 msgid ""
 "Do you want to validate tax receiptes for year \"%s\" ?{[br/]}{[u]}Warning:"
@@ -1584,71 +1584,71 @@ msgstr ""
 "Voulez vous valider les reçus fiscaux de l'année \"%s\" ?{[br/]}{[u]}"
 "Attention:{[/u]} Les reçus fiscaux ne sont pas supprimable."
 
-#: views_conf.py:301 views_conf.py:314
+#: views_conf.py:317 views_conf.py:330
 msgid "Check"
 msgstr "Contrôle"
 
-#: views_conf.py:307 views_conf.py:320
+#: views_conf.py:323 views_conf.py:336
 msgid "Check tax receipt"
 msgstr "Contrôlez les reçus fiscaux"
 
-#: views_conf.py:310
+#: views_conf.py:326
 #, python-format
 msgid "Do you want to generate tax receiptes for year \"%s\" ?"
 msgstr "Voulez vous générer les reçus fiscaux de l'année \"%s\" ?"
 
-#: views_conf.py:323
+#: views_conf.py:339
 #, python-format
 msgid "Do you want to re-generate this tax receipte for year \"%s\" ?"
 msgstr "Voulez vous re-générer ce reçu fiscal de l'année \"%s\" ?"
 
-#: views_conf.py:333
+#: views_conf.py:349
 msgid "Show tax receipt"
 msgstr "Voir un reçu fiscal"
 
-#: views_conf.py:347
+#: views_conf.py:363
 msgid "Some tax receipts are not validated !"
 msgstr "Certains reçus fiscaux ne sont pas validés !"
 
-#: views_conf.py:353 views_conf.py:354
+#: views_conf.py:369 views_conf.py:370
 msgid "Print"
 msgstr "Imprimer"
 
-#: views_conf.py:360
+#: views_conf.py:376
 msgid "Print tax receipt"
 msgstr "Imprimer un reçu fiscal"
 
-#: views_conf.py:375
+#: views_conf.py:391
 msgid "simulation"
 msgstr "simulation"
 
-#: views_conf.py:387 views_season.py:54
+#: views_conf.py:403 views_season.py:54
 msgid "Season"
 msgstr "Saison"
 
-#: views_conf.py:387
+#: views_conf.py:403
 msgid "Configuration of season"
 msgstr "Ajoutez vos différentes saisons et activez la courante."
 
-#: views_conf.py:390 views_season.py:77
+#: views_conf.py:406 views_season.py:77
 msgid "Subscriptions"
 msgstr "Les cotisations"
 
-#: views_conf.py:390
+#: views_conf.py:406
 msgid "Configuration of subscription"
 msgstr ""
 "Dans cet écran, vous pouvez ajouter vos différents types d'adhésion pour "
 "votre association. {[br/]}Le paramètre \"mode de cotisation\" vous permet de "
 "donner la possibilité à un adhérent de créer une demande d'adhésion."
 
-#: views_conf.py:397
+#: views_conf.py:413
 msgid "Configuration of categories"
 msgstr ""
 "Définissez vos différentes catégories pour votre association. {[br/]} "
 "Commencez par activer ou désactiver les catégories dont vous avez besoin. "
 "{[br/]} Ensuite, ajoutez les catégories propres à votre fonctionnement."
 
-#: views_conf.py:418
+#: views_conf.py:434
 msgid "Configuration of main parameters"
 msgstr "Configurez ici d'autres paramètres relatifs à vos adhésions."
 
