@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-01-29 08:24+0000\n"
-"PO-Revision-Date: 2025-01-29 09:23+0100\n"
+"POT-Creation-Date: 2025-02-11 14:02+0000\n"
+"PO-Revision-Date: 2025-02-11 15:02+0100\n"
 "Last-Translator: Laurent Gay <l.gay@sd-libre.fr>\n"
 "Language-Team: français <>\n"
 "Language: en\n"
@@ -517,8 +517,8 @@ msgstr "type of gift"
 
 #: models.py:1992
 #, python-format
-msgid "Tax receipt #%(num)s-%(year)s %(third)s"
-msgstr "Tax receipt #%(num)s-%(year)s %(third)s"
+msgid "Tax receipt %(third)s #%(num)s-%(year)s"
+msgstr "Tax receipt %(third)s #%(num)s-%(year)s"
 
 #: models.py:2046
 msgid "waiver of fee"

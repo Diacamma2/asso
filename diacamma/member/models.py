@@ -1989,7 +1989,7 @@ class TaxReceipt(Supporting):
     __empty__ = LucteriosVirtualField(verbose_name='', compute_from=lambda *_args: '')
 
     def __str__(self):
-        return _("Tax receipt #%(num)s-%(year)s %(third)s") % {'num': self.num, 'year': self.year, 'third': self.third}
+        return _("Tax receipt %(third)s #%(num)s-%(year)s") % {'num': self.num, 'year': self.year, 'third': self.third}
 
     @classmethod
     def get_default_fields(cls):
