@@ -39,7 +39,7 @@ from lucterios.framework.tools import FORMTYPE_NOMODAL, ActionsManage, MenuManag
     SELECT_MULTI, CLOSE_YES, SELECT_NONE, ifplural, get_url_from_request, \
     get_bool_textual, get_date_formating
 from lucterios.framework.tools import convert_date
-from lucterios.framework.xferadvance import XferAddEditor
+from lucterios.framework.xferadvance import XferAddEditor, TITLE_SEARCH
 from lucterios.framework.xferadvance import XferDelete
 from lucterios.framework.xferadvance import XferListEditor, TITLE_OK, TITLE_ADD, \
     TITLE_MODIFY, TITLE_EDIT, TITLE_CANCEL, TITLE_LABEL, TITLE_LISTING, \
@@ -490,6 +490,7 @@ class PrestationShow(XferShowEditor):
         adherent.add_action(self.request, AdherentShow.get_action(TITLE_EDIT, short_icon='mdi:mdi-text-box-outline'), unique=SELECT_SINGLE)
         adherent.add_action(self.request, AdherentPrestationDel.get_action(TITLE_DELETE, short_icon='mdi:mdi-delete-outline'), unique=SELECT_MULTI, close=CLOSE_NO)
         adherent.add_action(self.request, AdherentPrestationAdd.get_action(TITLE_ADD, short_icon='mdi:mdi-pencil-plus-outline'), unique=SELECT_NONE, close=CLOSE_NO)
+        adherent.add_action(self.request, AdherentPrestationSearch.get_action(TITLE_SEARCH, short_icon='mdi:mdi-pencil-plus-outline'), unique=SELECT_NONE, close=CLOSE_NO)
         self._add_listing()
 
 
@@ -713,6 +714,23 @@ class AdherentPrestationAdd(AdherentSelection):
         AdherentSelection.fillresponse(self)
         self.actions = []
         self.add_action(WrapAction(TITLE_CLOSE, short_icon='mdi:mdi-close'))
+
+
+@MenuManage.describ('member.add_subscription')
+class AdherentPrestationSearch(XferSavedCriteriaSearchEditor):
+    short_icon = 'mdi:mdi-badge-account-horizontal-outline'
+    model = Adherent
+    methods_allowed = ('POST', 'PUT')
+    field_id = 'adherent'
+    caption = _("Add prestation")
+
+    def fillresponse(self):
+        XferSavedCriteriaSearchEditor.fillresponse(self)
+        self.actions = []
+        self.add_action(WrapAction(TITLE_CLOSE, short_icon='mdi:mdi-close'))
+        grid = self.get_components(self.field_id)
+        grid.add_action(self.request, AdherentPrestationSave.get_action(_("Select"), short_icon='mdi:mdi-check'),
+                        close=CLOSE_YES, unique=SELECT_MULTI, pos_act=0)
 
 
 @MenuManage.describ('member.change_adherent', FORMTYPE_NOMODAL, 'member.actions', _('To find an adherent following a set of criteria.'))
