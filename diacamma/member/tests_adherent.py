@@ -106,6 +106,9 @@ class BaseAdherentTest(LucteriosTest):
             if created:
                 fill_accounts_fr(new_year, True, False, False)
             old_year = new_year
+        user_admin = LucteriosUser.objects.get(username='admin')
+        user_admin.is_active = True
+        user_admin.save()
 
     def add_subscriptions(self, year=2009, season_id=10, status=2, create_adh_sub=True):
         if create_adh_sub:
@@ -5550,6 +5553,7 @@ class AdherentConnectionTest(BaseAdherentTest):
 
     def test_connection_ask_simple(self):
         self.assertEqual(LucteriosUser.objects.all().count(), 1)
+        self.assertEqual(LucteriosUser.objects.filter(is_active=True).count(), 1, list(LucteriosUser.objects.all()) + [''] + list(LucteriosUser.objects.filter(is_active=True)))
         self.add_subscriptions()
         server = TestReceiver()
         server.start(AdherentConnectionTest.smtp_port)
@@ -5563,17 +5567,27 @@ class AdherentConnectionTest(BaseAdherentTest):
             self.assert_json_equal('', 'text', 'Les paramètres de connexion ont été envoyé.')
 
             self.assertEqual(2, server.count())
+            self.assertEqual('mr-sylvestre@worldcompany.com', server.get(0)[1])
+            self.assertEqual(['Joe.Dalton@worldcompany.com'], server.get(0)[2])
             _msg, msg = server.check_first_message('Mot de passe de connexion', 2)
             self.assertEqual('text/html', msg.get_content_type())
             self.assertEqual('base64', msg.get('Content-Transfer-Encoding', ''))
             message = decode_b64(msg.get_payload())
             self.assertEqual('<html><p>Bienvenue<br/><br/>Confirmation de connexion à votre application :'
                              '<br/> - Identifiant : joeD<br/> - Mot de passe : ', message[:124])
-            password = message[124:].split('<br/>')[0]
+            password1 = message[124:].split('<br/>')[0]
+
+            self.assertEqual('mr-sylvestre@worldcompany.com', server.get(1)[1])
+            self.assertEqual(['William.Dalton@worldcompany.com'], server.get(1)[2])
+            _msg, msg2 = server.get_msg_index(1, 'Mot de passe de connexion')
+            message = decode_b64(msg2.get_payload())
+            self.assertEqual('<html><p>Bienvenue<br/><br/>Confirmation de connexion à votre application :'
+                             '<br/> - Identifiant : williamD<br/> - Mot de passe : ', message[:128])
+            password2 = message[128:].split('<br/>')[0]
         finally:
             server.stop()
 
-        self.calljson('/CORE/authentification', {'login': 'joeD', 'password': password})
+        self.calljson('/CORE/authentification', {'login': 'joeD', 'password': password1})
         self.assert_observer('core.auth', 'CORE', 'authentification')
         self.assert_json_equal('', '', 'OK')
 
@@ -5584,8 +5598,27 @@ class AdherentConnectionTest(BaseAdherentTest):
         self.assert_json_equal('LABELFORM', 'lastname', "Dalton")
         self.assert_json_equal('LINK', 'email', "Joe.Dalton@worldcompany.com")
         self.assert_count_equal('subscription', 1)
+
+        self.calljson('/CORE/exitConnection', {})
+        self.assert_observer('core.acknowledge', 'CORE', 'exitConnection')
+
+        self.calljson('/CORE/authentification', {'login': 'williamD', 'password': password2})
+        self.assert_observer('core.auth', 'CORE', 'authentification')
+        self.assert_json_equal('', '', 'OK')
+
+        self.calljson('/lucterios.contacts/account', {}, 'get')
+        self.assert_observer('core.custom', 'lucterios.contacts', 'account')
+        self.assert_json_equal('LABELFORM', 'genre', 1)
+        self.assert_json_equal('LABELFORM', 'firstname', "William")
+        self.assert_json_equal('LABELFORM', 'lastname', "Dalton")
+        self.assert_json_equal('LINK', 'email', "William.Dalton@worldcompany.com")
+        self.assert_count_equal('subscription', 1)
+
+        self.calljson('/CORE/exitConnection', {})
+        self.assert_observer('core.acknowledge', 'CORE', 'exitConnection')
+
         self.assertEqual(LucteriosUser.objects.all().count(), 3)
-        self.assertEqual(LucteriosUser.objects.filter(is_active=True).count(), 3)
+        self.assertEqual(LucteriosUser.objects.filter(is_active=True).count(), 3, list(LucteriosUser.objects.all()) + [''] + list(LucteriosUser.objects.filter(is_active=True)))
 
     def test_connection_ask_family(self):
         self.assertEqual(LucteriosUser.objects.all().count(), 1)

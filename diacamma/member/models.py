@@ -36,13 +36,13 @@ from django.db.models import Q
 from django.apps import apps
 from django.utils.translation import gettext_lazy as _
 from django.utils import formats, timezone
-from django_fsm import FSMIntegerField, transition
+from django_fsm import FSMIntegerField, transition, TransitionNotAllowed
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 
 from lucterios.framework.models import LucteriosModel
 from lucterios.framework.model_fields import get_value_if_choices, LucteriosVirtualField
-from lucterios.framework.error import LucteriosException, IMPORTANT
+from lucterios.framework.error import LucteriosException, IMPORTANT, GRAVE
 from lucterios.framework.tools import convert_date, same_day_months_after, toHtml, get_bool_textual
 from lucterios.framework.signal_and_lock import Signal
 from lucterios.framework.filetools import get_tmp_dir
@@ -630,6 +630,13 @@ class Age(LucteriosModel):
         default_permissions = []
 
 
+def _validate_bill(bill):
+    try:
+        bill.valid()
+    except TransitionNotAllowed:
+        raise LucteriosException(GRAVE, _("Problem to validate %s:{[br/]} - %s") % (bill, "{[br/]} - ".join(bill.get_info_state())))
+
+
 class Adherent(Individual):
     CONNECTION_NO = 0
     CONNECTION_BYADHERENT = 1
@@ -1082,7 +1089,7 @@ class Adherent(Individual):
                     license_item.subscription = new_subscription
                     license_item.save()
             if new_subscription.bill is not None:
-                new_subscription.bill.valid()
+                _validate_bill(new_subscription.bill)
             return True
         else:
             return False
@@ -1496,6 +1503,8 @@ class Subscription(LucteriosModel):
         bill_list = Bill.objects.filter(third=new_third, bill_type__in=bill_types, status=Bill.STATUS_BUILDING).annotate(subscription_count=Count('subscription')).filter(subscription_count__gte=1).order_by('-date')
         if Bill.BILLTYPE_QUOTATION in bill_types:
             date_ref = timezone.now()
+            if FiscalYear.get_current(date_ref) is None:
+                date_ref = self.season.date_ref
         else:
             date_ref = self.season.date_ref
         if len(bill_list) > 0:
@@ -1778,7 +1787,7 @@ class Subscription(LucteriosModel):
 
     def sendemail(self, sendemail):
         if sendemail is not None:
-            self.bill.valid()
+            _validate_bill(self.bill)
             if self.adherent.email != '':
                 subscription_message = toHtml(Params.getvalue("member-subscription-message").replace('\n', '<br/>'))
                 if self.bill.payoff_have_payment():
@@ -2316,7 +2325,7 @@ class CommandManager(object):
                     bill_list.append(new_subscription.bill)
         if sendemail is not None:
             for subscription_bill in set(bill_list):
-                subscription_bill.valid()
+                _validate_bill(subscription_bill)
                 if subscription_bill.third.contact.email != '':
                     subscription_message = toHtml(Params.getvalue("member-subscription-message").replace('\n', '<br/>'))
                     if subscription_bill.payoff_have_payment() and (len(PaymentMethod.objects.all()) > 0):
