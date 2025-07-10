@@ -42,22 +42,19 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from lucterios.framework.models import LucteriosModel
 from lucterios.framework.model_fields import get_value_if_choices, LucteriosVirtualField
-from lucterios.framework.error import LucteriosException, IMPORTANT, GRAVE
+from lucterios.framework.error import LucteriosException, IMPORTANT
 from lucterios.framework.tools import convert_date, same_day_months_after, toHtml, get_bool_textual
 from lucterios.framework.signal_and_lock import Signal
 from lucterios.framework.filetools import get_tmp_dir
 from lucterios.framework.auditlog import auditlog
 
-from lucterios.CORE.models import Parameter, PrintModel, LucteriosUser, \
-    LucteriosGroup, Preference
+from lucterios.CORE.models import Parameter, PrintModel, LucteriosUser, LucteriosGroup, Preference
 from lucterios.CORE.parameters import Params
-from lucterios.contacts.models import Individual, LegalEntity, Responsability, \
-    AbstractContact
+from lucterios.contacts.models import Individual, LegalEntity, Responsability, AbstractContact
 from lucterios.documents.models import FolderContainer
 from lucterios.mailing.email_functions import EmailException
 
-from diacamma.invoice.models import Article, Bill, Detail, get_or_create_customer, invoice_addon_for_third, \
-    CategoryBill
+from diacamma.invoice.models import Article, Bill, Detail, get_or_create_customer, invoice_addon_for_third, CategoryBill
 from diacamma.accounting.tools import get_amount_from_format_devise, format_with_devise, current_system_account
 from diacamma.accounting.models import Third, FiscalYear, EntryAccount, EntryLineAccount, ChartsAccount, Journal
 from diacamma.payoff.models import PaymentMethod, Supporting, Payoff, get_html_payment
@@ -634,7 +631,7 @@ def _validate_bill(bill):
     try:
         bill.valid()
     except TransitionNotAllowed:
-        raise LucteriosException(GRAVE, _("Problem to validate %s:{[br/]} - %s") % (bill, "{[br/]} - ".join(bill.get_info_state())))
+        raise LucteriosException(IMPORTANT, _("Problem to validate %s:{[br/]} - %s") % (bill, "{[br/]} - ".join(bill.get_info_state())))
 
 
 class Adherent(Individual):
@@ -1504,9 +1501,9 @@ class Subscription(LucteriosModel):
         if Bill.BILLTYPE_QUOTATION in bill_types:
             date_ref = timezone.now()
             if FiscalYear.get_current(date_ref) is None:
-                date_ref = self.season.date_ref
+                date_ref = self.begin_date
         else:
-            date_ref = self.season.date_ref
+            date_ref = self.begin_date
         if len(bill_list) > 0:
             self.bill = bill_list[0]
             self.bill.date = date_ref
