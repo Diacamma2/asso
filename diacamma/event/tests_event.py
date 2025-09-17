@@ -640,7 +640,7 @@ class EventTest(LucteriosTest):
         self.assert_json_equal('', 'detail/@0/designation', 'Article 05')
         self.assert_json_equal('', 'detail/@0/price', 64.10)
         self.assert_json_equal('', 'detail/@0/quantity_txt', '1,00')
-        self.assert_json_equal('', 'detail/@0/reduce_txt', '10,00 €(15.60%)')
+        self.assert_json_equal('', 'detail/@0/reduce_txt', '10,00 €(15,60%)')
         self.assert_json_equal('', 'detail/@0/total', 54.10)
         self.assert_json_equal('LABELFORM', 'total_excltax', 54.10)
 

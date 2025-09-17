@@ -343,7 +343,7 @@ class AdherentTest(BaseAdherentTest):
         self.assert_select_equal('status', 2)  # nb=2
         self.assert_json_equal('SELECT', 'status', '1')
         self.assert_json_equal('SELECT', 'subscriptiontype', '1')
-        self.assert_json_equal('LABELFORM', 'seasondates', "1 sept. 2009 => 31 août 2010")
+        self.assert_json_equal('LABELFORM', 'seasondates', "01/09/2009 => 31/08/2010")
 
         self.factory.xfer = SubscriptionAddModify()
         self.calljson('/diacamma.member/subscriptionAddModify',
@@ -1065,7 +1065,7 @@ class AdherentTest(BaseAdherentTest):
         self.calljson('/diacamma.member/adherentRenewList', {'dateref': '2010-10-01', 'enddate_delay': -90, 'reminder': False}, False)
         self.assert_observer('core.custom', 'diacamma.member', 'adherentRenewList')
         self.assert_count_equal('', 8)
-        self.assert_json_equal('LABELFORM', 'savecritera_renew', '{[b]}nom{[/b]} contenu {[i]}"Dalton"{[/i]}')
+        self.assert_json_equal('LABELFORM', 'savecritera_renew', '{[b]}nom{[/b]} contient {[i]}"Dalton"{[/i]}')
         self.assert_count_equal('adherent', 2)
         self.assert_json_equal('', 'adherent/@0/id', "2")
         self.assert_json_equal('', 'adherent/@1/id', "5")
@@ -5693,7 +5693,7 @@ class AdherentConnectionTest(BaseAdherentTest):
 
         self.calljson('/lucterios.contacts/currentLegalEntityModify', {'legal_entity': 7})
         self.assert_observer('core.custom', 'lucterios.contacts', 'currentLegalEntityModify')
-        self.assert_count_equal('', 12)
+        self.assert_count_equal('', 14)
 
     def test_disable_connexion(self):
         self.add_subscriptions()
