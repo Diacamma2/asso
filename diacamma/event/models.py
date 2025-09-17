@@ -30,9 +30,9 @@ from django.db.models import Q
 from django.db.models.aggregates import Count
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.utils.translation import gettext_lazy as _
-from django_fsm import transition, FSMIntegerField
 
 from lucterios.framework.models import LucteriosModel
+from lucterios.framework.model_fields import transition, FSMIntegerField
 from lucterios.framework.model_fields import get_value_if_choices, LucteriosVirtualField
 from lucterios.framework.tools import get_date_formating
 from lucterios.framework.error import LucteriosException, IMPORTANT

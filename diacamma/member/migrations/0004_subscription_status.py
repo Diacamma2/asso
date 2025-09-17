@@ -3,7 +3,7 @@
 from __future__ import unicode_literals
 
 from django.db import migrations
-import django_fsm
+import lucterios.framework.model_fields
 from django.db.models.fields.related import ForeignKey
 from django.db.models import deletion
 
@@ -23,7 +23,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='subscription',
             name='status',
-            field=django_fsm.FSMIntegerField(
+            field=lucterios.framework.model_fields.FSMIntegerField(
                 choices=[(0, 'waiting'), (1, 'building'), (2, 'valid'), (3, 'cancel'), (4, 'disbarred')], db_index=True, default=1, verbose_name='status'),
         ),
     ]

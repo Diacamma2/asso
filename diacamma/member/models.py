@@ -27,6 +27,7 @@ from datetime import date, datetime, timedelta
 from os.path import isfile, join
 import logging
 from os import unlink
+from viewflow.fsm import TransitionNotAllowed
 
 from django.db import models
 from django.db.models.query import QuerySet
@@ -36,11 +37,11 @@ from django.db.models import Q
 from django.apps import apps
 from django.utils.translation import gettext_lazy as _
 from django.utils import formats, timezone
-from django_fsm import FSMIntegerField, transition, TransitionNotAllowed
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 
 from lucterios.framework.models import LucteriosModel
+from lucterios.framework.model_fields import FSMIntegerField, transition
 from lucterios.framework.model_fields import get_value_if_choices, LucteriosVirtualField
 from lucterios.framework.error import LucteriosException, IMPORTANT
 from lucterios.framework.tools import convert_date, same_day_months_after, toHtml, get_bool_textual

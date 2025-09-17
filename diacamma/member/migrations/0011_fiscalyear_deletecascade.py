@@ -2,7 +2,7 @@
 
 from django.db import migrations, models
 import django.db.models.deletion
-import django_fsm
+import lucterios.framework.model_fields
 
 
 class Migration(migrations.Migration):
@@ -35,7 +35,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='subscription',
             name='status',
-            field=django_fsm.FSMIntegerField(choices=[(0, 'waiting subscription'), (1, 'building subscription'), (2, 'valid subscription'), (3, 'cancel subscription'), (4, 'disbarred subscription')], db_index=True, default=1, verbose_name='status'),
+            field=lucterios.framework.model_fields.FSMIntegerField(choices=[(0, 'waiting subscription'), (1, 'building subscription'), (2, 'valid subscription'), (3, 'cancel subscription'), (4, 'disbarred subscription')], db_index=True, default=1, verbose_name='status'),
         ),
         migrations.AlterField(
             model_name='taxreceipt',
