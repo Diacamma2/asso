@@ -51,7 +51,8 @@ def config_member(setting_list):
                                               "member-size-page", "member-default-categorybill",
                                               "member-tax-receipt", "member-tax-receipt-payoff",
                                               "member-tax-exclude-payoff", "member-tax-reason-payoff",
-                                              "member-activegroup", "member-renew-filter"]
+                                              "member-activegroup", "member-renew-filter",
+                                              "member-bill-current-date"]
     return True
 
 

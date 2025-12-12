@@ -1517,14 +1517,17 @@ class Subscription(LucteriosModel):
     def _regenerate_bill(self, bill_type):
         self.bill.bill_type = bill_type
         if bill_type == Bill.BILLTYPE_BILL:
-            if hasattr(self, 'xfer'):
-                self.bill.date = convert_date(self.xfer.getparam('dateref'), self.season.date_ref)
-            elif hasattr(self, 'dateref'):
-                self.bill.date = convert_date(self.dateref, self.season.date_ref)
+            if Params.getvalue("member-bill-current-date"):
+                self.bill.date = timezone.now().date()
             else:
-                self.bill.date = self.season.date_ref
-            if (self.bill.date < self.season.begin_date) or (self.bill.date > self.season.end_date):
-                self.bill.date = self.season.date_ref
+                if hasattr(self, 'xfer'):
+                    self.bill.date = convert_date(self.xfer.getparam('dateref'), self.season.date_ref)
+                elif hasattr(self, 'dateref'):
+                    self.bill.date = convert_date(self.dateref, self.season.date_ref)
+                else:
+                    self.bill.date = self.season.date_ref
+                if (self.bill.date < self.season.begin_date) or (self.bill.date > self.season.end_date):
+                    self.bill.date = self.season.date_ref
         else:
             self.bill.date = timezone.now().date()
             if self.bill.date < self.season.begin_date:
@@ -2470,6 +2473,7 @@ def member_checkparam():
                                meta='("CORE","LucteriosGroup","django.db.models.Q()", "id", False)')
     Parameter.check_and_create(name="member-renew-filter", typeparam=Parameter.TYPE_INTEGER, title=_("member-renew-filter"), args="{}", value='',
                                meta='("CORE","SavedCriteria","django.db.models.Q(modelname=\'%s\')", "id", False)' % Adherent.get_long_name())
+    Parameter.check_and_create(name="member-bill-current-date", typeparam=Parameter.TYPE_BOOL, title=_("member-bill-current-date"), args="{}", value='False')
 
     LucteriosGroup.redefine_generic(_("# member (administrator)"), Season.get_permission(True, True, True), Adherent.get_permission(True, True, True),
                                     Subscription.get_permission(True, True, True), TaxReceipt.get_permission(True, True, True))
