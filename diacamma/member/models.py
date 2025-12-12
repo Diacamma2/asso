@@ -1530,10 +1530,11 @@ class Subscription(LucteriosModel):
                     self.bill.date = self.season.date_ref
         else:
             self.bill.date = timezone.now().date()
-            if self.bill.date < self.season.begin_date:
-                self.bill.date = self.season.begin_date
-            elif self.bill.date > self.season.end_date:
-                self.bill.date = self.season.end_date
+            if not Params.getvalue("member-bill-current-date"):
+                if self.bill.date < self.season.begin_date:
+                    self.bill.date = self.season.begin_date
+                elif self.bill.date > self.season.end_date:
+                    self.bill.date = self.season.end_date
         cmt = ["{[b]}%s{[/b]}" % _("subscription")]
         if self.bill.third.contact.id == self.adherent.id:
             cmt.append(_("Subscription of '%s'") % str(self.adherent))
