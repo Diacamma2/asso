@@ -898,6 +898,7 @@ class AdherentTest(BaseAdherentTest):
 
     @patch("django.utils.timezone.now")
     def test_renew(self, mock_now):
+        Params.setvalue("member-fields", "firstname;lastname;tel1;tel2;email;current_subscription")
         mock_now.return_value = datetime(year=2015, month=4, day=1)
 
         configSMTP('localhost', 1125)
@@ -1132,6 +1133,7 @@ class AdherentTest(BaseAdherentTest):
 
     @patch("django.utils.timezone.now")
     def test_renew_disabled(self, mock_now):
+        Params.setvalue("member-fields", "firstname;lastname;tel1;tel2;email;current_subscription")
         mock_now.return_value = datetime(year=2015, month=4, day=1)
 
         self.add_subscriptions()

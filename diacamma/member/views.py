@@ -121,13 +121,13 @@ class AdherentFilter(object):
                 self.exclude_filter = Q()
             elif enddate_delay < 0:
                 self.current_filter = Q(subscription__end_date__gte=sub_end_date) & Q(subscription__end_date__lte=dateref)
-                self.exclude_filter = Q(subscription__begin_date__gt=sub_end_date) & Q(subscription__status__in=(Subscription.STATUS_CANCEL, ))
+                self.exclude_filter = Q(subscription__begin_date__gt=sub_end_date) & Q(subscription__status__in=(Subscription.STATUS_CANCEL, Subscription.STATUS_WAITING, Subscription.STATUS_BUILDING))
             elif enddate_delay > 0:
                 self.current_filter = Q(subscription__end_date__lte=sub_end_date) & Q(subscription__end_date__gt=dateref)
-                self.exclude_filter = Q(subscription__begin_date__gte=dateref) & Q(subscription__status__in=(Subscription.STATUS_CANCEL, ))
+                self.exclude_filter = Q(subscription__begin_date__gte=dateref) & Q(subscription__status__in=(Subscription.STATUS_CANCEL, Subscription.STATUS_WAITING, Subscription.STATUS_BUILDING))
             else:
                 self.current_filter = Q(subscription__end_date=dateref)
-                self.exclude_filter = Q(subscription__begin_date__gt=dateref) & Q(subscription__status__in=(Subscription.STATUS_CANCEL, ))
+                self.exclude_filter = Q(subscription__begin_date__gt=dateref) & Q(subscription__status__in=(Subscription.STATUS_CANCEL, Subscription.STATUS_WAITING, Subscription.STATUS_BUILDING))
             if savecritera_renew is not None:
                 filter_result, _desc = get_search_query_from_criteria(savecritera_renew.criteria, Adherent)
                 self.current_filter &= filter_result
@@ -1423,7 +1423,7 @@ class SubscriptionAddModify(XferAddEditor):
     caption_add = _("Add subscription")
     caption_modify = _("Modify subscription")
     redirect_to_show = 'Bill'
-    
+
     def fillresponse(self):
         if (Params.getvalue("member-team-enable") != 0) and (Team.objects.filter(unactive=False).count() == 0):
             raise LucteriosException(IMPORTANT, _("No actived team is defined !"))
