@@ -1,91 +1,71 @@
 code;name
-1111;Réserves pour dépense imprévues
-1112;Réserves pour dépense prévues à long terme
-1191;Résultat (Excédent)
-1199;Résultat (Déficit)
-1311;Subventions reçues
-1511;Provisions pour travaux décidés
-1512;Provisions pour litiges
-1513;Provisions pour risque
-1514;Provision pour charge
-3411;Fournisseurs débiteurs
-3412;Fournisseurs, avances sur travaux
-3413;Autres avances
-342;Collectivité des copropriétaires
-3421;Copropriétaire individualisé
-3422;Copropriétaire - budget prévisionnel
-3423;Copropriétaire - travaux et opérations non courantes
-3424;Copropriétaire - créances douteuses
-3451;Etat et autres organismes-subventions à recevoir
-3452;Etat et autres organismes débiteurs
-3481;Débiteurs divers
-3491;Charges constatées d'avance
-3497;Comptes transitoires ou d'attente débiteurs
-3942;Provision pour Dépréciation des comptes des copropriétaires
-3943;Provision pour Dépréciation autres que les copropriétaires
-4411;Fournisseurs
-4412;Fournisseurs - Factures non parvenues
-4413;Autres fournisseurs
-4421;Copropriétaires-avances
-4431;Rémunérations dues
-4441;Sécurité sociale
-4442;Autres organismes sociaux
-4452;Etat - impôts et versements assimilés
-4453;Etat et autres organismes créditeurs
-4481;Créditeurs divers
-4491;Compte en attente d'imputation divers créditeur
-4492;Compte de produits encaissés d'avance
-4497;Compte transitoires ou d'attente créditeurs
-5111;Compte à terme
-5112;Autres compte
-5121;Banques
-5122;Chèques
-5161;Caisse
-5541;Banque
-6111;Eau
-6112;Electricité
-6113;Chauffage, énergie et combustibles
-6114;Achats produits d'entretien et petits équipements
-6115;Petit matériel
-6116;Fournitures
-6121;Remboursement d'emprunts
-6131;Nettoyage des locaux
-6132;Locations immobilières
-6133;Locations mobilières
-6134;Contrats de maintenance
-6135;Entretien et petites réparations
-6136;Primes d'assurance
-6137;Rémunérations du syndic sur gestion copropriété
-6138;Autres rémunération
-6140;Frais postaux
-6141;Frais bancaires
-6142;Honoraires
-6143;Autres charges
-6144;Charges d'interêts
-6161;Impôts et taxes
-6171;Salaires
-6172;Charges sociales et organismes sociaux
-6173;Autres (médecine du travail, mutuelles, etc.)
-6174;Assurance accident de travail
-6511;Travaux décidés par l'assemblée générale
-6512;Travaux urgents
-6513;Etudes techniques, diagnostic, consultation
-6514;Pertes sur créances irrécouvrables
-6515;Charges non courante
-691;Dotations aux dépréciations sur créances douteuses.
-7111;Provisions sur opérations courantes
-7112;Provisions sur travaux
-7113;Avances
-7121;Emprunts
-7122;Subvention
-7123;Indemnités d'assurances
-7124;Produits divers
-7125;Produits financiers
-7511;Autres produits décidés par l'assemblée générale
-7512;Produits de cession reçus
-7513;Dons reçus
-7514;Rentrées sur créance soldées
-7515;Autres produits non courants
-791;Reprises de dépréciations sur créances douteuses
-
-
+111;Fonds associatifs sans droit de reprise
+112;Fonds associatifs avec droit de reprise
+115;Réserves
+116;Report à nouveau
+117;Résultats sous contrôle de tiers financeurs
+119;Excédent – Insuffisance de l’exercice
+130;Fonds propres assimilés
+140;Dettes de financement
+15O;Provisions durables pour risques et charges
+194;Fonds dédiés sur subventions de fonctionnement
+195;Fonds dédiés sur dons affectés
+197;Fonds dédiés sur legs et dotations affectés
+210;Immobilisation en non-valeur
+223;Fonds commercial
+227;Immobilisations incorporelles diverses
+231;Terrains
+232;Constructions
+233;Installations techniques, matériel et outillage
+234;Matériel de transport
+237;Immobilisations corporelles diverses
+240;Immobilisations financières
+281;Amortissements en non-valeur
+282;Amortissements des immobilisations incorporelles
+283;Amortissements des immobilisations corporelles
+292;Provisions pour dépréciation des immobilisations incorporelles
+293;Provisions pour dépréciation des immobilisations corporelles
+294;Provisions pour dépréciation des immobilisations financières
+311;Marchandises
+317;Stocks divers
+342;Clients et comptes rattachés
+346;Comptes sociétaires Débiteurs
+347;Débiteurs divers
+349;Comptes de régularisation-Actif
+350;Titres et valeurs de placement
+391;Provisions pour dépréciation des stocks
+394;Provisions pour dépréciation des créances de l’actif circulant
+395;Provisions pour dépréciation des titres et valeurs de placement
+441;Fournisseurs et comptes rattachés
+446;Comptes sociétaires Créditeurs
+447;Usagers
+449;Comptes de régularisation-passif
+450;Autres provisions pour risques et charges
+511;Chèques et valeurs à encaisser
+514;Banques, trésorerie générale et chèques postaux-débiteurs
+516;Caisses, Régies d’avances et accréditifs
+552;Crédits de trésorerie
+554;Banques (soldes créditeurs)
+590;Provisions pour dépréciation des comptes de trésorerie
+611;Achats revendus de marchandises
+612;Achats consommés de matières et fournitures
+613;Autres charges externes
+616;Impôts et taxes
+617;Charges de personnel
+618;Autres charges d’exploitation
+619;Dotations d’exploitation
+630;Charges financières
+650;Charges non courantes
+657;Subventions exceptionnelles versées
+670;Impôts sur les résultats
+711;Ventes de marchandises
+712;Ventes de biens et services produits
+713;Variation des stocks de produits
+714;Immobilisations produites par l’entreprise pour elle -même
+715;Cotisations
+718;Autres produits d’exploitation
+719;Reprises d’exploitation ; transferts de charges
+730;Produits financiers
+750;Produits non courants
+810;excédent
+811;insuffisance
