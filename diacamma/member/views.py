@@ -792,13 +792,13 @@ class AdherentRenewList(XferListEditor, AdherentFilter):
         if reminder:
             delay_list = []
         else:
-            delay_list = [(-360, _('360 days before reference')), (-180, _('180 days before reference')),
+            delay_list = [(-367, _('1 year before reference')), (-184, _('half a year before reference')),
                           (-90, _('90 days before reference')), (-30, _('30 days before reference')),
                           (-10, _('10 days before reference')), (-3, _('3 days before reference'))]
         delay_list.extend([(0, _('end the reference day')),
                            (3, _('3 days after reference')), (10, _('10 days after reference')),
                            (30, _('30 days after reference')), (90, _('90 days after reference')),
-                           (180, _('180 days after reference')), (360, _('360 days after reference'))])
+                           (184, _('half a year after reference')), (367, _('1 year after reference'))])
 
         seldelay = XferCompSelect('enddate_delay')
         seldelay.set_select(delay_list)
