@@ -654,6 +654,8 @@ class Adherent(Individual):
     last_subscription = LucteriosVirtualField(verbose_name=_("last subscription"), compute_from='get_last_subscription')
     current_subscription = LucteriosVirtualField(verbose_name=_("current subscription"), compute_from='get_current_subscription')
 
+    subscription_situation = LucteriosVirtualField(verbose_name=_("situation"), compute_from='get_subscription_situation')
+
     higher_degree = LucteriosVirtualField(verbose_name=_("higher degree"), compute_from='get_higher_degree')
     lastdate_degree = LucteriosVirtualField(verbose_name=_("last date degree"), compute_from='get_lastdate_degree')
 
@@ -1107,6 +1109,21 @@ class Adherent(Individual):
         else:
             return None
 
+    def get_subscription_situation(self):
+        situation_text = ''
+        if self.id is not None:
+            try:
+                current_family = self.family
+                current_third = Third.objects.get(contact_id=current_family.id if current_family is not None else self.id)
+                if abs(current_third.total) > 1e-2:
+                    situation_text = _('unbalanced')
+            except ObjectDoesNotExist:
+                pass
+        if situation_text == '':
+            return '{[font color="blue"]}%s{[/font]}' % _('Ok')
+        else:
+            return '{[font color="orange"]}%s{[/font]}' % situation_text
+
     def get_default_family_value(self, with_type=True):
         family_value = {'name': self.lastname}
         if with_type:
@@ -1271,7 +1288,6 @@ class TeamPrestation(LucteriosModel):
             fields.append("team.name")
         fields.append("team.description")
         fields.append(('article', "price"))
-        fields.append("adherent_set")
         return fields
 
     @property

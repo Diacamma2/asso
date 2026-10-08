@@ -482,15 +482,19 @@ class PrestationShow(XferShowEditor):
         self.add_action(AdherentListing.get_action(TITLE_LISTING, short_icon='mdi:mdi-printer-pos-edit-outline'), pos_act=0, close=CLOSE_NO, params={"team": self.item.team_id, "activity": self.item.activity_id})
 
     def fillresponse(self):
-        if (GRID_SIZE + 'adherent') not in self.params:
-            self.params[GRID_SIZE + 'adherent'] = Params.getvalue("member-size-page")
         XferShowEditor.fillresponse(self)
-        adherent = self.get_components('adherent')
-        adherent.actions = []
+        adherent_fieldnames = Adherent.get_default_fields()
+        if 'subscription_situation' not in adherent_fieldnames:
+            adherent_fieldnames.append('subscription_situation')
+        adherent = XferCompGrid("adherent")
+        adherent.size_by_page = Params.getvalue("member-size-page")
+        adherent.set_model(self.item.adherent_set.all(), adherent_fieldnames, self)
         adherent.add_action(self.request, AdherentShow.get_action(TITLE_EDIT, short_icon='mdi:mdi-text-box-outline'), unique=SELECT_SINGLE)
         adherent.add_action(self.request, AdherentPrestationDel.get_action(TITLE_DELETE, short_icon='mdi:mdi-delete-outline'), unique=SELECT_MULTI, close=CLOSE_NO)
         adherent.add_action(self.request, AdherentPrestationAdd.get_action(TITLE_ADD, short_icon='mdi:mdi-pencil-plus-outline'), unique=SELECT_NONE, close=CLOSE_NO)
         adherent.add_action(self.request, AdherentPrestationSearch.get_action(TITLE_SEARCH, short_icon='mdi:mdi-pencil-plus-outline'), unique=SELECT_NONE, close=CLOSE_NO)
+        adherent.set_location(0, self.get_max_row() + 1, 2)
+        self.add_component(adherent)
         self._add_listing()
 
 
